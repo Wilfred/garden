@@ -284,8 +284,20 @@ fn main() {
         CliCommands::RunSnippets { path } => {
             let abs_path = to_abs_path(&path);
             let markdown_src = read_utf8_or_die(&abs_path);
-            let code = extract_code_from_markdown(&markdown_src);
-            run_file(&code, &abs_path, &[], interrupted)
+            let (code, error_blocks) = extract_code_from_markdown(&markdown_src);
+
+            // Run regular code blocks
+            if !code.is_empty() {
+                run_file(&code, &abs_path, &[], Arc::clone(&interrupted));
+            }
+
+            // Run error blocks and verify they fail
+            for (i, error_code) in error_blocks.iter().enumerate() {
+                if !verify_code_fails(error_code, &abs_path, Arc::clone(&interrupted)) {
+                    eprintln!("Error: garden-error block #{} was expected to fail but succeeded", i + 1);
+                    std::process::exit(1);
+                }
+            }
         }
         CliCommands::ShowType { path, offset } => {
             let abs_path = to_abs_path(&path);
@@ -570,10 +582,13 @@ fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
 }
 
 /// Extract code blocks from markdown that are unlabeled or labeled as 'garden'.
-fn extract_code_from_markdown(markdown: &str) -> String {
+/// Returns (regular_code, error_blocks) where error_blocks are expected to fail.
+fn extract_code_from_markdown(markdown: &str) -> (String, Vec<String>) {
     let mut code_blocks = Vec::new();
+    let mut error_blocks = Vec::new();
     let mut in_code_block = false;
     let mut collecting = false;
+    let mut collecting_error = false;
     let mut current_block = String::new();
 
     for line in markdown.lines() {
@@ -582,27 +597,32 @@ fn extract_code_from_markdown(markdown: &str) -> String {
                 // End of code block
                 if collecting {
                     code_blocks.push(current_block.clone());
-                    current_block.clear();
+                } else if collecting_error {
+                    error_blocks.push(current_block.clone());
                 }
+                current_block.clear();
                 in_code_block = false;
                 collecting = false;
+                collecting_error = false;
             } else {
                 // Start of code block - check the language label
                 let label = line.trim_start_matches('`').trim();
                 in_code_block = true;
-                // Only collect blocks with no label or explicitly labeled "garden"
+                // Collect blocks with no label or explicitly labeled "garden"
                 if label.is_empty() || label == "garden" {
                     collecting = true;
+                } else if label == "garden-error" {
+                    collecting_error = true;
                 }
             }
-        } else if in_code_block && collecting {
+        } else if in_code_block && (collecting || collecting_error) {
             current_block.push_str(line);
             current_block.push('\n');
         }
     }
 
-    // Join all code blocks with newlines
-    code_blocks.join("\n")
+    // Join all regular code blocks with newlines
+    (code_blocks.join("\n"), error_blocks)
 }
 
 fn dump_ast(src: &str, path: &Path) {
@@ -687,6 +707,41 @@ fn parse_toplevel_items_or_die(
     }
 
     items
+}
+
+/// Verify that code fails when executed. Returns true if it fails, false if it succeeds.
+fn verify_code_fails(src: &str, path: &Path, interrupted: Arc<AtomicBool>) -> bool {
+    let mut id_gen = IdGenerator::default();
+    let mut vfs = Vfs::default();
+    let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
+
+    // Try to parse
+    let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+    if !errors.is_empty() {
+        // Parse error - this counts as a failure (expected)
+        return true;
+    }
+
+    let mut env = Env::new(id_gen, vfs);
+
+    // Set the toplevel stack frame as also in the file namespace.
+    let ns = env.get_or_create_namespace(path);
+    let frame = env.current_frame_mut();
+    frame.namespace = ns;
+
+    let session = Session {
+        interrupted,
+        stdout_mode: StdoutMode::WriteDirectly,
+        start_time: Instant::now(),
+        trace_exprs: false,
+        pretty_print_json: false,
+    };
+
+    // Try to evaluate - if it returns an error, that's expected
+    match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
+        Ok(_) => false, // Succeeded when we expected failure
+        Err(_) => true, // Failed as expected
+    }
 }
 
 fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {

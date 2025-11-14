@@ -9,6 +9,6 @@
 
 `**` will throw an exception if the second argument is negative.
 
-```
+```garden-error
 2 ** -1 // (throws)
 ```

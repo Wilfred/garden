@@ -10,7 +10,7 @@ second number.
 
 As with division, `% 0` will throw an error.
 
-```
+```garden-error
 6 % 0 // Division by zero error.
 ```
 

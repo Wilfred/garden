@@ -569,24 +569,33 @@ fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
     }
 }
 
-/// Extract all code blocks from markdown (triple backtick blocks).
+/// Extract code blocks from markdown that are unlabeled or labeled as 'garden'.
 fn extract_code_from_markdown(markdown: &str) -> String {
     let mut code_blocks = Vec::new();
     let mut in_code_block = false;
+    let mut collecting = false;
     let mut current_block = String::new();
 
     for line in markdown.lines() {
         if line.starts_with("```") {
             if in_code_block {
                 // End of code block
-                code_blocks.push(current_block.clone());
-                current_block.clear();
+                if collecting {
+                    code_blocks.push(current_block.clone());
+                    current_block.clear();
+                }
                 in_code_block = false;
+                collecting = false;
             } else {
-                // Start of code block
+                // Start of code block - check the language label
+                let label = line.trim_start_matches('`').trim();
                 in_code_block = true;
+                // Only collect blocks with no label or explicitly labeled "garden"
+                if label.is_empty() || label == "garden" {
+                    collecting = true;
+                }
             }
-        } else if in_code_block {
+        } else if in_code_block && collecting {
             current_block.push_str(line);
             current_block.push('\n');
         }

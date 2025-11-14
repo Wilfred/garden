@@ -725,6 +725,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
                     &env.project_root
                 )
             );
+            std::process::exit(1);
         }
         Err(EvalError::AssertionFailed(position, msg)) => {
             eprintln!(
@@ -737,27 +738,32 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
                     &env.project_root
                 )
             );
+            std::process::exit(1);
         }
         Err(EvalError::Interrupted) => {
             eprintln!("Interrupted");
+            std::process::exit(1);
         }
         Err(EvalError::ReachedTickLimit(position)) => {
             eprintln!(
                 "{}: Reached the tick limit.",
                 position.as_ide_string(&env.project_root)
             );
+            std::process::exit(1);
         }
         Err(EvalError::ReachedStackLimit(position)) => {
             eprintln!(
                 "{}: Reached the stack limit.",
                 position.as_ide_string(&env.project_root)
             );
+            std::process::exit(1);
         }
         Err(EvalError::ForbiddenInSandbox(position)) => {
             eprintln!(
                 "{}: Tried to execute unsafe code in sandboxed mode.",
                 position.as_ide_string(&env.project_root)
             );
+            std::process::exit(1);
         }
     }
 }

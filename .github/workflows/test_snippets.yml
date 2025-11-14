@@ -1,0 +1,43 @@
+on: [push, pull_request]
+
+name: Test Markdown Snippets
+
+jobs:
+  test_snippets:
+    name: Test all markdown snippets
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+
+      - name: Build garden binary
+        run: cargo build --release
+
+      - name: Test all markdown files
+        run: |
+          echo "Testing all markdown files in website/"
+          error_count=0
+          total_count=0
+
+          for file in $(find website -name "*.md" -type f | sort); do
+            total_count=$((total_count + 1))
+            echo -n "Testing $file ... "
+            if cargo run --release -- run-snippets "$file" >/dev/null 2>&1; then
+              echo "✓"
+            else
+              echo "✗ FAILED"
+              echo "Error output:"
+              cargo run --release -- run-snippets "$file" 2>&1 || true
+              error_count=$((error_count + 1))
+            fi
+          done
+
+          echo ""
+          echo "========================================="
+          echo "Total files: $total_count"
+          echo "Errors: $error_count"
+          echo "Success: $((total_count - error_count))"
+
+          if [ $error_count -gt 0 ]; then
+            exit 1
+          fi

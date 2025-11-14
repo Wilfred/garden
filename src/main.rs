@@ -212,7 +212,7 @@ enum CliCommands {
     /// AST.
     DumpAst { path: PathBuf },
     /// Extract code blocks from a markdown file and execute them.
-    RunMarkdown { path: PathBuf },
+    RunSnippets { path: PathBuf },
 }
 
 fn main() {
@@ -281,7 +281,7 @@ fn main() {
             let src = read_utf8_or_die(&abs_path);
             dump_ast(&src, &abs_path)
         }
-        CliCommands::RunMarkdown { path } => {
+        CliCommands::RunSnippets { path } => {
             let abs_path = to_abs_path(&path);
             let markdown_src = read_utf8_or_die(&abs_path);
             let code = extract_code_from_markdown(&markdown_src);

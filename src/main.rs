@@ -294,7 +294,7 @@ fn main() {
             // Run error blocks and verify they fail
             for (i, error_code) in error_blocks.iter().enumerate() {
                 if !verify_code_fails(error_code, &abs_path, Arc::clone(&interrupted)) {
-                    eprintln!("Error: garden-error block #{} was expected to fail but succeeded", i + 1);
+                    eprintln!("Error: garden error block #{} was expected to fail but succeeded", i + 1);
                     std::process::exit(1);
                 }
             }
@@ -611,7 +611,7 @@ fn extract_code_from_markdown(markdown: &str) -> (String, Vec<String>) {
                 // Collect blocks with no label or explicitly labeled "garden"
                 if label.is_empty() || label == "garden" {
                     collecting = true;
-                } else if label == "garden-error" {
+                } else if label == "garden error" {
                     collecting_error = true;
                 }
             }

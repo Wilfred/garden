@@ -1,3 +1,12 @@
 console.log("hello world");
 
-console.log(window.fetch("http://localhost:8001"));
+function evalSnippet(_src) {
+  fetch("/good.json")
+    .then((response) => response.text())
+    .then((responseText) => {
+      let evalResult = JSON.parse(responseText);
+      console.log(evalResult);
+    });
+}
+
+evalSnippet("1 + 2");

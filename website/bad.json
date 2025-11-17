@@ -1,0 +1,23 @@
+{
+  "evaluate": {
+    "warnings": [],
+    "value": {
+      "Err": [
+        {
+          "position": {
+            "start_offset": 0,
+            "end_offset": 3,
+            "line_number": 0,
+            "end_line_number": 0,
+            "column": 0,
+            "end_column": 3,
+            "path": "__user.gdn"
+          },
+          "message": "Error: No such variable `abc`.",
+          "stack": "Error: No such variable `abc`.\n-| __user.gdn:1:1\t __toplevel__\n?| abc"
+        }
+      ]
+    },
+    "stack_frame_name": "__user.gdn"
+  }
+}

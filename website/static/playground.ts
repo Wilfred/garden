@@ -1,6 +1,6 @@
 console.log("hello world");
 
-function evalSnippet(src) {
+function evalSnippet(src: string) {
   fetch("/good.json")
     .then((response) => response.text())
     .then((responseText) => {
@@ -14,11 +14,10 @@ function evalSnippet(src) {
 for (const button of document.querySelectorAll(".run-snippet")) {
   console.log(button);
 
-  let enclosingPre = button.parentNode.parentNode;
-  let codeNode = button.parentNode.nextSibling;
-  let src = codeNode.textContent;
+  let codeNode = button?.parentNode?.nextSibling;
+  let src = codeNode?.textContent || "";
 
-  button.addEventListener("click", (e) => {
+  button.addEventListener("click", (_e) => {
     evalSnippet(src);
   });
 }

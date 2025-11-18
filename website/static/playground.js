@@ -1,3 +1,4 @@
+var _a;
 console.log("hello world");
 function evalSnippet(src) {
     fetch("/good.json")
@@ -10,15 +11,14 @@ function evalSnippet(src) {
 }
 var _loop_1 = function (button) {
     console.log(button);
-    var enclosingPre = button.parentNode.parentNode;
-    var codeNode = button.parentNode.nextSibling;
-    var src = codeNode.textContent;
-    button.addEventListener("click", function (e) {
+    var codeNode = (_a = button === null || button === void 0 ? void 0 : button.parentNode) === null || _a === void 0 ? void 0 : _a.nextSibling;
+    var src = (codeNode === null || codeNode === void 0 ? void 0 : codeNode.textContent) || "";
+    button.addEventListener("click", function (_e) {
         evalSnippet(src);
     });
 };
-for (var _i = 0, _a = document.querySelectorAll(".run-snippet"); _i < _a.length; _i++) {
-    var button = _a[_i];
+for (var _i = 0, _b = document.querySelectorAll(".run-snippet"); _i < _b.length; _i++) {
+    var button = _b[_i];
     _loop_1(button);
 }
 console.log("Ready");

@@ -7,6 +7,10 @@
   "type": "commonjs",
   "main": "playground.js",
   "scripts": {
+    "build": "tsc playground.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "typescript": "^5.9.3"
   }
 }

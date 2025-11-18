@@ -1,4 +1,5 @@
 target
+website/static/node_modules/
 
 # Performance/profiling data.
 perf.data*

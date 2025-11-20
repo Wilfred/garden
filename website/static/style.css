@@ -248,13 +248,12 @@ header a {
   color: #57269c;
 }
 
-/* Style pre like .block, but don't animate and don't modify the
-   pointer. */
-pre {
-  font-weight: 700;
-
+.snippet {
   border: 3px solid #00000038;
   border-radius: 5px;
+
+  font-weight: 700;
+
   padding: 12px 8px;
   margin: 30px 0px 20px 0px;
 
@@ -263,6 +262,10 @@ pre {
   left: -2px;
 
   z-index: 1;
+}
+
+.snippet pre {
+  margin: 0;
 }
 
 .code-title {

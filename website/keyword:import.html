@@ -23,16 +23,16 @@
 
     <div class="container"><h1><code>import</code> keyword</h1>
 <p>You can use <code>import</code> to load definitions from another file.</p>
-<pre><span class="code-title">File: greetings.gdn</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> say_hello() {
+<div class="snippet"><span class="code-title">File: greetings.gdn <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> say_hello() {
   <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Hello!"</span>)
-}</code></pre>
-<pre><span class="code-title">Example 1</span><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./greetings.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> g
+}</code></pre></div>
+<div class="snippet"><span class="code-title">Example 1 <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./greetings.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> g
 
-g::say_hello()</code></pre>
+g::say_hello()</code></pre></div>
 <p>You can also load all the definitions into the current file.</p>
-<pre><span class="code-title">Example 2</span><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./greetings.gdn"</span>
+<div class="snippet"><span class="code-title">Example 2 <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./greetings.gdn"</span>
 
-say_hello()</code></pre></div>
+say_hello()</code></pre></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

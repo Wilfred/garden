@@ -23,14 +23,14 @@
 
     <div class="container"><h1><code>Dict::set()</code></h1>
 <p>Return a new dict with <code>key</code> associated with <code>value</code>.</p>
-<pre><span class="code-title">Examples</span><code><a class="keyword" href="/keyword:let.html">let</a> scores <a class="operator" href="/operator:=.html">=</a> <a class="type" href="/type:Dict.html">Dict</a>[<span class="string">"Mario" </span>=&gt; 10]
+<div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:let.html">let</a> scores <a class="operator" href="/operator:=.html">=</a> <a class="type" href="/type:Dict.html">Dict</a>[<span class="string">"Mario" </span>=&gt; 10]
 scores.set(<span class="string">"Mario"</span>, 11) <span class="comment">//-&gt; Dict["Mario" =&gt; 11]</span>
 
 scores.set(<span class="string">"Luigi"</span>, 8)
-<span class="comment">//-&gt; Dict["Mario" =&gt; 10, "Luigi" =&gt; 8]</span></code></pre>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> set&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Dict.html">Dict</a>&lt;<span class="type">T</span>&gt;, key: <a class="type" href="/type:String.html">String</a>, <span class="type">Value</span>: <span class="type">T</span>): <a class="type" href="/type:Dict.html">Dict</a>&lt;<span class="type">T</span>&gt; {
+<span class="comment">//-&gt; Dict["Mario" =&gt; 10, "Luigi" =&gt; 8]</span></code></pre></div>
+<div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> set&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Dict.html">Dict</a>&lt;<span class="type">T</span>&gt;, key: <a class="type" href="/type:String.html">String</a>, <span class="type">Value</span>: <span class="type">T</span>): <a class="type" href="/type:Dict.html">Dict</a>&lt;<span class="type">T</span>&gt; {
   __BUILTIN_IMPLEMENTATION
-}</code></pre></div>
+}</code></pre></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

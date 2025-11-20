@@ -23,15 +23,15 @@
 
     <div class="container"><h1><code>range</code></h1>
 <p>Return a list from <code>i</code> (inclusive) to <code>j</code> (exclusive).</p>
-<pre><span class="code-title">Examples</span><code><a href="/fun:__prelude.gdn::range.html">range</a>(1, 5) <span class="comment">//-&gt; [1, 2, 3, 4]</span></code></pre>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> <a href="/fun:__prelude.gdn::range.html">range</a>(i: <a class="type" href="/type:Int.html">Int</a>, j: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt; {
+<div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code><a href="/fun:__prelude.gdn::range.html">range</a>(1, 5) <span class="comment">//-&gt; [1, 2, 3, 4]</span></code></pre></div>
+<div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> <a href="/fun:__prelude.gdn::range.html">range</a>(i: <a class="type" href="/type:Int.html">Int</a>, j: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt; {
   <a class="keyword" href="/keyword:let.html">let</a> items: <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt; <a class="operator" href="/operator:=.html">=</a> []
   <a class="keyword" href="/keyword:while.html">while</a> i <a class="operator" href="/operator:<.html">&lt;</a> j {
     items <a class="operator" href="/operator:=.html">=</a> items.append(i)
     i <a class="operator" href="/operator:+=.html">+=</a> 1
   }
   items
-}</code></pre></div>
+}</code></pre></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

@@ -23,10 +23,10 @@
 
     <div class="container"><h1><code>Path::set_extension()</code></h1>
 <p>Set the extension of the filename to <code>new_ext</code>.</p>
-<pre><span class="code-title">Examples</span><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
+<div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
 <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
-<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt.gz"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span></code></pre>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> set_extension(this: <a class="type" href="/type:Path.html">Path</a>, new_ext: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Path.html">Path</a> {
+<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt.gz"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span></code></pre></div>
+<div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> set_extension(this: <a class="type" href="/type:Path.html">Path</a>, new_ext: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Path.html">Path</a> {
   <a class="keyword" href="/keyword:let.html">let</a> new_ext <a class="operator" href="/operator:=.html">=</a> <span class="string">"." </span><a class="operator" href="/operator:^.html">^</a> new_ext
   <a class="keyword" href="/keyword:match.html">match</a> this.file_name() {
     <span class="type">Some</span>(file_name) =&gt; {
@@ -45,7 +45,7 @@
     },
     <span class="type">None</span> =&gt; this,
   }
-}</code></pre></div>
+}</code></pre></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

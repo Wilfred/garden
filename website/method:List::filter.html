@@ -24,7 +24,7 @@
     <div class="container"><h1><code>List::filter()</code></h1>
 <p>Return a copy of this list with the items where <code>f(item)</code> returns
 True.</p>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> filter&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;, f: <a class="type" href="/type:Fun.html">Fun</a>&lt;(<span class="type">T</span>), <a class="type" href="/type:Bool.html">Bool</a>&gt;): <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; {
+<div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> filter&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;, f: <a class="type" href="/type:Fun.html">Fun</a>&lt;(<span class="type">T</span>), <a class="type" href="/type:Bool.html">Bool</a>&gt;): <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; {
   <a class="keyword" href="/keyword:let.html">let</a> result: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; <a class="operator" href="/operator:=.html">=</a> []
 
   <a class="keyword" href="/keyword:for.html">for</a> item <a class="keyword" href="/keyword:in.html">in</a> this {
@@ -34,7 +34,7 @@ True.</p>
   }
 
   result
-}</code></pre></div>
+}</code></pre></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

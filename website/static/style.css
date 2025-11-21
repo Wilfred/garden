@@ -249,7 +249,7 @@ header a {
 }
 
 .snippet {
-  border: 3px solid #00000038;
+  border: 3px solid #00000030;
   border-radius: 5px;
 
   padding: 0;
@@ -269,8 +269,9 @@ header a {
 }
 
 .snippet .snippet-output {
-  background: #00000038;
+  border-top: 3px solid #00000030;
   padding: 12px 8px;
+  font-style: italic;
 }
 
 .code-title {
@@ -280,7 +281,7 @@ header a {
   right: 12px;
 
   background: var(--cream);
-  border: 3px solid #00000038;
+  border: 3px solid #00000030;
   border-radius: 5px;
 
   font-family: "Lora", serif;

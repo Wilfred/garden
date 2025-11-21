@@ -25,10 +25,10 @@
 <p>Write <code>content</code> to file <code>path</code>.</p>
 <p>If <code>path</code> already exists, its content is replaced with <code>content</code>.</p>
 <div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"__fs.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> fs
-fs::write_file(<span class="string">"hello world"</span>, <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/tmp/foo.txt" </span>})</code></pre></div>
+fs::write_file(<span class="string">"hello world"</span>, <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/tmp/foo.txt" </span>})</code></pre><div class="snippet-output" hidden></div></div>
 <div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> write_file(content: <a class="type" href="/type:String.html">String</a>, path: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Result.html">Result</a>&lt;<a class="type" href="/type:Unit.html">Unit</a>, <a class="type" href="/type:String.html">String</a>&gt; {
   __BUILTIN_IMPLEMENTATION
-}</code></pre></div></div>
+}</code></pre><div class="snippet-output" hidden></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

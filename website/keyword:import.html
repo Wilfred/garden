@@ -25,14 +25,14 @@
 <p>You can use <code>import</code> to load definitions from another file.</p>
 <div class="snippet"><span class="code-title">File: greetings.gdn <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> say_hello() {
   <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Hello!"</span>)
-}</code></pre></div>
+}</code></pre><div class="snippet-output" hidden></div></div>
 <div class="snippet"><span class="code-title">Example 1 <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./greetings.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> g
 
-g::say_hello()</code></pre></div>
+g::say_hello()</code></pre><div class="snippet-output" hidden></div></div>
 <p>You can also load all the definitions into the current file.</p>
 <div class="snippet"><span class="code-title">Example 2 <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./greetings.gdn"</span>
 
-say_hello()</code></pre></div></div>
+say_hello()</code></pre><div class="snippet-output" hidden></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

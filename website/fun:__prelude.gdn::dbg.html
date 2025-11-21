@@ -25,11 +25,11 @@
 <p>Write an arbitrary value to stdout, along with debugging metadata.</p>
 <p>Returns the input, so you can use <code>dbg</code> in larger expressions
 <code>foo(dbg(bar()))</code>.</p>
-<div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code><a href="/fun:__prelude.gdn::dbg.html">dbg</a>([1, 2])</code></pre></div>
+<div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code><a href="/fun:__prelude.gdn::dbg.html">dbg</a>([1, 2])</code></pre><div class="snippet-output" hidden></div></div>
 <div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> <a href="/fun:__prelude.gdn::dbg.html">dbg</a>&lt;<span class="type">T</span>&gt;(value: <span class="type">T</span>): <span class="type">T</span> {
   <a href="/fun:__prelude.gdn::println.html">println</a>(<a href="/fun:__prelude.gdn::string_repr.html">string_repr</a>(value))
   value
-}</code></pre></div></div>
+}</code></pre><div class="snippet-output" hidden></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

@@ -30,7 +30,7 @@ tooling.</p>
   }
 
   fib(i <a class="operator" href="/operator:-.html">-</a> 1) <a class="operator" href="/operator:+.html">+</a> fib(i <a class="operator" href="/operator:-.html">-</a> 2)
-}</code></pre></div>
+}</code></pre><div class="snippet-output" hidden></div></div>
 <h2>Taking REPLs Seriously</h2>
 <p>Common Lisp and Smalltalk have a superpower: you can modify running
 programs. You can redefine functions and modify class definitions
@@ -53,7 +53,7 @@ works with code of the form:</p>
 <a class="keyword" href="/keyword:fun.html">fun</a> bar(): <a class="type" href="/type:Unit.html">Unit</a> {
   eval(<span class="string">"fun foo(): Int { return 1 }"</span>)
   <a class="keyword" href="/keyword:let.html">let</a> x <a class="operator" href="/operator:=.html">=</a> foo() <a class="operator" href="/operator:+.html">+</a> 1
-}</code></pre></div>
+}</code></pre><div class="snippet-output" hidden></div></div>
 <h2>Sandboxed Execution</h2>
 <p>Garden supports sandbox execution without third-party libraries. This
 is important for two workflows:</p>

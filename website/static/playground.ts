@@ -1,17 +1,53 @@
+type Position = {
+  start_offset: number;
+  end_offset: number;
+  line_number: number;
+  end_line_number: number;
+  column: number;
+  end_column: number;
+  path: String;
+};
+
+type EvalErr = {
+  position: Position;
+  message: string;
+  stack: string;
+};
+
+type EvalValueOk = { Ok: string };
+type EvalValueErr = { Err: EvalErr[] };
+
+type EvalResponse = {
+  evaluate: {
+    warnings: any[];
+    value: EvalValueOk | EvalValueErr;
+    stack_frame_name: string;
+  };
+};
+
 function evalSnippet(src: string, snippetDiv: Element) {
   // TODO: why doesn't typescript know about the hidden field on Element?
   let snippetElement = snippetDiv as Element & { hidden: boolean };
   snippetElement.hidden = false;
 
+  snippetDiv.innerHTML = "...";
+
   fetch("/good.json")
     .then((response) => response.text())
     .then((responseText) => {
-      let evalResult = JSON.parse(responseText);
+      let evalResult = JSON.parse(responseText) as EvalResponse;
+      let evalValue = evalResult.evaluate.value;
 
-      snippetDiv.innerHTML = responseText;
-
-      console.log("Evaluating: " + src);
-      console.log(evalResult);
+      if ("Ok" in evalValue) {
+        snippetDiv.innerHTML = evalValue.Ok;
+      } else {
+        let errors = evalValue.Err;
+        snippetDiv.innerHTML = errors
+          .map((error) => {
+            return error.message;
+          })
+          .join("\n");
+      }
     });
 }
 

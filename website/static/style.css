@@ -270,6 +270,7 @@ header a {
 
 .snippet .snippet-output {
   background: #00000038;
+  padding: 12px 8px;
 }
 
 .code-title {

@@ -3,13 +3,23 @@ function evalSnippet(src, snippetDiv) {
     // TODO: why doesn't typescript know about the hidden field on Element?
     var snippetElement = snippetDiv;
     snippetElement.hidden = false;
-    fetch("/good.json")
+    snippetDiv.innerHTML = "...";
+    fetch("/bad.json")
         .then(function (response) { return response.text(); })
         .then(function (responseText) {
         var evalResult = JSON.parse(responseText);
-        snippetDiv.innerHTML = responseText;
-        console.log("Evaluating: " + src);
-        console.log(evalResult);
+        var evalValue = evalResult.evaluate.value;
+        if ("Ok" in evalValue) {
+            snippetDiv.innerHTML = evalValue.Ok;
+        }
+        else {
+            var errors = evalValue.Err;
+            snippetDiv.innerHTML = errors
+                .map(function (error) {
+                return error.message;
+            })
+                .join("\n");
+        }
     });
 }
 var _loop_1 = function (button) {

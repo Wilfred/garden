@@ -4,7 +4,7 @@ function evalSnippet(src, snippetDiv) {
     var snippetElement = snippetDiv;
     snippetElement.hidden = false;
     snippetDiv.innerHTML = "...";
-    fetch("/bad.json")
+    fetch("http://localhost:3000/good.json")
         .then(function (response) { return response.text(); })
         .then(function (responseText) {
         var evalResult = JSON.parse(responseText);

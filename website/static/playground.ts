@@ -32,7 +32,7 @@ function evalSnippet(src: string, snippetDiv: Element) {
 
   snippetDiv.innerHTML = "...";
 
-  fetch("/good.json")
+  fetch("http://localhost:3000/good.json")
     .then((response) => response.text())
     .then((responseText) => {
       let evalResult = JSON.parse(responseText) as EvalResponse;

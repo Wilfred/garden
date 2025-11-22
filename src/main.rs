@@ -211,6 +211,9 @@ enum CliCommands {
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },
+    /// Run a Garden snippet in a sandbox and return the output as
+    /// JSON. Used for the playground.
+    SandboxedPlaygroundRun { path: PathBuf },
 }
 
 fn main() {
@@ -462,6 +465,16 @@ fn main() {
                     std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
                 }
             }
+        }
+        CliCommands::SandboxedPlaygroundRun { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+
+            let mut id_gen = IdGenerator::default();
+            let (_vfs, vfs_path) = Vfs::singleton(abs_path.to_owned(), src.to_owned());
+            let (items, _errors) = parse_toplevel_items(&vfs_path, &src, &mut id_gen);
+
+            println!(r#"{{"toplevel_items":{}}}"#, items.len());
         }
     }
 }

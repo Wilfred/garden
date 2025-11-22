@@ -1,5 +1,6 @@
 target
 website/static/node_modules/
+playground/node_modules
 
 # Performance/profiling data.
 perf.data*

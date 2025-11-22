@@ -21,7 +21,6 @@ function evalSnippet(src, snippetDiv) {
 }
 document.querySelectorAll(".run-snippet").forEach(function (button) {
     var _a, _b;
-    console.log(button);
     var snippetDiv = (_a = button === null || button === void 0 ? void 0 : button.parentNode) === null || _a === void 0 ? void 0 : _a.parentNode;
     var codeNode = (_b = button === null || button === void 0 ? void 0 : button.parentNode) === null || _b === void 0 ? void 0 : _b.nextSibling;
     var src = (codeNode === null || codeNode === void 0 ? void 0 : codeNode.textContent) || "";

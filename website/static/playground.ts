@@ -50,8 +50,6 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
 }
 
 document.querySelectorAll(".run-snippet").forEach((button) => {
-  console.log(button);
-
   let snippetDiv = button?.parentNode?.parentNode;
   let codeNode = button?.parentNode?.nextSibling;
   let src = codeNode?.textContent || "";

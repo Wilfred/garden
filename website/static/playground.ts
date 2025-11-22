@@ -25,10 +25,8 @@ type EvalResponse = {
   };
 };
 
-function evalSnippet(src: string, snippetDiv: Element) {
-  // TODO: why doesn't typescript know about the hidden field on Element?
-  let snippetElement = snippetDiv as Element & { hidden: boolean };
-  snippetElement.hidden = false;
+function evalSnippet(src: string, snippetDiv: HTMLElement) {
+  snippetDiv.hidden = false;
 
   snippetDiv.innerHTML = "...";
 
@@ -51,7 +49,7 @@ function evalSnippet(src: string, snippetDiv: Element) {
     });
 }
 
-for (const button of document.querySelectorAll(".run-snippet")) {
+document.querySelectorAll(".run-snippet").forEach((button) => {
   console.log(button);
 
   let snippetDiv = button?.parentNode?.parentNode;
@@ -61,9 +59,9 @@ for (const button of document.querySelectorAll(".run-snippet")) {
   button.addEventListener("click", (_e) => {
     if (snippetDiv) {
       let outputDiv = snippetDiv.querySelector(".snippet-output");
-      if (outputDiv) {
+      if (outputDiv instanceof HTMLElement) {
         evalSnippet(src, outputDiv);
       }
     }
   });
-}
+});

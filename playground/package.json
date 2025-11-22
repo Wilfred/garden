@@ -1,0 +1,12 @@
+{
+  "name": "garden-playground-server",
+  "version": "1.0.0",
+  "description": "HTTP server backend for Garden playground",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

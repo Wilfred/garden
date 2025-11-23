@@ -12,10 +12,12 @@ use crate::eval::{eval_toplevel_items, EvalError, Session, StdoutMode};
 use crate::parser::ast::IdGenerator;
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
+use crate::values::Value;
 
 #[derive(Serialize)]
 struct PlaygroundResponse {
     error: Option<String>,
+    value: String,
 }
 
 /// Run a Garden program in sandboxed mode and print the result as JSON.
@@ -44,24 +46,38 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
     };
 
     let response = match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
-        Ok(_) => PlaygroundResponse { error: None },
+        Ok(summary) => {
+            let last_value = summary.values.last().cloned().unwrap_or_else(Value::unit);
+            let value_display = last_value.display(&env);
+
+            PlaygroundResponse {
+                error: None,
+                value: value_display,
+            }
+        }
         Err(EvalError::Exception(_, msg)) => PlaygroundResponse {
             error: Some(msg.as_string()),
+            value: String::new(),
         },
         Err(EvalError::AssertionFailed(_, msg)) => PlaygroundResponse {
             error: Some(msg.as_string()),
+            value: String::new(),
         },
         Err(EvalError::Interrupted) => PlaygroundResponse {
             error: Some("Interrupted".to_owned()),
+            value: String::new(),
         },
         Err(EvalError::ReachedTickLimit(_)) => PlaygroundResponse {
             error: Some("Reached the tick limit".to_owned()),
+            value: String::new(),
         },
         Err(EvalError::ReachedStackLimit(_)) => PlaygroundResponse {
             error: Some("Reached the stack limit".to_owned()),
+            value: String::new(),
         },
         Err(EvalError::ForbiddenInSandbox(_)) => PlaygroundResponse {
             error: Some("Tried to execute unsafe code in sandboxed mode".to_owned()),
+            value: String::new(),
         },
     };
 

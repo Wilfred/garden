@@ -5,11 +5,18 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Instant;
 
+use serde::Serialize;
+
 use crate::env::Env;
 use crate::eval::{eval_toplevel_items, EvalError, Session, StdoutMode};
 use crate::parser::ast::IdGenerator;
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
+
+#[derive(Serialize)]
+struct PlaygroundResponse {
+    error: Option<String>,
+}
 
 /// Run a Garden program in sandboxed mode and print the result as JSON.
 ///
@@ -36,37 +43,28 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
         pretty_print_json: true,
     };
 
-    match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
-        Ok(_) => {
-            println!(r#"{{"error":null}}"#);
-        }
-        Err(EvalError::Exception(_, msg)) => {
-            let error_msg = msg
-                .as_string()
-                .replace('\\', "\\\\")
-                .replace('"', "\\\"")
-                .replace('\n', "\\n");
-            println!(r#"{{"error":"{}"}}"#, error_msg);
-        }
-        Err(EvalError::AssertionFailed(_, msg)) => {
-            let error_msg = msg
-                .as_string()
-                .replace('\\', "\\\\")
-                .replace('"', "\\\"")
-                .replace('\n', "\\n");
-            println!(r#"{{"error":"{}"}}"#, error_msg);
-        }
-        Err(EvalError::Interrupted) => {
-            println!(r#"{{"error":"Interrupted"}}"#);
-        }
-        Err(EvalError::ReachedTickLimit(_)) => {
-            println!(r#"{{"error":"Reached the tick limit"}}"#);
-        }
-        Err(EvalError::ReachedStackLimit(_)) => {
-            println!(r#"{{"error":"Reached the stack limit"}}"#);
-        }
-        Err(EvalError::ForbiddenInSandbox(_)) => {
-            println!(r#"{{"error":"Tried to execute unsafe code in sandboxed mode"}}"#);
-        }
-    }
+    let response = match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
+        Ok(_) => PlaygroundResponse { error: None },
+        Err(EvalError::Exception(_, msg)) => PlaygroundResponse {
+            error: Some(msg.as_string()),
+        },
+        Err(EvalError::AssertionFailed(_, msg)) => PlaygroundResponse {
+            error: Some(msg.as_string()),
+        },
+        Err(EvalError::Interrupted) => PlaygroundResponse {
+            error: Some("Interrupted".to_owned()),
+        },
+        Err(EvalError::ReachedTickLimit(_)) => PlaygroundResponse {
+            error: Some("Reached the tick limit".to_owned()),
+        },
+        Err(EvalError::ReachedStackLimit(_)) => PlaygroundResponse {
+            error: Some("Reached the stack limit".to_owned()),
+        },
+        Err(EvalError::ForbiddenInSandbox(_)) => PlaygroundResponse {
+            error: Some("Tried to execute unsafe code in sandboxed mode".to_owned()),
+        },
+    };
+
+    let json = serde_json::to_string(&response).expect("Failed to serialize response");
+    println!("{}", json);
 }

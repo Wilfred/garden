@@ -30,7 +30,7 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
 
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::DoNotWrite,
+        stdout_mode: StdoutMode::WriteJson,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: true,

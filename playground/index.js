@@ -25,8 +25,8 @@ app.post('/run', (req, res) => {
     });
   }
 
-  // Create a temporary file path
-  const tmpFile = path.join(os.tmpdir(), `garden-tmp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  // Create a temporary file path with .gdn extension
+  const tmpFile = path.join(os.tmpdir(), `garden-tmp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.gdn`);
 
   // Write content to temp file
   fs.writeFile(tmpFile, src, (writeError) => {
@@ -37,8 +37,8 @@ app.post('/run', (req, res) => {
       });
     }
 
-    // Run ls -l on the temp file
-    exec(`ls -l "${tmpFile}"`, (execError, stdout, stderr) => {
+    // Run garden sandboxed-playground-run on the temp file
+    exec(`garden sandboxed-playground-run "${tmpFile}"`, (execError, stdout, stderr) => {
       // Delete the temp file
       fs.unlink(tmpFile, (unlinkError) => {
         if (unlinkError) {
@@ -49,15 +49,33 @@ app.post('/run', (req, res) => {
       if (execError) {
         return res.json({
           success: false,
-          error: execError.message,
+          error: `Execution failed: ${execError.message}`,
           stderr: stderr
         });
       }
 
-      res.json({
-        success: true,
-        output: stdout.trim()
-      });
+      try {
+        // Parse the JSON response from Garden
+        const result = JSON.parse(stdout.trim());
+
+        if (result.error) {
+          return res.json({
+            success: false,
+            error: result.error
+          });
+        }
+
+        res.json({
+          success: true,
+          value: result.value
+        });
+      } catch (parseError) {
+        return res.json({
+          success: false,
+          error: `Failed to parse Garden output: ${parseError.message}`,
+          rawOutput: stdout
+        });
+      }
     });
   });
 });

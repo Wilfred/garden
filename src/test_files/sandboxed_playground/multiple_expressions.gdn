@@ -1,0 +1,6 @@
+let x: Int = 5
+x * 2
+
+// args: sandboxed-playground-run
+// expected stdout:
+// {"error":null,"value":"10"}

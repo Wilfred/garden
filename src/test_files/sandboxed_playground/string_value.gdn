@@ -1,0 +1,5 @@
+"Hello, Garden!"
+
+// args: sandboxed-playground-run
+// expected stdout:
+// {"error":null,"value":"\"Hello, Garden!\""}

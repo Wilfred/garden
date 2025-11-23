@@ -794,4 +794,14 @@ mod tests {
             .arg("54");
         cmd.assert().success();
     }
+
+    #[test]
+    fn test_sandboxed_playground() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("sandboxed-playground-run")
+            .arg("src/test_files/sandboxed_playground/simple_value.gdn");
+        cmd.assert().success().stdout("{\"error\":null,\"value\":\"3\"}\n");
+    }
 }

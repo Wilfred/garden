@@ -1,0 +1,5 @@
+xyz
+
+// args: sandboxed-playground-run
+// expected stdout:
+// {"error":"No such variable `xyz`.","value":""}

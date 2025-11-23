@@ -1,0 +1,5 @@
+assert(1 == 2)
+
+// args: sandboxed-playground-run
+// expected stdout:
+// {"error":"Expected `2` but got `1`.","value":""}

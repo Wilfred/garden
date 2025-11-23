@@ -1,0 +1,9 @@
+fun double(x: Int): Int {
+  x * 2
+}
+
+double(21)
+
+// args: sandboxed-playground-run
+// expected stdout:
+// {"error":null,"value":"42"}

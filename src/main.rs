@@ -471,10 +471,52 @@ fn main() {
             let src = read_utf8_or_die(&abs_path);
 
             let mut id_gen = IdGenerator::default();
-            let (_vfs, vfs_path) = Vfs::singleton(abs_path.to_owned(), src.to_owned());
+            let (vfs, vfs_path) = Vfs::singleton(abs_path.to_owned(), src.to_owned());
             let (items, _errors) = parse_toplevel_items(&vfs_path, &src, &mut id_gen);
 
-            println!(r#"{{"toplevel_items":{}}}"#, items.len());
+            let mut env = Env::new(id_gen, vfs);
+
+            let session = Session {
+                interrupted: Arc::clone(&interrupted),
+                stdout_mode: StdoutMode::DoNotWrite,
+                start_time: Instant::now(),
+                trace_exprs: false,
+                pretty_print_json: true,
+            };
+
+            match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
+                Ok(_) => {
+                    println!(r#"{{"error":null}}"#);
+                }
+                Err(EvalError::Exception(_, msg)) => {
+                    let error_msg = msg
+                        .as_string()
+                        .replace('\\', "\\\\")
+                        .replace('"', "\\\"")
+                        .replace('\n', "\\n");
+                    println!(r#"{{"error":"{}"}}"#, error_msg);
+                }
+                Err(EvalError::AssertionFailed(_, msg)) => {
+                    let error_msg = msg
+                        .as_string()
+                        .replace('\\', "\\\\")
+                        .replace('"', "\\\"")
+                        .replace('\n', "\\n");
+                    println!(r#"{{"error":"{}"}}"#, error_msg);
+                }
+                Err(EvalError::Interrupted) => {
+                    println!(r#"{{"error":"Interrupted"}}"#);
+                }
+                Err(EvalError::ReachedTickLimit(_)) => {
+                    println!(r#"{{"error":"Reached the tick limit"}}"#);
+                }
+                Err(EvalError::ReachedStackLimit(_)) => {
+                    println!(r#"{{"error":"Reached the stack limit"}}"#);
+                }
+                Err(EvalError::ForbiddenInSandbox(_)) => {
+                    println!(r#"{{"error":"Tried to execute unsafe code in sandboxed mode"}}"#);
+                }
+            }
         }
     }
 }

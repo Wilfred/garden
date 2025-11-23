@@ -58,6 +58,7 @@ mod parser;
 mod pos_to_id;
 mod prompt;
 mod rename;
+mod sandboxed_playground;
 mod syntax_check;
 mod syntax_highlighter;
 mod test_runner;
@@ -469,54 +470,7 @@ fn main() {
         CliCommands::SandboxedPlaygroundRun { path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
-
-            let mut id_gen = IdGenerator::default();
-            let (vfs, vfs_path) = Vfs::singleton(abs_path.to_owned(), src.to_owned());
-            let (items, _errors) = parse_toplevel_items(&vfs_path, &src, &mut id_gen);
-
-            let mut env = Env::new(id_gen, vfs);
-
-            let session = Session {
-                interrupted: Arc::clone(&interrupted),
-                stdout_mode: StdoutMode::DoNotWrite,
-                start_time: Instant::now(),
-                trace_exprs: false,
-                pretty_print_json: true,
-            };
-
-            match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
-                Ok(_) => {
-                    println!(r#"{{"error":null}}"#);
-                }
-                Err(EvalError::Exception(_, msg)) => {
-                    let error_msg = msg
-                        .as_string()
-                        .replace('\\', "\\\\")
-                        .replace('"', "\\\"")
-                        .replace('\n', "\\n");
-                    println!(r#"{{"error":"{}"}}"#, error_msg);
-                }
-                Err(EvalError::AssertionFailed(_, msg)) => {
-                    let error_msg = msg
-                        .as_string()
-                        .replace('\\', "\\\\")
-                        .replace('"', "\\\"")
-                        .replace('\n', "\\n");
-                    println!(r#"{{"error":"{}"}}"#, error_msg);
-                }
-                Err(EvalError::Interrupted) => {
-                    println!(r#"{{"error":"Interrupted"}}"#);
-                }
-                Err(EvalError::ReachedTickLimit(_)) => {
-                    println!(r#"{{"error":"Reached the tick limit"}}"#);
-                }
-                Err(EvalError::ReachedStackLimit(_)) => {
-                    println!(r#"{{"error":"Reached the stack limit"}}"#);
-                }
-                Err(EvalError::ForbiddenInSandbox(_)) => {
-                    println!(r#"{{"error":"Tried to execute unsafe code in sandboxed mode"}}"#);
-                }
-            }
+            sandboxed_playground::run_sandboxed_playground(&src, &abs_path, interrupted);
         }
     }
 }

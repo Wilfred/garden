@@ -235,10 +235,16 @@ fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {
     None
 }
 
+/// How output from print() is handled.
 #[derive(Debug)]
 pub(crate) enum StdoutMode {
+    /// Write the string to stdout unmodified.
     WriteDirectly,
+    /// Write the string to stdout in a JSON format, so we can can
+    /// consume stdout in a REPL session without getting confused.
     WriteJson,
+    /// Don't write anything to stdout when print() is called, treat
+    /// it as a no-op.
     DoNotWrite,
 }
 
@@ -250,6 +256,9 @@ pub(crate) struct Session {
     pub(crate) stdout_mode: StdoutMode,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
+    /// Whether JSON should be pretty-printed. This applies to any
+    /// time the interpreter writes out JSON, both in REPL session
+    /// output as well as stdout JSON output used in the playground.
     pub(crate) pretty_print_json: bool,
 }
 

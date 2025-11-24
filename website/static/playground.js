@@ -1,22 +1,54 @@
 function evalSnippet(src, snippetDiv) {
     snippetDiv.hidden = false;
     snippetDiv.innerHTML = "...";
-    fetch("http://localhost:3000/good.json")
-        .then(function (response) { return response.text(); })
-        .then(function (responseText) {
-        var evalResult = JSON.parse(responseText);
-        var evalValue = evalResult.evaluate.value;
-        if ("Ok" in evalValue) {
-            snippetDiv.innerHTML = evalValue.Ok;
+    fetch("http://localhost:3000/run", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ src: src }),
+    })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+        if (!data.success) {
+            snippetDiv.innerHTML = "Error: ".concat(data.error || "Unknown error");
+            return;
         }
-        else {
-            var errors = evalValue.Err;
-            snippetDiv.innerHTML = errors
-                .map(function (error) {
-                return error.message;
-            })
-                .join("\n");
+        if (!data.results || data.results.length === 0) {
+            snippetDiv.innerHTML = "No output";
+            return;
         }
+        // Iterate over all results
+        var stdoutParts = [];
+        var finalValue = "";
+        var hasError = false;
+        for (var _i = 0, _a = data.results; _i < _a.length; _i++) {
+            var item = _a[_i];
+            // Check if this is a stdout object
+            if ("kind" in item && item.kind && "printed" in item.kind) {
+                var stdoutItem = item;
+                stdoutParts.push(stdoutItem.kind.printed.s);
+            }
+            // Check if this is a result object
+            else if ("error" in item || "value" in item) {
+                var result = item;
+                if (result.error) {
+                    snippetDiv.innerHTML = "Error: ".concat(result.error);
+                    hasError = true;
+                    break;
+                }
+                if (result.value) {
+                    finalValue = result.value;
+                }
+            }
+        }
+        if (!hasError) {
+            var output = stdoutParts.join("") + "\n" + finalValue;
+            snippetDiv.innerHTML = output || "No output";
+        }
+    })
+        .catch(function (error) {
+        snippetDiv.innerHTML = "Fetch error: ".concat(error.message);
     });
 }
 document.querySelectorAll(".run-snippet").forEach(function (button) {

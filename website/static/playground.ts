@@ -1,28 +1,22 @@
-type Position = {
-  start_offset: number;
-  end_offset: number;
-  line_number: number;
-  end_line_number: number;
-  column: number;
-  end_column: number;
-  path: String;
-};
-
-type EvalErr = {
-  position: Position;
-  message: string;
-  stack: string;
-};
-
-type EvalValueOk = { Ok: string };
-type EvalValueErr = { Err: EvalErr[] };
-
-type EvalResponse = {
-  evaluate: {
-    warnings: any[];
-    value: EvalValueOk | EvalValueErr;
-    stack_frame_name: string;
+type StdoutOutput = {
+  kind: {
+    printed: {
+      s: string;
+    };
   };
+  position: any;
+};
+
+type PlaygroundResult = {
+  error: string | null;
+  value: string | null;
+};
+
+type PlaygroundResponse = {
+  success: boolean;
+  results?: (StdoutOutput | PlaygroundResult)[];
+  error?: string;
+  rawOutput?: string;
 };
 
 function evalSnippet(src: string, snippetDiv: HTMLElement) {
@@ -30,22 +24,59 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
 
   snippetDiv.innerHTML = "...";
 
-  fetch("http://localhost:3000/good.json")
-    .then((response) => response.text())
-    .then((responseText) => {
-      let evalResult = JSON.parse(responseText) as EvalResponse;
-      let evalValue = evalResult.evaluate.value;
-
-      if ("Ok" in evalValue) {
-        snippetDiv.innerHTML = evalValue.Ok;
-      } else {
-        let errors = evalValue.Err;
-        snippetDiv.innerHTML = errors
-          .map((error) => {
-            return error.message;
-          })
-          .join("\n");
+  fetch("http://localhost:3000/run", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ src }),
+  })
+    .then((response) => response.json())
+    .then((data: PlaygroundResponse) => {
+      if (!data.success) {
+        snippetDiv.innerHTML = `Error: ${data.error || "Unknown error"}`;
+        return;
       }
+
+      if (!data.results || data.results.length === 0) {
+        snippetDiv.innerHTML = "No output";
+        return;
+      }
+
+      // Iterate over all results
+      const stdoutParts: string[] = [];
+      let finalValue = "";
+      let hasError = false;
+
+      for (const item of data.results) {
+        // Check if this is a stdout object
+        if ("kind" in item && item.kind && "printed" in item.kind) {
+          const stdoutItem = item as StdoutOutput;
+          stdoutParts.push(stdoutItem.kind.printed.s);
+        }
+        // Check if this is a result object
+        else if ("error" in item || "value" in item) {
+          const result = item as PlaygroundResult;
+
+          if (result.error) {
+            snippetDiv.innerHTML = `Error: ${result.error}`;
+            hasError = true;
+            break;
+          }
+
+          if (result.value) {
+            finalValue = result.value;
+          }
+        }
+      }
+
+      if (!hasError) {
+        let output = stdoutParts.join("") + "x\nx" + finalValue;
+        snippetDiv.innerHTML = output || "No output";
+      }
+    })
+    .catch((error) => {
+      snippetDiv.innerHTML = `Fetch error: ${error.message}`;
     });
 }
 

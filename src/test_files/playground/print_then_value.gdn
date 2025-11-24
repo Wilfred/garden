@@ -1,0 +1,9 @@
+let x = 1
+println("hello")
+x + 3
+
+// args: sandboxed-playground-run
+// expected stdout:
+// {"kind":{"printed":{"s":"hello\n"}},"position":null}
+// {"error":null,"value":"4"}
+

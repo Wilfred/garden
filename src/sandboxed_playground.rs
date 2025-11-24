@@ -42,7 +42,7 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
         stdout_mode: StdoutMode::WriteJson,
         start_time: Instant::now(),
         trace_exprs: false,
-        pretty_print_json: true,
+        pretty_print_json: false,
     };
 
     let response = match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {

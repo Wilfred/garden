@@ -55,19 +55,13 @@ app.post('/run', (req, res) => {
       }
 
       try {
-        // Parse the JSON response from Garden
-        const result = JSON.parse(stdout.trim());
-
-        if (result.error) {
-          return res.json({
-            success: false,
-            error: result.error
-          });
-        }
+        // Parse JSON lines from Garden output
+        const lines = stdout.trim().split('\n').filter(line => line.length > 0);
+        const results = lines.map(line => JSON.parse(line));
 
         res.json({
           success: true,
-          value: result.value
+          results: results
         });
       } catch (parseError) {
         return res.json({

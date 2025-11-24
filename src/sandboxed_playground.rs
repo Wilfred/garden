@@ -17,7 +17,7 @@ use crate::values::Value;
 #[derive(Serialize)]
 struct PlaygroundResponse {
     error: Option<String>,
-    value: String,
+    value: Option<String>,
 }
 
 /// Run a Garden program in sandboxed mode and print the result as JSON.
@@ -52,32 +52,32 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
 
             PlaygroundResponse {
                 error: None,
-                value: value_display,
+                value: Some(value_display),
             }
         }
         Err(EvalError::Exception(_, msg)) => PlaygroundResponse {
             error: Some(msg.as_string()),
-            value: String::new(),
+            value: None,
         },
         Err(EvalError::AssertionFailed(_, msg)) => PlaygroundResponse {
             error: Some(msg.as_string()),
-            value: String::new(),
+            value: None,
         },
         Err(EvalError::Interrupted) => PlaygroundResponse {
             error: Some("Interrupted".to_owned()),
-            value: String::new(),
+            value: None,
         },
         Err(EvalError::ReachedTickLimit(_)) => PlaygroundResponse {
             error: Some("Reached the tick limit".to_owned()),
-            value: String::new(),
+            value: None,
         },
         Err(EvalError::ReachedStackLimit(_)) => PlaygroundResponse {
             error: Some("Reached the stack limit".to_owned()),
-            value: String::new(),
+            value: None,
         },
         Err(EvalError::ForbiddenInSandbox(_)) => PlaygroundResponse {
             error: Some("Tried to execute unsafe code in sandboxed mode".to_owned()),
-            value: String::new(),
+            value: None,
         },
     };
 

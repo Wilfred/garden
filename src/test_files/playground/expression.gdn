@@ -1,0 +1,5 @@
+1 + 2
+
+// args: sandboxed-playground-run
+// expected stdout: {"error":null,"value":"3"}
+

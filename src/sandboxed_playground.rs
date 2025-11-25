@@ -37,6 +37,11 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
     let frame = env.current_frame_mut();
     frame.namespace = ns;
 
+    // Enable sandbox restrictions and resource limits.
+    env.tick_limit = Some(100_000);
+    env.stack_limit = Some(1_000);
+    env.enforce_sandbox = true;
+
     let session = Session {
         interrupted,
         stdout_mode: StdoutMode::WriteJson,

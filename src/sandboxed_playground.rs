@@ -8,7 +8,7 @@ use std::time::Instant;
 use serde::Serialize;
 
 use crate::env::Env;
-use crate::eval::{eval_toplevel_items, EvalError, Session, StdoutMode};
+use crate::eval::{eval_toplevel_items, EvalError, Session, StdoutJsonFormat, StdoutMode};
 use crate::parser::ast::IdGenerator;
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
@@ -44,7 +44,7 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
 
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::WriteJson,
+        stdout_mode: StdoutMode::WriteJson(StdoutJsonFormat::Playground),
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,

@@ -19,7 +19,7 @@ use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to,
     load_toplevel_items_with_stubs, push_test_stackframe, EvalError, EvalUpToErr, ExpressionState,
-    Session, StdoutMode,
+    Session, StdoutJsonFormat, StdoutMode,
 };
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position;
@@ -865,7 +865,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let pretty_print_json = false;
     let session = Session {
         interrupted: Arc::clone(&interrupted),
-        stdout_mode: StdoutMode::WriteJson,
+        stdout_mode: StdoutMode::WriteJson(StdoutJsonFormat::ReplSession),
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json,

@@ -235,14 +235,21 @@ fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {
     None
 }
 
+#[derive(Debug)]
+pub(crate) enum StdoutJsonFormat {
+    ReplSession,
+    Playground,
+}
+
 /// How output from print() is handled.
 #[derive(Debug)]
 pub(crate) enum StdoutMode {
     /// Write the string to stdout unmodified.
     WriteDirectly,
     /// Write the string to stdout in a JSON format, so we can can
-    /// consume stdout in a REPL session without getting confused.
-    WriteJson,
+    /// consume stdout in a REPL session or the playground backend
+    /// without getting confused.
+    WriteJson(StdoutJsonFormat),
     /// Don't write anything to stdout when print() is called, treat
     /// it as a no-op.
     DoNotWrite,
@@ -2421,16 +2428,21 @@ fn eval_builtin_call(
             saved_values.push(receiver_value.clone());
 
             let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
-            match session.stdout_mode {
+            match &session.stdout_mode {
                 StdoutMode::WriteDirectly => {
                     print!("{s}");
                 }
-                StdoutMode::WriteJson => {
+                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {
                         kind: ResponseKind::Printed { s: s.clone() },
                         position: None,
                         id: None,
                     };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                    let response = ResponseKind::Printed { s: s.clone() };
+                    // needs a test
                     print_as_json(&response, session.pretty_print_json);
                 }
                 StdoutMode::DoNotWrite => {}
@@ -2463,13 +2475,19 @@ fn eval_builtin_call(
                 StdoutMode::WriteDirectly => {
                     println!("{s}");
                 }
-                StdoutMode::WriteJson => {
+                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {
                         kind: ResponseKind::Printed {
                             s: format!("{s}\n"),
                         },
                         position: None,
                         id: None,
+                    };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                    let response = ResponseKind::Printed {
+                        s: format!("{s}\n"),
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }

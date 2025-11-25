@@ -1,10 +1,7 @@
 type StdoutOutput = {
-  kind: {
-    printed: {
-      s: string;
-    };
+  printed: {
+    s: string;
   };
-  position: any;
 };
 
 type PlaygroundResult = {
@@ -50,9 +47,9 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
 
       for (const item of data.results) {
         // Check if this is a stdout object
-        if ("kind" in item && item.kind && "printed" in item.kind) {
+        if ("printed" in item) {
           const stdoutItem = item as StdoutOutput;
-          stdoutParts.push(stdoutItem.kind.printed.s);
+          stdoutParts.push(stdoutItem.printed.s);
         }
         // Check if this is a result object
         else if ("error" in item || "value" in item) {

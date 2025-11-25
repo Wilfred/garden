@@ -25,9 +25,9 @@ function evalSnippet(src, snippetDiv) {
         for (var _i = 0, _a = data.results; _i < _a.length; _i++) {
             var item = _a[_i];
             // Check if this is a stdout object
-            if ("kind" in item && item.kind && "printed" in item.kind) {
+            if ("printed" in item) {
                 var stdoutItem = item;
-                stdoutParts.push(stdoutItem.kind.printed.s);
+                stdoutParts.push(stdoutItem.printed.s);
             }
             // Check if this is a result object
             else if ("error" in item || "value" in item) {
@@ -43,7 +43,7 @@ function evalSnippet(src, snippetDiv) {
             }
         }
         if (!hasError) {
-            var output = stdoutParts.join("") + "\n" + finalValue;
+            var output = stdoutParts.join("") + "x\nx" + finalValue;
             snippetDiv.innerHTML = output || "No output";
         }
     })

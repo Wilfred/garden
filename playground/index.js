@@ -37,8 +37,7 @@ app.post('/run', (req, res) => {
       });
     }
 
-    // Run garden sandboxed-playground-run on the temp file
-    exec(`garden sandboxed-playground-run "${tmpFile}"`, (execError, stdout, stderr) => {
+    exec(`garden playground-run "${tmpFile}"`, (execError, stdout, stderr) => {
       // Delete the temp file
       fs.unlink(tmpFile, (unlinkError) => {
         if (unlinkError) {

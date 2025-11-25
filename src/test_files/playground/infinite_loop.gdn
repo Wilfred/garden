@@ -1,4 +1,5 @@
 while True {}
 
-// args: sandboxed-playground-run
+// args: playground-run
 // expected stdout: {"error":"Reached the tick limit","value":null}
+

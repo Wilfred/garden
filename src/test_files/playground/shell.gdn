@@ -1,5 +1,5 @@
 dbg(shell("ls", ["-l", "/"]))
 
-// args: sandboxed-playground-run
+// args: playground-run
 // expected stdout: {"error":"Tried to execute unsafe code in sandboxed mode","value":null}
 

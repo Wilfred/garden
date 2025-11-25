@@ -2,6 +2,6 @@ fun foo() { foo() }
 
 foo()
 
-// args: sandboxed-playground-run
+// args: playground-run
 // expected stdout: {"error":"Reached the stack limit","value":null}
 

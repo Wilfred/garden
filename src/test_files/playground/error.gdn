@@ -1,5 +1,5 @@
 no_such_var
 
-// args: sandboxed-playground-run
+// args: playground-run
 // expected stdout: {"error":"No such variable `no_such_var`.","value":null}
 

@@ -213,8 +213,8 @@ enum CliCommands {
     /// AST.
     DumpAst { path: PathBuf },
     /// Run a Garden snippet in a sandbox and return the output as
-    /// JSON. Used for the playground.
-    SandboxedPlaygroundRun { path: PathBuf },
+    /// JSON.
+    PlaygroundRun { path: PathBuf },
 }
 
 fn main() {
@@ -467,7 +467,7 @@ fn main() {
                 }
             }
         }
-        CliCommands::SandboxedPlaygroundRun { path } => {
+        CliCommands::PlaygroundRun { path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
             sandboxed_playground::run_sandboxed_playground(&src, &abs_path, interrupted);

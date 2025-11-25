@@ -451,7 +451,10 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
     }
 }
 
-pub(crate) fn print_as_json(res: &Response, pretty_print_json: bool) {
+pub(crate) fn print_as_json<T>(res: &T, pretty_print_json: bool)
+where
+    T: ?Sized + Serialize,
+{
     let serialized = if pretty_print_json {
         serde_json::to_string_pretty(&res)
     } else {

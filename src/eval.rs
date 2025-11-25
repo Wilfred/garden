@@ -251,7 +251,7 @@ pub(crate) enum StdoutMode {
     /// without getting confused.
     WriteJson(StdoutJsonFormat),
     /// Don't write anything to stdout when print() is called, treat
-    /// it as a no-op.
+    /// it as a no-op. This is used when running tests in a sandbox.
     DoNotWrite,
 }
 

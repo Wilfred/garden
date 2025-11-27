@@ -278,16 +278,17 @@ header a {
 
 .code-title {
   padding: 4px 8px;
-  position: absolute;
-  top: -24px;
-  right: 12px;
+  display: block;
 
   background: var(--cream);
-  border: 3px solid #00000030;
-  border-radius: 5px;
+  border-bottom: 3px solid #00000030;
 
-  font-family: "Lora", serif;
   font-weight: initial;
+}
+
+.code-title button {
+  position: absolute;
+  right: 10px;
 }
 
 footer {

@@ -1,5 +1,5 @@
 ```metadata
-published: true
+published: false
 date: 2025-11-21
 title: Devlog 2: The Importance of Sandboxing
 ```

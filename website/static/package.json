@@ -8,6 +8,7 @@
   "main": "playground.js",
   "scripts": {
     "build": "tsc playground.ts",
+    "watch": "tsc --watch playground.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

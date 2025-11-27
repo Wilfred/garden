@@ -256,6 +256,7 @@ header a {
 
 #playground-wrapper textarea {
   margin: 10px;
+  width: calc(100% - 30px);
 }
 
 #playground-output {

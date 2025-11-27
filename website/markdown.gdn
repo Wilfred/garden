@@ -208,18 +208,17 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
 }
 
 fun render_markdown_code(snippet: Snippet): String {
-  let inner = if snippet.labels.is_empty() || snippet.labels.contains("garden") {
-    render_markdown_garden_code(snippet)
+  let (inner, buttons) = if snippet.labels.is_empty() || snippet.labels.contains("garden") {
+    (render_markdown_garden_code(snippet), "<button class=\"run-snippet\">Run</button>")
   } else {
-    "<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>"
+    ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "")
   }
 
   let header = match snippet.title {
     Some(title) => {
-      "<span class=\"code-title\">" ^ title ^ " <button class=\"run-snippet\">Run</button></span>"
+      "<span class=\"code-title\">" ^ title ^ " " ^ buttons ^ "</span>"
     }
-    None => "<span class=\"code-title\"><button class=\"run-snippet\">Run</button></span>"
-
+    None => "<span class=\"code-title\">" ^ buttons ^ "</span>"
   }
 
   "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre><div class=\"snippet-output\" hidden></div></div>"

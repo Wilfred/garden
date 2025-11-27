@@ -43,7 +43,7 @@ function evalSnippet(src, snippetDiv) {
             }
         }
         if (!hasError) {
-            var output = stdoutParts.join("") + "x\nx" + finalValue;
+            var output = stdoutParts.join("") + "\n" + finalValue;
             snippetDiv.innerHTML = output || "No output";
         }
     })
@@ -65,3 +65,15 @@ document.querySelectorAll(".run-snippet").forEach(function (button) {
         }
     });
 });
+var playgroundRunButton = document.querySelector("#playground-run");
+var playgroundEditor = document.querySelector("#playground-editor");
+var playgroundOutput = document.querySelector("#playground-output");
+if (playgroundRunButton &&
+    playgroundOutput &&
+    playgroundOutput instanceof HTMLElement &&
+    playgroundEditor &&
+    playgroundEditor instanceof HTMLTextAreaElement) {
+    playgroundRunButton.addEventListener("click", function () {
+        evalSnippet(playgroundEditor.value, playgroundOutput);
+    });
+}

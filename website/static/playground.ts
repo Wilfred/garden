@@ -68,7 +68,7 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
       }
 
       if (!hasError) {
-        let output = stdoutParts.join("") + "x\nx" + finalValue;
+        let output = stdoutParts.join("") + "\n" + finalValue;
         snippetDiv.innerHTML = output || "No output";
       }
     })
@@ -91,3 +91,18 @@ document.querySelectorAll(".run-snippet").forEach((button) => {
     }
   });
 });
+
+let playgroundRunButton = document.querySelector("#playground-run");
+let playgroundEditor = document.querySelector("#playground-editor");
+let playgroundOutput = document.querySelector("#playground-output");
+if (
+  playgroundRunButton &&
+  playgroundOutput &&
+  playgroundOutput instanceof HTMLElement &&
+  playgroundEditor &&
+  playgroundEditor instanceof HTMLTextAreaElement
+) {
+  playgroundRunButton.addEventListener("click", () => {
+    evalSnippet(playgroundEditor.value, playgroundOutput);
+  });
+}

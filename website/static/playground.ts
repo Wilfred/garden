@@ -68,8 +68,13 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
       }
 
       if (!hasError) {
-        let output = stdoutParts.join("") + "\n" + finalValue;
-        snippetDiv.innerHTML = output || "No output";
+        let output = "";
+        if (stdoutParts.length > 0) {
+          output = stdoutParts.join("") + "\n";
+        }
+        output += finalValue;
+
+        snippetDiv.innerHTML = output;
       }
     })
     .catch((error) => {

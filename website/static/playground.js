@@ -43,8 +43,12 @@ function evalSnippet(src, snippetDiv) {
             }
         }
         if (!hasError) {
-            var output = stdoutParts.join("") + "\n" + finalValue;
-            snippetDiv.innerHTML = output || "No output";
+            var output = "";
+            if (stdoutParts.length > 0) {
+                output = stdoutParts.join("") + "\n";
+            }
+            output += finalValue;
+            snippetDiv.innerHTML = output;
         }
     })
         .catch(function (error) {

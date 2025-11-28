@@ -25,7 +25,7 @@
     <div class="container"><h1><code>String::strip_prefix()</code></h1>
 <p>Returns this string without the prefix specified. If this string
 does not start with the prefix, return the string unchanged.</p>
-<div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code><span class="string">"foo"</span>.strip_prefix(<span class="string">"f"</span>) <span class="comment">//-&gt; "oo"</span>
+<div class="snippet"><span class="code-title">Example <button class="run-snippet">Run</button></span><pre><code><span class="string">"foo"</span>.strip_prefix(<span class="string">"f"</span>) <span class="comment">//-&gt; "oo"</span>
 <span class="string">"bar"</span>.strip_prefix(<span class="string">"f"</span>) <span class="comment">//-&gt; "bar"</span>
 <span class="string">"ffoo"</span>.strip_prefix(<span class="string">"f"</span>) <span class="comment">//-&gt; "foo"</span></code></pre><div class="snippet-output" hidden></div></div>
 <div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> strip_prefix(this: <a class="type" href="/type:String.html">String</a>, prefix: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:String.html">String</a> {

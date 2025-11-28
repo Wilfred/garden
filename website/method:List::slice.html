@@ -26,7 +26,7 @@
 <p>Return a new list consisting of the items from index i (inclusive)
 to index j (exclusive). If <code>j</code> is negative, count backwards from
 the end.</p>
-<div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code>[10, 11, 12].slice(0, 2) <span class="comment">//-&gt; [10, 11]</span>
+<div class="snippet"><span class="code-title">Example <button class="run-snippet">Run</button></span><pre><code>[10, 11, 12].slice(0, 2) <span class="comment">//-&gt; [10, 11]</span>
 [10, 11, 12].slice(1, -1) <span class="comment">//-&gt; [11]</span></code></pre><div class="snippet-output" hidden></div></div>
 <div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> slice&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;, i: <a class="type" href="/type:Int.html">Int</a>, j: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; {
   <a class="keyword" href="/keyword:if.html">if</a> (j <a class="operator" href="/operator:<.html">&lt;</a> 0) {

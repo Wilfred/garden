@@ -24,7 +24,7 @@
 
     <div class="container"><h1><code>Path::set_extension()</code></h1>
 <p>Set the extension of the filename to <code>new_ext</code>.</p>
-<div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
+<div class="snippet"><span class="code-title">Example <button class="run-snippet">Run</button></span><pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
 <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
 <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt.gz"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span></code></pre><div class="snippet-output" hidden></div></div>
 <div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> set_extension(this: <a class="type" href="/type:Path.html">Path</a>, new_ext: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Path.html">Path</a> {

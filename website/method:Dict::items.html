@@ -25,7 +25,7 @@
     <div class="container"><h1><code>Dict::items()</code></h1>
 <p>Return a list of all the items in this dict. Items are returned in
 alphabetical order.</p>
-<div class="snippet"><span class="code-title">Examples <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:let.html">let</a> scores <a class="operator" href="/operator:=.html">=</a> <a class="type" href="/type:Dict.html">Dict</a>[<span class="string">"Mario" </span>=&gt; 10, <span class="string">"Luigi" </span>=&gt; 8]
+<div class="snippet"><span class="code-title">Example <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:let.html">let</a> scores <a class="operator" href="/operator:=.html">=</a> <a class="type" href="/type:Dict.html">Dict</a>[<span class="string">"Mario" </span>=&gt; 10, <span class="string">"Luigi" </span>=&gt; 8]
 scores.items() <span class="comment">//-&gt; [("Luigi", 8), ("Mario", 10)]</span></code></pre><div class="snippet-output" hidden></div></div>
 <div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> items&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Dict.html">Dict</a>&lt;<span class="type">T</span>&gt;): <a class="type" href="/type:List.html">List</a>&lt;(<a class="type" href="/type:String.html">String</a>, <span class="type">T</span>)&gt; {
   __BUILTIN_IMPLEMENTATION

@@ -824,6 +824,8 @@ public fun throw(message: String): NoValue {
 
 // Write a string to stdout.
 //
+// See also `println`.
+//
 // ```
 // print("hello world\n")
 // ```

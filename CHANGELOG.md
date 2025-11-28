@@ -34,6 +34,8 @@ documented behaviour on negative values.
 
 `__garden.gdn` is now `__reflect.gdn`.
 
+Added `min()` and `max()`.
+
 Added `Dict::get()`, `Dict::set()` and `Dict::items()`.
 
 Added `__reflect::operators()`.

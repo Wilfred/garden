@@ -1073,3 +1073,38 @@ public method set<T>(this: Dict<T>, key: String, Value: T): Dict<T> {
 public method items<T>(this: Dict<T>): List<(String, T)> {
   __BUILTIN_IMPLEMENTATION
 }
+
+// Return the larger value of these two integers.
+// 
+// ```
+// max(1, 2) //-> 2
+// ```
+public fun max(x: Int, y: Int): Int {
+  if x >= y {
+    x
+  } else {
+    y
+  }
+}
+
+test max {
+  assert(max(1, 2) == 2)
+}
+
+// Return the smaller value of these two integers.
+// 
+// ```
+// min(1, 2) //-> 1
+// ```
+public fun min(x: Int, y: Int): Int {
+  if x <= y {
+    x
+  } else {
+    y
+  }
+}
+
+test min {
+  assert(min(1, 2) == 1)
+}
+

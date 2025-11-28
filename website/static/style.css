@@ -255,7 +255,10 @@ header a {
 }
 
 #playground-wrapper textarea {
+  font-size: 18px;
+
   margin: 10px;
+  margin-top: 40px;
   width: calc(100% - 30px);
 }
 
@@ -270,6 +273,7 @@ header a {
 #playground-header button {
   position: absolute;
   right: 10px;
+  top: 10px;
 }
 
 #playground-output {

@@ -27,10 +27,10 @@
 failed, with <code>Err(...)</code>.</p>
 <p>For example, reading a file might return <code>Ok("contents of file")</code>
 or <code>Err("file did not exist")</code>.</p>
-<div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:enum.html">enum</a> <a class="type" href="/type:Result.html">Result</a>&lt;<span class="type">T</span>, <span class="type">E</span>&gt; {
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:enum.html">enum</a> <a class="type" href="/type:Result.html">Result</a>&lt;<span class="type">T</span>, <span class="type">E</span>&gt; {
   <span class="type">Ok</span>(<span class="type">T</span>),
   <span class="type">Err</span>(<span class="type">E</span>),
-}</code></pre><div class="snippet-output" hidden></div></div>
+}</code></pre><div class="snippet-output"><button class="run-snippet">Run</button></div></div>
 <h2>Methods</h2>
 <ul>
 <li><a href="/method:Result::or_throw.html"><code>or_throw()</code></a></li>

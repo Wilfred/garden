@@ -25,14 +25,14 @@
     <div class="container"><h1><code>Path::extension()</code></h1>
 <p>The extension of this path, if this path is a file whose name
 includes a ".".</p>
-<div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> extension(this: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> extension(this: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
   <a class="keyword" href="/keyword:let.html">let</a> name <a class="operator" href="/operator:=.html">=</a> <a class="keyword" href="/keyword:match.html">match</a> this.file_name() {
     <span class="type">Some</span>(name) =&gt; name
     <span class="type">None</span> =&gt; <a class="keyword" href="/keyword:return.html">return</a> <span class="type">None</span>
   }
 
   name.split(<span class="string">"."</span>).last()
-}</code></pre><div class="snippet-output" hidden></div></div></div>
+}</code></pre><div class="snippet-output"><button class="run-snippet">Run</button></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

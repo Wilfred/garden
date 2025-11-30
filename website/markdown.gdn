@@ -216,12 +216,12 @@ fun render_markdown_code(snippet: Snippet): String {
 
   let header = match snippet.title {
     Some(title) => {
-      "<span class=\"code-title\">" ^ title ^ " " ^ buttons ^ "</span>"
+      "<span class=\"code-title\">" ^ title ^ "</span>"
     }
-    None => "<span class=\"code-title\">" ^ buttons ^ "</span>"
+    None => ""
   }
 
-  "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre><div class=\"snippet-output\" hidden></div></div>"
+  "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre><div class=\"snippet-output\">" ^ buttons ^ "</div></div>"
 }
 
 fun check_source(src: String, path: Option<Path>): Unit {

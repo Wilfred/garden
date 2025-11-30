@@ -25,13 +25,13 @@
     <div class="container"><h1>The Garden Programming Language</h1>
 <p>Garden is an experimental programming language focused on interactive
 tooling.</p>
-<div class="snippet"><span class="code-title"><button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> fib(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
+<div class="snippet"><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> fib(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
   <a class="keyword" href="/keyword:if.html">if</a> i <a class="operator" href="/operator:<.html">&lt;</a> 2 {
     <a class="keyword" href="/keyword:return.html">return</a> 1
   }
 
   fib(i <a class="operator" href="/operator:-.html">-</a> 1) <a class="operator" href="/operator:+.html">+</a> fib(i <a class="operator" href="/operator:-.html">-</a> 2)
-}</code></pre><div class="snippet-output" hidden></div></div>
+}</code></pre><div class="snippet-output"><button class="run-snippet">Run</button></div></div>
 <h2>Taking REPLs Seriously</h2>
 <p>Common Lisp and Smalltalk have a superpower: you can modify running
 programs. You can redefine functions and modify class definitions
@@ -47,14 +47,14 @@ experience.</p>
 <p>Most gradual type systems are intended for incremental adoption in a
 dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:</p>
-<div class="snippet"><span class="code-title"><button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> foo(): <a class="type" href="/type:String.html">String</a> {
+<div class="snippet"><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> foo(): <a class="type" href="/type:String.html">String</a> {
   <a class="keyword" href="/keyword:return.html">return</a> <span class="string">""</span>
 }
 
 <a class="keyword" href="/keyword:fun.html">fun</a> bar(): <a class="type" href="/type:Unit.html">Unit</a> {
   eval(<span class="string">"fun foo(): Int { return 1 }"</span>)
   <a class="keyword" href="/keyword:let.html">let</a> x <a class="operator" href="/operator:=.html">=</a> foo() <a class="operator" href="/operator:+.html">+</a> 1
-}</code></pre><div class="snippet-output" hidden></div></div>
+}</code></pre><div class="snippet-output"><button class="run-snippet">Run</button></div></div>
 <h2>Sandboxed Execution</h2>
 <p>Garden supports sandbox execution without third-party libraries. This
 is important for two workflows:</p>

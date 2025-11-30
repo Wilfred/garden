@@ -24,8 +24,8 @@
 
     <div class="container"><h1><code>String::trim_left()</code></h1>
 <p>Remove whitespace at the beginning of this string.</p>
-<div class="snippet"><span class="code-title">Example <button class="run-snippet">Run</button></span><pre><code><span class="string">" foo "</span>.trim_left() <span class="comment">//-&gt; "foo "</span></code></pre><div class="snippet-output" hidden></div></div>
-<div class="snippet"><span class="code-title">Source Code <button class="run-snippet">Run</button></span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> trim_left(this: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:String.html">String</a> {
+<div class="snippet"><span class="code-title">Example</span><pre><code><span class="string">" foo "</span>.trim_left() <span class="comment">//-&gt; "foo "</span></code></pre><div class="snippet-output"><button class="run-snippet">Run</button></div></div>
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> trim_left(this: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:String.html">String</a> {
   <a class="keyword" href="/keyword:let.html">let</a> i <a class="operator" href="/operator:=.html">=</a> 0
   <a class="keyword" href="/keyword:while.html">while</a> i <a class="operator" href="/operator:<.html">&lt;</a> this.len() {
     <a class="keyword" href="/keyword:let.html">let</a> char <a class="operator" href="/operator:=.html">=</a> this.substring(i, i <a class="operator" href="/operator:+.html">+</a> 1)
@@ -37,7 +37,7 @@
   }
 
   this.substring(i, this.len())
-}</code></pre><div class="snippet-output" hidden></div></div></div>
+}</code></pre><div class="snippet-output"><button class="run-snippet">Run</button></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

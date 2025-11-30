@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 app.post('/run', (req, res) => {
   const { src } = req.body;
 
-  if (!src) {
+  if (src === undefined) {
     return res.status(400).json({
       success: false,
       error: 'src parameter is required'

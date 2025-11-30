@@ -221,7 +221,7 @@ fun render_markdown_code(snippet: Snippet): String {
     None => ""
   }
 
-  "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre><div class=\"snippet-output\">" ^ buttons ^ "</div></div>"
+  "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre>" ^ buttons ^ "<div class=\"snippet-output\"></div></div>"
 }
 
 fun check_source(src: String, path: Option<Path>): Unit {

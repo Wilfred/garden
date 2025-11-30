@@ -309,12 +309,16 @@ header a {
 }
 
 .code-title {
-  padding: 10px 8px;
-  display: block;
+  padding: 4px 8px;
+  position: absolute;
+  top: -24px;
+  right: 12px;
 
   background: var(--cream);
-  border-bottom: 3px solid #00000030;
+  border: 3px solid #00000038;
+  border-radius: 5px;
 
+  font-family: "Lora", serif;
   font-weight: initial;
 }
 

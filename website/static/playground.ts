@@ -83,8 +83,8 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
 }
 
 document.querySelectorAll(".run-snippet").forEach((button) => {
-  let snippetDiv = button?.parentNode?.parentNode;
-  let codeNode = button?.parentNode?.nextSibling;
+  let snippetDiv = (button as HTMLElement).closest('.snippet');
+  let codeNode = snippetDiv?.querySelector('pre');
   let src = codeNode?.textContent || "";
 
   button.addEventListener("click", (_e) => {

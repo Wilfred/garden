@@ -34,18 +34,36 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
 
     for id in ids_at_query_pos.iter().rev() {
         if let Some(pos) = summary.id_to_def_pos.get(&id.id()) {
-            let mut pos = pos.clone();
+            let mut pos_s = serde_json::to_string(&pos).unwrap();
 
             // For Garden's test suite we don't want to use absolute
             // paths in the expected output.
             if std::env::var("GDN_TEST").is_ok() {
+                let mut placeholder_pos = pos.clone();
+                // Positions in the prelude tend to change a lot. Use
+                // a placeholder value so the tests don't change every
+                // time we fix a typo in the prelude.
+                //
+                // TODO: the proper solution would be placeholders in
+                // the golden test output, like LLVM's lit.
+                if pos.path.ends_with("__prelude.gdn") {
+                    placeholder_pos.start_offset = 12345;
+                    placeholder_pos.end_offset = 12345;
+                    placeholder_pos.line_number = 12345;
+                    placeholder_pos.end_line_number = 12345;
+                    placeholder_pos.column = 12345;
+                    placeholder_pos.end_column = 12345;
+                }
+
                 let mut path = PathBuf::from("GDN_TEST_ROOT");
                 path.push(to_project_relative(&pos.path, &env.project_root));
+                placeholder_pos.path = Rc::new(path);
 
-                pos.path = Rc::new(path);
+                pos_s = serde_json::to_string(&placeholder_pos).unwrap();
+                pos_s = pos_s.replace("12345", "GDN_TEST_POS");
             }
 
-            println!("{}", serde_json::to_string(&pos).unwrap());
+            println!("{}", pos_s);
             return;
         }
     }

@@ -1,7 +1,8 @@
 # Separate stage for building the Garden binary.
-FROM rust:1.83 AS garden-builder
+FROM rust:1.85 AS garden-builder
 WORKDIR /build
-COPY .. .
+COPY Cargo.toml Cargo.lock build.rs ./
+COPY src/ ./src/
 RUN cargo build --release
 
 # The stage for running the playground backend.
@@ -11,9 +12,9 @@ WORKDIR /app
 
 COPY --from=garden-builder /build/target/release/garden /usr/local/bin/garden
 
-COPY package*.json ./
+COPY playground/package*.json ./
 RUN npm install --production
-COPY index.js ./
+COPY playground/index.js ./
 
 EXPOSE 3000
 CMD ["node", "index.js"]

@@ -31,3 +31,8 @@ release:
 # Start a webserver serving the latest website build.
 web:
     cd website && python -m http.server
+
+# Build a Docker image for the playground backend service.
+build-docker:
+    sudo docker build -t wilfred/garden-playground:latest -f playground/Dockerfile .
+

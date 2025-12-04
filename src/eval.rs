@@ -777,8 +777,8 @@ pub(crate) fn eval_toplevel_items(
     summary.new_syms.extend(new_syms);
 
     if !exprs.is_empty() {
-        let value = eval_exprs(&exprs, env, session)?;
-        summary.values = vec![value];
+        let values = eval_exprs(&exprs, env, session)?;
+        summary.values = values;
     }
 
     Ok(summary)
@@ -6186,16 +6186,17 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
     let eval_result = eval_exprs(&exprs, env, session);
     env.stop_at_expr_id = old_stop_at_expr_id;
 
-    eval_result.map(Some)
+    let mut values = eval_result?;
+    Ok(values.pop())
 }
 
 pub(crate) fn eval_exprs(
     exprs: &[Expression],
     env: &mut Env,
     session: &Session,
-) -> Result<Value, EvalError> {
+) -> Result<Vec<Value>, EvalError> {
     if exprs.is_empty() {
-        return Ok(Value::unit());
+        return Ok(vec![]);
     }
 
     let mut exprs_to_eval: Vec<(ExpressionState, Rc<Expression>)> = vec![];
@@ -6211,7 +6212,8 @@ pub(crate) fn eval_exprs(
     // TODO: do this setup outside of this function.
     top_stack.exprs_to_eval = exprs_to_eval;
 
-    eval(env, session)
+    let value = eval(env, session)?;
+    Ok(vec![value])
 }
 
 #[cfg(test)]
@@ -6279,7 +6281,8 @@ mod tests {
             pretty_print_json: true,
         };
 
-        super::eval_exprs(exprs, env, &session)
+        let mut values = super::eval_exprs(exprs, env, &session)?;
+        Ok(values.pop().unwrap())
     }
 
     #[test]

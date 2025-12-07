@@ -299,13 +299,15 @@ fn main() {
         } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
+
+            let has_caret = offset.is_none();
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
 
             let src_path = to_abs_path(&override_path.unwrap_or(path));
-            print_pos(&src, &src_path, offset)
+            print_pos(&src, &src_path, offset, has_caret)
         }
         CliCommands::Complete { offset, path } => {
             let abs_path = to_abs_path(&path);

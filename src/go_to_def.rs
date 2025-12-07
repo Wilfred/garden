@@ -11,7 +11,7 @@ use crate::pos_to_id::find_item_at;
 
 /// Print the position of the definition associated with the
 /// expression at `offset`.
-pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
+pub(crate) fn print_pos(src: &str, path: &Path, offset: usize, in_test_suite: bool) {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -38,7 +38,7 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
 
             // For Garden's test suite we don't want to use absolute
             // paths in the expected output.
-            if std::env::var("GDN_TEST").is_ok() {
+            if in_test_suite {
                 let mut placeholder_pos = pos.clone();
                 // Positions in the prelude tend to change a lot. Use
                 // a placeholder value so the tests don't change every

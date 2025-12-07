@@ -21,7 +21,7 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
 
   snippetDiv.innerHTML = "...";
 
-  fetch("http://5.175.183.111:3000/run", {
+  fetch("http://playground.garden-lang.org:3000/run", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

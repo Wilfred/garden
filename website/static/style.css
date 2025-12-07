@@ -343,3 +343,11 @@ ul li {
 ul ul {
   margin-left: 1em;
 }
+
+/* Hide blog link on narrow screens, manual and playground matter
+   more. */
+@media (max-width: 600px) {
+  nav a:first-child {
+    display: none;
+  }
+}

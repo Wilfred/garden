@@ -11,6 +11,8 @@ fun fib(i: Int): Int {
   
   fib(i - 1) + fib(i - 2)
 }
+
+fib(5)
 ```
 
 ## Taking REPLs Seriously

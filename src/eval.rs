@@ -6287,7 +6287,7 @@ mod tests {
         };
 
         let mut values = super::eval_exprs(exprs, env, &session)?;
-        Ok(values.pop().unwrap())
+        Ok(values.pop().unwrap_or(Value::unit()))
     }
 
     #[test]

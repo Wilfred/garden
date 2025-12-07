@@ -208,10 +208,10 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
 }
 
 fun render_markdown_code(snippet: Snippet): String {
-  let (inner, buttons) = if snippet.labels.is_empty() || snippet.labels.contains("garden") {
-    (render_markdown_garden_code(snippet), "<button class=\"run-snippet\">Run</button>")
+  let (inner, buttons, output_div) = if snippet.labels.is_empty() || snippet.labels.contains("garden") {
+    (render_markdown_garden_code(snippet), "<button class=\"run-snippet\">Run</button>", "<div class=\"snippet-output\"></div>")
   } else {
-    ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "")
+    ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "", "")
   }
 
   let header = match snippet.title {
@@ -221,7 +221,7 @@ fun render_markdown_code(snippet: Snippet): String {
     None => ""
   }
 
-  "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre>" ^ buttons ^ "<div class=\"snippet-output\"></div></div>"
+  "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre>" ^ buttons ^ output_div ^ "</div>"
 }
 
 fun check_source(src: String, path: Option<Path>): Unit {
@@ -713,23 +713,23 @@ test render_link_with_parentheses {
 }
 
 test render_triple_backtick {
-  assert(render_markdown("```nocheck\nfoo\nbar\n```", None) == "<pre><code>foo\nbar</code></pre>")
+  assert(render_markdown("```nocheck\nfoo\nbar\n```", None) == "<div class=\"snippet\"><pre><code>foo\nbar</code></pre></div>")
 }
 
 test render_triple_backtick_escape_html {
-  assert(render_markdown("```nocheck\nfoo <bar>\n```", None) == "<pre><code>foo &lt;bar&gt;</code></pre>")
+  assert(render_markdown("```nocheck\nfoo <bar>\n```", None) == "<div class=\"snippet\"><pre><code>foo &lt;bar&gt;</code></pre></div>")
 }
 
 test render_triple_backtick_blank_line {
-  assert(render_markdown("```nocheck\nfoo\n\nbar\n```", None) == "<pre><code>foo\n\nbar</code></pre>")
+  assert(render_markdown("```nocheck\nfoo\n\nbar\n```", None) == "<div class=\"snippet\"><pre><code>foo\n\nbar</code></pre></div>")
 }
 
 test render_triple_backtick_keyword {
-  assert(render_markdown("```garden nocheck\nfun foo\n```", None) == "<pre><code><a class=\"keyword\" href=\"/keyword:fun.html\">fun</a> foo</code></pre>")
+  assert(render_markdown("```garden nocheck\nfun foo\n```", None) == "<div class=\"snippet\"><pre><code><a class=\"keyword\" href=\"/keyword:fun.html\">fun</a> foo</code></pre><button class=\"run-snippet\">Run</button><div class=\"snippet-output\"></div></div>")
 }
 
 test render_triple_backtick_comment {
-  assert(render_markdown("```garden nocheck\nfoo // bar\n```", None) == "<pre><code>foo <span class=\"comment\">// bar</span></code></pre>")
+  assert(render_markdown("```garden nocheck\nfoo // bar\n```", None) == "<div class=\"snippet\"><pre><code>foo <span class=\"comment\">// bar</span></code></pre><button class=\"run-snippet\">Run</button><div class=\"snippet-output\"></div></div>")
 }
 
 test render_asterisk_bullet {

@@ -798,7 +798,8 @@ pub(crate) fn run_command<T: Write>(
                     )?;
                 } else {
                     match eval_exprs(&[expr], env, session) {
-                        Ok(value) => {
+                        Ok(mut values) => {
+                            let value = values.pop().unwrap_or(Value::unit());
                             write!(buf, "{}", Type::from_value(&value))?;
                         }
                         Err(e) => {

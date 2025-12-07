@@ -236,9 +236,22 @@ fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {
 }
 
 #[derive(Debug)]
+pub(crate) enum StdoutJsonFormat {
+    ReplSession,
+    Playground,
+}
+
+/// How output from print() is handled.
+#[derive(Debug)]
 pub(crate) enum StdoutMode {
+    /// Write the string to stdout unmodified.
     WriteDirectly,
-    WriteJson,
+    /// Write the string to stdout in a JSON format, so we can can
+    /// consume stdout in a REPL session or the playground backend
+    /// without getting confused.
+    WriteJson(StdoutJsonFormat),
+    /// Don't write anything to stdout when print() is called, treat
+    /// it as a no-op. This is used when running tests in a sandbox.
     DoNotWrite,
 }
 
@@ -250,6 +263,9 @@ pub(crate) struct Session {
     pub(crate) stdout_mode: StdoutMode,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
+    /// Whether JSON should be pretty-printed. This applies to any
+    /// time the interpreter writes out JSON, both in REPL session
+    /// output as well as stdout JSON output used in the playground.
     pub(crate) pretty_print_json: bool,
 }
 
@@ -761,8 +777,8 @@ pub(crate) fn eval_toplevel_items(
     summary.new_syms.extend(new_syms);
 
     if !exprs.is_empty() {
-        let value = eval_exprs(&exprs, env, session)?;
-        summary.values = vec![value];
+        let values = eval_exprs(&exprs, env, session)?;
+        summary.values = values;
     }
 
     Ok(summary)
@@ -2412,16 +2428,21 @@ fn eval_builtin_call(
             saved_values.push(receiver_value.clone());
 
             let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
-            match session.stdout_mode {
+            match &session.stdout_mode {
                 StdoutMode::WriteDirectly => {
                     print!("{s}");
                 }
-                StdoutMode::WriteJson => {
+                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {
                         kind: ResponseKind::Printed { s: s.clone() },
                         position: None,
                         id: None,
                     };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                    let response = ResponseKind::Printed { s: s.clone() };
+                    // needs a test
                     print_as_json(&response, session.pretty_print_json);
                 }
                 StdoutMode::DoNotWrite => {}
@@ -2454,13 +2475,19 @@ fn eval_builtin_call(
                 StdoutMode::WriteDirectly => {
                     println!("{s}");
                 }
-                StdoutMode::WriteJson => {
+                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {
                         kind: ResponseKind::Printed {
                             s: format!("{s}\n"),
                         },
                         position: None,
                         id: None,
+                    };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                    let response = ResponseKind::Printed {
+                        s: format!("{s}\n"),
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }
@@ -5540,7 +5567,12 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             }
 
             if session.trace_exprs {
-                println!("{:?} {:?}\n", &outer_expr.expr_, expr_state);
+                println!("{:?}:\n  {:?}", expr_state, &outer_expr.expr_,);
+                println!(
+                    "  Stack frame: exprs_to_eval: {} values: {}\n",
+                    env.current_frame().exprs_to_eval.len(),
+                    env.current_frame().evalled_values.len()
+                );
             }
 
             // Print the whole call stack every 10,000 ticks if the
@@ -6159,16 +6191,17 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
     let eval_result = eval_exprs(&exprs, env, session);
     env.stop_at_expr_id = old_stop_at_expr_id;
 
-    eval_result.map(Some)
+    let mut values = eval_result?;
+    Ok(values.pop())
 }
 
 pub(crate) fn eval_exprs(
     exprs: &[Expression],
     env: &mut Env,
     session: &Session,
-) -> Result<Value, EvalError> {
+) -> Result<Vec<Value>, EvalError> {
     if exprs.is_empty() {
-        return Ok(Value::unit());
+        return Ok(vec![]);
     }
 
     let mut exprs_to_eval: Vec<(ExpressionState, Rc<Expression>)> = vec![];
@@ -6184,7 +6217,8 @@ pub(crate) fn eval_exprs(
     // TODO: do this setup outside of this function.
     top_stack.exprs_to_eval = exprs_to_eval;
 
-    eval(env, session)
+    let value = eval(env, session)?;
+    Ok(vec![value])
 }
 
 #[cfg(test)]
@@ -6252,7 +6286,8 @@ mod tests {
             pretty_print_json: true,
         };
 
-        super::eval_exprs(exprs, env, &session)
+        let mut values = super::eval_exprs(exprs, env, &session)?;
+        Ok(values.pop().unwrap())
     }
 
     #[test]

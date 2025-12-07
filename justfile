@@ -1,8 +1,15 @@
 default:
     @just --list
 
-# Build and run tests on all changes.
+# Build and run golden test files.
 watch:
+    # Only watch for changes between runs. This avoids us re-running
+    # simply because the expected output of a test file was
+    # regenerated.
+    REGENERATE=y GDN_TEST=y cargo watch -x b -x 't run_test_files' --watch-when-idle
+
+# Build and run all tests.
+watch-all:
     # Only watch for changes between runs. This avoids us re-running
     # simply because the expected output of a test file was
     # regenerated.
@@ -24,3 +31,8 @@ release:
 # Start a webserver serving the latest website build.
 web:
     cd website && python -m http.server
+
+# Build a Docker image for the playground backend service.
+build-docker:
+    sudo docker build -t wilfred/garden-playground:latest -f playground/Dockerfile .
+

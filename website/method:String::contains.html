@@ -17,21 +17,22 @@
         <nav>
           <a class="block" href="/blog.html">Blog</a>
           <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
         </nav>
       </div>
     </header>
 
     <div class="container"><h1><code>String::contains()</code></h1>
 <p>Does this string contain <code>substring</code>?</p>
-<pre><span class="code-title">Examples</span><code><span class="string">"abcd"</span>.contains(<span class="string">"bc"</span>) <span class="comment">//-&gt; True</span>
-<span class="string">"abcd"</span>.contains(<span class="string">"x"</span>) <span class="comment">//-&gt; False</span></code></pre>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> contains(this: <a class="type" href="/type:String.html">String</a>, substring: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Bool.html">Bool</a> {
+<div class="snippet"><span class="code-title">Example</span><pre><code><span class="string">"abcd"</span>.contains(<span class="string">"bc"</span>) <span class="comment">//-&gt; True</span>
+<span class="string">"abcd"</span>.contains(<span class="string">"x"</span>) <span class="comment">//-&gt; False</span></code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> contains(this: <a class="type" href="/type:String.html">String</a>, substring: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Bool.html">Bool</a> {
   <a class="keyword" href="/keyword:if.html">if</a> substring.len() <a class="operator" href="/operator:>.html">&gt;</a> this.len() {
     <a class="keyword" href="/keyword:return.html">return</a> <span class="type">False</span>
   }
 
   <a class="keyword" href="/keyword:let.html">let</a> i <a class="operator" href="/operator:=.html">=</a> 0
-  <a class="keyword" href="/keyword:while.html">while</a> i &lt;= (this.len() <a class="operator" href="/operator:-.html">-</a> substring.len()) {
+  <a class="keyword" href="/keyword:while.html">while</a> i <a class="operator" href="/operator:<=.html">&lt;=</a> (this.len() <a class="operator" href="/operator:-.html">-</a> substring.len()) {
     <a class="keyword" href="/keyword:let.html">let</a> section <a class="operator" href="/operator:=.html">=</a> this.substring(i, i <a class="operator" href="/operator:+.html">+</a> substring.len())
     <a class="keyword" href="/keyword:if.html">if</a> section <a class="operator" href="/operator:==.html">==</a> substring {
       <a class="keyword" href="/keyword:return.html">return</a> <span class="type">True</span>
@@ -41,10 +42,12 @@
   }
 
   <span class="type">False</span>
-}</code></pre></div>
+}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
     </footer>
+
+    <script src="/static/playground.js"></script>
   </body>
 </html>

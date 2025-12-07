@@ -690,9 +690,9 @@ test list_index_of {
   assert([10, 11, 11, 12].index_of(11) == Some(1))
 }
 
-// Return a new list consisting of the items from index i (inclusive)
-// to index j (exclusive). If `j` is negative, count backwards from
-// the end.
+// Return a new list consisting of the items from index `i`
+// (inclusive) to index `j` (exclusive). If `j` is negative, count
+// backwards from the end.
 //
 // ```
 // [10, 11, 12].slice(0, 2) //-> [10, 11]
@@ -823,6 +823,8 @@ public fun throw(message: String): NoValue {
 }
 
 // Write a string to stdout.
+//
+// See also `println`.
 //
 // ```
 // print("hello world\n")
@@ -1071,3 +1073,38 @@ public method set<T>(this: Dict<T>, key: String, Value: T): Dict<T> {
 public method items<T>(this: Dict<T>): List<(String, T)> {
   __BUILTIN_IMPLEMENTATION
 }
+
+// Return the larger value of these two integers.
+// 
+// ```
+// max(1, 2) //-> 2
+// ```
+public fun max(x: Int, y: Int): Int {
+  if x >= y {
+    x
+  } else {
+    y
+  }
+}
+
+test max {
+  assert(max(1, 2) == 2)
+}
+
+// Return the smaller value of these two integers.
+// 
+// ```
+// min(1, 2) //-> 1
+// ```
+public fun min(x: Int, y: Int): Int {
+  if x <= y {
+    x
+  } else {
+    y
+  }
+}
+
+test min {
+  assert(min(1, 2) == 1)
+}
+

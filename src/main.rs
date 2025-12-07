@@ -13,7 +13,7 @@
 #![allow(clippy::too_many_arguments)]
 // Occurs in WIP code, and it's too obvious to be worth linting
 // against.
-#![allow(clippy::needless_if)]
+#![allow(clippy::needless_ifs)]
 // Occurs in WIP code when you plan to match on more cases later on.
 #![allow(clippy::single_match)]
 // Sometimes explicit if statements are clearer.
@@ -58,6 +58,7 @@ mod parser;
 mod pos_to_id;
 mod prompt;
 mod rename;
+mod sandboxed_playground;
 mod syntax_check;
 mod syntax_highlighter;
 mod test_runner;
@@ -82,7 +83,7 @@ use test_runner::{run_sandboxed_tests_in_file, run_tests_in_files};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Severity};
 use crate::env::Env;
-use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session};
+use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session, StdoutJsonFormat};
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -211,6 +212,9 @@ enum CliCommands {
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },
+    /// Run a Garden snippet in a sandbox and return the output as
+    /// JSON.
+    PlaygroundRun { path: PathBuf },
 }
 
 fn main() {
@@ -318,7 +322,7 @@ fn main() {
 
             let session = Session {
                 interrupted: Arc::clone(&interrupted),
-                stdout_mode: StdoutMode::WriteJson,
+                stdout_mode: StdoutMode::WriteJson(StdoutJsonFormat::ReplSession),
                 start_time: Instant::now(),
                 trace_exprs: false,
                 pretty_print_json: true,
@@ -462,6 +466,11 @@ fn main() {
                     std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
                 }
             }
+        }
+        CliCommands::PlaygroundRun { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            sandboxed_playground::run_sandboxed_playground(&src, &abs_path, interrupted);
         }
     }
 }

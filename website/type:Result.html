@@ -17,6 +17,7 @@
         <nav>
           <a class="block" href="/blog.html">Blog</a>
           <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
         </nav>
       </div>
     </header>
@@ -26,10 +27,10 @@
 failed, with <code>Err(...)</code>.</p>
 <p>For example, reading a file might return <code>Ok("contents of file")</code>
 or <code>Err("file did not exist")</code>.</p>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:enum.html">enum</a> <a class="type" href="/type:Result.html">Result</a>&lt;<span class="type">T</span>, <span class="type">E</span>&gt; {
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:enum.html">enum</a> <a class="type" href="/type:Result.html">Result</a>&lt;<span class="type">T</span>, <span class="type">E</span>&gt; {
   <span class="type">Ok</span>(<span class="type">T</span>),
   <span class="type">Err</span>(<span class="type">E</span>),
-}</code></pre>
+}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
 <h2>Methods</h2>
 <ul>
 <li><a href="/method:Result::or_throw.html"><code>or_throw()</code></a></li>
@@ -38,5 +39,7 @@ or <code>Err("file did not exist")</code>.</p>
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
     </footer>
+
+    <script src="/static/playground.js"></script>
   </body>
 </html>

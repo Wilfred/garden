@@ -1,0 +1,5 @@
+Path{ p: "/tmp/foo.txt" }.read()
+
+// args: playground-run
+// expected stdout: {"error":"Tried to execute unsafe code in sandboxed mode","value":null}
+

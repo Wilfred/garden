@@ -17,16 +17,17 @@
         <nav>
           <a class="block" href="/blog.html">Blog</a>
           <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
         </nav>
       </div>
     </header>
 
     <div class="container"><h1><code>String::trim_right()</code></h1>
 <p>Remove whitespace at the end of this string.</p>
-<pre><span class="code-title">Examples</span><code><span class="string">" foo "</span>.trim_right() <span class="comment">//-&gt; " foo"</span></code></pre>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> trim_right(this: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:String.html">String</a> {
+<div class="snippet"><span class="code-title">Example</span><pre><code><span class="string">" foo "</span>.trim_right() <span class="comment">//-&gt; " foo"</span></code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> trim_right(this: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:String.html">String</a> {
   <a class="keyword" href="/keyword:let.html">let</a> i <a class="operator" href="/operator:=.html">=</a> this.len() <a class="operator" href="/operator:-.html">-</a> 1
-  <a class="keyword" href="/keyword:while.html">while</a> i &gt;= 0 {
+  <a class="keyword" href="/keyword:while.html">while</a> i <a class="operator" href="/operator:>=.html">&gt;=</a> 0 {
     <a class="keyword" href="/keyword:let.html">let</a> char <a class="operator" href="/operator:=.html">=</a> this.substring(i, i <a class="operator" href="/operator:+.html">+</a> 1)
     <a class="keyword" href="/keyword:if.html">if</a> char <a class="operator" href="/operator:!=.html">!=</a> <span class="string">" " </span>{
       <a class="keyword" href="/keyword:break.html">break</a>
@@ -36,10 +37,12 @@
   }
 
   this.substring(0, i <a class="operator" href="/operator:+.html">+</a> 1)
-}</code></pre></div>
+}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
     </footer>
+
+    <script src="/static/playground.js"></script>
   </body>
 </html>

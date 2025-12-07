@@ -19,7 +19,7 @@ use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to,
     load_toplevel_items_with_stubs, push_test_stackframe, EvalError, EvalUpToErr, ExpressionState,
-    Session, StdoutMode,
+    Session, StdoutJsonFormat, StdoutMode,
 };
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position;
@@ -451,7 +451,10 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
     }
 }
 
-pub(crate) fn print_as_json(res: &Response, pretty_print_json: bool) {
+pub(crate) fn print_as_json<T>(res: &T, pretty_print_json: bool)
+where
+    T: ?Sized + Serialize,
+{
     let serialized = if pretty_print_json {
         serde_json::to_string_pretty(&res)
     } else {
@@ -862,7 +865,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let pretty_print_json = false;
     let session = Session {
         interrupted: Arc::clone(&interrupted),
-        stdout_mode: StdoutMode::WriteJson,
+        stdout_mode: StdoutMode::WriteJson(StdoutJsonFormat::ReplSession),
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json,

@@ -17,6 +17,7 @@
         <nav>
           <a class="block" href="/blog.html">Blog</a>
           <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
         </nav>
       </div>
     </header>
@@ -24,8 +25,8 @@
     <div class="container"><h1><code>String::split_once()</code></h1>
 <p>Split this string on the first occurrence of <code>needle</code>, and return
 the text before and after <code>needle</code>.</p>
-<pre><span class="code-title">Examples</span><code><span class="string">"abcd"</span>.split_once(<span class="string">"b"</span>) <span class="comment">//-&gt; Some(["a", "cd"])</span></code></pre>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> split_once(this: <a class="type" href="/type:String.html">String</a>, needle: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Option.html">Option</a>&lt;(<a class="type" href="/type:String.html">String</a>, <a class="type" href="/type:String.html">String</a>)&gt; {
+<div class="snippet"><span class="code-title">Example</span><pre><code><span class="string">"abcd"</span>.split_once(<span class="string">"b"</span>) <span class="comment">//-&gt; Some(["a", "cd"])</span></code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> split_once(this: <a class="type" href="/type:String.html">String</a>, needle: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Option.html">Option</a>&lt;(<a class="type" href="/type:String.html">String</a>, <a class="type" href="/type:String.html">String</a>)&gt; {
   <a class="keyword" href="/keyword:match.html">match</a> this.index_of(needle) {
     <span class="type">None</span> =&gt; <span class="type">None</span>
     <span class="type">Some</span>(i) =&gt; {
@@ -35,10 +36,12 @@ the text before and after <code>needle</code>.</p>
       ))
     }
   }
-}</code></pre></div>
+}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
     </footer>
+
+    <script src="/static/playground.js"></script>
   </body>
 </html>

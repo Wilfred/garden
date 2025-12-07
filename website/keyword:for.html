@@ -17,33 +17,36 @@
         <nav>
           <a class="block" href="/blog.html">Blog</a>
           <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
         </nav>
       </div>
     </header>
 
     <div class="container"><h1><code>for</code> keyword</h1>
 <p><code>for</code> runs a block code repeatedly, once for each occurrence in a list.</p>
-<pre><span class="code-title">Example 1</span><code><a class="keyword" href="/keyword:let.html">let</a> nums <a class="operator" href="/operator:=.html">=</a> [1, 2, 3]
+<div class="snippet"><span class="code-title">Example 1</span><pre><code><a class="keyword" href="/keyword:let.html">let</a> nums <a class="operator" href="/operator:=.html">=</a> [1, 2, 3]
 
 <a class="keyword" href="/keyword:for.html">for</a> num <a class="keyword" href="/keyword:in.html">in</a> nums {
   <a href="/fun:__prelude.gdn::dbg.html">dbg</a>(num)
-}</code></pre>
+}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
 <p>To stop loop evaluation, or to skip a loop iteration, see
 <a href="./keyword:break.html"><code>break</code></a> and
 <a href="./keyword:continue.html"><code>continue</code></a>.</p>
 <p>As with <a href="./keyword:let.html"><code>let</code></a>, you can use destructuring in <code>for</code>
 loop headers.</p>
-<pre><span class="code-title">Example 2</span><code><a class="keyword" href="/keyword:let.html">let</a> game_scores <a class="operator" href="/operator:=.html">=</a> [(123, <span class="string">"Alice"</span>), (45, <span class="string">"Bob"</span>)]
+<div class="snippet"><span class="code-title">Example 2</span><pre><code><a class="keyword" href="/keyword:let.html">let</a> game_scores <a class="operator" href="/operator:=.html">=</a> [(123, <span class="string">"Alice"</span>), (45, <span class="string">"Bob"</span>)]
 
 <a class="keyword" href="/keyword:for.html">for</a> (score, name) <a class="keyword" href="/keyword:in.html">in</a> game_scores {
   <a href="/fun:__prelude.gdn::dbg.html">dbg</a>(score)
   <a href="/fun:__prelude.gdn::dbg.html">dbg</a>(name)
-}</code></pre>
+}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
 <p>For looping when you don't have a list, see
 <a href="./keyword:while.html">while</a>.</p></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
     </footer>
+
+    <script src="/static/playground.js"></script>
   </body>
 </html>

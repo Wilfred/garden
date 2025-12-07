@@ -1,0 +1,9 @@
+let x = 1
+println("hello world")
+x + 3
+
+// args: playground-run
+// expected stdout:
+// {"printed":{"s":"hello world\n"}}
+// {"error":null,"value":"4"}
+

@@ -17,21 +17,24 @@
         <nav>
           <a class="block" href="/blog.html">Blog</a>
           <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
         </nav>
       </div>
     </header>
 
     <div class="container"><h1><code>Dict::get()</code></h1>
 <p>Look up <code>key</code> in this dict.</p>
-<pre><span class="code-title">Examples</span><code><a class="keyword" href="/keyword:let.html">let</a> scores <a class="operator" href="/operator:=.html">=</a> <a class="type" href="/type:Dict.html">Dict</a>[<span class="string">"Mario" </span>=&gt; 10, <span class="string">"Luigi" </span>=&gt; 8]
+<div class="snippet"><span class="code-title">Example</span><pre><code><a class="keyword" href="/keyword:let.html">let</a> scores <a class="operator" href="/operator:=.html">=</a> <a class="type" href="/type:Dict.html">Dict</a>[<span class="string">"Mario" </span>=&gt; 10, <span class="string">"Luigi" </span>=&gt; 8]
 scores.get(<span class="string">"Mario"</span>) <span class="comment">//-&gt; Some(10)</span>
-scores.get(<span class="string">"Bowser"</span>) <span class="comment">//-&gt; None</span></code></pre>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> get&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Dict.html">Dict</a>&lt;<span class="type">T</span>&gt;, key: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<span class="type">T</span>&gt; {
+scores.get(<span class="string">"Bowser"</span>) <span class="comment">//-&gt; None</span></code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> get&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Dict.html">Dict</a>&lt;<span class="type">T</span>&gt;, key: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<span class="type">T</span>&gt; {
   __BUILTIN_IMPLEMENTATION
-}</code></pre></div>
+}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
     </footer>
+
+    <script src="/static/playground.js"></script>
   </body>
 </html>

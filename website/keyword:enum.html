@@ -17,6 +17,7 @@
         <nav>
           <a class="block" href="/blog.html">Blog</a>
           <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
         </nav>
       </div>
     </header>
@@ -24,16 +25,18 @@
     <div class="container"><h1><code>enum</code> keyword</h1>
 <p><code>enum</code> defines a type where values are one of a possible set of
 variants.</p>
-<pre><span class="code-title">Example</span><code><a class="keyword" href="/keyword:enum.html">enum</a> <span class="type">Flavor</span> {
+<div class="snippet"><span class="code-title">Example</span><pre><code><a class="keyword" href="/keyword:enum.html">enum</a> <span class="type">Flavor</span> {
   <span class="type">Chocolate</span>,
   <span class="type">Strawberry</span>,
   <span class="type">Custom</span>(<a class="type" href="/type:String.html">String</a>),
 }
 
-<a class="keyword" href="/keyword:let.html">let</a> f <a class="operator" href="/operator:=.html">=</a> <span class="type">Custom</span>(<span class="string">"Fudge"</span>)</code></pre></div>
+<a class="keyword" href="/keyword:let.html">let</a> f <a class="operator" href="/operator:=.html">=</a> <span class="type">Custom</span>(<span class="string">"Fudge"</span>)</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
     </footer>
+
+    <script src="/static/playground.js"></script>
   </body>
 </html>

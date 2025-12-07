@@ -17,17 +17,18 @@
         <nav>
           <a class="block" href="/blog.html">Blog</a>
           <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
         </nav>
       </div>
     </header>
 
     <div class="container"><h1><code>String::split()</code></h1>
 <p>Split this string on occurrences of <code>needle</code>.</p>
-<pre><span class="code-title">Examples</span><code><span class="string">"a,b"</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; ["a", "b"]</span>
+<div class="snippet"><span class="code-title">Example</span><pre><code><span class="string">"a,b"</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; ["a", "b"]</span>
 <span class="string">"ab"</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; ["ab"]</span>
 <span class="string">"a,,b,"</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; ["a", "", "b", ""]</span>
-<span class="string">""</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; []</span></code></pre>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> split(this: <a class="type" href="/type:String.html">String</a>, needle: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
+<span class="string">""</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; []</span></code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> split(this: <a class="type" href="/type:String.html">String</a>, needle: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
   <a class="keyword" href="/keyword:if.html">if</a> this <a class="operator" href="/operator:==.html">==</a> <span class="string">"" </span>{
     <a class="keyword" href="/keyword:return.html">return</a> []
   }
@@ -50,10 +51,12 @@
   }
 
   parts
-}</code></pre></div>
+}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
     </footer>
+
+    <script src="/static/playground.js"></script>
   </body>
 </html>

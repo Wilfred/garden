@@ -30,10 +30,14 @@
 ;;
 ;; does in lisp. This could support backticks and triple backticks
 ;; from comments.
-(defun garden-send ()
+(defun garden-send (&optional save-to-kill-ring)
   "Send the active region or expression before point to the current garden session,
-evaluate, and display the result."
-  (interactive)
+evaluate, and display the result.
+
+With a prefix argument, also save the result to the kill ring."
+  (interactive "p")
+  (when save-to-kill-ring
+    (setq garden--save-to-kill-ring t))
   (let (start-pos end-pos)
     (cond
      ((region-active-p)
@@ -70,12 +74,14 @@ evaluate, and display the result."
    (1- (point-min))
    (1- (point-max))))
 
-(defun garden-send-or-eval-up-to ()
-  "Send the current region if region is active, otherwise eval-up-to."
-  (interactive)
+(defun garden-send-or-eval-up-to (&optional save-to-kill-ring)
+  "Send the current region if region is active, otherwise eval-up-to.
+
+With a prefix argument, also save the stringified result to the kill ring."
+  (interactive "p")
   (if (region-active-p)
-      (garden-send)
-    (garden-eval-up-to)))
+      (garden-send save-to-kill-ring)
+    (garden-eval-up-to save-to-kill-ring)))
 
 (defun garden--backward-expr ()
   "Move point back to the start of the expression before point."
@@ -104,6 +110,8 @@ evaluate, and display the result."
 
 (defvar garden-log-json t
   "If non-nil, write raw JSON responses from Garden to the buffer *garden-json*.")
+
+(defvar garden--save-to-kill-ring nil)
 
 (defun garden--log-json-to-buf (s &optional is-output-p)
   (let* ((buf-name "*garden-json*")
@@ -412,7 +420,11 @@ the user entering a value in the *garden* buffer."
                   ((string= response-kind "evaluate")
                    (garden--flash-position buf response-position)
                    (unless (or (null response-ok-value) (string= response-ok-value "void"))
-                     (message "%s" response-ok-value))
+                     (message "%s" response-ok-value)
+                     ;; Save successful value to kill ring if requested.
+                     (when garden--save-to-kill-ring
+                       (kill-new response-ok-value)
+                       (setq garden--save-to-kill-ring nil)))
                    (if response-ok-value
                        (garden--fontify-value (concat response-ok-value "\n"))
                      ""))
@@ -588,10 +600,14 @@ Useful for accidental infinite loops."
   (let ((sym-name (symbol-name (symbol-at-point))))
     (garden--find-def sym-name)))
 
-(defun garden-eval-up-to ()
+(defun garden-eval-up-to (&optional save-to-kill-ring)
   "Evaluate the definition containing point, but stop at the expression
-enclosing point and print the result."
-  (interactive)
+enclosing point and print the result.
+
+With a prefix argument, also save the stringified result to the kill ring."
+  (interactive "p")
+  (when save-to-kill-ring
+    (setq garden--save-to-kill-ring t))
   (let* ((buf (garden--active-buffer))
          ;; Zero-based offset.
          (raw-offset (1- (point)))

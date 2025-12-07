@@ -21,7 +21,7 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
 
   snippetDiv.innerHTML = "...";
 
-  fetch("http://localhost:3000/run", {
+  fetch("http://5.175.183.111:3000/run", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -83,8 +83,8 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
 }
 
 document.querySelectorAll(".run-snippet").forEach((button) => {
-  let snippetDiv = (button as HTMLElement).closest('.snippet');
-  let codeNode = snippetDiv?.querySelector('pre');
+  let snippetDiv = (button as HTMLElement).closest(".snippet");
+  let codeNode = snippetDiv?.querySelector("pre");
   let src = codeNode?.textContent || "";
 
   button.addEventListener("click", (_e) => {

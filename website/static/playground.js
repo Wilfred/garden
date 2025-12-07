@@ -1,7 +1,7 @@
 function evalSnippet(src, snippetDiv) {
     snippetDiv.hidden = false;
     snippetDiv.innerHTML = "...";
-    fetch("http://localhost:3000/run", {
+    fetch("http://5.175.183.111:3000/run", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -56,8 +56,8 @@ function evalSnippet(src, snippetDiv) {
     });
 }
 document.querySelectorAll(".run-snippet").forEach(function (button) {
-    var snippetDiv = button.closest('.snippet');
-    var codeNode = snippetDiv === null || snippetDiv === void 0 ? void 0 : snippetDiv.querySelector('pre');
+    var snippetDiv = button.closest(".snippet");
+    var codeNode = snippetDiv === null || snippetDiv === void 0 ? void 0 : snippetDiv.querySelector("pre");
     var src = (codeNode === null || codeNode === void 0 ? void 0 : codeNode.textContent) || "";
     button.addEventListener("click", function (_e) {
         if (snippetDiv) {

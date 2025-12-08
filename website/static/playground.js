@@ -6,12 +6,12 @@ function evalSnippet(src, snippetDiv) {
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ src: src }),
+        body: JSON.stringify({ src }),
     })
-        .then(function (response) { return response.json(); })
-        .then(function (data) {
+        .then((response) => response.json())
+        .then((data) => {
         if (!data.success) {
-            snippetDiv.innerHTML = "Error: ".concat(data.error || "Unknown error");
+            snippetDiv.innerHTML = `Error: ${data.error || "Unknown error"}`;
             return;
         }
         if (!data.results || data.results.length === 0) {
@@ -19,21 +19,20 @@ function evalSnippet(src, snippetDiv) {
             return;
         }
         // Iterate over all results
-        var stdoutParts = [];
-        var finalValue = "";
-        var hasError = false;
-        for (var _i = 0, _a = data.results; _i < _a.length; _i++) {
-            var item = _a[_i];
+        const stdoutParts = [];
+        let finalValue = "";
+        let hasError = false;
+        for (const item of data.results) {
             // Check if this is a stdout object
             if ("printed" in item) {
-                var stdoutItem = item;
+                const stdoutItem = item;
                 stdoutParts.push(stdoutItem.printed.s);
             }
             // Check if this is a result object
             else if ("error" in item || "value" in item) {
-                var result = item;
+                const result = item;
                 if (result.error) {
-                    snippetDiv.innerHTML = "Error: ".concat(result.error);
+                    snippetDiv.innerHTML = `Error: ${result.error}`;
                     hasError = true;
                     break;
                 }
@@ -43,7 +42,7 @@ function evalSnippet(src, snippetDiv) {
             }
         }
         if (!hasError) {
-            var output = "";
+            let output = "";
             if (stdoutParts.length > 0) {
                 output = stdoutParts.join("") + "\n";
             }
@@ -51,32 +50,34 @@ function evalSnippet(src, snippetDiv) {
             snippetDiv.innerHTML = output;
         }
     })
-        .catch(function (error) {
-        snippetDiv.innerHTML = "Fetch error: ".concat(error.message);
+        .catch((error) => {
+        snippetDiv.innerHTML = `Fetch error: ${error.message}`;
     });
 }
-document.querySelectorAll(".run-snippet").forEach(function (button) {
-    var snippetDiv = button.closest(".snippet");
-    var codeNode = snippetDiv === null || snippetDiv === void 0 ? void 0 : snippetDiv.querySelector("pre");
-    var src = (codeNode === null || codeNode === void 0 ? void 0 : codeNode.textContent) || "";
-    button.addEventListener("click", function (_e) {
+document.querySelectorAll(".run-snippet").forEach((button) => {
+    let snippetDiv = button.closest(".snippet");
+    let codeNode = snippetDiv === null || snippetDiv === void 0 ? void 0 : snippetDiv.querySelector("pre");
+    let src = (codeNode === null || codeNode === void 0 ? void 0 : codeNode.textContent) || "";
+    button.addEventListener("click", (_e) => {
         if (snippetDiv) {
-            var outputDiv = snippetDiv.querySelector(".snippet-output");
+            let outputDiv = snippetDiv.querySelector(".snippet-output");
             if (outputDiv instanceof HTMLElement) {
                 evalSnippet(src, outputDiv);
             }
         }
     });
 });
-var playgroundRunButton = document.querySelector("#playground-run");
-var playgroundEditor = document.querySelector("#playground-editor");
-var playgroundOutput = document.querySelector("#playground-output");
+let playgroundRunButton = document.querySelector("#playground-run");
+let playgroundEditor = document.querySelector("#playground-editor");
+let playgroundOutput = document.querySelector("#playground-output");
 if (playgroundRunButton &&
     playgroundOutput &&
     playgroundOutput instanceof HTMLElement &&
     playgroundEditor &&
     playgroundEditor instanceof HTMLTextAreaElement) {
-    playgroundRunButton.addEventListener("click", function () {
+    playgroundRunButton.addEventListener("click", () => {
         evalSnippet(playgroundEditor.value, playgroundOutput);
     });
 }
+export {};
+//# sourceMappingURL=playground.js.map

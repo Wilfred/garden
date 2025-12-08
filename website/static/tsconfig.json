@@ -1,4 +1,5 @@
 {
+  "files": ["playground.ts"],
   "compilerOptions": {
     // File Layout
     // "rootDir": "./src",
@@ -6,8 +7,8 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
-    "target": "esnext",
+    "module": "es2015",
+    "target": "es2015",
     "types": [],
 
     // Other Outputs

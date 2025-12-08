@@ -307,6 +307,22 @@ textarea {
   white-space: pre;
 }
 
+.snippet button {
+  border: 3px solid #00000030;
+  border-radius: 5px;
+  min-width: 60px;
+
+  padding: 10px 10px;
+  margin-right: 10px;
+  background-color: var(--cream);
+  cursor: pointer;
+}
+
+.snippet button:hover {
+  border-color: #00000060;
+  background-color: #dfe2d5;
+}
+
 .run-snippet {
   margin-top: 10px;
 }

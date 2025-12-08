@@ -37,7 +37,7 @@ basic syntax.</p>
   }
 
   fib(i <a class="operator" href="/operator:-.html">-</a> 1) <a class="operator" href="/operator:+.html">+</a> fib(i <a class="operator" href="/operator:-.html">-</a> 2)
-}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output"></div></div>
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
 <h2>Choosing Punctuation</h2>
 <p>Garden is a curly-brace language. I don't want to spend my
 <a href="https://steveklabnik.com/writing/the-language-strangeness-budget/">strangeness
@@ -48,7 +48,7 @@ on syntax, so it's deliberately conventional.</p>
   <a href="/fun:__prelude.gdn::println.html">println</a>(<a href="/fun:__prelude.gdn::string_repr.html">string_repr</a>(i))
   i <a class="operator" href="/operator:-=.html">-=</a> 1
 }
-<a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Blast off!"</span>)</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output"></div></div>
+<a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Blast off!"</span>)</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
 <p>Hopefully this code snippet is pretty readable to programmers from a
 range of backgrounds.</p>
 <h2>Choosing Keywords</h2>
@@ -66,7 +66,7 @@ support that. I say code aloud sometimes too, especially in
 conversations.</p>
 <div class="snippet"><span class="code-title">Keywords</span><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> say_hello(): <a class="type" href="/type:Unit.html">Unit</a> {
   <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Hello, World!"</span>)
-}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output"></div></div>
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
 <h2>Breaking Convention</h2>
 <p>Garden is focusing on tooling, so tooling features take precedence
 over traditional syntax.</p>
@@ -87,7 +87,7 @@ functions, similar to Go.</p>
 <a class="keyword" href="/keyword:fun.html">fun</a> demo(): <a class="type" href="/type:Unit.html">Unit</a> {
   <a class="keyword" href="/keyword:let.html">let</a> p <a class="operator" href="/operator:=.html">=</a> <span class="type">Person</span>{ name: <span class="string">"Wilfred" </span>}
   <a href="/fun:__prelude.gdn::println.html">println</a>(p.greet())
-}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output"></div></div>
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
 <h2>Next Steps</h2>
 <p>With the basics out of the way, we can start talking about more
 interesting things next time.</p>

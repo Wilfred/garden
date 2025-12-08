@@ -25,7 +25,7 @@
     <div class="container"><h1><code>assert</code> keyword</h1>
 <p>You can use <code>assert</code> to perform a runtime check that a value is
 <code>True</code>.</p>
-<div class="snippet"><span class="code-title">Example 1</span><pre><code><a class="keyword" href="/keyword:assert.html">assert</a>(1 <a class="operator" href="/operator:<.html">&lt;</a> 2)</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output"></div></div>
+<div class="snippet"><span class="code-title">Example 1</span><pre><code><a class="keyword" href="/keyword:assert.html">assert</a>(1 <a class="operator" href="/operator:<.html">&lt;</a> 2)</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
 <p>If the assertion fails, Garden will raise an error.</p>
 <p><code>assert</code> is particularly useful when defining a <code>test</code>.</p>
 <div class="snippet"><span class="code-title">Example 2</span><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> add_one(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
@@ -34,7 +34,7 @@
 
 <a class="keyword" href="/keyword:test.html">test</a> add_one_to_five {
   <a class="keyword" href="/keyword:assert.html">assert</a>(add_one(5) <a class="operator" href="/operator:==.html">==</a> 6)
-}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output"></div></div></div>
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

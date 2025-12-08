@@ -211,7 +211,7 @@ fun render_markdown_code(snippet: Snippet): String {
   let (inner, buttons, output_div) = if snippet.labels.is_empty() || snippet.labels.contains("garden") {
     (render_markdown_garden_code(snippet),
      "<button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button>",
-     "<div class=\"snippet-output\"></div>")
+     "<div class=\"snippet-output\" hidden></div>")
   } else {
     ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "", "")
   }

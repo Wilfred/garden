@@ -32,7 +32,7 @@
 }
 
 say_hello(<span class="type">None</span>) <span class="comment">// Hello there!</span>
-say_hello(<span class="type">Some</span>(<span class="string">"Wilfred"</span>)) <span class="comment">// Hello Wilfred</span></code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
+say_hello(<span class="type">Some</span>(<span class="string">"Wilfred"</span>)) <span class="comment">// Hello Wilfred</span></code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output"></div></div>
 <p>If you want to ignore some cases, use <code>_</code>.</p>
 <div class="snippet"><span class="code-title">Example 2</span><pre><code><a class="keyword" href="/keyword:enum.html">enum</a> <span class="type">Flavor</span> {
   <span class="type">Chocolate</span>,
@@ -48,7 +48,7 @@ say_hello(<span class="type">Some</span>(<span class="string">"Wilfred"</span>))
       <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Could be strawberry or vanilla."</span>)
     }
   }
-}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div>
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output"></div></div>
 <p><code>match</code> also supports destructuring of tuples.</p>
 <div class="snippet"><span class="code-title">Example 3</span><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> describe_email(address: <a class="type" href="/type:String.html">String</a>) {
   <a class="keyword" href="/keyword:match.html">match</a> address.split_once(<span class="string">"@"</span>) {
@@ -59,7 +59,7 @@ say_hello(<span class="type">Some</span>(<span class="string">"Wilfred"</span>))
       <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Doesn't look like an email address."</span>)
     }
   }
-}</code></pre><button class="run-snippet">Run</button><div class="snippet-output"></div></div></div>
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output"></div></div></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

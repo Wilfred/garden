@@ -9,6 +9,7 @@ flamegraph.svg
 .history
 
 *.map
+*.d.ts
 
 # Emacs related
 .cask

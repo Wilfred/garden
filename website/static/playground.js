@@ -54,30 +54,36 @@ function evalSnippet(src, snippetDiv) {
         snippetDiv.innerHTML = `Fetch error: ${error.message}`;
     });
 }
-document.querySelectorAll(".run-snippet").forEach((button) => {
-    let snippetDiv = button.closest(".snippet");
-    let codeNode = snippetDiv === null || snippetDiv === void 0 ? void 0 : snippetDiv.querySelector("pre");
-    let src = (codeNode === null || codeNode === void 0 ? void 0 : codeNode.textContent) || "";
-    button.addEventListener("click", (_e) => {
-        if (snippetDiv) {
-            let outputDiv = snippetDiv.querySelector(".snippet-output");
-            if (outputDiv instanceof HTMLElement) {
-                evalSnippet(src, outputDiv);
+function setupSnippetButtons() {
+    document.querySelectorAll(".run-snippet").forEach((button) => {
+        let snippetDiv = button.closest(".snippet");
+        let codeNode = snippetDiv === null || snippetDiv === void 0 ? void 0 : snippetDiv.querySelector("pre");
+        let src = (codeNode === null || codeNode === void 0 ? void 0 : codeNode.textContent) || "";
+        button.addEventListener("click", (_e) => {
+            if (snippetDiv) {
+                let outputDiv = snippetDiv.querySelector(".snippet-output");
+                if (outputDiv instanceof HTMLElement) {
+                    evalSnippet(src, outputDiv);
+                }
             }
-        }
-    });
-});
-let playgroundRunButton = document.querySelector("#playground-run");
-let playgroundEditor = document.querySelector("#playground-editor");
-let playgroundOutput = document.querySelector("#playground-output");
-if (playgroundRunButton &&
-    playgroundOutput &&
-    playgroundOutput instanceof HTMLElement &&
-    playgroundEditor &&
-    playgroundEditor instanceof HTMLTextAreaElement) {
-    playgroundRunButton.addEventListener("click", () => {
-        evalSnippet(playgroundEditor.value, playgroundOutput);
+        });
     });
 }
+function setupPlayground() {
+    let playgroundRunButton = document.querySelector("#playground-run");
+    let playgroundEditor = document.querySelector("#playground-editor");
+    let playgroundOutput = document.querySelector("#playground-output");
+    if (playgroundRunButton &&
+        playgroundOutput &&
+        playgroundOutput instanceof HTMLElement &&
+        playgroundEditor &&
+        playgroundEditor instanceof HTMLTextAreaElement) {
+        playgroundRunButton.addEventListener("click", () => {
+            evalSnippet(playgroundEditor.value, playgroundOutput);
+        });
+    }
+}
+setupSnippetButtons();
+setupPlayground();
 export {};
 //# sourceMappingURL=playground.js.map

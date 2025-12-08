@@ -261,25 +261,8 @@ textarea {
   width: calc(100% - 30px);
 }
 
-#playground-wrapper textarea {
-  margin-top: 40px;
-}
-
 #playground-output {
   padding: 10px;
-}
-
-#playground-header {
-  position: relative;
-}
-
-#playground-header button {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-}
-
-#playground-output {
   border-top: 3px solid #00000030;
   white-space: pre;
 }
@@ -317,7 +300,7 @@ textarea {
   white-space: pre;
 }
 
-.snippet button {
+button {
   border: 3px solid #00000030;
   border-radius: 5px;
   min-width: 60px;
@@ -331,7 +314,7 @@ textarea {
   cursor: pointer;
 }
 
-.snippet button:hover {
+button:hover {
   border-color: #00000060;
   background-color: #dfe2d5;
 }

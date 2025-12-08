@@ -8,6 +8,8 @@ flamegraph.svg
 
 .history
 
+*.map
+
 # Emacs related
 .cask
 *.elc

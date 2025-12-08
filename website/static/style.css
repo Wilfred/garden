@@ -254,12 +254,15 @@ header a {
   border-radius: 5px;
 }
 
-#playground-wrapper textarea {
+textarea {
   font-size: 18px;
 
   margin: 10px;
-  margin-top: 40px;
   width: calc(100% - 30px);
+}
+
+#playground-wrapper textarea {
+  margin-top: 40px;
 }
 
 #playground-output {

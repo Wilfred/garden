@@ -56,15 +56,47 @@ function evalSnippet(src, snippetDiv) {
 }
 function setupSnippetButtons() {
     document.querySelectorAll(".run-snippet").forEach((button) => {
-        let snippetDiv = button.closest(".snippet");
-        let codeNode = snippetDiv === null || snippetDiv === void 0 ? void 0 : snippetDiv.querySelector("pre");
-        let src = (codeNode === null || codeNode === void 0 ? void 0 : codeNode.textContent) || "";
         button.addEventListener("click", (_e) => {
+            let snippetDiv = button.closest(".snippet");
             if (snippetDiv) {
+                // Check for textarea first (edit mode), then pre (view mode)
+                let textarea = snippetDiv.querySelector("textarea");
+                let codeNode = snippetDiv.querySelector("pre");
+                let src = "";
+                if (textarea instanceof HTMLTextAreaElement) {
+                    src = textarea.value;
+                }
+                else if (codeNode) {
+                    src = codeNode.textContent || "";
+                }
                 let outputDiv = snippetDiv.querySelector(".snippet-output");
                 if (outputDiv instanceof HTMLElement) {
                     evalSnippet(src, outputDiv);
                 }
+            }
+        });
+    });
+}
+function setupEditButtons() {
+    document.querySelectorAll(".edit-snippet").forEach((button) => {
+        button.addEventListener("click", (_e) => {
+            let snippetDiv = button.closest(".snippet");
+            if (!snippetDiv)
+                return;
+            let textarea = snippetDiv.querySelector("textarea");
+            let codeNode = snippetDiv.querySelector("pre");
+            if (textarea instanceof HTMLTextAreaElement) {
+                // Currently in edit mode, switch back to view mode
+                let pre = document.createElement("pre");
+                pre.textContent = textarea.value;
+                textarea.replaceWith(pre);
+            }
+            else if (codeNode) {
+                // Currently in view mode, switch to edit mode
+                let textarea = document.createElement("textarea");
+                textarea.value = codeNode.textContent || "";
+                textarea.rows = (codeNode.textContent || "").split("\n").length;
+                codeNode.replaceWith(textarea);
             }
         });
     });
@@ -84,6 +116,7 @@ function setupPlayground() {
     }
 }
 setupSnippetButtons();
+setupEditButtons();
 setupPlayground();
 export {};
 //# sourceMappingURL=playground.js.map

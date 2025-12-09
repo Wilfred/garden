@@ -29,8 +29,25 @@ release:
     cargo set-version --bump minor
 
 # Start a webserver serving the latest website build.
-web:
-    cd website && python -m http.server
+site-serve:
+    cd website/dist && python -m http.server
+
+# Build the website.
+site-build:
+    mkdir -p website/dist
+    cp website/*.html website/dist
+    cp website/*.png website/dist
+    cp website/*.mp4 website/dist
+
+    mkdir -p website/dist/blog
+    cp website/blog/*.html website/dist/blog
+
+    mkdir -p website/dist/static
+    cp website/static/*.css website/dist/static
+    cp website/static/*.js website/dist/static
+
+    mkdir -p website/dist/static/fonts
+    cp website/static/fonts/*.woff2 website/dist/static/fonts
 
 # Build a Docker image for the playground backend service.
 build-docker:

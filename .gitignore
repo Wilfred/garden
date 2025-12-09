@@ -1,5 +1,6 @@
 target
 website/static/node_modules/
+website/dist/
 playground/node_modules
 
 # Performance/profiling data.

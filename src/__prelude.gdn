@@ -967,7 +967,8 @@ test string_as_int {
 // ```
 //
 // Note that a path may exist without the current user having
-// permission to read it.
+// permission to read it. This function still returns `True` in that
+// situation.
 public method exists(this: Path): Bool {
   __BUILTIN_IMPLEMENTATION
 }

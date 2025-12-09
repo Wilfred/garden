@@ -1,0 +1,12 @@
+let flavors = ["Mint", "Vanilla"]
+
+// Break should still give us a loop that evaluates to Unit.
+for flavor in flavors {
+  if flavor == "Mint" {
+    break
+  }
+}
+
+// args: playground-run
+// expected stdout: {"error":null,"value":"Unit"}
+

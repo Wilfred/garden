@@ -1750,6 +1750,8 @@ fn eval_for_in(
     };
 
     if iteree_idx as usize >= items.len() {
+        // Normal loop termination. We've popped the iteree value, so
+        // stack discipline is correct.
         return Ok(());
     }
 
@@ -1757,6 +1759,8 @@ fn eval_for_in(
     // re-evaluate the iteree expression though.
     env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
+    // Push the iterated value and the index for the next time we call
+    // this function.
     env.push_value(Value::new(Value_::Integer(iteree_idx + 1)));
     env.push_value(iteree_value.clone());
 
@@ -5034,7 +5038,7 @@ fn eval_expr(
 
                     env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
-                    // Next, we're going to evaluate the value
+                    // First, we're going to evaluate the value
                     // that we want to iterate over.
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
                 }
@@ -5717,14 +5721,29 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
     while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
-        if matches!(
-            expr.expr_,
-            Expression_::While(_, _) | Expression_::ForIn(_, _, _)
-        ) && matches!(
-            expr_state,
-            ExpressionState::NotEvaluated | ExpressionState::PartiallyEvaluated
-        ) {
-            break;
+        match expr_state {
+            ExpressionState::EvaluatedAllSubexpressions => {
+                continue;
+            }
+            ExpressionState::NotEvaluated | ExpressionState::PartiallyEvaluated => {}
+        }
+
+        match &expr.expr_ {
+            Expression_::While(_, _) => {
+                break;
+            }
+            Expression_::ForIn(_, _, _) => {
+                // We're exiting the loop early, we need to follow the
+                // pattern of `eval_for_in` and maintain stack
+                // discipline for values pushed for the loop body.
+                env.pop_value()
+                    .expect("Value used by `for` should be present");
+                env.pop_value()
+                    .expect("Index used by `for` should be present");
+
+                break;
+            }
+            _ => {}
         }
     }
 

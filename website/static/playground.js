@@ -1,6 +1,12 @@
 function evalSnippet(src, snippetDiv) {
     snippetDiv.hidden = false;
     snippetDiv.innerHTML = "...";
+    // This is the live site. To test local versions:
+    //
+    // $ cd playground
+    // $ npm start
+    //
+    // and change this to localhost:3000.
     fetch("http://playground.garden-lang.org:3000/run", {
         method: "POST",
         headers: {

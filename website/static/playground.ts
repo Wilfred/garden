@@ -27,7 +27,7 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
   // $ npm start
   //
   // and change this to localhost:3000.
-  fetch("http://playground.garden-lang.org:3000/run", {
+  fetch("http://localhost:3000/run", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

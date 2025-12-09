@@ -38,9 +38,9 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
   match reflect::doc_comment(ns, fun_name) {
     Some(doc_comment) => {
       let heading = if ns_name == "__prelude.gdn" {
-        "".join(["# `", fun_name, "`"])
+        "".join(["# `", fun_name, "()`"])
       } else {
-        "".join(["# `", qualified_name, "`"])
+        "".join(["# `", qualified_name, "()`"])
       }
 
       let src = reflect::source_for_fun(ns, fun_name)

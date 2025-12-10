@@ -1,0 +1,3 @@
+playground.garden-lang.org {
+	reverse_proxy garden-playground:3000
+}

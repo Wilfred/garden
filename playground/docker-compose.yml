@@ -32,10 +32,7 @@ services:
 
 configs:
   caddyfile:
-    content: |
-      playground.garden-lang.org {
-        reverse_proxy garden-playground:3000
-      }
+    file: ./Caddyfile
 
 networks:
   garden-network:

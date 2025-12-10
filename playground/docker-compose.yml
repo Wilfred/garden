@@ -1,11 +1,37 @@
+# The following doesn't seem to work:
+#
 # $ docker context create garden-playground --docker "host=ssh://wilfred@playground.garden-lang.org"
 # $ docker context use garden-playground
 # $ docker compose up -d
+#
+# So instead, just ssh on to the machine and run docker-compose up there.
 
 services:
   garden-playground:
     image: wilfred/garden-playground:latest
-    ports:
-      - "0.0.0.0:3000:3000"
     restart: unless-stopped
     container_name: garden-playground
+    networks:
+      - garden-network
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    container_name: garden-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - garden-network
+
+networks:
+  garden-network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

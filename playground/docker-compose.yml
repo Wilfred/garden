@@ -22,11 +22,20 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
     networks:
       - garden-network
+
+configs:
+  caddyfile:
+    content: |
+      playground.garden-lang.org {
+        reverse_proxy garden-playground:3000
+      }
 
 networks:
   garden-network:

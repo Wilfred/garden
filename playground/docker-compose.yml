@@ -1,0 +1,7 @@
+services:
+  garden-playground:
+    image: wilfred/garden-playground:latest
+    ports:
+      - "0.0.0.0:3000:3000"
+    restart: unless-stopped
+    container_name: garden-playground

@@ -8,11 +8,35 @@ const os = require('os');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+let gardenVersion = 'unknown';
+
+// Get Garden version on startup
+exec('garden --version', (error, stdout, stderr) => {
+  if (!error && stdout) {
+    gardenVersion = stdout.trim();
+  } else {
+    console.error('Failed to get Garden version:', error || stderr);
+  }
+});
+
 app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('hello world');
+  res.json({
+    name: 'Garden Playground API',
+    description: 'REST API for executing Garden programming language code in a sandboxed environment',
+    version: gardenVersion,
+    endpoints: {
+      'POST /run': {
+        description: 'Execute Garden code and return results',
+        parameters: {
+          src: 'Garden source code to execute (string, required)'
+        },
+        returns: 'JSON object with success status and execution results or error'
+      }
+    }
+  });
 });
 
 app.post('/run', (req, res) => {

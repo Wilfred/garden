@@ -30,7 +30,7 @@ release:
 
 # Start a webserver serving the latest website build.
 site-serve:
-    cd website/dist && python -m http.server
+    cd website && python -m http.server
 
 # Build the website.
 site-build:

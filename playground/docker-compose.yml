@@ -1,3 +1,7 @@
+# $ docker context create garden-playground --docker "host=ssh://wilfred@playground.garden-lang.org"
+# $ docker context use garden-playground
+# $ docker compose up -d
+
 services:
   garden-playground:
     image: wilfred/garden-playground:latest

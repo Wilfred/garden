@@ -89,10 +89,11 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
 }
 
 function setupSnippetButtons() {
-  document.querySelectorAll(".run-snippet").forEach((button) => {
-    button.addEventListener("click", (_e) => {
-      let snippetDiv = (button as HTMLElement).closest(".snippet");
-      if (snippetDiv) {
+  document.querySelectorAll(".snippet").forEach((snippetDiv) => {
+    // Set up run button
+    let runButton = snippetDiv.querySelector(".run-snippet");
+    if (runButton) {
+      runButton.addEventListener("click", (_e) => {
         // Check for textarea first (edit mode), then pre (view mode)
         let textarea = snippetDiv.querySelector("textarea");
         let codeNode = snippetDiv.querySelector("pre");
@@ -108,33 +109,30 @@ function setupSnippetButtons() {
         if (outputDiv instanceof HTMLElement) {
           evalSnippet(src, outputDiv);
         }
-      }
-    });
-  });
-}
+      });
+    }
 
-function setupEditButtons() {
-  document.querySelectorAll(".edit-snippet").forEach((button) => {
-    button.addEventListener("click", (_e) => {
-      let snippetDiv = (button as HTMLElement).closest(".snippet");
-      if (!snippetDiv) return;
+    // Set up edit button
+    let editButton = snippetDiv.querySelector(".edit-snippet");
+    if (editButton) {
+      editButton.addEventListener("click", (_e) => {
+        let textarea = snippetDiv.querySelector("textarea");
+        let codeNode = snippetDiv.querySelector("pre");
 
-      let textarea = snippetDiv.querySelector("textarea");
-      let codeNode = snippetDiv.querySelector("pre");
-
-      if (textarea instanceof HTMLTextAreaElement) {
-        // Currently in edit mode, switch back to view mode
-        let pre = document.createElement("pre");
-        pre.textContent = textarea.value;
-        textarea.replaceWith(pre);
-      } else if (codeNode) {
-        // Currently in view mode, switch to edit mode
-        let textarea = document.createElement("textarea");
-        textarea.value = codeNode.textContent || "";
-        textarea.rows = (codeNode.textContent || "").split("\n").length;
-        codeNode.replaceWith(textarea);
-      }
-    });
+        if (textarea instanceof HTMLTextAreaElement) {
+          // Currently in edit mode, switch back to view mode
+          let pre = document.createElement("pre");
+          pre.textContent = textarea.value;
+          textarea.replaceWith(pre);
+        } else if (codeNode) {
+          // Currently in view mode, switch to edit mode
+          let textarea = document.createElement("textarea");
+          textarea.value = codeNode.textContent || "";
+          textarea.rows = (codeNode.textContent || "").split("\n").length;
+          codeNode.replaceWith(textarea);
+        }
+      });
+    }
   });
 }
 
@@ -156,5 +154,4 @@ function setupPlayground() {
 }
 
 setupSnippetButtons();
-setupEditButtons();
 setupPlayground();

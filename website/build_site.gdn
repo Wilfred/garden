@@ -215,7 +215,7 @@ fun blog_posts(website_dir: Path): List<BlogPost> {
   posts
 }
 
-fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
+fun build_blog(website_dir: Path, out_dir: Path, base_tmpl_src: String): Unit {
   for post in blog_posts(website_dir) {
     if post.published.not() {
       continue
@@ -237,8 +237,11 @@ fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
       None => {}
     }
 
+    let post_file_name = post.path.file_name().or_throw()
+    let out_path = out_dir.join("blog").join(post_file_name).set_extension("html")
+
     let html = render_markdown(substitute_shorthand(website_dir, src), Some(post.path))
-    write_website_page(base_tmpl_src, html, post.path.set_extension("html"), post.title)
+    write_website_page(base_tmpl_src, html, out_path, post.title)
   }
 }
 
@@ -252,7 +255,7 @@ fun build_site(): Unit {
   let base_tmpl_path = website_dir.join("template.html")
   let base_tmpl_src = base_tmpl_path.read().or_throw()
 
-  build_blog(website_dir, base_tmpl_src)
+  build_blog(website_dir, out_dir, base_tmpl_src)
 
   let seen_keyword_pages: List<String> = []
   let seen_operator_pages: List<String> = []
@@ -421,9 +424,9 @@ fun write_website_page(
     Some(s) => s ^ " - Garden"
     None => "Garden"
   }
-  
+
   let base_tmpl_src = base_tmpl_src.replace("__TITLE", title)
-  
+
   let (header, footer) = match base_tmpl_src.split_once("__MAIN_CONTENT") {
     Some(s) => s,
     None => ("", "")

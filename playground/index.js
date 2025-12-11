@@ -4,6 +4,19 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const pino = require('pino');
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname'
+    }
+  }
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,8 +27,9 @@ let gardenVersion = 'unknown';
 exec('garden --version', (error, stdout, stderr) => {
   if (!error && stdout) {
     gardenVersion = stdout.trim();
+    logger.info({ version: gardenVersion }, 'Garden version detected');
   } else {
-    console.error('Failed to get Garden version:', error || stderr);
+    logger.error({ error: error?.message, stderr }, 'Failed to get Garden version');
   }
 });
 
@@ -50,11 +64,11 @@ app.post('/run', (req, res) => {
   }
 
   // Log the submitted code
-  const timestamp = new Date().toISOString();
   const codePreview = src.length > 200 ? src.substring(0, 200) + '...' : src;
-  console.log(`[${timestamp}] Evaluating code (${src.length} chars):`);
-  console.log(codePreview);
-  console.log('---');
+  logger.info({
+    codeLength: src.length,
+    codePreview
+  }, 'Evaluating code');
 
   // Create a temporary file path with .gdn extension
   const tmpFile = path.join(os.tmpdir(), `garden-tmp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.gdn`);
@@ -72,7 +86,7 @@ app.post('/run', (req, res) => {
       // Delete the temp file
       fs.unlink(tmpFile, (unlinkError) => {
         if (unlinkError) {
-          console.error('Failed to delete temp file:', unlinkError);
+          logger.error({ error: unlinkError.message, tmpFile }, 'Failed to delete temp file');
         }
       });
 
@@ -105,19 +119,21 @@ app.post('/run', (req, res) => {
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info({ port: PORT }, 'Server running');
 });
 
 process.on('SIGINT', () => {
-  console.log('\nGot SIGINT');
+  logger.info('Got SIGINT, shutting down gracefully');
   server.close(() => {
+    logger.info('Server closed');
     process.exit(0);
   });
 });
 
 process.on('SIGTERM', () => {
-  console.log('\nGot SIGTERM');
+  logger.info('Got SIGTERM, shutting down gracefully');
   server.close(() => {
+    logger.info('Server closed');
     process.exit(0);
   });
 });

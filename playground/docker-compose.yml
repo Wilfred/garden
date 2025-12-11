@@ -1,10 +1,7 @@
-# The following doesn't seem to work:
+# ssh on to the machine and run docker-compose up there.
 #
-# $ docker context create garden-playground --docker "host=ssh://wilfred@playground.garden-lang.org"
-# $ docker context use garden-playground
+# $ docker compose pull
 # $ docker compose up -d
-#
-# So instead, just ssh on to the machine and run docker-compose up there.
 
 services:
   garden-playground:

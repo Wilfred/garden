@@ -254,7 +254,7 @@ fun build_site(): Unit {
   let website_dir = source_dir_path().parent().or_throw().parent().or_throw().join("website")
   fs::set_working_directory(website_dir).or_throw()
 
-  let out_dir = website_dir
+  let out_dir = website_dir.join("dist")
 
   let base_tmpl_path = website_dir.join("template.html")
   let base_tmpl_src = base_tmpl_path.read().or_throw()

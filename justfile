@@ -30,17 +30,15 @@ release:
 
 # Start a webserver serving the latest website build.
 site-serve:
-    cd website && python -m http.server
+    cd website/dist && python -m http.server
 
 # Build the website.
 site-build:
-    mkdir -p website/dist
-    cp website/*.html website/dist
+    mkdir -p website/dist/blog
+    garden run website/build_site.gdn
+
     cp website/*.png website/dist
     cp website/*.mp4 website/dist
-
-    mkdir -p website/dist/blog
-    cp website/blog/*.html website/dist/blog
 
     mkdir -p website/dist/static
     cp website/static/*.css website/dist/static

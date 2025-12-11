@@ -4,15 +4,11 @@ Garden is an experimental programming language focused on interactive
 tooling.
 
 ```
-fun fib(i: Int): Int {
-  if i < 2 {
-    return 1
-  }
-  
-  fib(i - 1) + fib(i - 2)
+fun greet(name: String): String {
+  "Hello, " ^ name ^ "!"
 }
 
-fib(5)
+greet("World")
 ```
 
 ## Taking REPLs Seriously

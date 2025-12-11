@@ -1,0 +1,16 @@
+import "__fs.gdn" as fs
+
+// These should all include the path they tried to access.
+
+dbg(fs::list_directory(Path{ p: "/tmp/no_such_dir_garden/" }))
+
+dbg(Path{ p: "/tmp/no_such_dir_garden/foo.txt" }.read())
+
+dbg(fs::write_file("hello world", Path{ p: "/tmp/no_such_dir_garden/bar.txt" }))
+
+// args: run
+// expected stdout:
+// Err("Could not read directory `/tmp/no_such_dir_garden/`. No such file or directory (os error 2)")
+// Err("Could not read `/tmp/no_such_dir_garden/foo.txt`. No such file or directory (os error 2)")
+// Err("Could not write `/tmp/no_such_dir_garden/bar.txt`. No such file or directory (os error 2)")
+

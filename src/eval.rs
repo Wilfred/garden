@@ -2743,7 +2743,7 @@ fn eval_builtin_call(
                 }
             };
 
-            let path = PathBuf::from(path_s.clone());
+            let path = PathBuf::from(&path_s);
 
             let value = match path.read_dir() {
                 Ok(dir_iter) => {
@@ -2761,7 +2761,9 @@ fn eval_builtin_call(
                     }))
                 }
                 Err(e) => {
-                    let s = Value::new(Value_::String(format!("{e} {path_s}")));
+                    let s = Value::new(Value_::String(format!(
+                        "Could not read directory `{path_s}`. {e}"
+                    )));
                     Value::err(s)
                 }
             };
@@ -2976,11 +2978,14 @@ fn eval_builtin_call(
                 }
             };
 
-            let path = PathBuf::from(path_s);
+            let path = PathBuf::from(&path_s);
 
-            let v = match std::fs::write(path, content_s) {
+            let v = match std::fs::write(&path, content_s) {
                 Ok(()) => Value::ok(Value::unit()),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{e}")))),
+                Err(e) => {
+                    let msg = format!("Could not write `{path_s}`. {e}");
+                    Value::err(Value::new(Value_::String(msg)))
+                }
             };
 
             if expr_value_is_used {
@@ -4548,7 +4553,9 @@ fn eval_builtin_method_call(
 
             let v = match std::fs::read_to_string(path) {
                 Ok(s) => Value::ok(Value::new(Value_::String(s))),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{e} {path_s}")))),
+                Err(e) => Value::err(Value::new(Value_::String(format!(
+                    "Could not read `{path_s}`. {e}"
+                )))),
             };
 
             if expr_value_is_used {

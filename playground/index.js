@@ -49,6 +49,13 @@ app.post('/run', (req, res) => {
     });
   }
 
+  // Log the submitted code
+  const timestamp = new Date().toISOString();
+  const codePreview = src.length > 200 ? src.substring(0, 200) + '...' : src;
+  console.log(`[${timestamp}] Evaluating code (${src.length} chars):`);
+  console.log(codePreview);
+  console.log('---');
+
   // Create a temporary file path with .gdn extension
   const tmpFile = path.join(os.tmpdir(), `garden-tmp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.gdn`);
 
@@ -97,6 +104,20 @@ app.post('/run', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+process.on('SIGINT', () => {
+  console.log('\nGot SIGINT');
+  server.close(() => {
+    process.exit(0);
+  });
+});
+
+process.on('SIGTERM', () => {
+  console.log('\nGot SIGTERM');
+  server.close(() => {
+    process.exit(0);
+  });
 });

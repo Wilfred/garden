@@ -1,6 +1,9 @@
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 
+// Store EditorView instances for each snippet
+const editorViews = new WeakMap<Element, EditorView>();
+
 type StdoutOutput = {
   printed: {
     s: string;
@@ -100,7 +103,7 @@ function setupSnippetButtons() {
         let src = "";
 
         // Check for CodeMirror editor first (edit mode)
-        let editorView = (snippetDiv as any)._editorView as EditorView | undefined;
+        let editorView = editorViews.get(snippetDiv);
         if (editorView) {
           src = editorView.state.sliceDoc();
         } else {
@@ -130,7 +133,7 @@ function setupSnippetButtons() {
 
       editButton.addEventListener("click", (_e) => {
         let codeNode = snippetDiv.querySelector("pre");
-        let editorView = (snippetDiv as any)._editorView as EditorView | undefined;
+        let editorView = editorViews.get(snippetDiv);
 
         // Check if we're in CodeMirror edit mode
         if (editorView) {
@@ -150,7 +153,7 @@ function setupSnippetButtons() {
             editorView.destroy();
           }
 
-          (snippetDiv as any)._editorView = null;
+          editorViews.delete(snippetDiv);
           originalCodeNode = null;
           originalTextContent = "";
         } else if (codeNode instanceof HTMLPreElement) {
@@ -168,8 +171,8 @@ function setupSnippetButtons() {
             state,
           });
 
-          // Store reference on the snippet div so Run button can access it
-          (snippetDiv as any)._editorView = newEditorView;
+          // Store reference in WeakMap so Run button can access it
+          editorViews.set(snippetDiv, newEditorView);
 
           codeNode.replaceWith(newEditorView.dom);
         }

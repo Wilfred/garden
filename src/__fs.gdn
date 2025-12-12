@@ -60,3 +60,31 @@ public fun working_directory(): Path {
 public fun set_working_directory(path: Path): Result<Unit, String> {
   __BUILTIN_IMPLEMENTATION
 }
+
+// Create a directory at `path`.
+//
+// ```
+// import "__fs.gdn" as fs
+// fs::create_dir(Path{ p: "/tmp/my_new_directory" })
+// ```
+public fun create_dir(path: Path): Result<Unit, String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+// Remove the directory at `path`.
+//
+// The directory must be empty.
+//
+// ```
+// import "__fs.gdn" as fs
+// fs::remove_dir(Path{ p: "/tmp/my_directory" })
+// ```
+public fun remove_dir(path: Path): Result<Unit, String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test create_and_remove_dir {
+  let test_path = Path{ p: "/tmp/garden_test_directory" }
+  create_dir(test_path)
+  remove_dir(test_path)
+}

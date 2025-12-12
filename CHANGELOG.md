@@ -42,6 +42,8 @@ Added `__reflect::operators()`.
 
 Added `__random::int()`.
 
+Added `__fs::create_dir()` and `__fs::remove_dir()`.
+
 ## Build
 
 Garden now requires Rust 1.85+ to build.

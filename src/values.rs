@@ -391,6 +391,8 @@ pub(crate) enum BuiltinFunctionKind {
     GetEnv,
     Keywords,
     RandomInt,
+    CreateDir,
+    RemoveDir,
 }
 
 impl BuiltinFunctionKind {
@@ -407,7 +409,9 @@ impl BuiltinFunctionKind {
             BuiltinFunctionKind::WriteFile
             | BuiltinFunctionKind::ListDirectory
             | BuiltinFunctionKind::WorkingDirectory
-            | BuiltinFunctionKind::SetWorkingDirectory => PathBuf::from("__fs.gdn"),
+            | BuiltinFunctionKind::SetWorkingDirectory
+            | BuiltinFunctionKind::CreateDir
+            | BuiltinFunctionKind::RemoveDir => PathBuf::from("__fs.gdn"),
             BuiltinFunctionKind::SourceForFun
             | BuiltinFunctionKind::SourceForMethod
             | BuiltinFunctionKind::SourceForType
@@ -453,6 +457,8 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::GetEnv => "get_env",
             BuiltinFunctionKind::Keywords => "keywords",
             BuiltinFunctionKind::RandomInt => "int",
+            BuiltinFunctionKind::CreateDir => "create_dir",
+            BuiltinFunctionKind::RemoveDir => "remove_dir",
         };
         write!(f, "{name}")
     }

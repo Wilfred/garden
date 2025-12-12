@@ -33,15 +33,20 @@ Most gradual type systems are intended for incremental adoption in a
 dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:
 
-```garden nocheck
-fun foo(): String {
+```garden
+fun get_value(): String {
   return ""
 }
 
-fun bar(): Unit {
-  eval("fun foo(): Int { return 1 }")
-  let x = foo() + 1
+fun add_one(): Int {
+  get_value() + 1
 }
+
+fun get_value(): Int {
+  return 2
+}
+
+add_one()
 ```
 
 ## Sandboxed Execution

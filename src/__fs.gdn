@@ -60,3 +60,36 @@ public fun working_directory(): Path {
 public fun set_working_directory(path: Path): Result<Unit, String> {
   __BUILTIN_IMPLEMENTATION
 }
+
+// Create a new directory at the specified path.
+//
+// If the directory already exists, an error is returned.
+//
+// ```
+// import "__fs.gdn" as fs
+// fs::create_dir(Path{ p: "/tmp/my_new_directory" })
+// ```
+public fun create_dir(path: Path): Result<Unit, String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test create_dir {
+  create_dir(Path{ p: "/tmp/test_garden_create_dir" })
+}
+
+// Delete the directory at the specified path.
+//
+// The directory must be empty. If it contains files or subdirectories,
+// an error is returned.
+//
+// ```
+// import "__fs.gdn" as fs
+// fs::delete_dir(Path{ p: "/tmp/my_directory" })
+// ```
+public fun delete_dir(path: Path): Result<Unit, String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test delete_dir {
+  delete_dir(Path{ p: "/tmp/test_garden_delete_dir" })
+}

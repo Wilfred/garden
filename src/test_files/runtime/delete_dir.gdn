@@ -1,0 +1,16 @@
+import "__fs.gdn" as fs
+
+{
+  let test_dir = Path{ p: "/tmp/test_garden_delete_dir_runtime" }
+
+  // Create a directory first
+  fs::create_dir(test_dir).or_throw()
+
+  // Delete the directory
+  fs::delete_dir(test_dir).or_throw()
+
+  println("Directory deleted successfully")
+}
+
+// args: run
+// expected stdout: Directory deleted successfully

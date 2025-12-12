@@ -1,0 +1,19 @@
+import "__fs.gdn" as fs
+
+{
+  let test_dir = Path{ p: "/tmp/test_garden_create_dir_runtime" }
+
+  // Create the directory
+  fs::create_dir(test_dir).or_throw()
+
+  // Verify it exists by listing the parent directory
+  let contents = fs::list_directory(Path{ p: "/tmp" }).or_throw()
+
+  // Clean up
+  fs::delete_dir(test_dir)
+
+  println("Directory created successfully")
+}
+
+// args: run
+// expected stdout: Directory created successfully

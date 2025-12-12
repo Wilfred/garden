@@ -8,6 +8,7 @@
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "es2015",
+    "moduleResolution": "node",
     "target": "es2015",
     "types": [],
 

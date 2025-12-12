@@ -358,3 +358,49 @@ ul ul {
     display: none;
   }
 }
+
+/* CodeMirror Integration */
+.cm-editor {
+  font-family: monospace;
+  font-size: 16px;
+  line-height: 20px;
+  border: none;
+  outline: none;
+  background-color: var(--cream);
+}
+
+.cm-scroller {
+  font-family: monospace;
+  overflow: auto;
+}
+
+.cm-content {
+  padding: 10px;
+  min-height: 100px;
+  caret-color: var(--green-primary);
+}
+
+.cm-focused {
+  outline: 2px solid var(--green-primary);
+  outline-offset: 2px;
+}
+
+.cm-selectionBackground {
+  background-color: var(--green-primary) !important;
+  opacity: 0.3;
+}
+
+.snippet .cm-editor {
+  font-weight: 700;
+  margin: 10px;
+}
+
+.cm-line {
+  padding: 0;
+}
+
+/* Gutters (line numbers, etc) */
+.cm-gutters {
+  background-color: var(--cream);
+  border-right: 1px solid #00000030;
+}

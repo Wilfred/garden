@@ -1109,3 +1109,11 @@ test min {
   assert(min(1, 2) == 1)
 }
 
+// A function, which is a value that can be called with arguments.
+//
+// ```
+// let f: Fun<(Int, Int), Int> = fun(x, y) { x + y }
+// ```
+struct Fun<Args, Out> {
+  __BUILTIN_IMPLEMENTATION: NoValue,
+}

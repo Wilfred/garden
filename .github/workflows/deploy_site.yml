@@ -11,14 +11,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.85.0
+      - uses: extractions/setup-just@v2
 
-      - name: Run website build script
-        run: cargo run -- run website/build_site.gdn
+      - name: Build Garden
+        run: cargo build --release
+
+      - name: Add Garden to PATH
+        run: echo "$GITHUB_WORKSPACE/target/release" >> $GITHUB_PATH
+
+      - name: Build website
+        run: just site-build
 
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:
           branch: gh-pages
-          folder: website
+          folder: website/dist
           single-commit: true
           force: true

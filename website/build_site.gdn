@@ -96,13 +96,8 @@ fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>
   render_markdown(md_src, file)
 }
 
-fun render_type_doc_comment(heading: String, doc_comment: String, src: Option<String>, methods: List<String>, type_name: String): String {
-  let src = match src {
-    Some(src) => {
-      "```title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
-    }
-    None => ""
-  }
+fun render_type_doc_comment(heading: String, doc_comment: String, src: String, methods: List<String>, type_name: String): String {
+  let src = "```title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
 
   let methods_section = if methods.is_empty() {
     ""
@@ -124,12 +119,23 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Un
     Some(doc_comment) => {
       let heading = "".join(["# `", type_name, "` type"])
       let methods = reflect::methods_for_type(type_name)
-      let page_src = render_type_doc_comment(heading, doc_comment, reflect::source_for_type(type_name), methods, type_name)
+
+      let type_src = match reflect::source_for_type(type_name) {
+        Some(src) => src
+        None => {
+          log::warn("No source found for built-in type " ^ type_name)
+          ""
+        }
+      }
+
+      let page_src = render_type_doc_comment(heading, doc_comment, type_src, methods, type_name)
 
       let dest_path = out_dir.join("type:" ^ type_name ^ ".html")
       write_website_page(base_tmpl_src, page_src, dest_path, Some(type_name))
     }
-    None => {}
+    None => {
+      log::warn("No doc comment found for built-in type " ^ type_name)
+    }
   }
 }
 
@@ -302,7 +308,11 @@ fun build_site(): Unit {
   }
 
   for type_name in reflect::prelude_types() {
-    write_type_page(type_name, out_dir, base_tmpl_src)
+    // We have a manually created type::Tuple.md file, so don't look
+    // for a doc comment in that case.
+    if website_dir.join("type:" ^ type_name ^ ".md").exists().not() {
+      write_type_page(type_name, out_dir, base_tmpl_src)
+    }
 
     for method_name in reflect::methods_for_type(type_name) {
       write_method_page(type_name, method_name, out_dir, base_tmpl_src)

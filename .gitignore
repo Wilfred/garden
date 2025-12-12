@@ -11,6 +11,7 @@ flamegraph.svg
 
 *.map
 *.d.ts
+website/static/playground.js
 
 # Emacs related
 .cask

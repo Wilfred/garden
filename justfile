@@ -41,6 +41,7 @@ site-build:
     cp website/*.mp4 website/dist
 
     mkdir -p website/dist/static
+    cd website/static && npm run build
     cp website/static/*.css website/dist/static
     cp website/static/*.js website/dist/static
 

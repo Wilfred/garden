@@ -115,20 +115,37 @@ function setupSnippetButtons() {
     // Set up edit button
     let editButton = snippetDiv.querySelector(".edit-snippet");
     if (editButton) {
+      let originalCodeNode: HTMLPreElement | null = null;
+      let originalTextContent = "";
+
       editButton.addEventListener("click", (_e) => {
         let textarea = snippetDiv.querySelector("textarea");
         let codeNode = snippetDiv.querySelector("pre");
 
         if (textarea instanceof HTMLTextAreaElement) {
           // Currently in edit mode, switch back to view mode
-          let pre = document.createElement("pre");
-          pre.textContent = textarea.value;
-          textarea.replaceWith(pre);
-        } else if (codeNode) {
+          // If content hasn't changed, restore original with syntax highlighting
+          if (textarea.value === originalTextContent && originalCodeNode) {
+            textarea.replaceWith(originalCodeNode);
+            originalCodeNode = null;
+            originalTextContent = "";
+          } else {
+            // Content changed, create plain pre element
+            let pre = document.createElement("pre");
+            pre.textContent = textarea.value;
+            textarea.replaceWith(pre);
+            originalCodeNode = null;
+            originalTextContent = "";
+          }
+        } else if (codeNode instanceof HTMLPreElement) {
           // Currently in view mode, switch to edit mode
+          // Store the original node to restore later if unchanged
+          originalCodeNode = codeNode.cloneNode(true) as HTMLPreElement;
+          originalTextContent = codeNode.textContent || "";
+
           let textarea = document.createElement("textarea");
-          textarea.value = codeNode.textContent || "";
-          textarea.rows = (codeNode.textContent || "").split("\n").length;
+          textarea.value = originalTextContent;
+          textarea.rows = originalTextContent.split("\n").length;
           codeNode.replaceWith(textarea);
         }
       });

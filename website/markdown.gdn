@@ -734,11 +734,11 @@ test render_triple_backtick_blank_line {
 }
 
 test render_triple_backtick_keyword {
-  assert(render_markdown("```garden nocheck\nfun foo\n```", None) == "<div class=\"snippet\"><pre><code><a class=\"keyword\" href=\"/keyword:fun.html\">fun</a> foo</code></pre><button class=\"run-snippet\">Run</button><div class=\"snippet-output\"></div></div>")
+  assert(render_markdown("```garden nocheck\nfun foo\n```", None) == "<div class=\"snippet\"><pre><code><a class=\"keyword\" href=\"/keyword:fun.html\">fun</a> foo</code></pre><button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button><div class=\"snippet-output\" hidden></div></div>")
 }
 
 test render_triple_backtick_comment {
-  assert(render_markdown("```garden nocheck\nfoo // bar\n```", None) == "<div class=\"snippet\"><pre><code>foo <span class=\"comment\">// bar</span></code></pre><button class=\"run-snippet\">Run</button><div class=\"snippet-output\"></div></div>")
+  assert(render_markdown("```garden nocheck\nfoo // bar\n```", None) == "<div class=\"snippet\"><pre><code>foo <span class=\"comment\">// bar</span></code></pre><button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button><div class=\"snippet-output\" hidden></div></div>")
 }
 
 test render_asterisk_bullet {

@@ -196,25 +196,22 @@ function setupSnippetButtons() {
 
         // Check if we're in CodeMirror edit mode
         if (editorView) {
-          // Currently in edit mode with CodeMirror, switch back to view mode
-          let currentValue = editorView.state.sliceDoc();
-          let editorDom = editorView.dom;
+          // Currently in edit mode, reset to original content
+          let state = EditorState.create({
+            doc: originalTextContent,
+            extensions: [
+              minimalSetup,
+              EditorView.lineWrapping,
+              history(),
+              keymap.of([...defaultKeymap, ...historyKeymap]),
+              highlightActiveLine(),
+              gardenLanguage,
+              gardenHighlighting,
+            ],
+          });
 
-          if (currentValue === originalTextContent && originalCodeNode) {
-            // Content unchanged, restore original with syntax highlighting
-            editorDom.replaceWith(originalCodeNode);
-            editorView.destroy();
-          } else {
-            // Content changed, create plain pre element
-            let pre = document.createElement("pre");
-            pre.textContent = currentValue;
-            editorDom.replaceWith(pre);
-            editorView.destroy();
-          }
-
-          editorViews.delete(snippetDiv);
-          originalCodeNode = null;
-          originalTextContent = "";
+          editorView.setState(state);
+          editorView.focus();
         } else if (codeNode instanceof HTMLPreElement) {
           // Currently in view mode, switch to CodeMirror edit mode
           originalCodeNode = codeNode.cloneNode(true) as HTMLPreElement;
@@ -242,6 +239,9 @@ function setupSnippetButtons() {
           editorViews.set(snippetDiv, newEditorView);
 
           codeNode.replaceWith(newEditorView.dom);
+
+          // Change button text to "Reset"
+          editButton.textContent = "Reset";
 
           newEditorView.focus();
         }

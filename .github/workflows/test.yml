@@ -23,6 +23,23 @@ jobs:
       - run: ls
       - uses: raven-actions/actionlint@v1
 
+  build_docs:
+    name: Build documentation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+      - uses: extractions/setup-just@v2
+
+      - name: Build Garden
+        run: cargo build --release
+
+      - name: Add Garden to PATH
+        run: echo "$GITHUB_WORKSPACE/target/release" >> "$GITHUB_PATH"
+
+      - name: Build website
+        run: just site-build
+
   # dry_run_publish:
   #   runs-on: ubuntu-24.04
   #   steps:

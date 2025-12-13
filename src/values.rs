@@ -393,6 +393,7 @@ pub(crate) enum BuiltinFunctionKind {
     RandomInt,
     CreateDir,
     RemoveDir,
+    Unixtime,
 }
 
 impl BuiltinFunctionKind {
@@ -425,6 +426,7 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::NamespaceFunctions
             | BuiltinFunctionKind::Keywords => PathBuf::from("__reflect.gdn"),
             BuiltinFunctionKind::RandomInt => PathBuf::from("__random.gdn"),
+            BuiltinFunctionKind::Unixtime => PathBuf::from("__time.gdn"),
         }
     }
 }
@@ -459,6 +461,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::RandomInt => "int",
             BuiltinFunctionKind::CreateDir => "create_dir",
             BuiltinFunctionKind::RemoveDir => "remove_dir",
+            BuiltinFunctionKind::Unixtime => "unixtime",
         };
         write!(f, "{name}")
     }

@@ -3510,6 +3510,27 @@ fn eval_builtin_call(
                 env.push_value(Value::new(Value_::Integer(random_value)));
             }
         }
+        BuiltinFunctionKind::Unixtime => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let timestamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64;
+
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::Integer(timestamp)));
+            }
+        }
     }
 
     Ok(())

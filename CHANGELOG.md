@@ -44,6 +44,8 @@ Added `__random::int()`.
 
 Added `__fs::create_dir()` and `__fs::remove_dir()`.
 
+Added `__time::unixtime()`.
+
 ## Build
 
 Garden now requires Rust 1.85+ to build.

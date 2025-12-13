@@ -1,8 +1,11 @@
-import { EditorView, basicSetup } from "codemirror";
+import { EditorView, minimalSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { StreamLanguage } from "@codemirror/language";
+import { history, historyKeymap } from "@codemirror/commands";
+import { keymap, highlightActiveLine, highlightActiveLineGutter } from "@codemirror/view";
+import { defaultKeymap } from "@codemirror/commands";
 
 // Store EditorView instances for each snippet
 const editorViews = new WeakMap<Element, EditorView>();
@@ -212,7 +215,15 @@ function setupSnippetButtons() {
           // Create CodeMirror editor
           let state = EditorState.create({
             doc: originalTextContent,
-            extensions: [basicSetup, EditorView.lineWrapping, gardenLanguage, gardenHighlighting],
+            extensions: [
+              minimalSetup,
+              EditorView.lineWrapping,
+              history(),
+              keymap.of([...defaultKeymap, ...historyKeymap]),
+              highlightActiveLine(),
+              gardenLanguage,
+              gardenHighlighting
+            ],
           });
 
           let newEditorView = new EditorView({
@@ -223,6 +234,8 @@ function setupSnippetButtons() {
           editorViews.set(snippetDiv, newEditorView);
 
           codeNode.replaceWith(newEditorView.dom);
+
+          newEditorView.focus();
         }
       });
     }

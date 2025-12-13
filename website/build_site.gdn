@@ -262,6 +262,12 @@ fun build_site(): Unit {
 
   let out_dir = website_dir.join("dist")
 
+  // Create necessary directories
+  fs::create_dir(out_dir)
+  fs::create_dir(out_dir.join("blog"))
+  fs::create_dir(out_dir.join("static"))
+  fs::create_dir(out_dir.join("static").join("fonts"))
+
   let base_tmpl_path = website_dir.join("template.html")
   let base_tmpl_src = base_tmpl_path.read().or_throw()
 

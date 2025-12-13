@@ -34,17 +34,14 @@ site-serve:
 
 # Build the website.
 site-build:
-    mkdir -p website/dist/blog
     garden run website/build_site.gdn
 
     cp website/*.png website/dist
     cp website/*.mp4 website/dist
 
-    mkdir -p website/dist/static
     cd website/static && npm install && npm run build
     cp website/static/*.css website/dist/static
 
-    mkdir -p website/dist/static/fonts
     cp website/static/fonts/*.woff2 website/dist/static/fonts
 
 # Build a Docker image for the playground backend service.

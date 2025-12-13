@@ -43,7 +43,6 @@ site-build:
     mkdir -p website/dist/static
     cd website/static && npm run build
     cp website/static/*.css website/dist/static
-    cp website/static/*.js website/dist/static
 
     mkdir -p website/dist/static/fonts
     cp website/static/fonts/*.woff2 website/dist/static/fonts

@@ -7,8 +7,8 @@
   "type": "commonjs",
   "main": "playground.js",
   "scripts": {
-    "build": "tsc --noEmit && esbuild playground.ts --bundle --format=esm --outfile=playground.js --sourcemap",
-    "watch": "concurrently \"tsc --noEmit --watch --preserveWatchOutput\" \"esbuild playground.ts --bundle --format=esm --outfile=playground.js --sourcemap --watch\"",
+    "build": "tsc --noEmit && esbuild playground.ts --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap",
+    "watch": "concurrently \"tsc --noEmit --watch --preserveWatchOutput\" \"esbuild playground.ts --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap --watch\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

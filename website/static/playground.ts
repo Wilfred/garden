@@ -1,8 +1,56 @@
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags } from "@lezer/highlight";
+import { StreamLanguage } from "@codemirror/language";
 
 // Store EditorView instances for each snippet
 const editorViews = new WeakMap<Element, EditorView>();
+
+// Garden language definition
+const gardenLanguage = StreamLanguage.define({
+  token(stream) {
+    // Comments
+    if (stream.match("//")) {
+      stream.skipToEnd();
+      return "comment";
+    }
+
+    // Strings
+    if (stream.match('"')) {
+      while (!stream.eol()) {
+        if (stream.next() === '"') {
+          break;
+        }
+      }
+      return "string";
+    }
+
+    // Keywords
+    if (stream.match(/\b(as|assert|break|continue|else|enum|for|fun|if|import|in|let|match|method|public|return|shared|struct|test|while)\b/)) {
+      return "keyword";
+    }
+
+    // Types (CamelCase words)
+    if (stream.match(/\b[A-Z][a-zA-Z0-9_]*\b/)) {
+      return "type";
+    }
+
+    // Skip other characters
+    stream.next();
+    return null;
+  }
+});
+
+// Syntax highlighting style for Garden
+const gardenHighlighting = syntaxHighlighting(
+  HighlightStyle.define([
+    { tag: tags.comment, color: "gray" },
+    { tag: tags.string, color: "#910a0a" },
+    { tag: tags.keyword, color: "#d05416", fontWeight: "bold" },
+    { tag: tags.typeName, color: "#57269c" }
+  ])
+);
 
 type StdoutOutput = {
   printed: {
@@ -164,7 +212,7 @@ function setupSnippetButtons() {
           // Create CodeMirror editor
           let state = EditorState.create({
             doc: originalTextContent,
-            extensions: [basicSetup, EditorView.lineWrapping],
+            extensions: [basicSetup, EditorView.lineWrapping, gardenLanguage, gardenHighlighting],
           });
 
           let newEditorView = new EditorView({

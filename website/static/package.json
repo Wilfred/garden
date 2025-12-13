@@ -7,8 +7,9 @@
   "type": "commonjs",
   "main": "playground.js",
   "scripts": {
-    "build": "tsc --noEmit && esbuild playground.ts --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap",
-    "watch": "concurrently \"tsc --noEmit --watch --preserveWatchOutput\" \"esbuild playground.ts --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap --watch\"",
+    "build": "tsc --noEmit && esbuild playground.ts --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap && npm run build:css",
+    "build:css": "cleancss -o ../dist/static/style.css style.css && cp blocks.min.css ../dist/static/blocks.min.css",
+    "watch": "concurrently \"tsc --noEmit --watch --preserveWatchOutput\" \"esbuild playground.ts --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap --watch\" \"chokidar '*.css' -c 'npm run build:css'\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -17,6 +18,8 @@
     "@codemirror/state": "^6.4.0",
     "@codemirror/view": "^6.23.0",
     "@lezer/highlight": "^1.2.3",
+    "chokidar-cli": "^3.0.0",
+    "clean-css-cli": "^5.6.3",
     "codemirror": "^6.0.1",
     "concurrently": "^9.1.0",
     "esbuild": "^0.24.0",

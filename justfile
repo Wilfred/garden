@@ -40,8 +40,6 @@ site-build:
     cp website/*.mp4 website/dist
 
     cd website/static && npm install && npm run build
-    cp website/static/*.css website/dist/static
-
     cp website/static/fonts/*.woff2 website/dist/static/fonts
 
 # Build a Docker image for the playground backend service.

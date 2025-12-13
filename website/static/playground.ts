@@ -4,7 +4,11 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { StreamLanguage } from "@codemirror/language";
 import { history, historyKeymap } from "@codemirror/commands";
-import { keymap, highlightActiveLine, highlightActiveLineGutter } from "@codemirror/view";
+import {
+  keymap,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+} from "@codemirror/view";
 import { defaultKeymap } from "@codemirror/commands";
 
 // Store EditorView instances for each snippet
@@ -30,7 +34,11 @@ const gardenLanguage = StreamLanguage.define({
     }
 
     // Keywords
-    if (stream.match(/\b(as|assert|break|continue|else|enum|for|fun|if|import|in|let|match|method|public|return|shared|struct|test|while)\b/)) {
+    if (
+      stream.match(
+        /\b(as|assert|break|continue|else|enum|for|fun|if|import|in|let|match|method|public|return|shared|struct|test|while)\b/,
+      )
+    ) {
       return "keyword";
     }
 
@@ -42,7 +50,7 @@ const gardenLanguage = StreamLanguage.define({
     // Skip other characters
     stream.next();
     return null;
-  }
+  },
 });
 
 // Syntax highlighting style for Garden
@@ -51,8 +59,8 @@ const gardenHighlighting = syntaxHighlighting(
     { tag: tags.comment, color: "gray" },
     { tag: tags.string, color: "#910a0a" },
     { tag: tags.keyword, color: "#d05416", fontWeight: "bold" },
-    { tag: tags.typeName, color: "#57269c" }
-  ])
+    { tag: tags.typeName, color: "#57269c" },
+  ]),
 );
 
 type StdoutOutput = {
@@ -222,7 +230,7 @@ function setupSnippetButtons() {
               keymap.of([...defaultKeymap, ...historyKeymap]),
               highlightActiveLine(),
               gardenLanguage,
-              gardenHighlighting
+              gardenHighlighting,
             ],
           });
 

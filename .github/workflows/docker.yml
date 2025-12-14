@@ -6,9 +6,26 @@ jobs:
   build-docker:
     name: Build Docker Image
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - uses: extractions/setup-just@v2
 
       - name: Build Docker image
         run: just build-docker
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and push to ghcr.io
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker tag wilfred/garden-playground:latest ghcr.io/${{ github.repository_owner }}/garden-playground:latest
+          docker push ghcr.io/${{ github.repository_owner }}/garden-playground:latest

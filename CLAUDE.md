@@ -28,6 +28,8 @@ import "__fs.gdn" as fs
 fs::list_directory(Path{ p: "/"})
 ```
 
+When adding built-in functions, always update the CHANGELOG.md.
+
 # Verifying changes
 - cargo clippy: Check that your Rust code is correct
 - cargo run -- check yourfile.gdn: Check the test program named yourfile.gdn

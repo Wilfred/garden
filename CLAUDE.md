@@ -19,7 +19,7 @@ test add_one_to_two {
 }
 ```
 
-The built-in namespaces available are `__fs`, `__random` and
+The built-in files available are `__fs`, `__random` and
 `__reflect`. You can import and use them like this:
 
 ```

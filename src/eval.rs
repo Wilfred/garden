@@ -3566,6 +3566,30 @@ fn eval_builtin_call(
                 env.push_value(Value::new(Value_::Integer(timestamp)));
             }
         }
+        BuiltinFunctionKind::BuiltinFiles => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let items: Vec<Value> = BUILTIN_FILES
+                .iter()
+                .map(|(name, _)| Value::new(Value_::String((*name).to_owned())))
+                .collect();
+
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::List {
+                    items,
+                    elem_type: Type::string(),
+                }));
+            }
+        }
     }
 
     Ok(())

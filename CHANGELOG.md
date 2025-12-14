@@ -46,6 +46,8 @@ Added `__fs::create_dir()` and `__fs::remove_dir()`.
 
 Added `__time::unixtime()`.
 
+Added `__reflect::builtin_files()`.
+
 ## Build
 
 Garden now requires Rust 1.85+ to build.

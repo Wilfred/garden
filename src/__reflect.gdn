@@ -206,3 +206,16 @@ test methods_for_type {
   let string_methods = methods_for_type("String")
   assert(string_methods.contains("len"))
 }
+
+// Get all the built-in file names that can be imported.
+public fun builtin_files(): List<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test builtin_files {
+  let files = builtin_files()
+  assert(files.contains("__prelude.gdn"))
+  assert(files.contains("__fs.gdn"))
+  assert(files.contains("__reflect.gdn"))
+  assert(files.contains("__time.gdn"))
+}

@@ -394,6 +394,7 @@ pub(crate) enum BuiltinFunctionKind {
     CreateDir,
     RemoveDir,
     Unixtime,
+    BuiltinFiles,
 }
 
 impl BuiltinFunctionKind {
@@ -424,7 +425,8 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::CheckSnippet
             | BuiltinFunctionKind::MethodsForType
             | BuiltinFunctionKind::NamespaceFunctions
-            | BuiltinFunctionKind::Keywords => PathBuf::from("__reflect.gdn"),
+            | BuiltinFunctionKind::Keywords
+            | BuiltinFunctionKind::BuiltinFiles => PathBuf::from("__reflect.gdn"),
             BuiltinFunctionKind::RandomInt => PathBuf::from("__random.gdn"),
             BuiltinFunctionKind::Unixtime => PathBuf::from("__time.gdn"),
         }
@@ -462,6 +464,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::CreateDir => "create_dir",
             BuiltinFunctionKind::RemoveDir => "remove_dir",
             BuiltinFunctionKind::Unixtime => "unixtime",
+            BuiltinFunctionKind::BuiltinFiles => "builtin_files",
         };
         write!(f, "{name}")
     }

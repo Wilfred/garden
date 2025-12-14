@@ -444,8 +444,6 @@ fn load_toplevel_items_(
                 };
 
                 let abs_path = if import_info.path.display().to_string().starts_with("__") {
-                    // TODO: warn on user trying to name files with
-                    // two underscores.
                     import_info.path.to_owned()
                 } else {
                     let norm_path = enclosing_dir.join(&import_info.path).normalize();
@@ -662,6 +660,21 @@ fn insert_imported_namespace(
     }
 }
 
+const BUILTIN_FILES: &[&str] = &["__prelude.gdn", "__fs.gdn", "__random.gdn", "__reflect.gdn"];
+
+fn join_with_and(items: &[&str]) -> String {
+    match items.len() {
+        0 => String::new(),
+        1 => items[0].to_owned(),
+        2 => format!("{} and {}", items[0], items[1]),
+        _ => {
+            let last = items.last().unwrap();
+            let rest = &items[..items.len() - 1];
+            format!("{} and {}", rest.join(", "), last)
+        }
+    }
+}
+
 fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnostic> {
     if import_info.path == PathBuf::from("__prelude.gdn") {
         return Ok(include_str!("__prelude.gdn").to_owned());
@@ -671,6 +684,25 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
         return Ok(include_str!("__random.gdn").to_owned());
     } else if import_info.path == PathBuf::from("__reflect.gdn") {
         return Ok(include_str!("__reflect.gdn").to_owned());
+    }
+
+    // Check if the path starts with __ but isn't one of the allowed built-in files
+    if let Some(file_name) = import_info.path.file_name() {
+        if let Some(name_str) = file_name.to_str() {
+            if name_str.starts_with("__") {
+                let available_builtins = join_with_and(BUILTIN_FILES);
+                return Err(Diagnostic {
+                    message: ErrorMessage(vec![
+                        msgtext!("Unknown built-in file "),
+                        msgcode!("{}", import_info.path.display()),
+                        msgtext!(". The available built-in files are {}.", available_builtins),
+                    ]),
+                    position: import_info.path_pos.clone(),
+                    notes: vec![],
+                    severity: Severity::Error,
+                });
+            }
+        }
     }
 
     let src_bytes = match std::fs::read(abs_path) {

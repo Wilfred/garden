@@ -660,7 +660,12 @@ fn insert_imported_namespace(
     }
 }
 
-const BUILTIN_FILES: &[&str] = &["__prelude.gdn", "__fs.gdn", "__random.gdn", "__reflect.gdn"];
+const BUILTIN_FILES: &[(&str, &str)] = &[
+    ("__prelude.gdn", include_str!("__prelude.gdn")),
+    ("__fs.gdn", include_str!("__fs.gdn")),
+    ("__random.gdn", include_str!("__random.gdn")),
+    ("__reflect.gdn", include_str!("__reflect.gdn")),
+];
 
 fn join_with_and(items: &[&str]) -> String {
     match items.len() {
@@ -676,21 +681,18 @@ fn join_with_and(items: &[&str]) -> String {
 }
 
 fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnostic> {
-    if import_info.path == PathBuf::from("__prelude.gdn") {
-        return Ok(include_str!("__prelude.gdn").to_owned());
-    } else if import_info.path == PathBuf::from("__fs.gdn") {
-        return Ok(include_str!("__fs.gdn").to_owned());
-    } else if import_info.path == PathBuf::from("__random.gdn") {
-        return Ok(include_str!("__random.gdn").to_owned());
-    } else if import_info.path == PathBuf::from("__reflect.gdn") {
-        return Ok(include_str!("__reflect.gdn").to_owned());
+    for (file_name, content) in BUILTIN_FILES {
+        if import_info.path == PathBuf::from(*file_name) {
+            return Ok((*content).to_owned());
+        }
     }
 
     // Check if the path starts with __ but isn't one of the allowed built-in files
     if let Some(file_name) = import_info.path.file_name() {
         if let Some(name_str) = file_name.to_str() {
             if name_str.starts_with("__") {
-                let available_builtins = join_with_and(BUILTIN_FILES);
+                let file_names: Vec<&str> = BUILTIN_FILES.iter().map(|(name, _)| *name).collect();
+                let available_builtins = join_with_and(&file_names);
                 return Err(Diagnostic {
                     message: ErrorMessage(vec![
                         msgtext!("Unknown built-in file "),

@@ -26,6 +26,9 @@ jobs:
 
       - name: Tag and push to ghcr.io
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        # ghcr.io requires image repository names to be lowercase, but
+        # my GitHub username is unfortunately capitalised.
         run: |
-          docker tag wilfred/garden-playground:latest ghcr.io/${{ github.repository_owner }}/garden-playground:latest
-          docker push ghcr.io/${{ github.repository_owner }}/garden-playground:latest
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker tag wilfred/garden-playground:latest "ghcr.io/${OWNER_LC}/garden-playground:latest"
+          docker push "ghcr.io/${OWNER_LC}/garden-playground:latest"

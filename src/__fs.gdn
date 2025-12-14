@@ -63,6 +63,9 @@ public fun set_working_directory(path: Path): Result<Unit, String> {
 
 // Create a directory at `path`.
 //
+// Returns an error if the directory could not be created or already
+// exists.
+//
 // ```
 // import "__fs.gdn" as fs
 // fs::create_dir(Path{ p: "/tmp/my_new_directory" })

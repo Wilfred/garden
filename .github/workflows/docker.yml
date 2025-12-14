@@ -32,3 +32,4 @@ jobs:
           OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker tag wilfred/garden-playground:latest "ghcr.io/${OWNER_LC}/garden-playground:latest"
           docker push "ghcr.io/${OWNER_LC}/garden-playground:latest"
+          echo Published to https://github.com/Wilfred/garden/pkgs/container/garden-playground

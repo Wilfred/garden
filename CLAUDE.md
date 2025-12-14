@@ -29,6 +29,7 @@ fs::list_directory(Path{ p: "/"})
 ```
 
 # Verifying changes
+- cargo clippy: Check that your Rust code is correct
 - cargo run -- check yourfile.gdn: Check the test program named yourfile.gdn
 - cargo run -- run yourfile.gdn: Run the code in yourfile.gdn.
 - cargo run -- test yourfile.gdn: Run unit tests in yourfile.gdn.

@@ -404,3 +404,8 @@ ul ul {
   background-color: var(--cream);
   border-right: 1px solid #00000030;
 }
+
+/* Active line highlighting with pale green to match theme */
+.cm-activeLine {
+  background-color: #a8dda855 !important;
+}

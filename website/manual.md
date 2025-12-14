@@ -29,3 +29,7 @@ __RANDOM_FUNS
 ## Reflection `__reflect.gdn`
 
 __REFLECT_FUNS
+
+## Time `__time.gdn`
+
+__TIME_FUNS

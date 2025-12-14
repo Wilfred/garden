@@ -1,6 +1,7 @@
 import "__fs.gdn" as fs
 import "__random.gdn" as random
 import "__reflect.gdn" as reflect
+import "__time.gdn" as time
 import "__prelude.gdn" as prelude
 import "./markdown.gdn"
 import "./log.gdn" as log
@@ -330,7 +331,19 @@ fun build_site(): Unit {
     ("__fs.gdn", fs),
     ("__random.gdn", random),
     ("__reflect.gdn", reflect),
+    ("__time.gdn", time),
   ]
+
+  // Validate that all builtin files are documented
+  let documented_files: List<String> = []
+  for (ns_name, _ns) in namespaces {
+    documented_files = documented_files.append(ns_name)
+  }
+  for builtin_file in reflect::builtin_files() {
+    if documented_files.contains(builtin_file).not() {
+      log::warn("Builtin file " ^ builtin_file ^ " is not documented in the namespaces list")
+    }
+  }
 
   for (ns_name, ns) in namespaces {
     for fun_name in reflect::namespace_functions(ns) {
@@ -394,6 +407,11 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
   })
   let reflect_funs = join_with_commas_and(reflect_funs)
 
+  let time_funs = reflect::namespace_functions(time).map(fun(name: String) {
+    "".join(["[`", name ^ "()", "`](./fun:__time.gdn::", name, ".html)"])
+  })
+  let time_funs = join_with_commas_and(time_funs)
+
   let blog_links: List<String> = []
   for post in blog_posts(website_dir) {
     if post.published.not() {
@@ -430,6 +448,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
     .replace("__FS_FUNS", fs_funs)
     .replace("__RANDOM_FUNS", random_funs)
     .replace("__REFLECT_FUNS", reflect_funs)
+    .replace("__TIME_FUNS", time_funs)
     .replace("__BLOG_LINKS", blog_links)
 }
 

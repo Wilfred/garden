@@ -665,6 +665,7 @@ const BUILTIN_FILES: &[(&str, &str)] = &[
     ("__fs.gdn", include_str!("__fs.gdn")),
     ("__random.gdn", include_str!("__random.gdn")),
     ("__reflect.gdn", include_str!("__reflect.gdn")),
+    ("__time.gdn", include_str!("__time.gdn")),
 ];
 
 fn join_with_and(items: &[&str]) -> String {

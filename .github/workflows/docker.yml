@@ -1,0 +1,14 @@
+name: Docker Build
+
+on: [push, pull_request]
+
+jobs:
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: extractions/setup-just@v2
+
+      - name: Build Docker image
+        run: just build-docker

@@ -115,18 +115,21 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
       for (const item of data.results) {
         // Check if this is a stdout object
         if ("printed" in item) {
-          stdoutParts.push(item.printed.s);
+          const stdoutItem = item;
+          stdoutParts.push(stdoutItem.printed.s);
         }
         // Check if this is a result object
         else if ("error" in item || "value" in item) {
-          if (item.error) {
-            snippetDiv.innerHTML = `Error: ${item.error}`;
+          const result = item;
+
+          if (result.error) {
+            snippetDiv.innerHTML = `Error: ${result.error}`;
             hasError = true;
             break;
           }
 
-          if (item.value) {
-            finalValue = item.value;
+          if (result.value) {
+            finalValue = result.value;
           }
         }
       }

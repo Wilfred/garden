@@ -80,7 +80,7 @@ type PlaygroundResponse = {
 function evalSnippet(src: string, snippetDiv: HTMLElement): void {
   snippetDiv.hidden = false;
 
-  snippetDiv.innerHTML = "...";
+  snippetDiv.innerHTML = '<div class="spinner"></div>';
 
   // This is the live site. To test local versions:
   //

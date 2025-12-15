@@ -12,6 +12,7 @@ use crate::eval::{eval_toplevel_items, EvalError, Session, StdoutJsonFormat, Std
 use crate::parser::ast::IdGenerator;
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
+use crate::test_runner::describe_tests;
 use crate::values::Value;
 
 #[derive(Serialize)]
@@ -52,13 +53,22 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
 
     let responses = match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
         Ok(summary) => {
+            let mut items = vec![];
+            if !summary.diagnostics.is_empty() {
+                items.push(PlaygroundResponse {
+                    error: None,
+                    value: Some(describe_tests(&env, &summary)),
+                });
+            }
+
             let last_value = summary.values.last().cloned().unwrap_or_else(Value::unit);
             let value_display = last_value.display(&env);
-
-            vec![PlaygroundResponse {
+            items.push(PlaygroundResponse {
                 error: None,
                 value: Some(value_display),
-            }]
+            });
+
+            items
         }
         Err(EvalError::Exception(_, msg)) => vec![PlaygroundResponse {
             error: Some(msg.as_string()),

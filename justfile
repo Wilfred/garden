@@ -15,7 +15,7 @@ watch-all:
     # regenerated.
     REGENERATE=y cargo watch -x b -x t --watch-when-idle
 
-# Tag, push and publish a new release.
+# Tag a new release, trigger a crates.io publish on GitHub, and bump version.
 release:
     #!/bin/bash
 
@@ -25,7 +25,6 @@ release:
     git tag $VERSION
     git push --tags
 
-    cargo publish
     cargo set-version --bump minor
 
 # Start a webserver serving the latest website build.

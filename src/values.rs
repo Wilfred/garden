@@ -31,7 +31,7 @@ impl Value {
         match self.as_ref() {
             Value_::Fun { fun_info, .. } => Some(fun_info),
             Value_::Closure(_, fun_info, _) => Some(fun_info),
-            Value_::BuiltinFunction(_, fun_info, _) => fun_info.as_ref(),
+            Value_::BuiltInFunction(_, fun_info, _) => fun_info.as_ref(),
             _ => None,
         }
     }
@@ -57,7 +57,7 @@ pub(crate) enum Value_ {
     /// A closure value.
     Closure(Vec<BlockBindings>, FunInfo, Type),
     /// A reference to a built-in function.
-    BuiltinFunction(BuiltinFunctionKind, Option<FunInfo>, Option<Type>),
+    BuiltInFunction(BuiltInFunctionKind, Option<FunInfo>, Option<Type>),
     /// A string value.
     String(String),
     /// A list value, along with the type of its elements.
@@ -123,8 +123,8 @@ impl PartialEq for Value_ {
                 false
             }
             (
-                Value_::BuiltinFunction(self_kind, _, _),
-                Value_::BuiltinFunction(other_kind, _, _),
+                Value_::BuiltInFunction(self_kind, _, _),
+                Value_::BuiltInFunction(other_kind, _, _),
             ) => self_kind == other_kind,
             (Value_::String(s1), Value_::String(s2)) => s1 == s2,
             (
@@ -346,7 +346,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value_::Integer(_) => "Int",
             Value_::Fun { .. } => "Fun",
             Value_::Closure(_, _, _) => "Fun",
-            Value_::BuiltinFunction(_, _, _) => "Fun",
+            Value_::BuiltInFunction(_, _, _) => "Fun",
             Value_::String(_) => "String",
             Value_::List { .. } => "List",
             Value_::Tuple { .. } => "Tuple",
@@ -362,7 +362,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
-pub(crate) enum BuiltinFunctionKind {
+pub(crate) enum BuiltInFunctionKind {
     Throw,
     ListDirectory,
     Shell,
@@ -399,78 +399,78 @@ pub(crate) enum BuiltinFunctionKind {
     BuiltinFiles,
 }
 
-impl BuiltinFunctionKind {
+impl BuiltInFunctionKind {
     pub(crate) fn namespace_path(&self) -> PathBuf {
         match self {
-            BuiltinFunctionKind::Throw
-            | BuiltinFunctionKind::Shell
-            | BuiltinFunctionKind::StringRepr
-            | BuiltinFunctionKind::Print
-            | BuiltinFunctionKind::Println
-            | BuiltinFunctionKind::SourceDirectory
-            | BuiltinFunctionKind::ShellArguments
-            | BuiltinFunctionKind::GetEnv => PathBuf::from("__prelude.gdn"),
-            BuiltinFunctionKind::WriteFile
-            | BuiltinFunctionKind::ListDirectory
-            | BuiltinFunctionKind::WorkingDirectory
-            | BuiltinFunctionKind::SetWorkingDirectory
-            | BuiltinFunctionKind::CreateDir
-            | BuiltinFunctionKind::RemoveDir
-            | BuiltinFunctionKind::CopyFile
-            | BuiltinFunctionKind::RemoveFile => PathBuf::from("__fs.gdn"),
-            BuiltinFunctionKind::SourceForFun
-            | BuiltinFunctionKind::SourceForMethod
-            | BuiltinFunctionKind::SourceForType
-            | BuiltinFunctionKind::PreludeTypes
-            | BuiltinFunctionKind::Lex
-            | BuiltinFunctionKind::DocComment
-            | BuiltinFunctionKind::DocCommentForType
-            | BuiltinFunctionKind::DocCommentForMethod
-            | BuiltinFunctionKind::CheckSnippet
-            | BuiltinFunctionKind::MethodsForType
-            | BuiltinFunctionKind::NamespaceFunctions
-            | BuiltinFunctionKind::Keywords
-            | BuiltinFunctionKind::BuiltinFiles => PathBuf::from("__reflect.gdn"),
-            BuiltinFunctionKind::RandomInt => PathBuf::from("__random.gdn"),
-            BuiltinFunctionKind::Unixtime => PathBuf::from("__time.gdn"),
+            BuiltInFunctionKind::Throw
+            | BuiltInFunctionKind::Shell
+            | BuiltInFunctionKind::StringRepr
+            | BuiltInFunctionKind::Print
+            | BuiltInFunctionKind::Println
+            | BuiltInFunctionKind::SourceDirectory
+            | BuiltInFunctionKind::ShellArguments
+            | BuiltInFunctionKind::GetEnv => PathBuf::from("__prelude.gdn"),
+            BuiltInFunctionKind::WriteFile
+            | BuiltInFunctionKind::ListDirectory
+            | BuiltInFunctionKind::WorkingDirectory
+            | BuiltInFunctionKind::SetWorkingDirectory
+            | BuiltInFunctionKind::CreateDir
+            | BuiltInFunctionKind::RemoveDir
+            | BuiltInFunctionKind::CopyFile
+            | BuiltInFunctionKind::RemoveFile => PathBuf::from("__fs.gdn"),
+            BuiltInFunctionKind::SourceForFun
+            | BuiltInFunctionKind::SourceForMethod
+            | BuiltInFunctionKind::SourceForType
+            | BuiltInFunctionKind::PreludeTypes
+            | BuiltInFunctionKind::Lex
+            | BuiltInFunctionKind::DocComment
+            | BuiltInFunctionKind::DocCommentForType
+            | BuiltInFunctionKind::DocCommentForMethod
+            | BuiltInFunctionKind::CheckSnippet
+            | BuiltInFunctionKind::MethodsForType
+            | BuiltInFunctionKind::NamespaceFunctions
+            | BuiltInFunctionKind::Keywords
+            | BuiltInFunctionKind::BuiltinFiles => PathBuf::from("__reflect.gdn"),
+            BuiltInFunctionKind::RandomInt => PathBuf::from("__random.gdn"),
+            BuiltInFunctionKind::Unixtime => PathBuf::from("__time.gdn"),
         }
     }
 }
 
-impl Display for BuiltinFunctionKind {
+impl Display for BuiltInFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
-            BuiltinFunctionKind::Throw => "throw",
-            BuiltinFunctionKind::ListDirectory => "list_directory",
-            BuiltinFunctionKind::Shell => "shell",
-            BuiltinFunctionKind::StringRepr => "string_repr",
-            BuiltinFunctionKind::Print => "print",
-            BuiltinFunctionKind::Println => "println",
-            BuiltinFunctionKind::SourceDirectory => "source_directory",
-            BuiltinFunctionKind::ShellArguments => "shell_arguments",
-            BuiltinFunctionKind::SetWorkingDirectory => "set_working_directory",
-            BuiltinFunctionKind::WorkingDirectory => "working_directory",
-            BuiltinFunctionKind::WriteFile => "write_file",
-            BuiltinFunctionKind::CheckSnippet => "check_snippet",
-            BuiltinFunctionKind::Lex => "lex",
-            BuiltinFunctionKind::DocComment => "doc_comment",
-            BuiltinFunctionKind::DocCommentForType => "doc_comment_for_type",
-            BuiltinFunctionKind::DocCommentForMethod => "doc_comment_for_method",
-            BuiltinFunctionKind::SourceForFun => "source_for_fun",
-            BuiltinFunctionKind::SourceForMethod => "source_for_method",
-            BuiltinFunctionKind::SourceForType => "source_for_type",
-            BuiltinFunctionKind::PreludeTypes => "prelude_types",
-            BuiltinFunctionKind::NamespaceFunctions => "namespace_functions",
-            BuiltinFunctionKind::MethodsForType => "methods_for_type",
-            BuiltinFunctionKind::GetEnv => "get_env",
-            BuiltinFunctionKind::Keywords => "keywords",
-            BuiltinFunctionKind::RandomInt => "int",
-            BuiltinFunctionKind::CreateDir => "create_dir",
-            BuiltinFunctionKind::RemoveDir => "remove_dir",
-            BuiltinFunctionKind::CopyFile => "copy_file",
-            BuiltinFunctionKind::RemoveFile => "remove_file",
-            BuiltinFunctionKind::Unixtime => "unixtime",
-            BuiltinFunctionKind::BuiltinFiles => "builtin_files",
+            BuiltInFunctionKind::Throw => "throw",
+            BuiltInFunctionKind::ListDirectory => "list_directory",
+            BuiltInFunctionKind::Shell => "shell",
+            BuiltInFunctionKind::StringRepr => "string_repr",
+            BuiltInFunctionKind::Print => "print",
+            BuiltInFunctionKind::Println => "println",
+            BuiltInFunctionKind::SourceDirectory => "source_directory",
+            BuiltInFunctionKind::ShellArguments => "shell_arguments",
+            BuiltInFunctionKind::SetWorkingDirectory => "set_working_directory",
+            BuiltInFunctionKind::WorkingDirectory => "working_directory",
+            BuiltInFunctionKind::WriteFile => "write_file",
+            BuiltInFunctionKind::CheckSnippet => "check_snippet",
+            BuiltInFunctionKind::Lex => "lex",
+            BuiltInFunctionKind::DocComment => "doc_comment",
+            BuiltInFunctionKind::DocCommentForType => "doc_comment_for_type",
+            BuiltInFunctionKind::DocCommentForMethod => "doc_comment_for_method",
+            BuiltInFunctionKind::SourceForFun => "source_for_fun",
+            BuiltInFunctionKind::SourceForMethod => "source_for_method",
+            BuiltInFunctionKind::SourceForType => "source_for_type",
+            BuiltInFunctionKind::PreludeTypes => "prelude_types",
+            BuiltInFunctionKind::NamespaceFunctions => "namespace_functions",
+            BuiltInFunctionKind::MethodsForType => "methods_for_type",
+            BuiltInFunctionKind::GetEnv => "get_env",
+            BuiltInFunctionKind::Keywords => "keywords",
+            BuiltInFunctionKind::RandomInt => "int",
+            BuiltInFunctionKind::CreateDir => "create_dir",
+            BuiltInFunctionKind::RemoveDir => "remove_dir",
+            BuiltInFunctionKind::CopyFile => "copy_file",
+            BuiltInFunctionKind::RemoveFile => "remove_file",
+            BuiltInFunctionKind::Unixtime => "unixtime",
+            BuiltInFunctionKind::BuiltinFiles => "builtin_files",
         };
         write!(f, "{name}")
     }
@@ -483,7 +483,7 @@ impl Value {
             Value_::Integer(i) => format!("{i}"),
             Value_::Fun { name_sym, .. } => format!("{}", name_sym.name),
             Value_::Closure(..) => "(closure)".to_owned(),
-            Value_::BuiltinFunction(kind, _, _) => format!("{kind}"),
+            Value_::BuiltInFunction(kind, _, _) => format!("{kind}"),
             Value_::String(s) => escape_string_literal(s),
             Value_::List { items, .. } => {
                 let mut s = String::new();

@@ -682,7 +682,7 @@ pub(crate) struct ImportInfo {
 ///
 /// See also `crate::values::BuiltinFunctionKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum BuiltinMethodKind {
+pub(crate) enum BuiltInMethodKind {
     DictGet,
     DictItems,
     DictSet,
@@ -705,7 +705,7 @@ pub(crate) enum BuiltinMethodKind {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum MethodKind {
-    BuiltinMethod(BuiltinMethodKind, Option<FunInfo>),
+    BuiltinMethod(BuiltInMethodKind, Option<FunInfo>),
     UserDefinedMethod(FunInfo),
 }
 

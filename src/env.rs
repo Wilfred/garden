@@ -9,14 +9,14 @@ use crate::eval::{load_toplevel_items, Bindings, EnclosingSymbol, ExpressionStat
 use crate::garden_type::TypeVarEnv;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
-    BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, StructInfo, Symbol,
+    BuiltInMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, StructInfo, Symbol,
     SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, Visibility,
 };
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_abs_path, Vfs};
 use crate::types::{BuiltinType, TypeDef, TypeDefAndMethods};
-use crate::values::{BuiltinFunctionKind, Value, Value_};
+use crate::values::{BuiltInFunctionKind, Value, Value_};
 use crate::VfsPathBuf;
 
 #[derive(Debug, Clone)]
@@ -195,7 +195,7 @@ impl Env {
         }
 
         let mut values = FxHashMap::default();
-        for fun_kind in BuiltinFunctionKind::iter() {
+        for fun_kind in BuiltInFunctionKind::iter() {
             if fun_kind.namespace_path() != abs_path {
                 continue;
             }
@@ -204,7 +204,7 @@ impl Env {
                 SymbolName {
                     text: format!("{fun_kind}"),
                 },
-                Value::new(Value_::BuiltinFunction(fun_kind, None, None)),
+                Value::new(Value_::BuiltInFunction(fun_kind, None, None)),
             );
         }
 
@@ -460,7 +460,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     let mut values = FxHashMap::default();
 
     // Insert all the built-in prelude functions.
-    for fun_kind in BuiltinFunctionKind::iter() {
+    for fun_kind in BuiltInFunctionKind::iter() {
         let namespace_file = fun_kind.namespace_path();
         if namespace_file != *prelude_path {
             continue;
@@ -470,7 +470,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
             SymbolName {
                 text: format!("{fun_kind}"),
             },
-            Value::new(Value_::BuiltinFunction(fun_kind, None, None)),
+            Value::new(Value_::BuiltInFunction(fun_kind, None, None)),
         );
     }
 
@@ -505,39 +505,39 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         (
             "Dict",
             vec![
-                ("get", BuiltinMethodKind::DictGet),
-                ("items", BuiltinMethodKind::DictItems),
-                ("set", BuiltinMethodKind::DictSet),
+                ("get", BuiltInMethodKind::DictGet),
+                ("items", BuiltInMethodKind::DictItems),
+                ("set", BuiltInMethodKind::DictSet),
             ],
         ),
         (
             "List",
             vec![
-                ("append", BuiltinMethodKind::ListAppend),
-                ("contains", BuiltinMethodKind::ListContains),
-                ("get", BuiltinMethodKind::ListGet),
-                ("len", BuiltinMethodKind::ListLen),
+                ("append", BuiltInMethodKind::ListAppend),
+                ("contains", BuiltInMethodKind::ListContains),
+                ("get", BuiltInMethodKind::ListGet),
+                ("len", BuiltInMethodKind::ListLen),
             ],
         ),
         (
             "Path",
             vec![
-                ("exists", BuiltinMethodKind::PathExists),
-                ("read", BuiltinMethodKind::PathRead),
+                ("exists", BuiltInMethodKind::PathExists),
+                ("read", BuiltInMethodKind::PathRead),
             ],
         ),
         (
             "String",
             vec![
-                ("as_int", BuiltinMethodKind::StringAsInt),
-                ("chars", BuiltinMethodKind::StringChars),
-                ("ends_with", BuiltinMethodKind::StringEndsWith),
-                ("index_of", BuiltinMethodKind::StringIndexOf),
-                ("join", BuiltinMethodKind::StringJoin),
-                ("len", BuiltinMethodKind::StringLen),
-                ("lines", BuiltinMethodKind::StringLines),
-                ("starts_with", BuiltinMethodKind::StringStartsWith),
-                ("substring", BuiltinMethodKind::StringSubstring),
+                ("as_int", BuiltInMethodKind::StringAsInt),
+                ("chars", BuiltInMethodKind::StringChars),
+                ("ends_with", BuiltInMethodKind::StringEndsWith),
+                ("index_of", BuiltInMethodKind::StringIndexOf),
+                ("join", BuiltInMethodKind::StringJoin),
+                ("len", BuiltInMethodKind::StringLen),
+                ("lines", BuiltInMethodKind::StringLines),
+                ("starts_with", BuiltInMethodKind::StringStartsWith),
+                ("substring", BuiltInMethodKind::StringSubstring),
             ],
         ),
     ];

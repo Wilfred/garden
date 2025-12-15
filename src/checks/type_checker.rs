@@ -1459,7 +1459,7 @@ impl TypeCheckVisitor<'_> {
         let fun_info = match value.as_ref() {
             Value_::Fun { fun_info, .. } => Some(fun_info),
             Value_::Closure(_, fun_info, _) => Some(fun_info),
-            Value_::BuiltinFunction(_, fun_info, _) => fun_info.as_ref(),
+            Value_::BuiltInFunction(_, fun_info, _) => fun_info.as_ref(),
             _ => None,
         };
         if let Some(fun_info) = fun_info {
@@ -1748,7 +1748,7 @@ impl TypeCheckVisitor<'_> {
                             let mut name_pos = None;
                             match value.as_ref() {
                                 Value_::Fun { fun_info, .. }
-                                | Value_::BuiltinFunction(_, Some(fun_info), _) => {
+                                | Value_::BuiltInFunction(_, Some(fun_info), _) => {
                                     if let Some(name_sym) = &fun_info.name_sym {
                                         name_pos = Some(name_sym.position.clone());
                                     }

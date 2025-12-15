@@ -344,8 +344,8 @@ fn load_toplevel_items_(
     for item in &items {
         match &item {
             ToplevelItem::Fun(name_symbol, fun_info, visibility) => {
-                if is_builtin_stub(fun_info) {
-                    update_builtin_fun_info(fun_info, env, namespace.clone(), &mut diagnostics);
+                if is_built_in_stub(fun_info) {
+                    update_built_in_fun_info(fun_info, env, namespace.clone(), &mut diagnostics);
                 } else {
                     let runtime_type =
                         Type::from_fun_info(fun_info, &env.types, &env.stack.type_bindings())
@@ -379,8 +379,8 @@ fn load_toplevel_items_(
             }
             ToplevelItem::Method(meth_info, _) => {
                 if let MethodKind::UserDefinedMethod(fun_info) = &meth_info.kind {
-                    if is_builtin_stub(fun_info) {
-                        update_builtin_meth_info(meth_info, fun_info, env, &mut diagnostics);
+                    if is_built_in_stub(fun_info) {
+                        update_built_in_meth_info(meth_info, fun_info, env, &mut diagnostics);
                     } else {
                         env.add_method(meth_info, vivify_types);
                     }
@@ -409,8 +409,13 @@ fn load_toplevel_items_(
                 new_syms.push(name_as_sym);
             }
             ToplevelItem::Struct(struct_info) => {
-                if is_builtin_type(struct_info) {
-                    update_builtin_type_info(struct_info, env, &mut diagnostics, namespace.clone());
+                if is_built_in_type(struct_info) {
+                    update_built_in_type_info(
+                        struct_info,
+                        env,
+                        &mut diagnostics,
+                        namespace.clone(),
+                    );
                 } else {
                     // Add the struct definition to the type environment.
                     env.add_type(
@@ -693,12 +698,15 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
         if let Some(name_str) = file_name.to_str() {
             if name_str.starts_with("__") {
                 let file_names: Vec<&str> = BUILT_IN_FILES.iter().map(|(name, _)| *name).collect();
-                let available_builtins = join_with_and(&file_names);
+                let available_built_ins = join_with_and(&file_names);
                 return Err(Diagnostic {
                     message: ErrorMessage(vec![
                         msgtext!("Unknown built-in file "),
                         msgcode!("{}", import_info.path.display()),
-                        msgtext!(". The available built-in files are {}.", available_builtins),
+                        msgtext!(
+                            ". The available built-in files are {}.",
+                            available_built_ins
+                        ),
                     ]),
                     position: import_info.path_pos.clone(),
                     notes: vec![],
@@ -1397,7 +1405,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     env.stack.0.push(stack_frame);
 }
 
-fn update_builtin_type_info(
+fn update_built_in_type_info(
     struct_info: &StructInfo,
     env: &mut Env,
     diagnostics: &mut Vec<Diagnostic>,
@@ -1448,7 +1456,7 @@ fn update_builtin_type_info(
     );
 }
 
-fn is_builtin_type(struct_info: &StructInfo) -> bool {
+fn is_built_in_type(struct_info: &StructInfo) -> bool {
     let Some(field) = struct_info.fields.first() else {
         return false;
     };
@@ -1458,7 +1466,7 @@ fn is_builtin_type(struct_info: &StructInfo) -> bool {
 
 /// Update the built-in method described by `meth_info`, using
 /// `fun_info` for position data.
-fn update_builtin_meth_info(
+fn update_built_in_meth_info(
     meth_info: &MethodInfo,
     fun_info: &FunInfo,
     env: &mut Env,
@@ -1518,7 +1526,7 @@ fn update_builtin_meth_info(
     }
 }
 
-fn update_builtin_fun_info(
+fn update_built_in_fun_info(
     fun_info: &FunInfo,
     env: &mut Env,
     namespace: Rc<RefCell<NamespaceInfo>>,
@@ -1585,7 +1593,7 @@ fn update_builtin_fun_info(
     );
 }
 
-fn is_builtin_stub(fun_info: &FunInfo) -> bool {
+fn is_built_in_stub(fun_info: &FunInfo) -> bool {
     let exprs = &fun_info.body.exprs;
     if exprs.len() != 1 {
         return false;
@@ -2412,7 +2420,7 @@ fn as_int_str_tuple(i: i64, s: &str) -> Value {
     })
 }
 
-fn eval_builtin_call(
+fn eval_built_in_call(
     env: &mut Env,
     kind: BuiltInFunctionKind,
     receiver_value: &Value,
@@ -3928,7 +3936,7 @@ fn eval_call(
                 caller_uses_value: expr_value_is_used,
             }));
         }
-        Value_::BuiltInFunction(kind, _, _) => eval_builtin_call(
+        Value_::BuiltInFunction(kind, _, _) => eval_built_in_call(
             env,
             *kind,
             &receiver_value,
@@ -4283,7 +4291,7 @@ fn eval_method_call(
 
     let fun_info = match &receiver_method.kind {
         MethodKind::BuiltinMethod(kind, _) => {
-            eval_builtin_method_call(
+            eval_built_in_method_call(
                 env,
                 *kind,
                 &receiver_value,
@@ -4390,7 +4398,7 @@ fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
     }
 }
 
-fn eval_builtin_method_call(
+fn eval_built_in_method_call(
     env: &mut Env,
     kind: BuiltInMethodKind,
     receiver_value: &Value,

@@ -201,8 +201,8 @@ pub(crate) enum EvalAction {
 
 fn describe_type(type_: &TypeDef) -> String {
     match type_ {
-        TypeDef::BuiltIn(builtin_type, _) => {
-            let name = match builtin_type {
+        TypeDef::BuiltIn(built_in_type, _) => {
+            let name = match built_in_type {
                 BuiltInType::Int => "Int",
                 BuiltInType::String => "String",
                 BuiltInType::Fun => "Fun",

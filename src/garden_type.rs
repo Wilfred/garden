@@ -203,7 +203,7 @@ impl Type {
 
         match global_tys.get(name) {
             Some(type_) => match &type_.def {
-                TypeDef::BuiltIn(builtin_type, _) => match builtin_type {
+                TypeDef::BuiltIn(built_in_type, _) => match built_in_type {
                     BuiltInType::Int => Ok(Type::int()),
                     BuiltInType::String => Ok(Type::string()),
                     BuiltInType::Namespace => Ok(Type::namespace()),

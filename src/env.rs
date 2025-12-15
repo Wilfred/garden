@@ -501,7 +501,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         diags[0].message.as_string(),
     );
 
-    let builtin_methods = vec![
+    let built_in_methods = vec![
         (
             "Dict",
             vec![
@@ -542,23 +542,23 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         ),
     ];
 
-    for (type_name, methods) in builtin_methods {
+    for (type_name, methods) in built_in_methods {
         let Some(type_def_and_methods) = env.types.get_mut(&TypeName {
             text: type_name.to_owned(),
         }) else {
             continue;
         };
 
-        // Merge the builtin method kinds for this type into the stub
+        // Merge the built-in method kinds for this type into the stub
         // methods defined in the prelude.
-        for (name, builtin_kind) in methods {
+        for (name, built_in_kind) in methods {
             let name = SymbolName {
                 text: name.to_owned(),
             };
 
             if let Some(existing_meth) = type_def_and_methods.methods.get_mut(&name) {
                 existing_meth.kind =
-                    MethodKind::BuiltinMethod(builtin_kind, existing_meth.fun_info().cloned());
+                    MethodKind::BuiltinMethod(built_in_kind, existing_meth.fun_info().cloned());
             }
         }
     }

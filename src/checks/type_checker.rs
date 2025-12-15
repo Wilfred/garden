@@ -263,7 +263,7 @@ impl TypeCheckVisitor<'_> {
 
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         if std::env::var_os("GDN_TRUST_PRELUDE").is_some() {
-            // Skip typechecking builtins and prelude to help print debugging.
+            // Skip typechecking built-ins and prelude to help print debugging.
             if let Some(n) = &fun_info.name_sym {
                 let path = n.position.path.clone();
                 if path.display().to_string().ends_with("__prelude.gdn") {

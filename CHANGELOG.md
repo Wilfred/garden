@@ -1,6 +1,9 @@
-# 0.22 (unreleased)
-**Goal: Playground.**
+# 0.23 (unreleased)
+**Goal: LSP.**
 **Goal: Offer actions when runtime errors occur.**
+
+# 0.22 (released 15 December 2025)
+**Goal: Playground.**
 
 ## Syntax
 

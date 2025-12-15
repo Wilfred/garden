@@ -3202,6 +3202,59 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
+        BuiltinFunctionKind::RemoveFile => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let path_s = match unwrap_path(&arg_values[0], env) {
+                Ok(s) => s,
+                Err(msg) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
+                    }
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(receiver_pos.clone(), msg),
+                    ));
+                }
+            };
+
+            let path = PathBuf::from(&path_s);
+            let v = match std::fs::remove_file(&path) {
+                Ok(()) => Value::ok(Value::unit()),
+                Err(e) => {
+                    let msg = format!("Could not remove file `{path_s}`. {e}");
+                    Value::err(Value::new(Value_::String(msg)))
+                }
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltinFunctionKind::CheckSnippet => {
             check_arity(
                 &SymbolName {

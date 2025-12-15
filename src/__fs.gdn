@@ -36,6 +36,24 @@ test copy_file {
   copy_file(src_path, dest_path)
 }
 
+// Remove the file at `path`.
+//
+// Returns an error if the file could not be removed or does not exist.
+//
+// ```
+// import "__fs.gdn" as fs
+// fs::remove_file(Path{ p: "/tmp/my_file.txt" })
+// ```
+public fun remove_file(path: Path): Result<Unit, String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test remove_file {
+  let test_path = Path{ p: "/tmp/garden_remove_file_test.txt" }
+  write_file("temporary test content", test_path)
+  remove_file(test_path)
+}
+
 // List the contents of the specified directory.
 //
 // ```

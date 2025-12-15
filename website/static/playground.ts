@@ -4,10 +4,7 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { StreamLanguage } from "@codemirror/language";
 import { history, historyKeymap } from "@codemirror/commands";
-import {
-  keymap,
-  highlightActiveLine,
-} from "@codemirror/view";
+import { keymap, highlightActiveLine } from "@codemirror/view";
 import { defaultKeymap } from "@codemirror/commands";
 
 // Store EditorView instances for each snippet

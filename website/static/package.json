@@ -10,6 +10,8 @@
     "build": "tsc --noEmit && esbuild playground.ts --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap && npm run build:css",
     "build:css": "cleancss -o ../dist/static/style.css style.css && cp blocks.min.css ../dist/static/blocks.min.css",
     "watch": "concurrently \"tsc --noEmit --watch --preserveWatchOutput\" \"esbuild playground.ts --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap --watch\" \"chokidar '*.css' -c 'npm run build:css'\"",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -24,5 +26,12 @@
     "concurrently": "^9.1.0",
     "esbuild": "^0.24.0",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@typescript-eslint/eslint-plugin": "^8.50.0",
+    "@typescript-eslint/parser": "^8.50.0",
+    "eslint": "^9.39.2",
+    "typescript-eslint": "^8.50.0"
   }
 }

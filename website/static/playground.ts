@@ -80,7 +80,7 @@ type PlaygroundResponse = {
   rawOutput?: string;
 };
 
-function evalSnippet(src: string, snippetDiv: HTMLElement) {
+function evalSnippet(src: string, snippetDiv: HTMLElement): void {
   snippetDiv.hidden = false;
 
   snippetDiv.innerHTML = "...";
@@ -118,12 +118,12 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
       for (const item of data.results) {
         // Check if this is a stdout object
         if ("printed" in item) {
-          const stdoutItem = item as StdoutOutput;
+          const stdoutItem = item;
           stdoutParts.push(stdoutItem.printed.s);
         }
         // Check if this is a result object
         else if ("error" in item || "value" in item) {
-          const result = item as PlaygroundResult;
+          const result = item;
 
           if (result.error) {
             snippetDiv.innerHTML = `Error: ${result.error}`;
@@ -147,8 +147,9 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
         snippetDiv.innerHTML = output;
       }
     })
-    .catch((error) => {
-      snippetDiv.innerHTML = `Fetch error: ${error.message}`;
+    .catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      snippetDiv.innerHTML = `Fetch error: ${message}`;
     });
 }
 
@@ -157,8 +158,8 @@ function resetSnippet(
   editorView: EditorView,
   originalCodeNode: HTMLPreElement | null,
   editButton: Element,
-) {
-  let editorDom = editorView.dom;
+): void {
+  const editorDom = editorView.dom;
 
   if (originalCodeNode) {
     // Restore original with syntax highlighting
@@ -169,7 +170,7 @@ function resetSnippet(
   editorViews.delete(snippetDiv);
 
   // Hide the output div
-  let outputDiv = snippetDiv.querySelector(".snippet-output");
+  const outputDiv = snippetDiv.querySelector(".snippet-output");
   if (outputDiv instanceof HTMLElement) {
     outputDiv.hidden = true;
   }
@@ -178,22 +179,22 @@ function resetSnippet(
   editButton.textContent = "Edit";
 }
 
-function setupSnippetButtons() {
+function setupSnippetButtons(): void {
   document.querySelectorAll(".snippet").forEach((snippetDiv) => {
     // Set up run button
-    let runButton = snippetDiv.querySelector(".run-snippet");
+    const runButton = snippetDiv.querySelector(".run-snippet");
     if (runButton) {
       runButton.addEventListener("click", (_e) => {
         let src = "";
 
         // Check for CodeMirror editor first (edit mode)
-        let editorView = editorViews.get(snippetDiv);
+        const editorView = editorViews.get(snippetDiv);
         if (editorView) {
           src = editorView.state.sliceDoc();
         } else {
           // Check for textarea (legacy edit mode) or pre (view mode)
-          let textarea = snippetDiv.querySelector("textarea");
-          let codeNode = snippetDiv.querySelector("pre");
+          const textarea = snippetDiv.querySelector("textarea");
+          const codeNode = snippetDiv.querySelector("pre");
 
           if (textarea instanceof HTMLTextAreaElement) {
             src = textarea.value;
@@ -202,7 +203,7 @@ function setupSnippetButtons() {
           }
         }
 
-        let outputDiv = snippetDiv.querySelector(".snippet-output");
+        const outputDiv = snippetDiv.querySelector(".snippet-output");
         if (outputDiv instanceof HTMLElement) {
           evalSnippet(src, outputDiv);
         }
@@ -210,14 +211,14 @@ function setupSnippetButtons() {
     }
 
     // Set up edit button
-    let editButton = snippetDiv.querySelector(".edit-snippet");
+    const editButton = snippetDiv.querySelector(".edit-snippet");
     if (editButton) {
       let originalCodeNode: HTMLPreElement | null = null;
       let originalTextContent = "";
 
       editButton.addEventListener("click", (_e) => {
-        let codeNode = snippetDiv.querySelector("pre");
-        let editorView = editorViews.get(snippetDiv);
+        const codeNode = snippetDiv.querySelector("pre");
+        const editorView = editorViews.get(snippetDiv);
 
         // Check if we're in CodeMirror edit mode
         if (editorView) {
@@ -232,7 +233,7 @@ function setupSnippetButtons() {
           originalTextContent = codeNode.textContent || "";
 
           // Create CodeMirror editor
-          let state = EditorState.create({
+          const state = EditorState.create({
             doc: originalTextContent,
             extensions: [
               minimalSetup,
@@ -245,7 +246,7 @@ function setupSnippetButtons() {
             ],
           });
 
-          let newEditorView = new EditorView({
+          const newEditorView = new EditorView({
             state,
           });
 
@@ -264,10 +265,10 @@ function setupSnippetButtons() {
   });
 }
 
-function setupPlayground() {
-  let playgroundRunButton = document.querySelector("#playground-run");
-  let playgroundEditor = document.querySelector("#playground-editor");
-  let playgroundOutput = document.querySelector("#playground-output");
+function setupPlayground(): void {
+  const playgroundRunButton = document.querySelector("#playground-run");
+  const playgroundEditor = document.querySelector("#playground-editor");
+  const playgroundOutput = document.querySelector("#playground-output");
   if (
     playgroundRunButton &&
     playgroundOutput &&

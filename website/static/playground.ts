@@ -153,6 +153,32 @@ function evalSnippet(src: string, snippetDiv: HTMLElement) {
     });
 }
 
+function resetSnippet(
+  snippetDiv: Element,
+  editorView: EditorView,
+  originalCodeNode: HTMLPreElement | null,
+  editButton: Element,
+) {
+  let editorDom = editorView.dom;
+
+  if (originalCodeNode) {
+    // Restore original with syntax highlighting
+    editorDom.replaceWith(originalCodeNode);
+    editorView.destroy();
+  }
+
+  editorViews.delete(snippetDiv);
+
+  // Hide the output div
+  let outputDiv = snippetDiv.querySelector(".snippet-output");
+  if (outputDiv instanceof HTMLElement) {
+    outputDiv.hidden = true;
+  }
+
+  // Change button text back to "Edit"
+  editButton.textContent = "Edit";
+}
+
 function setupSnippetButtons() {
   document.querySelectorAll(".snippet").forEach((snippetDiv) => {
     // Set up run button
@@ -197,26 +223,10 @@ function setupSnippetButtons() {
         // Check if we're in CodeMirror edit mode
         if (editorView) {
           // Currently in edit mode, reset to original pre element
-          let editorDom = editorView.dom;
+          resetSnippet(snippetDiv, editorView, originalCodeNode, editButton);
 
-          if (originalCodeNode) {
-            // Restore original with syntax highlighting
-            editorDom.replaceWith(originalCodeNode);
-            editorView.destroy();
-          }
-
-          editorViews.delete(snippetDiv);
           originalCodeNode = null;
           originalTextContent = "";
-
-          // Hide the output div
-          let outputDiv = snippetDiv.querySelector(".snippet-output");
-          if (outputDiv instanceof HTMLElement) {
-            outputDiv.hidden = true;
-          }
-
-          // Change button text back to "Edit"
-          editButton.textContent = "Edit";
         } else if (codeNode instanceof HTMLPreElement) {
           // Currently in view mode, switch to CodeMirror edit mode
           originalCodeNode = codeNode.cloneNode(true) as HTMLPreElement;

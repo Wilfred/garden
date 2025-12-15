@@ -209,6 +209,12 @@ function setupSnippetButtons() {
           originalCodeNode = null;
           originalTextContent = "";
 
+          // Hide the output div
+          let outputDiv = snippetDiv.querySelector(".snippet-output");
+          if (outputDiv instanceof HTMLElement) {
+            outputDiv.hidden = true;
+          }
+
           // Change button text back to "Edit"
           editButton.textContent = "Edit";
         } else if (codeNode instanceof HTMLPreElement) {

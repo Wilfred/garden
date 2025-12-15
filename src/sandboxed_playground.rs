@@ -50,42 +50,44 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
         pretty_print_json: false,
     };
 
-    let response = match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
+    let responses = match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
         Ok(summary) => {
             let last_value = summary.values.last().cloned().unwrap_or_else(Value::unit);
             let value_display = last_value.display(&env);
 
-            PlaygroundResponse {
+            vec![PlaygroundResponse {
                 error: None,
                 value: Some(value_display),
-            }
+            }]
         }
-        Err(EvalError::Exception(_, msg)) => PlaygroundResponse {
+        Err(EvalError::Exception(_, msg)) => vec![PlaygroundResponse {
             error: Some(msg.as_string()),
             value: None,
-        },
-        Err(EvalError::AssertionFailed(_, msg)) => PlaygroundResponse {
+        }],
+        Err(EvalError::AssertionFailed(_, msg)) => vec![PlaygroundResponse {
             error: Some(msg.as_string()),
             value: None,
-        },
-        Err(EvalError::Interrupted) => PlaygroundResponse {
+        }],
+        Err(EvalError::Interrupted) => vec![PlaygroundResponse {
             error: Some("Interrupted".to_owned()),
             value: None,
-        },
-        Err(EvalError::ReachedTickLimit(_)) => PlaygroundResponse {
+        }],
+        Err(EvalError::ReachedTickLimit(_)) => vec![PlaygroundResponse {
             error: Some("Reached the tick limit".to_owned()),
             value: None,
-        },
-        Err(EvalError::ReachedStackLimit(_)) => PlaygroundResponse {
+        }],
+        Err(EvalError::ReachedStackLimit(_)) => vec![PlaygroundResponse {
             error: Some("Reached the stack limit".to_owned()),
             value: None,
-        },
-        Err(EvalError::ForbiddenInSandbox(_)) => PlaygroundResponse {
+        }],
+        Err(EvalError::ForbiddenInSandbox(_)) => vec![PlaygroundResponse {
             error: Some("Tried to execute unsafe code in sandboxed mode".to_owned()),
             value: None,
-        },
+        }],
     };
 
-    let json = serde_json::to_string(&response).expect("Failed to serialize response");
-    println!("{}", json);
+    for response in responses {
+        let json = serde_json::to_string(&response).expect("Failed to serialize response");
+        println!("{}", json);
+    }
 }

@@ -464,7 +464,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
   src
     .replace("__KEYWORDS", keyword_links)
     .replace("__OPERATORS", operator_links)
-    .replace("__BUILTIN_TYPES", type_links)
+    .replace("__BUILT_IN_TYPES", type_links)
     .replace("__PRELUDE_FUNS", prelude_funs)
     .replace("__FS_FUNS", fs_funs)
     .replace("__RANDOM_FUNS", random_funs)

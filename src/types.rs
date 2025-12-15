@@ -9,7 +9,7 @@ use crate::parser::vfs::VfsId;
 use crate::VfsPathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
-pub(crate) enum BuiltinType {
+pub(crate) enum BuiltInType {
     // TODO: do we need to denote BuiltinType values for these, now we
     // have stubs in __prelude.gdn?
     Int,
@@ -26,7 +26,7 @@ pub(crate) enum BuiltinType {
 pub(crate) enum TypeDef {
     /// A built-in type, such as Int. StructInfo includes the
     /// definition position and doc comment from __prelude.gdn.
-    Builtin(BuiltinType, Option<StructInfo>),
+    BuiltIn(BuiltInType, Option<StructInfo>),
     Enum(EnumInfo),
     Struct(StructInfo),
 }
@@ -46,11 +46,11 @@ impl TypeDef {
         };
 
         match self {
-            TypeDef::Builtin(built_in_type, _) => match built_in_type {
-                BuiltinType::Int => vec![],
-                BuiltinType::String => vec![],
-                BuiltinType::Namespace => vec![],
-                BuiltinType::Fun => vec![
+            TypeDef::BuiltIn(built_in_type, _) => match built_in_type {
+                BuiltInType::Int => vec![],
+                BuiltInType::String => vec![],
+                BuiltInType::Namespace => vec![],
+                BuiltInType::Fun => vec![
                     TypeSymbol {
                         name: "Args".into(),
                         position: Position::todo(&dummy_vfs_path),
@@ -62,17 +62,17 @@ impl TypeDef {
                         id: SyntaxId(0),
                     },
                 ],
-                BuiltinType::List => vec![TypeSymbol {
+                BuiltInType::List => vec![TypeSymbol {
                     name: "T".into(),
                     position: Position::todo(&dummy_vfs_path),
                     id: SyntaxId(0),
                 }],
-                BuiltinType::Dict => vec![TypeSymbol {
+                BuiltInType::Dict => vec![TypeSymbol {
                     name: "T".into(),
                     position: Position::todo(&dummy_vfs_path),
                     id: SyntaxId(0),
                 }],
-                BuiltinType::Tuple => {
+                BuiltInType::Tuple => {
                     // TODO: tuple can actually take an arbitrary
                     // number of arguments.
                     vec![]

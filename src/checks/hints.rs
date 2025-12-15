@@ -8,7 +8,7 @@ use crate::{msgcode, msgtext};
 
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::env::Env;
-use crate::types::{BuiltinType, TypeDef};
+use crate::types::{BuiltInType, TypeDef};
 
 pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = HintVisitor {
@@ -101,15 +101,15 @@ impl Visitor for HintVisitor<'_> {
                 };
 
                 match type_ {
-                    TypeDef::Builtin(b, _) => {
+                    TypeDef::BuiltIn(b, _) => {
                         let num_expected = match b {
-                            BuiltinType::Int => Some(0),
-                            BuiltinType::String => Some(0),
-                            BuiltinType::Namespace => Some(0),
-                            BuiltinType::Fun => Some(2),
-                            BuiltinType::List => Some(1),
-                            BuiltinType::Dict => Some(1),
-                            BuiltinType::Tuple => None,
+                            BuiltInType::Int => Some(0),
+                            BuiltInType::String => Some(0),
+                            BuiltInType::Namespace => Some(0),
+                            BuiltInType::Fun => Some(2),
+                            BuiltInType::List => Some(1),
+                            BuiltInType::Dict => Some(1),
+                            BuiltInType::Tuple => None,
                         };
 
                         if let Some(num_expected) = num_expected {
@@ -126,7 +126,7 @@ impl Visitor for HintVisitor<'_> {
                             }
                         }
 
-                        if matches!(b, BuiltinType::Fun) {
+                        if matches!(b, BuiltInType::Fun) {
                             let first_arg = &type_hint.args[0];
                             if first_arg.sym.name.text != "Tuple" {
                                 self.diagnostics.push(Diagnostic {

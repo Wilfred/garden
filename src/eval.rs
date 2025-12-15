@@ -660,7 +660,7 @@ fn insert_imported_namespace(
     }
 }
 
-const BUILTIN_FILES: &[(&str, &str)] = &[
+const BUILT_IN_FILES: &[(&str, &str)] = &[
     ("__prelude.gdn", include_str!("__prelude.gdn")),
     ("__fs.gdn", include_str!("__fs.gdn")),
     ("__random.gdn", include_str!("__random.gdn")),
@@ -682,7 +682,7 @@ fn join_with_and(items: &[&str]) -> String {
 }
 
 fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnostic> {
-    for (file_name, content) in BUILTIN_FILES {
+    for (file_name, content) in BUILT_IN_FILES {
         if import_info.path == PathBuf::from(*file_name) {
             return Ok((*content).to_owned());
         }
@@ -692,7 +692,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
     if let Some(file_name) = import_info.path.file_name() {
         if let Some(name_str) = file_name.to_str() {
             if name_str.starts_with("__") {
-                let file_names: Vec<&str> = BUILTIN_FILES.iter().map(|(name, _)| *name).collect();
+                let file_names: Vec<&str> = BUILT_IN_FILES.iter().map(|(name, _)| *name).collect();
                 let available_builtins = join_with_and(&file_names);
                 return Err(Diagnostic {
                     message: ErrorMessage(vec![
@@ -1418,7 +1418,7 @@ fn update_builtin_type_info(
         return;
     };
 
-    let TypeDef::Builtin(kind, _) = &current_def.def else {
+    let TypeDef::BuiltIn(kind, _) = &current_def.def else {
         diagnostics.push(Diagnostic {
             notes: vec![],
             severity: Severity::Warning,
@@ -1434,7 +1434,7 @@ fn update_builtin_type_info(
     namespace.borrow_mut().types.insert(
         symbol.name.clone(),
         TypeDefAndMethods {
-            def: TypeDef::Builtin(*kind, Some(struct_info.clone())),
+            def: TypeDef::BuiltIn(*kind, Some(struct_info.clone())),
             methods: current_def.methods.clone(),
         },
     );
@@ -1442,7 +1442,7 @@ fn update_builtin_type_info(
     env.types.insert(
         symbol.name.clone(),
         TypeDefAndMethods {
-            def: TypeDef::Builtin(*kind, Some(struct_info.clone())),
+            def: TypeDef::BuiltIn(*kind, Some(struct_info.clone())),
             methods: current_def.methods.clone(),
         },
     );
@@ -3401,7 +3401,7 @@ fn eval_builtin_call(
             let v = match env.types.get(&TypeName::from(name)) {
                 Some(ty) => {
                     let doc_comment: Option<String> = match &ty.def {
-                        TypeDef::Builtin(_, struct_info) => {
+                        TypeDef::BuiltIn(_, struct_info) => {
                             struct_info.as_ref().and_then(|si| si.doc_comment.clone())
                         }
                         TypeDef::Enum(enum_info) => enum_info.doc_comment.clone(),
@@ -3589,10 +3589,10 @@ fn eval_builtin_call(
             let v = match env.types.get(&TypeName::from(name)) {
                 Some(ty) => {
                     let src: Option<String> = match &ty.def {
-                        TypeDef::Builtin(_, Some(struct_info)) => {
+                        TypeDef::BuiltIn(_, Some(struct_info)) => {
                             env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned())
                         }
-                        TypeDef::Builtin(_, None) => None,
+                        TypeDef::BuiltIn(_, None) => None,
                         TypeDef::Enum(enum_info) => {
                             env.vfs.pos_src(&enum_info.pos).map(|s| s.to_owned())
                         }
@@ -3700,7 +3700,7 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let items: Vec<Value> = BUILTIN_FILES
+            let items: Vec<Value> = BUILT_IN_FILES
                 .iter()
                 .map(|(name, _)| Value::new(Value_::String((*name).to_owned())))
                 .collect();

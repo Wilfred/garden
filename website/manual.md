@@ -10,7 +10,7 @@ __OPERATORS
 
 ## Built-in Types
 
-__BUILTIN_TYPES
+__BUILT_IN_TYPES
 
 ## Prelude
 

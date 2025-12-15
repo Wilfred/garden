@@ -414,10 +414,10 @@ impl TypeCheckVisitor<'_> {
 
         if let Some(type_def) = self.env.get_type_def(&ty_name) {
             let (def_name_sym, doc_comment) = match type_def {
-                TypeDef::Builtin(_, Some(struct_info)) => {
+                TypeDef::BuiltIn(_, Some(struct_info)) => {
                     (&struct_info.name_sym, struct_info.doc_comment.clone())
                 }
-                TypeDef::Builtin(_, None) => {
+                TypeDef::BuiltIn(_, None) => {
                     return;
                 }
                 TypeDef::Enum(enum_info) => (&enum_info.name_sym, enum_info.doc_comment.clone()),

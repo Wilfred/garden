@@ -7,7 +7,7 @@ use rustc_hash::FxHashMap;
 use crate::env::Env;
 use crate::parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
 use crate::parser::position::Position;
-use crate::types::{BuiltinType, TypeDef, TypeDefAndMethods};
+use crate::types::{BuiltInType, TypeDef, TypeDefAndMethods};
 use crate::values::{Value, Value_};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -203,11 +203,11 @@ impl Type {
 
         match global_tys.get(name) {
             Some(type_) => match &type_.def {
-                TypeDef::Builtin(builtin_type, _) => match builtin_type {
-                    BuiltinType::Int => Ok(Type::int()),
-                    BuiltinType::String => Ok(Type::string()),
-                    BuiltinType::Namespace => Ok(Type::namespace()),
-                    BuiltinType::List => {
+                TypeDef::BuiltIn(builtin_type, _) => match builtin_type {
+                    BuiltInType::Int => Ok(Type::int()),
+                    BuiltInType::String => Ok(Type::string()),
+                    BuiltInType::Namespace => Ok(Type::namespace()),
+                    BuiltInType::List => {
                         let elem_type = match args.first() {
                             Some(type_) => type_.clone(),
                             None => Self::error("Missing type argument to List<>"),
@@ -215,7 +215,7 @@ impl Type {
 
                         Ok(Type::list(elem_type))
                     }
-                    BuiltinType::Dict => {
+                    BuiltInType::Dict => {
                         let elem_type = match args.first() {
                             Some(type_) => type_.clone(),
                             None => Self::error("Missing type argument to Dict<>"),
@@ -223,8 +223,8 @@ impl Type {
 
                         Ok(Type::dict(elem_type))
                     }
-                    BuiltinType::Tuple => Ok(Type::Tuple(args)),
-                    BuiltinType::Fun => match &args[..] {
+                    BuiltInType::Tuple => Ok(Type::Tuple(args)),
+                    BuiltInType::Fun => match &args[..] {
                         [input_ty, return_] => {
                             let params = match input_ty {
                                 Type::Tuple(items) => items.clone(),
@@ -361,8 +361,8 @@ impl Type {
             Type::UserDefined { name, .. } => {
                 let def = env.get_type_def(name)?;
                 let name_sym = match def {
-                    TypeDef::Builtin(_, Some(struct_info)) => Some(&struct_info.name_sym),
-                    TypeDef::Builtin(_, None) => None,
+                    TypeDef::BuiltIn(_, Some(struct_info)) => Some(&struct_info.name_sym),
+                    TypeDef::BuiltIn(_, None) => None,
                     TypeDef::Enum(enum_info) => Some(&enum_info.name_sym),
                     TypeDef::Struct(struct_info) => Some(&struct_info.name_sym),
                 }?;

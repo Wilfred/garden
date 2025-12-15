@@ -18,7 +18,7 @@ use crate::garden_type::Type;
 use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
 use crate::parser::vfs::{to_project_relative, Vfs};
 use crate::parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
-use crate::types::{BuiltinType, TypeDef};
+use crate::types::{BuiltInType, TypeDef};
 use crate::values::{Value, Value_};
 use crate::version::VERSION;
 
@@ -201,15 +201,15 @@ pub(crate) enum EvalAction {
 
 fn describe_type(type_: &TypeDef) -> String {
     match type_ {
-        TypeDef::Builtin(builtin_type, _) => {
+        TypeDef::BuiltIn(builtin_type, _) => {
             let name = match builtin_type {
-                BuiltinType::Int => "Int",
-                BuiltinType::String => "String",
-                BuiltinType::Fun => "Fun",
-                BuiltinType::List => "List",
-                BuiltinType::Dict => "Dict",
-                BuiltinType::Tuple => "Tuple",
-                BuiltinType::Namespace => "Namespace",
+                BuiltInType::Int => "Int",
+                BuiltInType::String => "String",
+                BuiltInType::Fun => "Fun",
+                BuiltInType::List => "List",
+                BuiltInType::Dict => "Dict",
+                BuiltInType::Tuple => "Tuple",
+                BuiltInType::Namespace => "Namespace",
             };
             // TODO: Offer more comprehensive docs on built-in types.
             format!("{name} is a built-in type.")
@@ -857,10 +857,10 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
         text: name.to_owned(),
     }) {
         match type_ {
-            TypeDef::Builtin(_, Some(struct_info)) => {
+            TypeDef::BuiltIn(_, Some(struct_info)) => {
                 Ok(env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned()))
             }
-            TypeDef::Builtin(_, None) => Ok(None),
+            TypeDef::BuiltIn(_, None) => Ok(None),
             TypeDef::Enum(enum_info) => Ok(env.vfs.pos_src(&enum_info.pos).map(|s| s.to_owned())),
             TypeDef::Struct(struct_info) => {
                 Ok(env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned()))

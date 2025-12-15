@@ -15,7 +15,7 @@ use crate::parser::ast::{
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_abs_path, Vfs};
-use crate::types::{BuiltinType, TypeDef, TypeDefAndMethods};
+use crate::types::{BuiltInType, TypeDef, TypeDefAndMethods};
 use crate::values::{BuiltInFunctionKind, Value, Value_};
 use crate::VfsPathBuf;
 
@@ -368,7 +368,7 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
     types.insert(
         TypeName { text: "Int".into() },
         TypeDefAndMethods {
-            def: TypeDef::Builtin(BuiltinType::Int, None),
+            def: TypeDef::BuiltIn(BuiltInType::Int, None),
             methods: FxHashMap::default(),
         },
     );
@@ -378,7 +378,7 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
             text: "String".into(),
         },
         TypeDefAndMethods {
-            def: TypeDef::Builtin(BuiltinType::String, None),
+            def: TypeDef::BuiltIn(BuiltInType::String, None),
             methods: FxHashMap::default(),
         },
     );
@@ -387,7 +387,7 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
             text: "List".into(),
         },
         TypeDefAndMethods {
-            def: TypeDef::Builtin(BuiltinType::List, None),
+            def: TypeDef::BuiltIn(BuiltInType::List, None),
             methods: FxHashMap::default(),
         },
     );
@@ -396,7 +396,7 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
             text: "Dict".into(),
         },
         TypeDefAndMethods {
-            def: TypeDef::Builtin(BuiltinType::Dict, None),
+            def: TypeDef::BuiltIn(BuiltInType::Dict, None),
             methods: FxHashMap::default(),
         },
     );
@@ -405,14 +405,14 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
             text: "Tuple".into(),
         },
         TypeDefAndMethods {
-            def: TypeDef::Builtin(BuiltinType::Tuple, None),
+            def: TypeDef::BuiltIn(BuiltInType::Tuple, None),
             methods: FxHashMap::default(),
         },
     );
     types.insert(
         TypeName { text: "Fun".into() },
         TypeDefAndMethods {
-            def: TypeDef::Builtin(BuiltinType::Fun, None),
+            def: TypeDef::BuiltIn(BuiltInType::Fun, None),
             methods: FxHashMap::default(),
         },
     );
@@ -421,7 +421,7 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
             text: "Namespace".into(),
         },
         TypeDefAndMethods {
-            def: TypeDef::Builtin(BuiltinType::Namespace, None),
+            def: TypeDef::BuiltIn(BuiltInType::Namespace, None),
             methods: FxHashMap::default(),
         },
     );

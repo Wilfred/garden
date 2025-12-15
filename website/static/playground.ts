@@ -7,7 +7,6 @@ import { history, historyKeymap } from "@codemirror/commands";
 import {
   keymap,
   highlightActiveLine,
-  highlightActiveLineGutter,
 } from "@codemirror/view";
 import { defaultKeymap } from "@codemirror/commands";
 

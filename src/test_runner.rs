@@ -191,7 +191,10 @@ pub(crate) fn run_sandboxed_tests_in_file(
     println!("{}", serde_json::to_string(&summary).unwrap());
 }
 
-pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) {
+#[must_use]
+pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) -> String {
+    let mut s = String::new();
+
     let total_tests = summary.tests.len();
     let tests_failed = summary
         .tests
@@ -202,21 +205,21 @@ pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) {
 
     let use_color = std::io::stdout().is_terminal();
     if tests_passed == 0 && tests_failed == 0 {
-        println!("No tests found.");
+        s.push_str("No tests found.\n");
     } else {
         for (test_sym, err) in &summary.tests {
             let Some(err) = err else {
                 continue;
             };
 
-            print!(
+            s.push_str(&format!(
                 "Failed: {}",
                 if use_color {
                     test_sym.name.text.bold().to_string()
                 } else {
                     test_sym.name.text.clone()
                 }
-            );
+            ));
 
             let (pos, msg) = match err {
                 EvalError::Interrupted => (None, None),
@@ -228,46 +231,48 @@ pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) {
             };
 
             match (pos, msg) {
-                (Some(pos), Some(msg)) => {
-                    println!(
-                        " {}\n  {}",
-                        pos.as_ide_string(&env.project_root),
-                        if use_color {
-                            msg.as_styled_string()
-                        } else {
-                            msg.as_string()
-                        }
-                    )
+                (Some(pos), Some(msg)) => s.push_str(&format!(
+                    " {}\n  {}\n",
+                    pos.as_ide_string(&env.project_root),
+                    if use_color {
+                        msg.as_styled_string()
+                    } else {
+                        msg.as_string()
+                    }
+                )),
+                (Some(pos), None) => {
+                    s.push_str(&format!(" {}\n", pos.as_ide_string(&env.project_root)))
                 }
-                (Some(pos), None) => println!(" {}", pos.as_ide_string(&env.project_root)),
-                _ => println!(),
+                _ => s.push('\n'),
             }
         }
 
         if tests_failed > 0 {
-            println!();
+            s.push('\n');
         }
 
         let total_tests = tests_passed + tests_failed;
 
         if tests_failed == 0 && total_tests == 1 {
-            println!("Ran 1 test: it passed.");
+            s.push_str("Ran 1 test: it passed.\n");
         } else if tests_failed == 0 {
-            println!(
-                "Ran {} test{}: they all passed.",
+            s.push_str(&format!(
+                "Ran {} test{}: they all passed.\n",
                 total_tests,
                 if total_tests == 1 { "" } else { "s" },
-            );
+            ));
         } else {
-            println!(
-                "Ran {} test{}: {} passed and {} failed.",
+            s.push_str(&format!(
+                "Ran {} test{}: {} passed and {} failed.\n",
                 total_tests,
                 if total_tests == 1 { "" } else { "s" },
                 tests_passed,
                 tests_failed
-            );
+            ));
         }
     }
+
+    s
 }
 
 pub(crate) fn run_tests_in_files(
@@ -316,7 +321,7 @@ pub(crate) fn run_tests_in_files(
         .filter(|(_, err)| err.is_some())
         .count();
 
-    describe_tests(&env, &summary);
+    print!("{}", describe_tests(&env, &summary));
     // TODO: support printing back traces from every test failure.
     // TODO: print incremental progress as tests run.
 

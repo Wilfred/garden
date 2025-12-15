@@ -9,7 +9,7 @@ use owo_colors::OwoColorize as _;
 use rustc_hash::FxHashMap;
 use serde::Serialize;
 
-use crate::eval::eval_tests;
+use crate::eval::{eval_tests, ToplevelEvalSummary};
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
@@ -191,47 +191,7 @@ pub(crate) fn run_sandboxed_tests_in_file(
     println!("{}", serde_json::to_string(&summary).unwrap());
 }
 
-pub(crate) fn run_tests_in_files(
-    srcs_and_paths: &[(String, PathBuf)],
-    name_contains: Option<&String>,
-    interrupted: Arc<AtomicBool>,
-) {
-    let session = Session {
-        interrupted,
-        stdout_mode: StdoutMode::WriteDirectly,
-        start_time: Instant::now(),
-        trace_exprs: false,
-        pretty_print_json: false,
-    };
-
-    let id_gen = IdGenerator::default();
-    let mut env = Env::new(id_gen, Vfs::default());
-
-    let mut all_items = vec![];
-
-    for (src, path) in srcs_and_paths {
-        let vfs_path = env.vfs.insert(Rc::new(path.to_owned()), src.to_owned());
-
-        let items = parse_toplevel_items_or_die(&vfs_path, src, &mut env.vfs, &mut env.id_gen);
-
-        let ns = env.get_or_create_namespace(path);
-        load_toplevel_items(&items, &mut env, ns);
-
-        all_items.extend_from_slice(&items);
-    }
-
-    let mut test_items: Vec<ToplevelItem> = vec![];
-    let name_contains = name_contains.cloned().unwrap_or_default();
-    for item in &all_items {
-        if let ToplevelItem::Test(ti) = item {
-            if ti.name_sym.name.text.contains(&name_contains) {
-                test_items.push(item.clone());
-            }
-        }
-    }
-
-    let summary = eval_tests(&test_items, &mut env, &session);
-
+pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) {
     let total_tests = summary.tests.len();
     let tests_failed = summary
         .tests
@@ -308,7 +268,55 @@ pub(crate) fn run_tests_in_files(
             );
         }
     }
+}
 
+pub(crate) fn run_tests_in_files(
+    srcs_and_paths: &[(String, PathBuf)],
+    name_contains: Option<&String>,
+    interrupted: Arc<AtomicBool>,
+) {
+    let session = Session {
+        interrupted,
+        stdout_mode: StdoutMode::WriteDirectly,
+        start_time: Instant::now(),
+        trace_exprs: false,
+        pretty_print_json: false,
+    };
+
+    let id_gen = IdGenerator::default();
+    let mut env = Env::new(id_gen, Vfs::default());
+
+    let mut all_items = vec![];
+
+    for (src, path) in srcs_and_paths {
+        let vfs_path = env.vfs.insert(Rc::new(path.to_owned()), src.to_owned());
+
+        let items = parse_toplevel_items_or_die(&vfs_path, src, &mut env.vfs, &mut env.id_gen);
+
+        let ns = env.get_or_create_namespace(path);
+        load_toplevel_items(&items, &mut env, ns);
+
+        all_items.extend_from_slice(&items);
+    }
+
+    let mut test_items: Vec<ToplevelItem> = vec![];
+    let name_contains = name_contains.cloned().unwrap_or_default();
+    for item in &all_items {
+        if let ToplevelItem::Test(ti) = item {
+            if ti.name_sym.name.text.contains(&name_contains) {
+                test_items.push(item.clone());
+            }
+        }
+    }
+
+    let summary = eval_tests(&test_items, &mut env, &session);
+    let tests_failed = summary
+        .tests
+        .iter()
+        .filter(|(_, err)| err.is_some())
+        .count();
+
+    describe_tests(&env, &summary);
     // TODO: support printing back traces from every test failure.
     // TODO: print incremental progress as tests run.
 

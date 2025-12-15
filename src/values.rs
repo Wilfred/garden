@@ -363,76 +363,77 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BuiltInFunctionKind {
-    Throw,
-    ListDirectory,
-    Shell,
-    StringRepr,
-    Print,
-    Println,
-    SourceDirectory,
+    PreludeGetEnv,
+    PreludePrint,
+    PreludePrintln,
+    PreludeShell,
     // TODO: It's a little confusing that we have both shell() and
     // shell_arguments(), these should go in separate namespaces once
     // we have namespaces.
-    ShellArguments,
-    WorkingDirectory,
-    SetWorkingDirectory,
-    WriteFile,
-    CheckSnippet,
-    Lex,
-    DocComment,
-    DocCommentForType,
-    DocCommentForMethod,
-    SourceForFun,
-    SourceForMethod,
-    SourceForType,
-    PreludeTypes,
-    NamespaceFunctions,
-    MethodsForType,
-    GetEnv,
-    Keywords,
-    RandomInt,
-    CreateDir,
-    RemoveDir,
-    CopyFile,
-    RemoveFile,
-    Unixtime,
-    BuiltInFiles,
+    PreludeShellArguments,
+    PreludeSourceDirectory,
+    PreludeStringRepr,
+    PreludeThrow,
+
+    FsCopyFile,
+    FsCreateDir,
+    FsListDirectory,
+    FsRemoveDir,
+    FsRemoveFile,
+    FsSetWorkingDirectory,
+    FsWorkingDirectory,
+    FsWriteFile,
+    RandomRandomInt,
+    ReflectBuiltInFiles,
+    ReflectCheckSnippet,
+    ReflectDocComment,
+    ReflectDocCommentForMethod,
+    ReflectDocCommentForType,
+    ReflectKeywords,
+    ReflectLex,
+    ReflectMethodsForType,
+    ReflectNamespaceFunctions,
+    ReflectPreludeTypes,
+    ReflectSourceForFun,
+    ReflectSourceForMethod,
+    ReflectSourceForType,
+    TimeUnixtime,
 }
 
 impl BuiltInFunctionKind {
     pub(crate) fn namespace_path(&self) -> PathBuf {
         match self {
-            BuiltInFunctionKind::Throw
-            | BuiltInFunctionKind::Shell
-            | BuiltInFunctionKind::StringRepr
-            | BuiltInFunctionKind::Print
-            | BuiltInFunctionKind::Println
-            | BuiltInFunctionKind::SourceDirectory
-            | BuiltInFunctionKind::ShellArguments
-            | BuiltInFunctionKind::GetEnv => PathBuf::from("__prelude.gdn"),
-            BuiltInFunctionKind::WriteFile
-            | BuiltInFunctionKind::ListDirectory
-            | BuiltInFunctionKind::WorkingDirectory
-            | BuiltInFunctionKind::SetWorkingDirectory
-            | BuiltInFunctionKind::CreateDir
-            | BuiltInFunctionKind::RemoveDir
-            | BuiltInFunctionKind::CopyFile
-            | BuiltInFunctionKind::RemoveFile => PathBuf::from("__fs.gdn"),
-            BuiltInFunctionKind::SourceForFun
-            | BuiltInFunctionKind::SourceForMethod
-            | BuiltInFunctionKind::SourceForType
-            | BuiltInFunctionKind::PreludeTypes
-            | BuiltInFunctionKind::Lex
-            | BuiltInFunctionKind::DocComment
-            | BuiltInFunctionKind::DocCommentForType
-            | BuiltInFunctionKind::DocCommentForMethod
-            | BuiltInFunctionKind::CheckSnippet
-            | BuiltInFunctionKind::MethodsForType
-            | BuiltInFunctionKind::NamespaceFunctions
-            | BuiltInFunctionKind::Keywords
-            | BuiltInFunctionKind::BuiltInFiles => PathBuf::from("__reflect.gdn"),
-            BuiltInFunctionKind::RandomInt => PathBuf::from("__random.gdn"),
-            BuiltInFunctionKind::Unixtime => PathBuf::from("__time.gdn"),
+            BuiltInFunctionKind::PreludeThrow
+            | BuiltInFunctionKind::PreludeShell
+            | BuiltInFunctionKind::PreludeStringRepr
+            | BuiltInFunctionKind::PreludePrint
+            | BuiltInFunctionKind::PreludePrintln
+            | BuiltInFunctionKind::PreludeSourceDirectory
+            | BuiltInFunctionKind::PreludeShellArguments
+            | BuiltInFunctionKind::PreludeGetEnv => PathBuf::from("__prelude.gdn"),
+            BuiltInFunctionKind::FsWriteFile
+            | BuiltInFunctionKind::FsListDirectory
+            | BuiltInFunctionKind::FsWorkingDirectory
+            | BuiltInFunctionKind::FsSetWorkingDirectory
+            | BuiltInFunctionKind::FsCreateDir
+            | BuiltInFunctionKind::FsRemoveDir
+            | BuiltInFunctionKind::FsCopyFile
+            | BuiltInFunctionKind::FsRemoveFile => PathBuf::from("__fs.gdn"),
+            BuiltInFunctionKind::ReflectSourceForFun
+            | BuiltInFunctionKind::ReflectSourceForMethod
+            | BuiltInFunctionKind::ReflectSourceForType
+            | BuiltInFunctionKind::ReflectPreludeTypes
+            | BuiltInFunctionKind::ReflectLex
+            | BuiltInFunctionKind::ReflectDocComment
+            | BuiltInFunctionKind::ReflectDocCommentForType
+            | BuiltInFunctionKind::ReflectDocCommentForMethod
+            | BuiltInFunctionKind::ReflectCheckSnippet
+            | BuiltInFunctionKind::ReflectMethodsForType
+            | BuiltInFunctionKind::ReflectNamespaceFunctions
+            | BuiltInFunctionKind::ReflectKeywords
+            | BuiltInFunctionKind::ReflectBuiltInFiles => PathBuf::from("__reflect.gdn"),
+            BuiltInFunctionKind::RandomRandomInt => PathBuf::from("__random.gdn"),
+            BuiltInFunctionKind::TimeUnixtime => PathBuf::from("__time.gdn"),
         }
     }
 }
@@ -440,37 +441,37 @@ impl BuiltInFunctionKind {
 impl Display for BuiltInFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
-            BuiltInFunctionKind::Throw => "throw",
-            BuiltInFunctionKind::ListDirectory => "list_directory",
-            BuiltInFunctionKind::Shell => "shell",
-            BuiltInFunctionKind::StringRepr => "string_repr",
-            BuiltInFunctionKind::Print => "print",
-            BuiltInFunctionKind::Println => "println",
-            BuiltInFunctionKind::SourceDirectory => "source_directory",
-            BuiltInFunctionKind::ShellArguments => "shell_arguments",
-            BuiltInFunctionKind::SetWorkingDirectory => "set_working_directory",
-            BuiltInFunctionKind::WorkingDirectory => "working_directory",
-            BuiltInFunctionKind::WriteFile => "write_file",
-            BuiltInFunctionKind::CheckSnippet => "check_snippet",
-            BuiltInFunctionKind::Lex => "lex",
-            BuiltInFunctionKind::DocComment => "doc_comment",
-            BuiltInFunctionKind::DocCommentForType => "doc_comment_for_type",
-            BuiltInFunctionKind::DocCommentForMethod => "doc_comment_for_method",
-            BuiltInFunctionKind::SourceForFun => "source_for_fun",
-            BuiltInFunctionKind::SourceForMethod => "source_for_method",
-            BuiltInFunctionKind::SourceForType => "source_for_type",
-            BuiltInFunctionKind::PreludeTypes => "prelude_types",
-            BuiltInFunctionKind::NamespaceFunctions => "namespace_functions",
-            BuiltInFunctionKind::MethodsForType => "methods_for_type",
-            BuiltInFunctionKind::GetEnv => "get_env",
-            BuiltInFunctionKind::Keywords => "keywords",
-            BuiltInFunctionKind::RandomInt => "int",
-            BuiltInFunctionKind::CreateDir => "create_dir",
-            BuiltInFunctionKind::RemoveDir => "remove_dir",
-            BuiltInFunctionKind::CopyFile => "copy_file",
-            BuiltInFunctionKind::RemoveFile => "remove_file",
-            BuiltInFunctionKind::Unixtime => "unixtime",
-            BuiltInFunctionKind::BuiltInFiles => "built_in_files",
+            BuiltInFunctionKind::PreludeThrow => "throw",
+            BuiltInFunctionKind::FsListDirectory => "list_directory",
+            BuiltInFunctionKind::PreludeShell => "shell",
+            BuiltInFunctionKind::PreludeStringRepr => "string_repr",
+            BuiltInFunctionKind::PreludePrint => "print",
+            BuiltInFunctionKind::PreludePrintln => "println",
+            BuiltInFunctionKind::PreludeSourceDirectory => "source_directory",
+            BuiltInFunctionKind::PreludeShellArguments => "shell_arguments",
+            BuiltInFunctionKind::FsSetWorkingDirectory => "set_working_directory",
+            BuiltInFunctionKind::FsWorkingDirectory => "working_directory",
+            BuiltInFunctionKind::FsWriteFile => "write_file",
+            BuiltInFunctionKind::ReflectCheckSnippet => "check_snippet",
+            BuiltInFunctionKind::ReflectLex => "lex",
+            BuiltInFunctionKind::ReflectDocComment => "doc_comment",
+            BuiltInFunctionKind::ReflectDocCommentForType => "doc_comment_for_type",
+            BuiltInFunctionKind::ReflectDocCommentForMethod => "doc_comment_for_method",
+            BuiltInFunctionKind::ReflectSourceForFun => "source_for_fun",
+            BuiltInFunctionKind::ReflectSourceForMethod => "source_for_method",
+            BuiltInFunctionKind::ReflectSourceForType => "source_for_type",
+            BuiltInFunctionKind::ReflectPreludeTypes => "prelude_types",
+            BuiltInFunctionKind::ReflectNamespaceFunctions => "namespace_functions",
+            BuiltInFunctionKind::ReflectMethodsForType => "methods_for_type",
+            BuiltInFunctionKind::PreludeGetEnv => "get_env",
+            BuiltInFunctionKind::ReflectKeywords => "keywords",
+            BuiltInFunctionKind::RandomRandomInt => "int",
+            BuiltInFunctionKind::FsCreateDir => "create_dir",
+            BuiltInFunctionKind::FsRemoveDir => "remove_dir",
+            BuiltInFunctionKind::FsCopyFile => "copy_file",
+            BuiltInFunctionKind::FsRemoveFile => "remove_file",
+            BuiltInFunctionKind::TimeUnixtime => "unixtime",
+            BuiltInFunctionKind::ReflectBuiltInFiles => "built_in_files",
         };
         write!(f, "{name}")
     }

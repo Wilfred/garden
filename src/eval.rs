@@ -2432,7 +2432,7 @@ fn eval_built_in_call(
     session: &Session,
 ) -> Result<(), (RestoreValues, EvalError)> {
     match kind {
-        BuiltInFunctionKind::Throw => {
+        BuiltInFunctionKind::PreludeThrow => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2456,7 +2456,7 @@ fn eval_built_in_call(
                 EvalError::Exception(position.clone(), message),
             ));
         }
-        BuiltInFunctionKind::Print => {
+        BuiltInFunctionKind::PreludePrint => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2499,7 +2499,7 @@ fn eval_built_in_call(
                 env.push_value(Value::unit());
             }
         }
-        BuiltInFunctionKind::Println => {
+        BuiltInFunctionKind::PreludePrintln => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2545,7 +2545,7 @@ fn eval_built_in_call(
                 env.push_value(Value::unit());
             }
         }
-        BuiltInFunctionKind::Shell => {
+        BuiltInFunctionKind::PreludeShell => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
@@ -2631,7 +2631,7 @@ fn eval_built_in_call(
                 }
             }
         }
-        BuiltInFunctionKind::StringRepr => {
+        BuiltInFunctionKind::PreludeStringRepr => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2647,7 +2647,7 @@ fn eval_built_in_call(
                 env.push_value(Value::new(Value_::String(arg_values[0].display(env))));
             }
         }
-        BuiltInFunctionKind::NamespaceFunctions => {
+        BuiltInFunctionKind::ReflectNamespaceFunctions => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2705,7 +2705,7 @@ fn eval_built_in_call(
                 }));
             }
         }
-        BuiltInFunctionKind::MethodsForType => {
+        BuiltInFunctionKind::ReflectMethodsForType => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2746,7 +2746,7 @@ fn eval_built_in_call(
                 }));
             }
         }
-        BuiltInFunctionKind::ListDirectory => {
+        BuiltInFunctionKind::FsListDirectory => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
@@ -2815,7 +2815,7 @@ fn eval_built_in_call(
                 env.push_value(value);
             }
         }
-        BuiltInFunctionKind::SourceDirectory => {
+        BuiltInFunctionKind::PreludeSourceDirectory => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2836,7 +2836,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::ShellArguments => {
+        BuiltInFunctionKind::PreludeShellArguments => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2861,7 +2861,7 @@ fn eval_built_in_call(
                 }));
             }
         }
-        BuiltInFunctionKind::GetEnv => {
+        BuiltInFunctionKind::PreludeGetEnv => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2890,7 +2890,7 @@ fn eval_built_in_call(
                 env.push_value(value);
             }
         }
-        BuiltInFunctionKind::Keywords => {
+        BuiltInFunctionKind::ReflectKeywords => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2917,7 +2917,7 @@ fn eval_built_in_call(
                 }));
             }
         }
-        BuiltInFunctionKind::SetWorkingDirectory => {
+        BuiltInFunctionKind::FsSetWorkingDirectory => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2954,7 +2954,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::WorkingDirectory => {
+        BuiltInFunctionKind::FsWorkingDirectory => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -2973,7 +2973,7 @@ fn eval_built_in_call(
                 env.push_value(Value::path(path.display().to_string()));
             }
         }
-        BuiltInFunctionKind::WriteFile => {
+        BuiltInFunctionKind::FsWriteFile => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
@@ -3035,7 +3035,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::CreateDir => {
+        BuiltInFunctionKind::FsCreateDir => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
@@ -3088,7 +3088,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::RemoveDir => {
+        BuiltInFunctionKind::FsRemoveDir => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
@@ -3141,7 +3141,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::CopyFile => {
+        BuiltInFunctionKind::FsCopyFile => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
@@ -3210,7 +3210,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::RemoveFile => {
+        BuiltInFunctionKind::FsRemoveFile => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
@@ -3263,7 +3263,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::CheckSnippet => {
+        BuiltInFunctionKind::ReflectCheckSnippet => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3287,7 +3287,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::Lex => {
+        BuiltInFunctionKind::ReflectLex => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3335,7 +3335,7 @@ fn eval_built_in_call(
                 env.push_value(Value::new(v));
             }
         }
-        BuiltInFunctionKind::DocComment => {
+        BuiltInFunctionKind::ReflectDocComment => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3387,7 +3387,7 @@ fn eval_built_in_call(
                 env.push_value(ret_value);
             }
         }
-        BuiltInFunctionKind::DocCommentForType => {
+        BuiltInFunctionKind::ReflectDocCommentForType => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3428,7 +3428,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::DocCommentForMethod => {
+        BuiltInFunctionKind::ReflectDocCommentForMethod => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3472,7 +3472,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::SourceForFun => {
+        BuiltInFunctionKind::ReflectSourceForFun => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3539,7 +3539,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::SourceForMethod => {
+        BuiltInFunctionKind::ReflectSourceForMethod => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3575,7 +3575,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::SourceForType => {
+        BuiltInFunctionKind::ReflectSourceForType => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3621,7 +3621,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::PreludeTypes => {
+        BuiltInFunctionKind::ReflectPreludeTypes => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3656,7 +3656,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::RandomInt => {
+        BuiltInFunctionKind::RandomRandomInt => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3675,7 +3675,7 @@ fn eval_built_in_call(
                 env.push_value(Value::new(Value_::Integer(random_value)));
             }
         }
-        BuiltInFunctionKind::Unixtime => {
+        BuiltInFunctionKind::TimeUnixtime => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),
@@ -3696,7 +3696,7 @@ fn eval_built_in_call(
                 env.push_value(Value::new(Value_::Integer(timestamp)));
             }
         }
-        BuiltInFunctionKind::BuiltInFiles => {
+        BuiltInFunctionKind::ReflectBuiltInFiles => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),

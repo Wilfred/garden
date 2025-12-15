@@ -38,8 +38,6 @@ Added `min()` and `max()`.
 
 Added `Dict::get()`, `Dict::set()` and `Dict::items()`.
 
-Added `__reflect::operators()`.
-
 Added `__random::int()`.
 
 Added `__fs::create_dir()`, `__fs::remove_dir()`,
@@ -47,7 +45,7 @@ Added `__fs::create_dir()`, `__fs::remove_dir()`,
 
 Added `__time::unixtime()`.
 
-Added `__reflect::builtin_files()`.
+Added `__reflect::operators()` and `__reflect::builtin_files()`.
 
 ## Build
 

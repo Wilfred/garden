@@ -3696,7 +3696,7 @@ fn eval_built_in_call(
                 env.push_value(Value::new(Value_::Integer(timestamp)));
             }
         }
-        BuiltInFunctionKind::BuiltinFiles => {
+        BuiltInFunctionKind::BuiltInFiles => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),

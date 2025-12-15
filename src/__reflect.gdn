@@ -208,12 +208,12 @@ test methods_for_type {
 }
 
 // Get all the built-in file names that can be imported.
-public fun builtin_files(): List<String> {
+public fun built_in_files(): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-test builtin_files {
-  let files = builtin_files()
+test built_in_files {
+  let files = built_in_files()
   assert(files.contains("__prelude.gdn"))
   assert(files.contains("__fs.gdn"))
   assert(files.contains("__reflect.gdn"))

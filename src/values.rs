@@ -396,7 +396,7 @@ pub(crate) enum BuiltInFunctionKind {
     CopyFile,
     RemoveFile,
     Unixtime,
-    BuiltinFiles,
+    BuiltInFiles,
 }
 
 impl BuiltInFunctionKind {
@@ -430,7 +430,7 @@ impl BuiltInFunctionKind {
             | BuiltInFunctionKind::MethodsForType
             | BuiltInFunctionKind::NamespaceFunctions
             | BuiltInFunctionKind::Keywords
-            | BuiltInFunctionKind::BuiltinFiles => PathBuf::from("__reflect.gdn"),
+            | BuiltInFunctionKind::BuiltInFiles => PathBuf::from("__reflect.gdn"),
             BuiltInFunctionKind::RandomInt => PathBuf::from("__random.gdn"),
             BuiltInFunctionKind::Unixtime => PathBuf::from("__time.gdn"),
         }
@@ -470,7 +470,7 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::CopyFile => "copy_file",
             BuiltInFunctionKind::RemoveFile => "remove_file",
             BuiltInFunctionKind::Unixtime => "unixtime",
-            BuiltInFunctionKind::BuiltinFiles => "builtin_files",
+            BuiltInFunctionKind::BuiltInFiles => "built_in_files",
         };
         write!(f, "{name}")
     }

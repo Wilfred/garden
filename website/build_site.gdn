@@ -334,14 +334,14 @@ fun build_site(): Unit {
     ("__time.gdn", time),
   ]
 
-  // Validate that all builtin files are documented
+  // Validate that all built-in files are documented
   let documented_files: List<String> = []
   for (ns_name, _ns) in namespaces {
     documented_files = documented_files.append(ns_name)
   }
-  for builtin_file in reflect::builtin_files() {
-    if documented_files.contains(builtin_file).not() {
-      log::warn("Builtin file " ^ builtin_file ^ " is not documented in the namespaces list")
+  for built_in_file in reflect::built_in_files() {
+    if documented_files.contains(built_in_file).not() {
+      log::warn("Builtin file " ^ built_in_file ^ " is not documented in the namespaces list")
     }
   }
 

@@ -45,7 +45,7 @@ Added `__fs::create_dir()`, `__fs::remove_dir()`,
 
 Added `__time::unixtime()`.
 
-Added `__reflect::operators()` and `__reflect::builtin_files()`.
+Added `__reflect::operators()` and `__reflect::built_in_files()`.
 
 ## Build
 

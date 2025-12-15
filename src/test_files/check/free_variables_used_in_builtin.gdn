@@ -1,6 +1,6 @@
 public fun foo(x: Int) {
     // We should not complain about unused variables in built-in signatures.
-    __BUILTIN_IMPLEMENTATION
+    __BUILT_IN_IMPLEMENTATION
 }
 
 // args: check
@@ -11,5 +11,5 @@ public fun foo(x: Int) {
 // 1| public fun foo(x: Int) {
 //  |            ^^^
 // 2|     // We should not complain about unused variables in built-in signatures.
-// 3|     __BUILTIN_IMPLEMENTATION
+// 3|     __BUILT_IN_IMPLEMENTATION
 

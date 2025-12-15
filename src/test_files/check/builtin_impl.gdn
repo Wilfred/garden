@@ -1,5 +1,5 @@
 public fun foo(_: String): NoValue {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 public fun bar() {
@@ -13,6 +13,6 @@ public fun bar() {
 // -| src/test_files/check/builtin_impl.gdn:1:12
 // 1| public fun foo(_: String): NoValue {
 //  |            ^^^
-// 2|   __BUILTIN_IMPLEMENTATION
+// 2|   __BUILT_IN_IMPLEMENTATION
 // 3| }
 

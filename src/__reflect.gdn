@@ -4,7 +4,7 @@ import "__fs.gdn" as fs
 
 // Check the syntax of `src`.
 public fun check_snippet(src: String): Result<Unit, List<String>> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test check_snippet_good {
@@ -37,7 +37,7 @@ test check_snippet_bad_name {
 // Split `src` into individual lexed tokens, along with their offsets
 // in the original string.
 public fun lex(src: String): List<(Int, String)> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test lex {
@@ -57,7 +57,7 @@ test lex {
 // Get the doc comment for `fun_name` in the namespace `ns`. The
 // string does not include the leading `//` comment.
 public fun doc_comment(ns: Namespace, fun_name: String): Option<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test doc_comment {
@@ -69,7 +69,7 @@ test doc_comment {
 
 // Get the doc comment for type `type_name`.
 public fun doc_comment_for_type(type_name: String): Option<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test doc_comment_for_type {
@@ -86,7 +86,7 @@ test doc_comment_for_type {
 
 // Get the doc comment for the method `method_name` on `type_name`.
 public fun doc_comment_for_method(type_name: String, method_name: String): Option<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test doc_comment_for_method {
@@ -99,7 +99,7 @@ test doc_comment_for_method {
 // A list of all the type names in the prelude, `String`, `Option` and
 // so on. The list is sorted alphabetically.
 public fun prelude_types(): List<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test prelude_types {
@@ -112,7 +112,7 @@ test prelude_types {
 
 // All the keywords in Garden. Variables cannot use these as names.
 public fun keywords(): List<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test keywords {
@@ -128,7 +128,7 @@ public fun operators(): List<String> {
 
 // Get the source code for the type definition of `name`.
 public fun source_for_type(name: String): Option<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test source_for_type {
@@ -144,7 +144,7 @@ test source_for_type {
 
 // Get the source code for the function definition of `name`.
 public fun source_for_fun(ns: Namespace, name: String): Option<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test source_for_fun {
@@ -171,7 +171,7 @@ test source_for_fun {
 
 // Get the source code for the function definition of `name`.
 public fun source_for_method(type_name: String, method_name): Option<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test source_for_method {
@@ -189,7 +189,7 @@ test source_for_method {
 public fun namespace_functions(ns: Namespace): List<String> {
   // This is deliberately not a method on Namespace, so code
   // completion isn't confusing.
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test namespace_functions {
@@ -199,7 +199,7 @@ test namespace_functions {
 
 // Get all the methods defined on a given type.
 public fun methods_for_type(type_name: String): List<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test methods_for_type {
@@ -209,7 +209,7 @@ test methods_for_type {
 
 // Get all the built-in file names that can be imported.
 public fun builtin_files(): List<String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test builtin_files {

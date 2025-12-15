@@ -1441,7 +1441,7 @@ impl TypeCheckVisitor<'_> {
             // errors.
             self.set_binding(sym, ty.clone());
 
-            if sym.name.text != "__BUILTIN_IMPLEMENTATION" {
+            if sym.name.text != "__BUILT_IN_IMPLEMENTATION" {
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
                     severity: Severity::Error,

@@ -1453,7 +1453,7 @@ fn is_builtin_type(struct_info: &StructInfo) -> bool {
         return false;
     };
 
-    field.sym.name.text == "__BUILTIN_IMPLEMENTATION"
+    field.sym.name.text == "__BUILT_IN_IMPLEMENTATION"
 }
 
 /// Update the built-in method described by `meth_info`, using
@@ -1593,7 +1593,7 @@ fn is_builtin_stub(fun_info: &FunInfo) -> bool {
 
     let expr_ = &exprs[0].expr_;
     match expr_ {
-        Expression_::Variable(variable) => variable.name.text == "__BUILTIN_IMPLEMENTATION",
+        Expression_::Variable(variable) => variable.name.text == "__BUILT_IN_IMPLEMENTATION",
         _ => false,
     }
 }

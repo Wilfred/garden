@@ -7,7 +7,7 @@
 // fs::write_file("hello world", Path{ p: "/tmp/foo.txt" })
 // ```
 public fun write_file(content: String, path: Path): Result<Unit, String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test write_file {
@@ -25,7 +25,7 @@ test write_file {
 // fs::copy_file(Path{ p: "/tmp/source.txt" }, Path{ p: "/tmp/destination.txt" })
 // ```
 public fun copy_file(src: Path, dest: Path): Result<Unit, String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test copy_file {
@@ -45,7 +45,7 @@ test copy_file {
 // fs::remove_file(Path{ p: "/tmp/my_file.txt" })
 // ```
 public fun remove_file(path: Path): Result<Unit, String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test remove_file {
@@ -61,7 +61,7 @@ test remove_file {
 // fs::list_directory(Path{ p: "/" })
 // ```
 public fun list_directory(path: Path): Result<List<Path>, String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 // Kludge to perform a runtime check that list_directory returns a
@@ -84,7 +84,7 @@ test list_directory {
 // fs::working_directory() //-> Path{ p: "/home/yourname/awesome_garden_project" }
 // ```
 public fun working_directory(): Path {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 // Change the current working directory to `path`.
@@ -97,7 +97,7 @@ public fun working_directory(): Path {
 // fs::set_working_directory(Path{ p: "/tmp" })
 // ```
 public fun set_working_directory(path: Path): Result<Unit, String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 // Create a directory at `path`.
@@ -110,7 +110,7 @@ public fun set_working_directory(path: Path): Result<Unit, String> {
 // fs::create_dir(Path{ p: "/tmp/my_new_directory" })
 // ```
 public fun create_dir(path: Path): Result<Unit, String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 // Remove the directory at `path`.
@@ -122,7 +122,7 @@ public fun create_dir(path: Path): Result<Unit, String> {
 // fs::remove_dir(Path{ p: "/tmp/my_directory" })
 // ```
 public fun remove_dir(path: Path): Result<Unit, String> {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test create_and_remove_dir {

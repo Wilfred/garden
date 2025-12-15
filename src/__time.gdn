@@ -5,7 +5,7 @@
 // time::unixtime() //-> 1702534800
 // ```
 public fun unixtime(): Int {
-  __BUILTIN_IMPLEMENTATION
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test unixtime {

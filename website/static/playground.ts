@@ -273,9 +273,35 @@ function setupPlayground(): void {
     playgroundEditor &&
     playgroundEditor instanceof HTMLTextAreaElement
   ) {
-    playgroundRunButton.addEventListener("click", () => {
-      evalSnippet(playgroundEditor.value, playgroundOutput);
+    const initialContent = playgroundEditor.value + "\n\n";
+
+    // Create CodeMirror editor
+    const state = EditorState.create({
+      doc: initialContent,
+      extensions: [
+        minimalSetup,
+        EditorView.lineWrapping,
+        history(),
+        keymap.of([...defaultKeymap, ...historyKeymap]),
+        highlightActiveLine(),
+        gardenLanguage,
+        gardenHighlighting,
+      ],
     });
+
+    const editorView = new EditorView({
+      state,
+    });
+
+    // Replace textarea with CodeMirror editor
+    playgroundEditor.replaceWith(editorView.dom);
+
+    playgroundRunButton.addEventListener("click", () => {
+      const src = editorView.state.sliceDoc();
+      evalSnippet(src, playgroundOutput);
+    });
+
+    editorView.focus();
   }
 }
 

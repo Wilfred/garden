@@ -15,6 +15,27 @@ test write_file {
   write_file("hello world", Path{ p: "/tmp/file_from_garden_testing.txt" })
 }
 
+// Copy the file from `src` to `dest`.
+//
+// If `dest` already exists, its content is replaced with the content
+// from `src`.
+//
+// ```
+// import "__fs.gdn" as fs
+// fs::copy_file(Path{ p: "/tmp/source.txt" }, Path{ p: "/tmp/destination.txt" })
+// ```
+public fun copy_file(src: Path, dest: Path): Result<Unit, String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test copy_file {
+  let src_path = Path{ p: "/tmp/garden_copy_test_src.txt" }
+  write_file("test content for copy", src_path)
+
+  let dest_path = Path{ p: "/tmp/garden_copy_test_dest.txt" }
+  copy_file(src_path, dest_path)
+}
+
 // List the contents of the specified directory.
 //
 // ```

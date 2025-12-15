@@ -3133,6 +3133,75 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
+        BuiltinFunctionKind::CopyFile => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let src_path_s = match unwrap_path(&arg_values[0], env) {
+                Ok(s) => s,
+                Err(msg) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
+                    }
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(receiver_pos.clone(), msg),
+                    ));
+                }
+            };
+
+            let dest_path_s = match unwrap_path(&arg_values[1], env) {
+                Ok(s) => s,
+                Err(msg) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
+                    }
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(receiver_pos.clone(), msg),
+                    ));
+                }
+            };
+
+            let src_path = PathBuf::from(&src_path_s);
+            let dest_path = PathBuf::from(&dest_path_s);
+            let v = match std::fs::copy(&src_path, &dest_path) {
+                Ok(_) => Value::ok(Value::unit()),
+                Err(e) => {
+                    let msg = format!("Could not copy `{src_path_s}` to `{dest_path_s}`. {e}");
+                    Value::err(Value::new(Value_::String(msg)))
+                }
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltinFunctionKind::CheckSnippet => {
             check_arity(
                 &SymbolName {

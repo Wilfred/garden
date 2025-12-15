@@ -42,7 +42,8 @@ Added `__reflect::operators()`.
 
 Added `__random::int()`.
 
-Added `__fs::create_dir()` and `__fs::remove_dir()`.
+Added `__fs::create_dir()`, `__fs::remove_dir()` and
+`__fs::copy_file()`.
 
 Added `__time::unixtime()`.
 

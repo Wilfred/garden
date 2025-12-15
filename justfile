@@ -36,11 +36,7 @@ site-serve:
 site-build:
     garden run website/build_site.gdn
 
-    cp website/*.png website/dist
-    cp website/*.mp4 website/dist
-
     cd website/static && npm ci --silent && npm run build --silent
-    cp website/static/fonts/*.woff2 website/dist/static/fonts
 
 # Build a Docker image for the playground backend service.
 build-docker:

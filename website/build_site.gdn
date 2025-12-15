@@ -350,6 +350,27 @@ fun build_site(): Unit {
       write_fun_page(ns_name, ns, fun_name, out_dir, base_tmpl_src)
     }
   }
+
+  // Copy static files (PNG, MP4, fonts)
+  for path in fs::list_directory(website_dir).or_throw() {
+    let ext = path.extension()
+    if (ext == Some("png")) || (ext == Some("mp4")) {
+      let file_name = path.file_name().or_throw()
+      let dest = out_dir.join(file_name)
+      fs::copy_file(path, dest).or_throw()
+    }
+  }
+
+  // Copy font files
+  let fonts_src_dir = website_dir.join("static").join("fonts")
+  let fonts_dest_dir = out_dir.join("static").join("fonts")
+  for path in fs::list_directory(fonts_src_dir).or_throw() {
+    if path.extension() == Some("woff2") {
+      let file_name = path.file_name().or_throw()
+      let dest = fonts_dest_dir.join(file_name)
+      fs::copy_file(path, dest).or_throw()
+    }
+  }
 }
 
 // Convert `["a", "b", "c"]` to `"a, b and c"`.

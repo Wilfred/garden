@@ -802,4 +802,64 @@ mod tests {
             .arg("54");
         cmd.assert().success();
     }
+
+    #[test]
+    fn test_lsp_initialize_shutdown() {
+        use std::io::Write;
+        use std::process::Stdio;
+
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut child = Command::new(path)
+            .arg("lsp")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn command");
+
+        // Prepare LSP messages
+        let init_request =
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#;
+        let initialized = r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#;
+        let shutdown_request = r#"{"jsonrpc":"2.0","id":2,"method":"shutdown"}"#;
+        let exit = r#"{"jsonrpc":"2.0","method":"exit"}"#;
+
+        let input = format!(
+            "Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}",
+            init_request.len(), init_request,
+            initialized.len(), initialized,
+            shutdown_request.len(), shutdown_request,
+            exit.len(), exit
+        );
+
+        // Write to stdin
+        {
+            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+            stdin
+                .write_all(input.as_bytes())
+                .expect("Failed to write to stdin");
+        }
+
+        // Wait for the process to complete and get output
+        let output = child
+            .wait_with_output()
+            .expect("Failed to wait for command");
+
+        // Verify the command succeeded
+        assert!(output.status.success());
+
+        // Verify the output contains expected LSP responses
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            stdout.contains(r#""id":1"#),
+            "Should contain initialize response"
+        );
+        assert!(
+            stdout.contains(r#""name":"garden-lsp""#),
+            "Should contain server name"
+        );
+        assert!(
+            stdout.contains(r#""id":2"#),
+            "Should contain shutdown response"
+        );
+    }
 }

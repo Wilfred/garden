@@ -53,6 +53,7 @@ mod garden_type;
 mod go_to_def;
 mod hover;
 mod json_session;
+mod lsp;
 mod namespaces;
 mod parser;
 mod pos_to_id;
@@ -215,6 +216,8 @@ enum CliCommands {
     /// Run a Garden snippet in a sandbox and return the output as
     /// JSON.
     PlaygroundRun { path: PathBuf },
+    /// Start the Language Server Protocol (LSP) server.
+    Lsp,
 }
 
 fn main() {
@@ -473,6 +476,9 @@ fn main() {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
             sandboxed_playground::run_sandboxed_playground(&src, &abs_path, interrupted);
+        }
+        CliCommands::Lsp => {
+            lsp::run_lsp();
         }
     }
 }

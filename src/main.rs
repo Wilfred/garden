@@ -862,4 +862,111 @@ mod tests {
             "Should contain shutdown response"
         );
     }
+
+    #[test]
+    fn test_lsp_goto_definition() {
+        use std::io::Write;
+        use std::process::Stdio;
+
+        // Create a temporary test file
+        let test_content = r#"fun add_one(x: Int): Int {
+  x + 1
+}
+
+fun main() {
+  add_one(5)
+}
+"#;
+        let test_file = std::env::temp_dir().join("garden_lsp_test_goto_def.gdn");
+        std::fs::write(&test_file, test_content).expect("Failed to write test file");
+
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut child = Command::new(path)
+            .arg("lsp")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn command");
+
+        let file_uri = format!("file://{}", test_file.display());
+
+        // Prepare LSP messages
+        let init_request =
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#;
+        let initialized = r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#;
+
+        // Request definition of "add_one" at line 5, character 2
+        // Line 5 is "  add_one(5)" and character 2 is the start of "add_one"
+        let goto_def_request = format!(
+            r#"{{"jsonrpc":"2.0","id":2,"method":"textDocument/definition","params":{{"textDocument":{{"uri":"{}"}},"position":{{"line":5,"character":2}}}}}}"#,
+            file_uri
+        );
+
+        let shutdown_request = r#"{"jsonrpc":"2.0","id":3,"method":"shutdown"}"#;
+        let exit = r#"{"jsonrpc":"2.0","method":"exit"}"#;
+
+        let input = format!(
+            "Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}",
+            init_request.len(), init_request,
+            initialized.len(), initialized,
+            goto_def_request.len(), goto_def_request,
+            shutdown_request.len(), shutdown_request,
+            exit.len(), exit
+        );
+
+        // Write to stdin
+        {
+            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+            stdin
+                .write_all(input.as_bytes())
+                .expect("Failed to write to stdin");
+        }
+
+        // Wait for the process to complete and get output
+        let output = child
+            .wait_with_output()
+            .expect("Failed to wait for command");
+
+        // Verify the command succeeded
+        assert!(output.status.success());
+
+        // Verify the output contains expected LSP responses
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        // Should contain initialize response
+        assert!(
+            stdout.contains(r#""id":1"#),
+            "Should contain initialize response"
+        );
+
+        // Should contain go-to-definition response with id 2
+        assert!(
+            stdout.contains(r#""id":2"#),
+            "Should contain goto-definition response"
+        );
+
+        // Should contain the URI in the response
+        assert!(
+            stdout.contains(&file_uri),
+            "Should contain file URI in definition response"
+        );
+
+        // Should contain a range in the response
+        assert!(stdout.contains(r#""range""#), "Should contain range");
+
+        // The definition should point to line 0 (where add_one is defined)
+        assert!(
+            stdout.contains(r#""line":0"#),
+            "Should point to line 0 where add_one is defined"
+        );
+
+        // Should contain shutdown response
+        assert!(
+            stdout.contains(r#""id":3"#),
+            "Should contain shutdown response"
+        );
+
+        // Clean up the temporary file
+        let _ = std::fs::remove_file(&test_file);
+    }
 }

@@ -54,7 +54,7 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
     let responses = match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
         Ok(summary) => {
             let mut items = vec![];
-            if !summary.diagnostics.is_empty() {
+            if !summary.tests.is_empty() {
                 items.push(PlaygroundResponse {
                     error: None,
                     value: Some(describe_tests(&env, &summary)),

@@ -29,7 +29,15 @@ release:
 
 # Start a webserver serving the latest website build.
 site-serve:
-    cd website/dist && python -m http.server
+    #!/bin/bash
+
+    cd website/dist
+    python -m http.server &
+    SERVER_PID=$!
+    trap "kill $SERVER_PID 2>/dev/null" EXIT INT
+    sleep 1
+    xdg-open http://localhost:8000
+    wait $SERVER_PID
 
 # Build the website.
 site-build:

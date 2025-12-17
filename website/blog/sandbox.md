@@ -27,7 +27,7 @@ while True {}
 ```
 
 ```
-Path { p: "/etc/passwd" }.read()
+Path{ p: "/etc/passwd" }.read()
 ```
 
 If you don't have a sandbox, you might choose to compile your
@@ -72,8 +72,8 @@ when I'm writing code, whereas it could be helping!
 ## Speculative Library Loading
 
 In an ideal world, writing `require('underscore')` in JavaScript would
-be sufficient. The IDE could install the library, provide code
-completion, and I'd be ready to to start using it.
+be sufficient. The IDE could install the library and no additional
+keystrokes would be required.
 
 There are also projects that do this (JS example). Again, without a
 sandbox, this isn't safe. You can reduce the risk with a list of
@@ -96,8 +96,8 @@ workflow.
 
 These workflows prevent the AI from e.g. deleting all your files, but
 make it harder to interactively guide the AI towards the desired
-solution. A sandbox lets you run the LLM and interpreter as a normal
-program, getting the best of both worlds.
+solution. A sandbox lets you run the LLM and interpreter as normal
+programs, getting the best of both worlds.
 
 ## Program Synthesis
 
@@ -127,10 +127,26 @@ just feed it to an LLM.
 
 ## Security
 
-Enforcing memory liimtations.
+Evaluation of arbitrary code requires significant work to have a
+strong security posture.
 
-Not defending against side channel attacks like rowhammer or spectre.
+The Garden interpreter sandbox prevents I/O (disk, network) as well as
+enforcing resource limits. Memory limits are less enforced today, so a
+sufficiently problematic problem might be able to OOM the interpreter.
 
-## Open Questions
+The sandbox also provides no protection against side channel attacks,
+such as rowhammer or spectre.
 
-Should this be a userland feature?
+## Future Work
+
+I'm delighted to have live evaluation on the website, but there's
+still a ton of features that could be built on top of this sandbox.
+
+There's also open questions about whether the sandbox should be
+exposed as a userland API.
+
+---
+
+If you've made it to the end of this long post, thanks for reading!
+Garden is still very much alpha software, but it's all on GitHub if
+you want to try it.

@@ -1,17 +1,23 @@
 //! LSP (Language Server Protocol) support for Garden.
 
+use lsp_types::{
+    CompletionItem, CompletionItemKind, CompletionOptions, Diagnostic, DiagnosticSeverity,
+    InitializeResult, InsertTextFormat, Location, Position, PublishDiagnosticsParams, Range,
+    ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
+};
 use serde::Deserialize;
 use std::io::{self, BufRead, Read, Write};
 use std::path::PathBuf;
+use url::Url;
 
 use crate::checks::check_toplevel_items_in_env;
 use crate::checks::type_checker::check_types;
-use crate::diagnostics::{Diagnostic, Severity};
+use crate::diagnostics::{Diagnostic as GardenDiagnostic, Severity};
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::garden_type::Type;
 use crate::parser::ast::{AstId, Expression_, IdGenerator};
-use crate::parser::position::Position;
+use crate::parser::position::Position as GardenPosition;
 use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
@@ -88,12 +94,30 @@ fn write_message(message: &serde_json::Value) -> io::Result<()> {
 }
 
 /// Convert a file path to an LSP URI.
-fn path_to_uri(path: &PathBuf) -> String {
-    format!("file://{}", path.display())
+fn path_to_uri(path: &PathBuf) -> Uri {
+    let url = Url::from_file_path(path).unwrap_or_else(|_| {
+        // Fallback to file:// scheme with display
+        Url::parse(&format!("file://{}", path.display())).unwrap()
+    });
+    url.as_str().parse().unwrap()
+}
+
+/// Convert a Garden position to an LSP range.
+fn garden_pos_to_lsp_range(pos: &GardenPosition) -> Range {
+    Range {
+        start: Position {
+            line: pos.line_number as u32,
+            character: pos.column as u32,
+        },
+        end: Position {
+            line: pos.end_line_number as u32,
+            character: pos.end_column as u32,
+        },
+    }
 }
 
 /// Get diagnostics for a file.
-fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<serde_json::Value> {
+fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<Diagnostic> {
     let mut diagnostics = vec![];
 
     let mut id_gen = IdGenerator::default();
@@ -112,20 +136,12 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<serde_json::Value> {
             } => (position, message.as_string()),
         };
 
-        diagnostics.push(serde_json::json!({
-            "range": {
-                "start": {
-                    "line": position.line_number,
-                    "character": position.column
-                },
-                "end": {
-                    "line": position.end_line_number,
-                    "character": position.end_column
-                }
-            },
-            "severity": 1, // Error
-            "message": message
-        }));
+        diagnostics.push(Diagnostic {
+            range: garden_pos_to_lsp_range(&position),
+            severity: Some(DiagnosticSeverity::ERROR),
+            message,
+            ..Default::default()
+        });
     }
 
     // If no parse errors, check for semantic errors
@@ -135,7 +151,7 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<serde_json::Value> {
         let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, ns.clone());
         raw_diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, &env, ns));
 
-        for Diagnostic {
+        for GardenDiagnostic {
             message,
             position,
             severity,
@@ -143,24 +159,16 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<serde_json::Value> {
         } in raw_diagnostics
         {
             let lsp_severity = match severity {
-                Severity::Error => 1,
-                Severity::Warning => 2,
+                Severity::Error => DiagnosticSeverity::ERROR,
+                Severity::Warning => DiagnosticSeverity::WARNING,
             };
 
-            diagnostics.push(serde_json::json!({
-                "range": {
-                    "start": {
-                        "line": position.line_number,
-                        "character": position.column
-                    },
-                    "end": {
-                        "line": position.end_line_number,
-                        "character": position.end_column
-                    }
-                },
-                "severity": lsp_severity,
-                "message": message.as_string()
-            }));
+            diagnostics.push(Diagnostic {
+                range: garden_pos_to_lsp_range(&position),
+                severity: Some(lsp_severity),
+                message: message.as_string(),
+                ..Default::default()
+            });
         }
     }
 
@@ -168,7 +176,7 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<serde_json::Value> {
 }
 
 /// Get completion items at the given offset.
-fn get_completions(src: &str, path: &PathBuf, offset: usize) -> Vec<serde_json::Value> {
+fn get_completions(src: &str, path: &PathBuf, offset: usize) -> Vec<CompletionItem> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -211,7 +219,7 @@ fn get_completions(src: &str, path: &PathBuf, offset: usize) -> Vec<serde_json::
 }
 
 /// Get method and field completions for a given type.
-fn get_method_completions(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<serde_json::Value> {
+fn get_method_completions(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
     let Some(type_name) = recv_ty.type_name() else {
         return vec![];
     };
@@ -263,13 +271,14 @@ fn get_method_completions(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<serde_
 
         let detail = format!("({params}){return_hint}");
 
-        items.push(serde_json::json!({
-            "label": label,
-            "kind": 2, // Method
-            "detail": detail,
-            "insertText": insert_text,
-            "insertTextFormat": 2, // Snippet
-        }));
+        items.push(CompletionItem {
+            label,
+            kind: Some(CompletionItemKind::METHOD),
+            detail: Some(detail),
+            insert_text: Some(insert_text),
+            insert_text_format: Some(InsertTextFormat::SNIPPET),
+            ..Default::default()
+        });
     }
 
     // Add struct fields
@@ -279,11 +288,12 @@ fn get_method_completions(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<serde_
                 continue;
             }
 
-            items.push(serde_json::json!({
-                "label": field.sym.name.text,
-                "kind": 5, // Field
-                "detail": format!(": {}", field.hint.as_src()),
-            }));
+            items.push(CompletionItem {
+                label: field.sym.name.text.clone(),
+                kind: Some(CompletionItemKind::FIELD),
+                detail: Some(format!(": {}", field.hint.as_src())),
+                ..Default::default()
+            });
         }
     }
 
@@ -291,7 +301,7 @@ fn get_method_completions(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<serde_
 }
 
 /// Get the definition position for a symbol at the given offset.
-fn get_definition(src: &str, path: &PathBuf, offset: usize) -> Option<Position> {
+fn get_definition(src: &str, path: &PathBuf, offset: usize) -> Option<GardenPosition> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -320,25 +330,29 @@ fn get_definition(src: &str, path: &PathBuf, offset: usize) -> Option<Position> 
 
 /// Handle an initialize request.
 fn handle_initialize(id: serde_json::Value) -> serde_json::Value {
+    let result = InitializeResult {
+        capabilities: ServerCapabilities {
+            definition_provider: Some(lsp_types::OneOf::Left(true)),
+            completion_provider: Some(CompletionOptions {
+                trigger_characters: Some(vec![".".to_owned()]),
+                ..Default::default()
+            }),
+            text_document_sync: Some(TextDocumentSyncCapability::Kind(
+                TextDocumentSyncKind::FULL,
+            )),
+            ..Default::default()
+        },
+        server_info: Some(ServerInfo {
+            name: "garden-lsp".to_owned(),
+            version: Some("0.1.0".to_owned()),
+        }),
+        ..Default::default()
+    };
+
     serde_json::json!({
         "jsonrpc": "2.0",
         "id": id,
-        "result": {
-            "capabilities": {
-                "definitionProvider": true,
-                "completionProvider": {
-                    "triggerCharacters": ["."]
-                },
-                "textDocumentSync": {
-                    "openClose": true,
-                    "change": 1 // Full document sync
-                }
-            },
-            "serverInfo": {
-                "name": "garden-lsp",
-                "version": "0.1.0"
-            }
-        }
+        "result": result
     })
 }
 
@@ -352,14 +366,17 @@ fn handle_shutdown(id: serde_json::Value) -> serde_json::Value {
 }
 
 /// Send diagnostics for a file.
-fn send_diagnostics(uri: &str, diagnostics: Vec<serde_json::Value>) -> io::Result<()> {
+fn send_diagnostics(uri: Uri, diagnostics: Vec<Diagnostic>) -> io::Result<()> {
+    let params = PublishDiagnosticsParams {
+        uri,
+        diagnostics,
+        version: None,
+    };
+
     let notification = serde_json::json!({
         "jsonrpc": "2.0",
         "method": "textDocument/publishDiagnostics",
-        "params": {
-            "uri": uri,
-            "diagnostics": diagnostics
-        }
+        "params": params
     });
 
     write_message(&notification)
@@ -386,14 +403,19 @@ fn handle_did_open(params: &serde_json::Value) -> io::Result<()> {
     };
 
     // Convert URI to path
-    let path = match uri.strip_prefix("file://") {
-        Some(p) => PathBuf::from(p),
-        None => return Ok(()),
+    let url = match Url::parse(uri) {
+        Ok(u) => u,
+        Err(_) => return Ok(()),
+    };
+
+    let path = match url.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return Ok(()),
     };
 
     // Get diagnostics and send them
     let diagnostics = get_diagnostics(text, &path);
-    send_diagnostics(uri, diagnostics)
+    send_diagnostics(url.as_str().parse().unwrap(), diagnostics)
 }
 
 /// Handle textDocument/didChange notification.
@@ -420,14 +442,19 @@ fn handle_did_change(params: &serde_json::Value) -> io::Result<()> {
     };
 
     // Convert URI to path
-    let path = match uri.strip_prefix("file://") {
-        Some(p) => PathBuf::from(p),
-        None => return Ok(()),
+    let url = match Url::parse(uri) {
+        Ok(u) => u,
+        Err(_) => return Ok(()),
+    };
+
+    let path = match url.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return Ok(()),
     };
 
     // Get diagnostics and send them
     let diagnostics = get_diagnostics(text, &path);
-    send_diagnostics(uri, diagnostics)
+    send_diagnostics(url.as_str().parse().unwrap(), diagnostics)
 }
 
 /// Handle a textDocument/completion request.
@@ -478,9 +505,20 @@ fn handle_completion(id: serde_json::Value, params: &serde_json::Value) -> serde
     };
 
     // Convert file:// URI to path
-    let path = match uri.strip_prefix("file://") {
-        Some(p) => PathBuf::from(p),
-        None => {
+    let url = match Url::parse(uri) {
+        Ok(u) => u,
+        Err(_) => {
+            return serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": id,
+                "result": []
+            });
+        }
+    };
+
+    let path = match url.to_file_path() {
+        Ok(p) => p,
+        Err(_) => {
             return serde_json::json!({
                 "jsonrpc": "2.0",
                 "id": id,
@@ -551,7 +589,7 @@ fn handle_definition(id: serde_json::Value, params: &serde_json::Value) -> serde
     };
 
     let character = match position.get("character").and_then(|c| c.as_u64()) {
-        Some(c) => c as usize,
+        Some(l) => l as usize,
         _ => {
             return serde_json::json!({
                 "jsonrpc": "2.0",
@@ -562,9 +600,20 @@ fn handle_definition(id: serde_json::Value, params: &serde_json::Value) -> serde
     };
 
     // Convert file:// URI to path
-    let path = match uri.strip_prefix("file://") {
-        Some(p) => PathBuf::from(p),
-        None => {
+    let url = match Url::parse(uri) {
+        Ok(u) => u,
+        Err(_) => {
+            return serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": id,
+                "result": null
+            });
+        }
+    };
+
+    let path = match url.to_file_path() {
+        Ok(p) => p,
+        Err(_) => {
             return serde_json::json!({
                 "jsonrpc": "2.0",
                 "id": id,
@@ -601,22 +650,15 @@ fn handle_definition(id: serde_json::Value, params: &serde_json::Value) -> serde
     };
 
     // Convert to LSP Location format
+    let location = Location {
+        uri: path_to_uri(&def_pos.path),
+        range: garden_pos_to_lsp_range(&def_pos),
+    };
+
     serde_json::json!({
         "jsonrpc": "2.0",
         "id": id,
-        "result": {
-            "uri": path_to_uri(&def_pos.path),
-            "range": {
-                "start": {
-                    "line": def_pos.line_number,
-                    "character": def_pos.column
-                },
-                "end": {
-                    "line": def_pos.end_line_number,
-                    "character": def_pos.end_column
-                }
-            }
-        }
+        "result": location
     })
 }
 
@@ -632,15 +674,13 @@ fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
             }
             // Count characters on this line
             let line_start = idx;
-            let mut char_count = 0;
-            for (char_idx, ch) in src[line_start..].char_indices() {
+            for (char_count, (char_idx, ch)) in src[line_start..].char_indices().enumerate() {
                 if ch == '\n' {
                     break;
                 }
                 if char_count == character {
                     return line_start + char_idx;
                 }
-                char_count += 1;
             }
             return idx;
         }

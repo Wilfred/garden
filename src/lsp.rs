@@ -373,9 +373,7 @@ fn handle_initialize(id: serde_json::Value) -> JsonRpcResponse<InitializeResult>
                 trigger_characters: Some(vec![".".to_owned()]),
                 ..Default::default()
             }),
-            text_document_sync: Some(TextDocumentSyncCapability::Kind(
-                TextDocumentSyncKind::FULL,
-            )),
+            text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
             ..Default::default()
         },
         server_info: Some(ServerInfo {
@@ -400,8 +398,7 @@ fn send_diagnostics(uri: Uri, diagnostics: Vec<Diagnostic>) -> io::Result<()> {
         version: None,
     };
 
-    let notification =
-        JsonRpcNotification::new("textDocument/publishDiagnostics", params);
+    let notification = JsonRpcNotification::new("textDocument/publishDiagnostics", params);
 
     write_message(&notification)
 }

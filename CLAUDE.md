@@ -39,7 +39,9 @@ When adding built-in functions, always update the CHANGELOG.md.
 To generate target/debug/garden use `cargo build`. This separation
 allows Claude to set permissions on separate Garden subcommands.
 
-You do not need to ask permission for check commands.
+Remember that Garden does not treat `main` functions specially. You
+can just write expressions in the file directly, such as
+`println("foo")` or `some_func()`.
 
 # Site Builder
 

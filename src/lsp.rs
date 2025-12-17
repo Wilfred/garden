@@ -5,7 +5,7 @@ use lsp_types::{
     InitializeResult, InsertTextFormat, Location, Position, PublishDiagnosticsParams, Range,
     ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::io::{self, BufRead, Read, Write};
 use std::path::PathBuf;
 use url::Url;
@@ -33,6 +33,42 @@ struct Message {
     #[allow(dead_code)]
     #[serde(default)]
     params: Option<serde_json::Value>,
+}
+
+/// JSON-RPC 2.0 response structure.
+#[derive(Debug, Serialize)]
+struct JsonRpcResponse<T> {
+    jsonrpc: &'static str,
+    id: serde_json::Value,
+    result: T,
+}
+
+impl<T: Serialize> JsonRpcResponse<T> {
+    fn new(id: serde_json::Value, result: T) -> Self {
+        Self {
+            jsonrpc: "2.0",
+            id,
+            result,
+        }
+    }
+}
+
+/// JSON-RPC 2.0 notification structure.
+#[derive(Debug, Serialize)]
+struct JsonRpcNotification<T> {
+    jsonrpc: &'static str,
+    method: &'static str,
+    params: T,
+}
+
+impl<T: Serialize> JsonRpcNotification<T> {
+    fn new(method: &'static str, params: T) -> Self {
+        Self {
+            jsonrpc: "2.0",
+            method,
+            params,
+        }
+    }
 }
 
 /// Read a single LSP message from stdin.
@@ -81,7 +117,7 @@ fn read_message() -> io::Result<Option<serde_json::Value>> {
 }
 
 /// Write an LSP message to stdout.
-fn write_message(message: &serde_json::Value) -> io::Result<()> {
+fn write_message<T: Serialize>(message: &T) -> io::Result<()> {
     let content = serde_json::to_string(message)?;
     let response = format!("Content-Length: {}\r\n\r\n{}", content.len(), content);
 
@@ -329,7 +365,7 @@ fn get_definition(src: &str, path: &PathBuf, offset: usize) -> Option<GardenPosi
 }
 
 /// Handle an initialize request.
-fn handle_initialize(id: serde_json::Value) -> serde_json::Value {
+fn handle_initialize(id: serde_json::Value) -> JsonRpcResponse<InitializeResult> {
     let result = InitializeResult {
         capabilities: ServerCapabilities {
             definition_provider: Some(lsp_types::OneOf::Left(true)),
@@ -346,23 +382,14 @@ fn handle_initialize(id: serde_json::Value) -> serde_json::Value {
             name: "garden-lsp".to_owned(),
             version: Some("0.1.0".to_owned()),
         }),
-        ..Default::default()
     };
 
-    serde_json::json!({
-        "jsonrpc": "2.0",
-        "id": id,
-        "result": result
-    })
+    JsonRpcResponse::new(id, result)
 }
 
 /// Handle a shutdown request.
-fn handle_shutdown(id: serde_json::Value) -> serde_json::Value {
-    serde_json::json!({
-        "jsonrpc": "2.0",
-        "id": id,
-        "result": null
-    })
+fn handle_shutdown(id: serde_json::Value) -> JsonRpcResponse<()> {
+    JsonRpcResponse::new(id, ())
 }
 
 /// Send diagnostics for a file.
@@ -373,11 +400,8 @@ fn send_diagnostics(uri: Uri, diagnostics: Vec<Diagnostic>) -> io::Result<()> {
         version: None,
     };
 
-    let notification = serde_json::json!({
-        "jsonrpc": "2.0",
-        "method": "textDocument/publishDiagnostics",
-        "params": params
-    });
+    let notification =
+        JsonRpcNotification::new("textDocument/publishDiagnostics", params);
 
     write_message(&notification)
 }
@@ -458,85 +482,46 @@ fn handle_did_change(params: &serde_json::Value) -> io::Result<()> {
 }
 
 /// Handle a textDocument/completion request.
-fn handle_completion(id: serde_json::Value, params: &serde_json::Value) -> serde_json::Value {
+fn handle_completion(
+    id: serde_json::Value,
+    params: &serde_json::Value,
+) -> JsonRpcResponse<Vec<CompletionItem>> {
     // Extract the text document URI and position from params
     let uri = match params.get("textDocument").and_then(|doc| doc.get("uri")) {
         Some(serde_json::Value::String(uri)) => uri,
-        _ => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": []
-            });
-        }
+        _ => return JsonRpcResponse::new(id, vec![]),
     };
 
     let position = match params.get("position") {
         Some(pos) => pos,
-        _ => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": []
-            });
-        }
+        _ => return JsonRpcResponse::new(id, vec![]),
     };
 
     let line = match position.get("line").and_then(|l| l.as_u64()) {
         Some(l) => l as usize,
-        _ => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": []
-            });
-        }
+        _ => return JsonRpcResponse::new(id, vec![]),
     };
 
     let character = match position.get("character").and_then(|c| c.as_u64()) {
         Some(c) => c as usize,
-        _ => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": []
-            });
-        }
+        _ => return JsonRpcResponse::new(id, vec![]),
     };
 
     // Convert file:// URI to path
     let url = match Url::parse(uri) {
         Ok(u) => u,
-        Err(_) => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": []
-            });
-        }
+        Err(_) => return JsonRpcResponse::new(id, vec![]),
     };
 
     let path = match url.to_file_path() {
         Ok(p) => p,
-        Err(_) => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": []
-            });
-        }
+        Err(_) => return JsonRpcResponse::new(id, vec![]),
     };
 
     // Read the file
     let src = match std::fs::read_to_string(&path) {
         Ok(s) => s,
-        Err(_) => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": []
-            });
-        }
+        Err(_) => return JsonRpcResponse::new(id, vec![]),
     };
 
     // Convert line/character to offset
@@ -545,93 +530,50 @@ fn handle_completion(id: serde_json::Value, params: &serde_json::Value) -> serde
     // Get completions
     let items = get_completions(&src, &path, offset);
 
-    serde_json::json!({
-        "jsonrpc": "2.0",
-        "id": id,
-        "result": items
-    })
+    JsonRpcResponse::new(id, items)
 }
 
 /// Handle a textDocument/definition request.
-fn handle_definition(id: serde_json::Value, params: &serde_json::Value) -> serde_json::Value {
+fn handle_definition(
+    id: serde_json::Value,
+    params: &serde_json::Value,
+) -> JsonRpcResponse<Option<Location>> {
     // Extract the text document URI and position from params
     let uri = match params.get("textDocument").and_then(|doc| doc.get("uri")) {
         Some(serde_json::Value::String(uri)) => uri,
-        _ => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": null
-            });
-        }
+        _ => return JsonRpcResponse::new(id, None),
     };
 
     let position = match params.get("position") {
         Some(pos) => pos,
-        _ => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": null
-            });
-        }
+        _ => return JsonRpcResponse::new(id, None),
     };
 
     let line = match position.get("line").and_then(|l| l.as_u64()) {
         Some(l) => l as usize,
-        _ => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": null
-            });
-        }
+        _ => return JsonRpcResponse::new(id, None),
     };
 
     let character = match position.get("character").and_then(|c| c.as_u64()) {
         Some(l) => l as usize,
-        _ => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": null
-            });
-        }
+        _ => return JsonRpcResponse::new(id, None),
     };
 
     // Convert file:// URI to path
     let url = match Url::parse(uri) {
         Ok(u) => u,
-        Err(_) => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": null
-            });
-        }
+        Err(_) => return JsonRpcResponse::new(id, None),
     };
 
     let path = match url.to_file_path() {
         Ok(p) => p,
-        Err(_) => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": null
-            });
-        }
+        Err(_) => return JsonRpcResponse::new(id, None),
     };
 
     // Read the file
     let src = match std::fs::read_to_string(&path) {
         Ok(s) => s,
-        Err(_) => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": null
-            });
-        }
+        Err(_) => return JsonRpcResponse::new(id, None),
     };
 
     // Convert line/character to offset
@@ -640,13 +582,7 @@ fn handle_definition(id: serde_json::Value, params: &serde_json::Value) -> serde
     // Get the definition position
     let def_pos = match get_definition(&src, &path, offset) {
         Some(pos) => pos,
-        None => {
-            return serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": null
-            });
-        }
+        None => return JsonRpcResponse::new(id, None),
     };
 
     // Convert to LSP Location format
@@ -655,11 +591,7 @@ fn handle_definition(id: serde_json::Value, params: &serde_json::Value) -> serde
         range: garden_pos_to_lsp_range(&def_pos),
     };
 
-    serde_json::json!({
-        "jsonrpc": "2.0",
-        "id": id,
-        "result": location
-    })
+    JsonRpcResponse::new(id, Some(location))
 }
 
 /// Convert line and character position to byte offset in the source.

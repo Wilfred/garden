@@ -32,13 +32,12 @@ When adding built-in functions, always update the CHANGELOG.md.
 
 # Verifying changes
 - cargo clippy: Check that your Rust code is correct
-- cargo run -- check yourfile.gdn: Check the test program named yourfile.gdn
-- cargo run -- run yourfile.gdn: Run the code in yourfile.gdn.
-- cargo run -- test yourfile.gdn: Run unit tests in yourfile.gdn.
+- ./target/debug/garden check yourfile.gdn: Check the test program named yourfile.gdn
+- ./target/debug/garden run yourfile.gdn: Run the code in yourfile.gdn.
+- ./target/debug/garden test yourfile.gdn: Run unit tests in yourfile.gdn.
 
-Remember that Garden does not treat `main` functions specially. You'll
-need to write a toplevel call to any functions you want to call at
-runtime, e.g. `main()`.
+To generate target/debug/garden use `cargo build`. This separation
+allows Claude to set permissions on separate Garden subcommands.
 
 You do not need to ask permission for check commands.
 

@@ -38,7 +38,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: ls
       - uses: raven-actions/actionlint@v1
 
   build_docs:

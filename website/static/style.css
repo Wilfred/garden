@@ -63,9 +63,9 @@
 }
 
 body {
-  max-width: 800px;
+  max-width: 700px;
   margin: 24px auto 52px auto;
-  font-size: 18px;
+  font-size: 17px;
   background-color: var(--cream);
   font-family: "Lora", serif;
   font-optical-sizing: auto;
@@ -93,12 +93,12 @@ header > a,
 header .title-container > a {
   padding-left: 10px;
   color: var(--cream);
-  font-size: 36px;
+  font-size: 34px;
 }
 
 .title-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 700px;
   padding-top: 10px;
 }
 
@@ -129,6 +129,8 @@ code,
 }
 
 pre {
+  /* The monospace font appears a bit bigger, so choose a slightly
+   smaller font size. */
   font-size: 16px;
   line-height: 20px;
 }
@@ -264,7 +266,7 @@ header a {
 }
 
 textarea {
-  font-size: 18px;
+  font-size: 17px;
 
   margin: 10px;
   width: calc(100% - 30px);
@@ -371,7 +373,7 @@ ul ul {
 /* CodeMirror Integration */
 .cm-editor {
   font-family: monospace;
-  font-size: 16px;
+  font-size: 17px;
   line-height: 20px;
   border: none;
   outline: none;

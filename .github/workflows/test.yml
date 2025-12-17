@@ -15,6 +15,24 @@ jobs:
 
       - run: cargo test
 
+  formatting:
+    name: Check formatting
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt
+
+      - name: Check Rust formatting
+        run: cargo fmt -- --check
+
+      - name: Check CSS formatting
+        run: npx prettier --check "website/**/style.css"
+
+      - name: Check TS formatting
+        run: npx prettier --check "website/**/*.ts"
+
   actionlint:
     name: Actionlint
     runs-on: ubuntu-24.04

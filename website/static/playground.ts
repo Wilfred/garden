@@ -109,7 +109,7 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
 
       // Iterate over all results
       const stdoutParts: string[] = [];
-      let finalValue = "";
+      const valueParts: string[] = [];
       let hasError = false;
 
       for (const item of data.results) {
@@ -129,7 +129,7 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
           }
 
           if (result.value) {
-            finalValue = result.value;
+            valueParts.push(result.value);
           }
         }
       }
@@ -137,9 +137,14 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
       if (!hasError) {
         let output = "";
         if (stdoutParts.length > 0) {
-          output = stdoutParts.join("") + "\n";
+          output = stdoutParts.join("");
         }
-        output += finalValue;
+        if (valueParts.length > 0) {
+          if (output.length > 0) {
+            output += "\n";
+          }
+          output += valueParts.join("\n");
+        }
 
         snippetDiv.innerHTML = output;
       }

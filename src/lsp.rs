@@ -4,14 +4,16 @@ use serde::Deserialize;
 use std::io::{self, BufRead, Read, Write};
 use std::path::PathBuf;
 
+use crate::checks::check_toplevel_items_in_env;
 use crate::checks::type_checker::check_types;
+use crate::diagnostics::{Diagnostic, Severity};
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::garden_type::Type;
 use crate::parser::ast::{AstId, Expression_, IdGenerator};
-use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
+use crate::parser::{parse_toplevel_items, ParseError};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 
@@ -88,6 +90,81 @@ fn write_message(message: &serde_json::Value) -> io::Result<()> {
 /// Convert a file path to an LSP URI.
 fn path_to_uri(path: &PathBuf) -> String {
     format!("file://{}", path.display())
+}
+
+/// Get diagnostics for a file.
+fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<serde_json::Value> {
+    let mut diagnostics = vec![];
+
+    let mut id_gen = IdGenerator::default();
+    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+
+    let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+    // Collect parse errors
+    for e in errors.into_iter() {
+        let (position, message) = match e {
+            ParseError::Invalid {
+                position, message, ..
+            } => (position, message.as_string()),
+            ParseError::Incomplete {
+                position, message, ..
+            } => (position, message.as_string()),
+        };
+
+        diagnostics.push(serde_json::json!({
+            "range": {
+                "start": {
+                    "line": position.line_number,
+                    "character": position.column
+                },
+                "end": {
+                    "line": position.end_line_number,
+                    "character": position.end_column
+                }
+            },
+            "severity": 1, // Error
+            "message": message
+        }));
+    }
+
+    // If no parse errors, check for semantic errors
+    if diagnostics.is_empty() {
+        let mut env = Env::new(id_gen, vfs);
+        let ns = env.get_or_create_namespace(path);
+        let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, ns.clone());
+        raw_diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, &env, ns));
+
+        for Diagnostic {
+            message,
+            position,
+            severity,
+            ..
+        } in raw_diagnostics
+        {
+            let lsp_severity = match severity {
+                Severity::Error => 1,
+                Severity::Warning => 2,
+            };
+
+            diagnostics.push(serde_json::json!({
+                "range": {
+                    "start": {
+                        "line": position.line_number,
+                        "character": position.column
+                    },
+                    "end": {
+                        "line": position.end_line_number,
+                        "character": position.end_column
+                    }
+                },
+                "severity": lsp_severity,
+                "message": message.as_string()
+            }));
+        }
+    }
+
+    diagnostics
 }
 
 /// Get completion items at the given offset.
@@ -251,6 +328,10 @@ fn handle_initialize(id: serde_json::Value) -> serde_json::Value {
                 "definitionProvider": true,
                 "completionProvider": {
                     "triggerCharacters": ["."]
+                },
+                "textDocumentSync": {
+                    "openClose": true,
+                    "change": 1 // Full document sync
                 }
             },
             "serverInfo": {
@@ -268,6 +349,85 @@ fn handle_shutdown(id: serde_json::Value) -> serde_json::Value {
         "id": id,
         "result": null
     })
+}
+
+/// Send diagnostics for a file.
+fn send_diagnostics(uri: &str, diagnostics: Vec<serde_json::Value>) -> io::Result<()> {
+    let notification = serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": "textDocument/publishDiagnostics",
+        "params": {
+            "uri": uri,
+            "diagnostics": diagnostics
+        }
+    });
+
+    write_message(&notification)
+}
+
+/// Handle textDocument/didOpen notification.
+fn handle_did_open(params: &serde_json::Value) -> io::Result<()> {
+    let uri = match params
+        .get("textDocument")
+        .and_then(|doc| doc.get("uri"))
+        .and_then(|u| u.as_str())
+    {
+        Some(uri) => uri,
+        None => return Ok(()),
+    };
+
+    let text = match params
+        .get("textDocument")
+        .and_then(|doc| doc.get("text"))
+        .and_then(|t| t.as_str())
+    {
+        Some(text) => text,
+        None => return Ok(()),
+    };
+
+    // Convert URI to path
+    let path = match uri.strip_prefix("file://") {
+        Some(p) => PathBuf::from(p),
+        None => return Ok(()),
+    };
+
+    // Get diagnostics and send them
+    let diagnostics = get_diagnostics(text, &path);
+    send_diagnostics(uri, diagnostics)
+}
+
+/// Handle textDocument/didChange notification.
+fn handle_did_change(params: &serde_json::Value) -> io::Result<()> {
+    let uri = match params
+        .get("textDocument")
+        .and_then(|doc| doc.get("uri"))
+        .and_then(|u| u.as_str())
+    {
+        Some(uri) => uri,
+        None => return Ok(()),
+    };
+
+    // Get the new text from contentChanges (full document sync)
+    let text = match params
+        .get("contentChanges")
+        .and_then(|changes| changes.as_array())
+        .and_then(|arr| arr.first())
+        .and_then(|change| change.get("text"))
+        .and_then(|t| t.as_str())
+    {
+        Some(text) => text,
+        None => return Ok(()),
+    };
+
+    // Convert URI to path
+    let path = match uri.strip_prefix("file://") {
+        Some(p) => PathBuf::from(p),
+        None => return Ok(()),
+    };
+
+    // Get diagnostics and send them
+    let diagnostics = get_diagnostics(text, &path);
+    send_diagnostics(uri, diagnostics)
 }
 
 /// Handle a textDocument/completion request.
@@ -548,6 +708,18 @@ pub(crate) fn run_lsp() {
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }
+                }
+            }
+            Some("textDocument/didOpen") => {
+                let params = message.get("params").unwrap_or(&serde_json::Value::Null);
+                if let Err(e) = handle_did_open(params) {
+                    eprintln!("Error handling didOpen: {e}");
+                }
+            }
+            Some("textDocument/didChange") => {
+                let params = message.get("params").unwrap_or(&serde_json::Value::Null);
+                if let Err(e) = handle_did_change(params) {
+                    eprintln!("Error handling didChange: {e}");
                 }
             }
             Some("shutdown") => {

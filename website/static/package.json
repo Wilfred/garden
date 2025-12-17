@@ -7,7 +7,8 @@
   "type": "commonjs",
   "main": "playground.js",
   "scripts": {
-    "build": "tsc --noEmit; esbuild playground.ts --log-level=warning --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap; npm run build:css",
+    "build": "npm run build:js; npm run build:css; tsc --noEmit",
+    "build:js": "esbuild playground.ts --log-level=warning --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap",
     "build:css": "cleancss -o ../dist/static/style.css style.css && cp blocks.min.css ../dist/static/blocks.min.css",
     "watch": "concurrently \"tsc --noEmit --watch --preserveWatchOutput\" \"esbuild playground.ts --bundle --format=esm --outfile=../dist/static/playground.js --sourcemap --watch\" \"chokidar '*.css' -c 'npm run build:css'\"",
     "lint": "eslint . --ext .ts",

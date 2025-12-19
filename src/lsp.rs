@@ -1,9 +1,11 @@
 //! LSP (Language Server Protocol) support for Garden.
 
+use lsp_types::request::{Completion, GotoDefinition, Initialize, Request, Shutdown};
 use lsp_types::{
-    CompletionItem, CompletionItemKind, CompletionOptions, Diagnostic, DiagnosticSeverity,
-    InitializeResult, InsertTextFormat, Location, Position, PublishDiagnosticsParams, Range,
-    ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
+    CompletionItem, CompletionItemKind, CompletionOptions, CompletionParams, Diagnostic,
+    DiagnosticSeverity, GotoDefinitionParams, InitializeParams, InitializeResult, InsertTextFormat,
+    Location, Position, PublishDiagnosticsParams, Range, ServerCapabilities, ServerInfo,
+    TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
 use serde::{Deserialize, Serialize};
 use std::io::{self, BufRead, Read, Write};
@@ -365,7 +367,10 @@ fn get_definition(src: &str, path: &PathBuf, offset: usize) -> Option<GardenPosi
 }
 
 /// Handle an initialize request.
-fn handle_initialize(id: serde_json::Value) -> JsonRpcResponse<InitializeResult> {
+fn handle_initialize(
+    id: serde_json::Value,
+    _params: InitializeParams,
+) -> JsonRpcResponse<InitializeResult> {
     let result = InitializeResult {
         capabilities: ServerCapabilities {
             definition_provider: Some(lsp_types::OneOf::Left(true)),
@@ -481,31 +486,13 @@ fn handle_did_change(params: &serde_json::Value) -> io::Result<()> {
 /// Handle a textDocument/completion request.
 fn handle_completion(
     id: serde_json::Value,
-    params: &serde_json::Value,
+    params: CompletionParams,
 ) -> JsonRpcResponse<Vec<CompletionItem>> {
-    // Extract the text document URI and position from params
-    let uri = match params.get("textDocument").and_then(|doc| doc.get("uri")) {
-        Some(serde_json::Value::String(uri)) => uri,
-        _ => return JsonRpcResponse::new(id, vec![]),
-    };
-
-    let position = match params.get("position") {
-        Some(pos) => pos,
-        _ => return JsonRpcResponse::new(id, vec![]),
-    };
-
-    let line = match position.get("line").and_then(|l| l.as_u64()) {
-        Some(l) => l as usize,
-        _ => return JsonRpcResponse::new(id, vec![]),
-    };
-
-    let character = match position.get("character").and_then(|c| c.as_u64()) {
-        Some(c) => c as usize,
-        _ => return JsonRpcResponse::new(id, vec![]),
-    };
+    let uri = &params.text_document_position.text_document.uri;
+    let position = params.text_document_position.position;
 
     // Convert file:// URI to path
-    let url = match Url::parse(uri) {
+    let url = match Url::parse(uri.as_str()) {
         Ok(u) => u,
         Err(_) => return JsonRpcResponse::new(id, vec![]),
     };
@@ -522,7 +509,7 @@ fn handle_completion(
     };
 
     // Convert line/character to offset
-    let offset = line_char_to_offset(&src, line, character);
+    let offset = line_char_to_offset(&src, position.line as usize, position.character as usize);
 
     // Get completions
     let items = get_completions(&src, &path, offset);
@@ -533,31 +520,13 @@ fn handle_completion(
 /// Handle a textDocument/definition request.
 fn handle_definition(
     id: serde_json::Value,
-    params: &serde_json::Value,
+    params: GotoDefinitionParams,
 ) -> JsonRpcResponse<Option<Location>> {
-    // Extract the text document URI and position from params
-    let uri = match params.get("textDocument").and_then(|doc| doc.get("uri")) {
-        Some(serde_json::Value::String(uri)) => uri,
-        _ => return JsonRpcResponse::new(id, None),
-    };
-
-    let position = match params.get("position") {
-        Some(pos) => pos,
-        _ => return JsonRpcResponse::new(id, None),
-    };
-
-    let line = match position.get("line").and_then(|l| l.as_u64()) {
-        Some(l) => l as usize,
-        _ => return JsonRpcResponse::new(id, None),
-    };
-
-    let character = match position.get("character").and_then(|c| c.as_u64()) {
-        Some(l) => l as usize,
-        _ => return JsonRpcResponse::new(id, None),
-    };
+    let uri = &params.text_document_position_params.text_document.uri;
+    let position = params.text_document_position_params.position;
 
     // Convert file:// URI to path
-    let url = match Url::parse(uri) {
+    let url = match Url::parse(uri.as_str()) {
         Ok(u) => u,
         Err(_) => return JsonRpcResponse::new(id, None),
     };
@@ -574,7 +543,7 @@ fn handle_definition(
     };
 
     // Convert line/character to offset
-    let offset = line_char_to_offset(&src, line, character);
+    let offset = line_char_to_offset(&src, position.line as usize, position.character as usize);
 
     // Get the definition position
     let def_pos = match get_definition(&src, &path, offset) {
@@ -650,9 +619,19 @@ pub(crate) fn run_lsp() {
         };
 
         match parsed.method.as_deref() {
-            Some("initialize") => {
+            Some(method) if method == Initialize::METHOD => {
                 if let Some(id) = parsed.id {
-                    let response = handle_initialize(id);
+                    let params: InitializeParams = match message
+                        .get("params")
+                        .and_then(|p| serde_json::from_value(p.clone()).ok())
+                    {
+                        Some(p) => p,
+                        None => {
+                            eprintln!("Error parsing initialize params");
+                            continue;
+                        }
+                    };
+                    let response = handle_initialize(id, params);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }
@@ -661,18 +640,36 @@ pub(crate) fn run_lsp() {
             Some("initialized") => {
                 // This is a notification, no response needed
             }
-            Some("textDocument/completion") => {
+            Some(method) if method == Completion::METHOD => {
                 if let Some(id) = parsed.id {
-                    let params = message.get("params").unwrap_or(&serde_json::Value::Null);
+                    let params: CompletionParams = match message
+                        .get("params")
+                        .and_then(|p| serde_json::from_value(p.clone()).ok())
+                    {
+                        Some(p) => p,
+                        None => {
+                            eprintln!("Error parsing completion params");
+                            continue;
+                        }
+                    };
                     let response = handle_completion(id, params);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }
                 }
             }
-            Some("textDocument/definition") => {
+            Some(method) if method == GotoDefinition::METHOD => {
                 if let Some(id) = parsed.id {
-                    let params = message.get("params").unwrap_or(&serde_json::Value::Null);
+                    let params: GotoDefinitionParams = match message
+                        .get("params")
+                        .and_then(|p| serde_json::from_value(p.clone()).ok())
+                    {
+                        Some(p) => p,
+                        None => {
+                            eprintln!("Error parsing definition params");
+                            continue;
+                        }
+                    };
                     let response = handle_definition(id, params);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
@@ -691,7 +688,7 @@ pub(crate) fn run_lsp() {
                     eprintln!("Error handling didChange: {e}");
                 }
             }
-            Some("shutdown") => {
+            Some(method) if method == Shutdown::METHOD => {
                 if let Some(id) = parsed.id {
                     let response = handle_shutdown(id);
                     if let Err(e) = write_message(&response) {

@@ -24,6 +24,11 @@
 
 (defvar garden-executable "garden")
 
+(defvar garden--save-to-kill-ring nil)
+
+(defvar garden--top-stack-name "__user.gdn"
+  "The name of the innermost stack frame that we're currently in.")
+
 ;; TODO: support evaluating snippets in comments, much like
 ;;
 ;; ;; (some-fun-call)|
@@ -110,8 +115,6 @@ With a prefix argument, also save the stringified result to the kill ring."
 
 (defvar garden-log-json t
   "If non-nil, write raw JSON responses from Garden to the buffer *garden-json*.")
-
-(defvar garden--save-to-kill-ring nil)
 
 (defun garden--log-json-to-buf (s &optional is-output-p)
   (let* ((buf-name "*garden-json*")
@@ -342,9 +345,6 @@ the user entering a value in the *garden* buffer."
       (with-current-buffer buf
         ;; Convert to one-indexed Emacs point positions.
         (garden--flash-region (1+ position-offset) (1+ end-offset))))))
-
-(defvar garden--top-stack-name "__user.gdn"
-  "The name of the innermost stack frame that we're currently in.")
 
 (defun garden-process-filter (proc output)
   "Consume JSON session output from inferior Garden process and insert in comint buffer."

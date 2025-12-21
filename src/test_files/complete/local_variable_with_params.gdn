@@ -1,0 +1,10 @@
+fun example(first_arg: Int, second_arg: String) {
+    let first_local = True
+    fir
+//    ^
+}
+
+// args: complete
+// expected stdout:
+// {"name":"first_arg","suffix":": Int"}
+// {"name":"first_local","suffix":": Bool"}

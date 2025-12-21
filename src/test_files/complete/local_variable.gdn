@@ -1,0 +1,12 @@
+fun example() {
+    let foo = 1
+    let foobar = "hello"
+    let bar = true
+    fo
+//   ^
+}
+
+// args: complete
+// expected stdout:
+// {"name":"foo","suffix":": Int"}
+// {"name":"foobar","suffix":": String"}

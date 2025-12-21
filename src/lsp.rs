@@ -7,10 +7,14 @@ use lsp_types::{
     Location, Position, PublishDiagnosticsParams, Range, ServerCapabilities, ServerInfo,
     TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
+use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::io::{self, BufRead, Read, Write};
 use std::path::PathBuf;
 use url::Url;
+
+/// Storage for open document contents, keyed by file path.
+type DocumentStore = FxHashMap<PathBuf, String>;
 
 use crate::checks::check_toplevel_items_in_env;
 use crate::checks::type_checker::check_types;
@@ -409,7 +413,7 @@ fn send_diagnostics(uri: Uri, diagnostics: Vec<Diagnostic>) -> io::Result<()> {
 }
 
 /// Handle textDocument/didOpen notification.
-fn handle_did_open(params: &serde_json::Value) -> io::Result<()> {
+fn handle_did_open(params: &serde_json::Value, documents: &mut DocumentStore) -> io::Result<()> {
     let uri = match params
         .get("textDocument")
         .and_then(|doc| doc.get("uri"))
@@ -439,13 +443,16 @@ fn handle_did_open(params: &serde_json::Value) -> io::Result<()> {
         Err(_) => return Ok(()),
     };
 
+    // Store the document content
+    documents.insert(path.clone(), text.to_owned());
+
     // Get diagnostics and send them
     let diagnostics = get_diagnostics(text, &path);
     send_diagnostics(url.as_str().parse().unwrap(), diagnostics)
 }
 
 /// Handle textDocument/didChange notification.
-fn handle_did_change(params: &serde_json::Value) -> io::Result<()> {
+fn handle_did_change(params: &serde_json::Value, documents: &mut DocumentStore) -> io::Result<()> {
     let uri = match params
         .get("textDocument")
         .and_then(|doc| doc.get("uri"))
@@ -478,6 +485,9 @@ fn handle_did_change(params: &serde_json::Value) -> io::Result<()> {
         Err(_) => return Ok(()),
     };
 
+    // Update the stored document content
+    documents.insert(path.clone(), text.to_owned());
+
     // Get diagnostics and send them
     let diagnostics = get_diagnostics(text, &path);
     send_diagnostics(url.as_str().parse().unwrap(), diagnostics)
@@ -487,6 +497,7 @@ fn handle_did_change(params: &serde_json::Value) -> io::Result<()> {
 fn handle_completion(
     id: serde_json::Value,
     params: CompletionParams,
+    documents: &DocumentStore,
 ) -> JsonRpcResponse<Vec<CompletionItem>> {
     let uri = &params.text_document_position.text_document.uri;
     let position = params.text_document_position.position;
@@ -502,10 +513,13 @@ fn handle_completion(
         Err(_) => return JsonRpcResponse::new(id, vec![]),
     };
 
-    // Read the file
-    let src = match std::fs::read_to_string(&path) {
-        Ok(s) => s,
-        Err(_) => return JsonRpcResponse::new(id, vec![]),
+    // Get the document content from our store, falling back to disk
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, vec![]),
+        },
     };
 
     // Convert line/character to offset
@@ -521,6 +535,7 @@ fn handle_completion(
 fn handle_definition(
     id: serde_json::Value,
     params: GotoDefinitionParams,
+    documents: &DocumentStore,
 ) -> JsonRpcResponse<Option<Location>> {
     let uri = &params.text_document_position_params.text_document.uri;
     let position = params.text_document_position_params.position;
@@ -536,10 +551,13 @@ fn handle_definition(
         Err(_) => return JsonRpcResponse::new(id, None),
     };
 
-    // Read the file
-    let src = match std::fs::read_to_string(&path) {
-        Ok(s) => s,
-        Err(_) => return JsonRpcResponse::new(id, None),
+    // Get the document content from our store, falling back to disk
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, None),
+        },
     };
 
     // Convert line/character to offset
@@ -595,6 +613,7 @@ fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
 /// Run the LSP server.
 pub(crate) fn run_lsp() {
     let mut should_exit = false;
+    let mut documents: DocumentStore = FxHashMap::default();
 
     loop {
         let message = match read_message() {
@@ -652,7 +671,7 @@ pub(crate) fn run_lsp() {
                             continue;
                         }
                     };
-                    let response = handle_completion(id, params);
+                    let response = handle_completion(id, params, &documents);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }
@@ -670,7 +689,7 @@ pub(crate) fn run_lsp() {
                             continue;
                         }
                     };
-                    let response = handle_definition(id, params);
+                    let response = handle_definition(id, params, &documents);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }
@@ -678,13 +697,13 @@ pub(crate) fn run_lsp() {
             }
             Some("textDocument/didOpen") => {
                 let params = message.get("params").unwrap_or(&serde_json::Value::Null);
-                if let Err(e) = handle_did_open(params) {
+                if let Err(e) = handle_did_open(params, &mut documents) {
                     eprintln!("Error handling didOpen: {e}");
                 }
             }
             Some("textDocument/didChange") => {
                 let params = message.get("params").unwrap_or(&serde_json::Value::Null);
-                if let Err(e) = handle_did_change(params) {
+                if let Err(e) = handle_did_change(params, &mut documents) {
                     eprintln!("Error handling didChange: {e}");
                 }
             }

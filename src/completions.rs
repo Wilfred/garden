@@ -7,7 +7,7 @@ use crate::checks::type_checker::check_types;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::garden_type::Type;
-use crate::parser::ast::{AstId, Expression_, IdGenerator};
+use crate::parser::ast::{AstId, Expression_, IdGenerator, SymbolName};
 use crate::parser::parse_toplevel_items;
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
@@ -56,6 +56,18 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
                     &meth_sym.name.text
                 };
                 print_methods(&env, recv_ty, prefix);
+                return;
+            }
+            Expression_::Variable(sym) => {
+                let prefix = if sym.name.is_placeholder() {
+                    ""
+                } else {
+                    &sym.name.text
+                };
+                if let Some(bindings) = summary.id_to_bindings.get(expr_id) {
+                    print_local_variables(bindings, prefix);
+                }
+                return;
             }
             _ => {}
         }
@@ -68,6 +80,26 @@ struct CompletionItem {
     name: String,
     /// Extra information shown immediately after the completion item.
     suffix: String,
+}
+
+fn print_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) {
+    let mut items: Vec<CompletionItem> = vec![];
+
+    for (name, ty) in bindings {
+        if !name.text.starts_with(prefix) {
+            continue;
+        }
+
+        items.push(CompletionItem {
+            name: name.text.clone(),
+            suffix: format!(": {}", ty),
+        });
+    }
+
+    items.sort();
+    for item in items {
+        println!("{}", serde_json::to_string(&item).unwrap());
+    }
 }
 
 fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {

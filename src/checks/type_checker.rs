@@ -41,6 +41,9 @@ pub(crate) struct TCSummary {
     /// A mapping from each toplevel definition to the other functions
     /// it calls. Does not include tests.
     pub callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
+    /// A mapping of expression IDs to the local bindings visible at
+    /// that position. Used for code completion.
+    pub id_to_bindings: FxHashMap<SyntaxId, Vec<(SymbolName, Type)>>,
 }
 
 pub(crate) fn check_types(
@@ -58,6 +61,7 @@ pub(crate) fn check_types(
         id_to_doc_comment: FxHashMap::default(),
         id_to_def_pos: FxHashMap::default(),
         callees: FxHashMap::default(),
+        id_to_bindings: FxHashMap::default(),
         current_item: None,
     };
     for item in items {
@@ -70,6 +74,7 @@ pub(crate) fn check_types(
         id_to_doc_comment: visitor.id_to_doc_comment,
         id_to_def_pos: visitor.id_to_def_pos,
         callees: visitor.callees,
+        id_to_bindings: visitor.id_to_bindings,
     }
 }
 
@@ -130,6 +135,19 @@ impl LocalBindings {
         let block = self.blocks.last_mut().expect("Should be non-empty");
         block.insert(symbol.name.clone(), (ty, symbol.position.clone()));
     }
+
+    /// Return all bindings currently visible, with innermost scope
+    /// taking precedence.
+    fn all_bindings(&self) -> Vec<(SymbolName, Type)> {
+        let mut seen: FxHashMap<SymbolName, Type> = FxHashMap::default();
+        for block in self.blocks.iter().rev() {
+            for (name, (ty, _)) in block {
+                // Only insert if we haven't seen this name yet (inner scope shadows outer)
+                seen.entry(name.clone()).or_insert_with(|| ty.clone());
+            }
+        }
+        seen.into_iter().collect()
+    }
 }
 
 #[derive(Debug)]
@@ -143,6 +161,7 @@ struct TypeCheckVisitor<'a> {
     id_to_def_pos: FxHashMap<SyntaxId, Position>,
     current_item: Option<ToplevelItemId>,
     callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
+    id_to_bindings: FxHashMap<SyntaxId, Vec<(SymbolName, Type)>>,
 }
 
 impl TypeCheckVisitor<'_> {
@@ -1424,6 +1443,10 @@ impl TypeCheckVisitor<'_> {
     }
 
     fn infer_var(&mut self, expr_id: SyntaxId, sym: &Symbol) -> Type {
+        // Store visible bindings at this expression for code completion.
+        self.id_to_bindings
+            .insert(expr_id, self.bindings.all_bindings());
+
         if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
             self.id_to_def_pos.insert(sym.id, position.clone());
             self.id_to_ty.insert(sym.id, value_ty.clone());

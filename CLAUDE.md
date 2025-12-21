@@ -35,6 +35,8 @@ When adding built-in functions, always update the CHANGELOG.md.
 - ./target/debug/garden check yourfile.gdn: Check the test program named yourfile.gdn
 - ./target/debug/garden run yourfile.gdn: Run the code in yourfile.gdn.
 - ./target/debug/garden test yourfile.gdn: Run unit tests in yourfile.gdn.
+- cargo build && cargo test run_test_files: Run the integration tests.
+- cargo build && REGENERATE=y cargo test run_test_files: Update the output in the integration tests.
 
 To generate target/debug/garden use `cargo build`. This separation
 allows Claude to set permissions on separate Garden subcommands.

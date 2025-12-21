@@ -7,7 +7,7 @@ use lsp_types::{
     Location, Position, PublishDiagnosticsParams, Range, ServerCapabilities, ServerInfo,
     TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
 use std::io::{self, BufRead, Read, Write};
 use std::path::PathBuf;
@@ -228,15 +228,27 @@ fn get_completions(src: &str, path: &PathBuf, offset: usize) -> Vec<CompletionIt
     let ns = env.get_or_create_namespace(path);
     load_toplevel_items(&items, &mut env, ns.clone());
 
-    let ids_at_pos = find_item_at(&items, offset, offset);
+    // Check both offset and offset-1 to handle cursor positions at
+    // the end of expressions (e.g., right after a dot in "foo.").
+    let mut ids_at_pos = vec![];
+    if offset > 0 {
+        ids_at_pos.extend(find_item_at(&items, offset - 1, offset - 1));
+    }
+    ids_at_pos.extend(find_item_at(&items, offset, offset));
     let summary = check_types(&vfs_path, &items, &env, ns);
 
     let mut completion_items = vec![];
+    let mut seen_expr_ids = FxHashSet::default();
 
     for id in ids_at_pos.iter().rev() {
         let AstId::Expr(expr_id) = id else {
             continue;
         };
+        // Skip duplicate expression IDs that can occur when checking both
+        // offset and offset-1.
+        if !seen_expr_ids.insert(*expr_id) {
+            continue;
+        }
         let Some(expr) = find_expr_of_id(&items, *expr_id) else {
             break;
         };

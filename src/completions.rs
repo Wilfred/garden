@@ -82,6 +82,22 @@ pub(crate) struct CompletionItem {
     suffix: String,
 }
 
+impl From<CompletionItem> for lsp_types::CompletionItem {
+    fn from(item: CompletionItem) -> Self {
+        lsp_types::CompletionItem {
+            label: item.name.clone(),
+            insert_text: Some(item.name),
+            detail: if item.suffix.is_empty() {
+                None
+            } else {
+                Some(item.suffix)
+            },
+            kind: Some(lsp_types::CompletionItemKind::VARIABLE),
+            ..Default::default()
+        }
+    }
+}
+
 fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<CompletionItem> {
     let mut items: Vec<CompletionItem> = vec![];
 

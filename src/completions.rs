@@ -74,12 +74,27 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
     vec![]
 }
 
-#[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 pub(crate) struct CompletionItem {
     /// Shown as the name and inserted when the user chooses this item.
     name: String,
     /// Extra information shown immediately after the completion item.
     suffix: String,
+    /// The kind of completion item (variable, method, field, etc.)
+    #[serde(skip)]
+    kind: lsp_types::CompletionItemKind,
+}
+
+impl PartialOrd for CompletionItem {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for CompletionItem {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (&self.name, &self.suffix).cmp(&(&other.name, &other.suffix))
+    }
 }
 
 impl From<CompletionItem> for lsp_types::CompletionItem {
@@ -92,7 +107,7 @@ impl From<CompletionItem> for lsp_types::CompletionItem {
             } else {
                 Some(item.suffix)
             },
-            kind: Some(lsp_types::CompletionItemKind::VARIABLE),
+            kind: Some(item.kind),
             ..Default::default()
         }
     }
@@ -109,6 +124,7 @@ fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<Com
         items.push(CompletionItem {
             name: name.text.clone(),
             suffix: format!(": {}", ty),
+            kind: lsp_types::CompletionItemKind::VARIABLE,
         });
     }
 
@@ -161,7 +177,11 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
             (method_name.text.clone(), format!("({params}){return_hint}"))
         };
 
-        items.push(CompletionItem { name, suffix });
+        items.push(CompletionItem {
+            name,
+            suffix,
+            kind: lsp_types::CompletionItemKind::METHOD,
+        });
     }
 
     if let Some(TypeDef::Struct(struct_info)) = env.get_type_def(&type_name) {
@@ -173,6 +193,7 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
             items.push(CompletionItem {
                 name: field.sym.name.text.clone(),
                 suffix: format!(": {}", field.hint.as_src()),
+                kind: lsp_types::CompletionItemKind::FIELD,
             });
         }
     }

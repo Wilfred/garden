@@ -603,11 +603,11 @@ fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
             // Count characters on this line
             let line_start = idx;
             for (char_count, (char_idx, ch)) in src[line_start..].char_indices().enumerate() {
-                if ch == '\n' {
-                    break;
-                }
                 if char_count == character {
                     return line_start + char_idx;
+                }
+                if ch == '\n' {
+                    break;
                 }
             }
             return idx;
@@ -740,5 +740,27 @@ pub(crate) fn run_lsp() {
         if should_exit {
             break;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_line_char_to_offset_at_newline() {
+        let src = "fun foo(p: Path) {\n  p.\n}";
+        // Line 1, character 4 is the newline after "p."
+        // This is the case that was broken before the fix
+        assert_eq!(line_char_to_offset(src, 1, 4), 23);
+    }
+
+    #[test]
+    fn test_line_char_to_offset() {
+        let src = "fun foo(p: Path) {\n  p.\n}";
+        // Line 1, character 2 is 'p'
+        assert_eq!(line_char_to_offset(src, 1, 2), 21);
+        // Line 1, character 3 is '.'
+        assert_eq!(line_char_to_offset(src, 1, 3), 22);
     }
 }

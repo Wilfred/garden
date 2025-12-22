@@ -77,9 +77,11 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 pub(crate) struct CompletionItem {
     /// Shown as the name and inserted when the user chooses this item.
-    name: String,
+    #[serde(rename = "name")]
+    label: String,
     /// Extra information shown immediately after the completion item.
-    suffix: String,
+    #[serde(rename = "suffix")]
+    detail: String,
     /// The kind of completion item (variable, method, field, etc.)
     #[serde(skip)]
     kind: lsp_types::CompletionItemKind,
@@ -93,19 +95,19 @@ impl PartialOrd for CompletionItem {
 
 impl Ord for CompletionItem {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        (&self.name, &self.suffix).cmp(&(&other.name, &other.suffix))
+        (&self.label, &self.detail).cmp(&(&other.label, &other.detail))
     }
 }
 
 impl From<CompletionItem> for lsp_types::CompletionItem {
     fn from(item: CompletionItem) -> Self {
         lsp_types::CompletionItem {
-            label: item.name.clone(),
-            insert_text: Some(item.name),
-            detail: if item.suffix.is_empty() {
+            label: item.label.clone(),
+            insert_text: Some(item.label),
+            detail: if item.detail.is_empty() {
                 None
             } else {
-                Some(item.suffix)
+                Some(item.detail)
             },
             kind: Some(item.kind),
             ..Default::default()
@@ -122,8 +124,8 @@ fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<Com
         }
 
         items.push(CompletionItem {
-            name: name.text.clone(),
-            suffix: format!(": {}", ty),
+            label: name.text.clone(),
+            detail: format!(": {}", ty),
             kind: lsp_types::CompletionItemKind::VARIABLE,
         });
     }
@@ -178,8 +180,8 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
         };
 
         items.push(CompletionItem {
-            name,
-            suffix,
+            label: name,
+            detail: suffix,
             kind: lsp_types::CompletionItemKind::METHOD,
         });
     }
@@ -191,8 +193,8 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
             }
 
             items.push(CompletionItem {
-                name: field.sym.name.text.clone(),
-                suffix: format!(": {}", field.hint.as_src()),
+                label: field.sym.name.text.clone(),
+                detail: format!(": {}", field.hint.as_src()),
                 kind: lsp_types::CompletionItemKind::FIELD,
             });
         }

@@ -5,6 +5,6 @@ fun foo(s: String) {
 
 // args: complete
 // expected stdout:
-// {"name":"strip_prefix","suffix":"(String): String"}
-// {"name":"strip_suffix","suffix":"(String): String"}
+// {"label":"strip_prefix","kind":2,"detail":"(String): String","insertText":"strip_prefix($0)","insertTextFormat":2}
+// {"label":"strip_suffix","kind":2,"detail":"(String): String","insertText":"strip_suffix($0)","insertTextFormat":2}
 

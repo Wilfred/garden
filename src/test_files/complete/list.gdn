@@ -6,17 +6,17 @@ fun foo() {
 
 // args: complete
 // expected stdout:
-// {"name":"append","suffix":"(T): List<T>"}
-// {"name":"contains","suffix":"(T): Bool"}
-// {"name":"enumerate()","suffix":": List<(Int, T)>"}
-// {"name":"filter","suffix":"(Fun<(T), Bool>): List<T>"}
-// {"name":"first()","suffix":": Option<T>"}
-// {"name":"get","suffix":"(Int): Option<T>"}
-// {"name":"index_of","suffix":"(T): Option<Int>"}
-// {"name":"is_empty()","suffix":": Bool"}
-// {"name":"is_non_empty()","suffix":": Bool"}
-// {"name":"last()","suffix":": Option<T>"}
-// {"name":"len()","suffix":": Int"}
-// {"name":"map","suffix":"(Fun<(T), U>): List<U>"}
-// {"name":"slice","suffix":"(Int, Int): List<T>"}
+// {"label":"append","kind":2,"detail":"(T): List<T>","insertText":"append($0)","insertTextFormat":2}
+// {"label":"contains","kind":2,"detail":"(T): Bool","insertText":"contains($0)","insertTextFormat":2}
+// {"label":"enumerate()","kind":2,"detail":"(): List<(Int, T)>","insertText":"enumerate()","insertTextFormat":2}
+// {"label":"filter","kind":2,"detail":"(Fun<(T), Bool>): List<T>","insertText":"filter($0)","insertTextFormat":2}
+// {"label":"first()","kind":2,"detail":"(): Option<T>","insertText":"first()","insertTextFormat":2}
+// {"label":"get","kind":2,"detail":"(Int): Option<T>","insertText":"get($0)","insertTextFormat":2}
+// {"label":"index_of","kind":2,"detail":"(T): Option<Int>","insertText":"index_of($0)","insertTextFormat":2}
+// {"label":"is_empty()","kind":2,"detail":"(): Bool","insertText":"is_empty()","insertTextFormat":2}
+// {"label":"is_non_empty()","kind":2,"detail":"(): Bool","insertText":"is_non_empty()","insertTextFormat":2}
+// {"label":"last()","kind":2,"detail":"(): Option<T>","insertText":"last()","insertTextFormat":2}
+// {"label":"len()","kind":2,"detail":"(): Int","insertText":"len()","insertTextFormat":2}
+// {"label":"map","kind":2,"detail":"(Fun<(T), U>): List<U>","insertText":"map($0)","insertTextFormat":2}
+// {"label":"slice","kind":2,"detail":"(Int, Int): List<T>","insertText":"slice($0)","insertTextFormat":2}
 

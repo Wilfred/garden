@@ -6,5 +6,6 @@ fun example(first_arg: Int, second_arg: String) {
 
 // args: complete
 // expected stdout:
-// {"name":"first_arg","suffix":": Int"}
-// {"name":"first_local","suffix":": Bool"}
+// {"label":"first_arg","kind":6,"detail":": Int"}
+// {"label":"first_local","kind":6,"detail":": Bool"}
+

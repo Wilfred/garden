@@ -8,5 +8,6 @@ fun foo() {
 }
 
 // args: complete
-// expected stdout: {"name":"join","suffix":"(List<String>): String"}
+// expected stdout:
+// {"label":"join","kind":2,"detail":"(List<String>): String","insertText":"join($0)","insertTextFormat":2}
 

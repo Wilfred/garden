@@ -1,7 +1,7 @@
 use std::path::Path;
 
+use lsp_types::{CompletionItem, CompletionItemKind, InsertTextFormat};
 use rustc_hash::{FxHashMap, FxHashSet};
-use serde::Serialize;
 
 use crate::checks::type_checker::check_types;
 use crate::env::Env;
@@ -74,47 +74,6 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
     vec![]
 }
 
-#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
-pub(crate) struct CompletionItem {
-    /// Shown as the name and inserted when the user chooses this item.
-    #[serde(rename = "name")]
-    label: String,
-    /// Extra information shown immediately after the completion item.
-    #[serde(rename = "suffix")]
-    detail: String,
-    /// The kind of completion item (variable, method, field, etc.)
-    #[serde(skip)]
-    kind: lsp_types::CompletionItemKind,
-}
-
-impl PartialOrd for CompletionItem {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for CompletionItem {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        (&self.label, &self.detail).cmp(&(&other.label, &other.detail))
-    }
-}
-
-impl From<CompletionItem> for lsp_types::CompletionItem {
-    fn from(item: CompletionItem) -> Self {
-        lsp_types::CompletionItem {
-            label: item.label.clone(),
-            insert_text: Some(item.label),
-            detail: if item.detail.is_empty() {
-                None
-            } else {
-                Some(item.detail)
-            },
-            kind: Some(item.kind),
-            ..Default::default()
-        }
-    }
-}
-
 fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<CompletionItem> {
     let mut items: Vec<CompletionItem> = vec![];
 
@@ -125,12 +84,13 @@ fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<Com
 
         items.push(CompletionItem {
             label: name.text.clone(),
-            detail: format!(": {}", ty),
-            kind: lsp_types::CompletionItemKind::VARIABLE,
+            kind: Some(CompletionItemKind::VARIABLE),
+            detail: Some(format!(": {}", ty)),
+            ..Default::default()
         });
     }
 
-    items.sort();
+    items.sort_by(|a, b| a.label.cmp(&b.label));
     items
 }
 
@@ -172,17 +132,26 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
             None => "".to_owned(),
         };
 
-        let (name, suffix) = if params.is_empty() {
+        let (label, insert_text) = if params.is_empty() {
             // Complete parentheses too if there are zero parameters.
-            (format!("{}()", method_name.text), return_hint)
+            let name = format!("{}()", method_name.text);
+            (name.clone(), name)
         } else {
-            (method_name.text.clone(), format!("({params}){return_hint}"))
+            (
+                method_name.text.clone(),
+                format!("{}($0)", method_name.text),
+            )
         };
 
+        let detail = format!("({params}){return_hint}");
+
         items.push(CompletionItem {
-            label: name,
-            detail: suffix,
-            kind: lsp_types::CompletionItemKind::METHOD,
+            label,
+            kind: Some(CompletionItemKind::METHOD),
+            detail: Some(detail),
+            insert_text: Some(insert_text),
+            insert_text_format: Some(InsertTextFormat::SNIPPET),
+            ..Default::default()
         });
     }
 
@@ -194,12 +163,13 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
 
             items.push(CompletionItem {
                 label: field.sym.name.text.clone(),
-                detail: format!(": {}", field.hint.as_src()),
-                kind: lsp_types::CompletionItemKind::FIELD,
+                kind: Some(CompletionItemKind::FIELD),
+                detail: Some(format!(": {}", field.hint.as_src())),
+                ..Default::default()
             });
         }
     }
 
-    items.sort();
+    items.sort_by(|a, b| a.label.cmp(&b.label));
     items
 }

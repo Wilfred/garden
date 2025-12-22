@@ -8,5 +8,6 @@ fun example() {
 
 // args: complete
 // expected stdout:
-// {"name":"foo","suffix":": Int"}
-// {"name":"foobar","suffix":": String"}
+// {"label":"foo","kind":6,"detail":": Int"}
+// {"label":"foobar","kind":6,"detail":": String"}
+

@@ -5,22 +5,22 @@ fun file_name(s: String) {
 
 // args: complete
 // expected stdout:
-// {"name":"as_int()","suffix":": Option<Int>"}
-// {"name":"chars()","suffix":": List<String>"}
-// {"name":"contains","suffix":"(String): Bool"}
-// {"name":"ends_with","suffix":"(String): Bool"}
-// {"name":"index_of","suffix":"(String): Option<Int>"}
-// {"name":"join","suffix":"(List<String>): String"}
-// {"name":"len()","suffix":": Int"}
-// {"name":"lines()","suffix":": List<String>"}
-// {"name":"replace","suffix":"(String, String): String"}
-// {"name":"split","suffix":"(String): List<String>"}
-// {"name":"split_once","suffix":"(String): Option<(String, String)>"}
-// {"name":"starts_with","suffix":"(String): Bool"}
-// {"name":"strip_prefix","suffix":"(String): String"}
-// {"name":"strip_suffix","suffix":"(String): String"}
-// {"name":"substring","suffix":"(Int, Int): String"}
-// {"name":"trim()","suffix":": String"}
-// {"name":"trim_left()","suffix":": String"}
-// {"name":"trim_right()","suffix":": String"}
+// {"label":"as_int()","kind":2,"detail":"(): Option<Int>","insertText":"as_int()","insertTextFormat":2}
+// {"label":"chars()","kind":2,"detail":"(): List<String>","insertText":"chars()","insertTextFormat":2}
+// {"label":"contains","kind":2,"detail":"(String): Bool","insertText":"contains($0)","insertTextFormat":2}
+// {"label":"ends_with","kind":2,"detail":"(String): Bool","insertText":"ends_with($0)","insertTextFormat":2}
+// {"label":"index_of","kind":2,"detail":"(String): Option<Int>","insertText":"index_of($0)","insertTextFormat":2}
+// {"label":"join","kind":2,"detail":"(List<String>): String","insertText":"join($0)","insertTextFormat":2}
+// {"label":"len()","kind":2,"detail":"(): Int","insertText":"len()","insertTextFormat":2}
+// {"label":"lines()","kind":2,"detail":"(): List<String>","insertText":"lines()","insertTextFormat":2}
+// {"label":"replace","kind":2,"detail":"(String, String): String","insertText":"replace($0)","insertTextFormat":2}
+// {"label":"split","kind":2,"detail":"(String): List<String>","insertText":"split($0)","insertTextFormat":2}
+// {"label":"split_once","kind":2,"detail":"(String): Option<(String, String)>","insertText":"split_once($0)","insertTextFormat":2}
+// {"label":"starts_with","kind":2,"detail":"(String): Bool","insertText":"starts_with($0)","insertTextFormat":2}
+// {"label":"strip_prefix","kind":2,"detail":"(String): String","insertText":"strip_prefix($0)","insertTextFormat":2}
+// {"label":"strip_suffix","kind":2,"detail":"(String): String","insertText":"strip_suffix($0)","insertTextFormat":2}
+// {"label":"substring","kind":2,"detail":"(Int, Int): String","insertText":"substring($0)","insertTextFormat":2}
+// {"label":"trim()","kind":2,"detail":"(): String","insertText":"trim()","insertTextFormat":2}
+// {"label":"trim_left()","kind":2,"detail":"(): String","insertText":"trim_left()","insertTextFormat":2}
+// {"label":"trim_right()","kind":2,"detail":"(): String","insertText":"trim_right()","insertTextFormat":2}
 

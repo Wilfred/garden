@@ -322,7 +322,10 @@ fn main() {
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
-            completions::complete(&src, &abs_path, offset);
+            let items = completions::complete(&src, &abs_path, offset);
+            for item in items {
+                println!("{}", serde_json::to_string(&item).unwrap());
+            }
         }
         CliCommands::TestJson { path } => {
             let abs_path = to_abs_path(&path);

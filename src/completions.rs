@@ -13,7 +13,7 @@ use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 use crate::Vfs;
 
-pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
+pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionItem> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -55,8 +55,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
                 } else {
                     &meth_sym.name.text
                 };
-                print_methods(&env, recv_ty, prefix);
-                return;
+                return get_methods(&env, recv_ty, prefix);
             }
             Expression_::Variable(sym) => {
                 let prefix = if sym.name.is_placeholder() {
@@ -65,24 +64,25 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
                     &sym.name.text
                 };
                 if let Some(bindings) = summary.id_to_bindings.get(expr_id) {
-                    print_local_variables(bindings, prefix);
+                    return get_local_variables(bindings, prefix);
                 }
-                return;
+                return vec![];
             }
             _ => {}
         }
     }
+    vec![]
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
-struct CompletionItem {
+pub(crate) struct CompletionItem {
     /// Shown as the name and inserted when the user chooses this item.
     name: String,
     /// Extra information shown immediately after the completion item.
     suffix: String,
 }
 
-fn print_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) {
+fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<CompletionItem> {
     let mut items: Vec<CompletionItem> = vec![];
 
     for (name, ty) in bindings {
@@ -97,14 +97,12 @@ fn print_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) {
     }
 
     items.sort();
-    for item in items {
-        println!("{}", serde_json::to_string(&item).unwrap());
-    }
+    items
 }
 
-fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
+fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
     let Some(type_name) = recv_ty.type_name() else {
-        return;
+        return vec![];
     };
 
     let empty_hashmap = FxHashMap::default();
@@ -164,7 +162,5 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
     }
 
     items.sort();
-    for item in items {
-        println!("{}", serde_json::to_string(&item).unwrap());
-    }
+    items
 }

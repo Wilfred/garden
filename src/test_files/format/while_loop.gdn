@@ -1,0 +1,18 @@
+fun foo() {
+let i = 0
+while i < 10 {
+println(string_repr(i))
+i += 1
+}
+}
+
+// args: format
+// expected stdout:
+// fun foo() {
+//   let i = 0
+//   while i < 10 {
+//     println(string_repr(i))
+//     i += 1
+//   }
+// }
+

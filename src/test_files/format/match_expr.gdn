@@ -1,0 +1,22 @@
+fun foo(x: Option<Int>) {
+match x {
+Some(v) => {
+println(string_repr(v))
+v
+},
+None => 0,
+}
+}
+
+// args: format
+// expected stdout:
+// fun foo(x: Option<Int>) {
+//   match x {
+//     Some(v) => {
+//       println(string_repr(v))
+//       v
+//     },
+//     None => 0,
+//   }
+// }
+

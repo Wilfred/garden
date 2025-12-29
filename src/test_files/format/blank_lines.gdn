@@ -1,0 +1,32 @@
+fun foo() {
+let x = 1
+
+let y = 2
+
+
+let z = 3
+}
+
+//   let y = 2
+//
+//
+//   let z = 3
+// }
+
+// args: format
+// expected stdout:
+// fun foo() {
+//   let x = 1
+// 
+//   let y = 2
+// 
+// 
+//   let z = 3
+// }
+// 
+// //   let y = 2
+// //
+// //
+// //   let z = 3
+// // }
+

@@ -49,6 +49,7 @@ mod env;
 mod eval;
 mod extract_function;
 mod extract_variable;
+mod format;
 mod garden_type;
 mod go_to_def;
 mod hover;
@@ -169,6 +170,8 @@ enum CliCommands {
         #[clap(long)]
         override_path: Option<PathBuf>,
     },
+    /// Format a Garden file by fixing indentation.
+    Format { path: PathBuf },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.
     ///
@@ -471,6 +474,13 @@ fn main() {
                     std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
                 }
             }
+        }
+        CliCommands::Format { path } => {
+            let abs_path = to_abs_path(&path);
+            let mut src = read_utf8_or_die(&abs_path);
+            src = remove_testing_footer(&src);
+            let formatted = format::format(&src, &abs_path);
+            print!("{formatted}");
         }
         CliCommands::PlaygroundRun { path } => {
             let abs_path = to_abs_path(&path);

@@ -1,0 +1,11 @@
+fun foo() {
+println("hello")
+let x = 1
+}
+
+// args: format
+// expected stdout:
+// fun foo() {
+//   println("hello")
+//   let x = 1
+// }

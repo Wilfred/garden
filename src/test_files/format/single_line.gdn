@@ -1,0 +1,8 @@
+fun foo() { x }
+fun bar() { if True { y } else { z } }
+
+// args: format
+// expected stdout:
+// fun foo() { x }
+// fun bar() { if True { y } else { z } }
+

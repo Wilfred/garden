@@ -1,0 +1,12 @@
+{
+println("one")
+println("two")
+}
+
+// args: format
+// expected stdout:
+// {
+//   println("one")
+//   println("two")
+// }
+

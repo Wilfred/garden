@@ -1,0 +1,16 @@
+fun foo() {
+  let x = 1
+  if True {
+    let y = 2
+  }
+}
+
+// args: format
+// expected stdout:
+// fun foo() {
+//   let x = 1
+//   if True {
+//     let y = 2
+//   }
+// }
+

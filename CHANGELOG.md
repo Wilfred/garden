@@ -2,6 +2,10 @@
 **Goal: LSP.**
 **Goal: Offer actions when runtime errors occur.**
 
+## CLI
+
+Added a `format` subcommand that fixes indentation in Garden files.
+
 # 0.22 (released 15 December 2025)
 **Goal: Playground.**
 

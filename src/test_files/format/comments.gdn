@@ -1,0 +1,16 @@
+fun foo() {
+// Comment 1
+let x = 1
+    // Comment 2 (badly indented)
+let y = 2
+}
+
+// args: format
+// expected stdout:
+// fun foo() {
+//   // Comment 1
+//   let x = 1
+//   // Comment 2 (badly indented)
+//   let y = 2
+// }
+

@@ -1,11 +1,12 @@
 //! LSP (Language Server Protocol) support for Garden.
 
-use lsp_types::request::{Completion, GotoDefinition, Initialize, Request, Shutdown};
+use lsp_types::request::{Completion, Formatting, GotoDefinition, Initialize, Request, Shutdown};
 use lsp_types::{
     CompletionItem, CompletionItemKind, CompletionOptions, CompletionParams, Diagnostic,
-    DiagnosticSeverity, GotoDefinitionParams, InitializeParams, InitializeResult, InsertTextFormat,
-    Location, Position, PublishDiagnosticsParams, Range, ServerCapabilities, ServerInfo,
-    TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
+    DiagnosticSeverity, DocumentFormattingParams, GotoDefinitionParams, InitializeParams,
+    InitializeResult, InsertTextFormat, Location, Position, PublishDiagnosticsParams, Range,
+    ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit,
+    Uri,
 };
 use rustc_hash::{FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
@@ -395,6 +396,7 @@ fn handle_initialize(
                 ..Default::default()
             }),
             text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
+            document_formatting_provider: Some(lsp_types::OneOf::Left(true)),
             ..Default::default()
         },
         server_info: Some(ServerInfo {
@@ -590,6 +592,61 @@ fn handle_definition(
     JsonRpcResponse::new(id, Some(location))
 }
 
+/// Handle a textDocument/formatting request.
+fn handle_formatting(
+    id: serde_json::Value,
+    params: DocumentFormattingParams,
+    documents: &DocumentStore,
+) -> JsonRpcResponse<Vec<TextEdit>> {
+    let uri = &params.text_document.uri;
+
+    // Convert file:// URI to path
+    let url = match Url::parse(uri.as_str()) {
+        Ok(u) => u,
+        Err(_) => return JsonRpcResponse::new(id, vec![]),
+    };
+
+    let path = match url.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return JsonRpcResponse::new(id, vec![]),
+    };
+
+    // Get the document content from our store, falling back to disk
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, vec![]),
+        },
+    };
+
+    // Format the document
+    let formatted = crate::format::format(&src, &path);
+
+    // Calculate the range covering the entire document
+    let line_count = src.lines().count();
+    let last_line_length = src.lines().last().map_or(0, |l| l.len());
+
+    let range = Range {
+        start: Position {
+            line: 0,
+            character: 0,
+        },
+        end: Position {
+            line: line_count.saturating_sub(1) as u32,
+            character: last_line_length as u32,
+        },
+    };
+
+    // Create a TextEdit that replaces the entire document
+    let edit = TextEdit {
+        range,
+        new_text: formatted,
+    };
+
+    JsonRpcResponse::new(id, vec![edit])
+}
+
 /// Convert line and character position to byte offset in the source.
 fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
     let mut current_line = 0;
@@ -702,6 +759,24 @@ pub(crate) fn run_lsp() {
                         }
                     };
                     let response = handle_definition(id, params, &documents);
+                    if let Err(e) = write_message(&response) {
+                        eprintln!("Error writing response: {e}");
+                    }
+                }
+            }
+            Some(method) if method == Formatting::METHOD => {
+                if let Some(id) = parsed.id {
+                    let params: DocumentFormattingParams = match message
+                        .get("params")
+                        .and_then(|p| serde_json::from_value(p.clone()).ok())
+                    {
+                        Some(p) => p,
+                        None => {
+                            eprintln!("Error parsing formatting params");
+                            continue;
+                        }
+                    };
+                    let response = handle_formatting(id, params, &documents);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }

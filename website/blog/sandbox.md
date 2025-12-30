@@ -1,16 +1,16 @@
 ```metadata
 published: false
-date: 2025-11-21
+date: 2025-12-30
 title: Devlog 2: The Importance of Sandboxing
 ```
 
 A core feature of Garden is the ability to run untrusted code in a
 sandbox. This is really hard to add to an existing language, but it
-enables a ton of wonderful workflows.
+enables some wonderful workflows.
 
 ## Interactive Documentation
 
-Every code snippet on garden-lang.org has Run and Edit buttons. If you
+Every code snippet on this website has Run and Edit buttons. If you
 want to confirm your understanding of a feature, you can experiment.
 
 Here's a really simple example.
@@ -20,7 +20,8 @@ Here's a really simple example.
 ```
 
 Since we're allowing arbitrary code, the user might write something
-more problematic (accidentally or otherwise).
+more problematic (accidentally or otherwise). The sandbox ensures we
+can run this safely.
 
 ```
 while True {}
@@ -30,17 +31,16 @@ while True {}
 Path{ p: "/etc/passwd" }.read()
 ```
 
-If you don't have a sandbox, you might choose to compile your
-interpreter to wasm and run it in the browser. This is secure -- the
-user is running code on their machine -- but it's slow on mobile. wasm
-builds are also fiddly in my experience.
+Some programming languages choose to compile their interpreter to
+wasm, so the execution happens in the browser. This is secure -- no
+evaluation server required -- but it's slow on mobile. wasm
+builds also impose additional constraints on the interpreter.
 
-Snippets on the Garden website are executed on my server. This is
-scary, but the experience is much nicer to use. In addition to the
-interpreter level sandbox, the playground is running on docker on a
-dedicated $1 per month server. Security is hard :)
+Snippets on this website are executed on my server. This is scary, but
+the experience is much nicer to use. I've locked down the execution
+process in a Docker container on a dedicated $1 per month server.
 
-If you do find a security bug, feel free to open an issue on the bug
+If you *do* find a security bug, feel free to open an issue on the bug
 tracker or email me.
 
 ## Eager evaluation
@@ -49,25 +49,28 @@ JavaScript is one of the few languages with a mature sandbox, and it's
 a crucial part of the modern web. JavaScript also has the ability to
 eagerly execute snippets in the console, safely.
 
-```js
-// As gif
-"foo".toUpperCase()
-```
+<video controls>
+  <source src="/speculative_js.mp4" type="video/mp4" />
+</video>
 
-This is small but nice to work with. It saves keystrokes and gets you
-feedback faster.
+You can see that the interpreter shows `"FOO"` before we press enter.
+This is a small feature, but lovely to work with. It saves keystrokes
+and gets you feedback faster.
 
 Garden doesn't yet have eager evaluation in the REPL, but it can
-eagerly evaluate tests in the sandbox.
+eagerly evaluate tests in the sandbox. Eager tests also leverages your
+hardware better. My machine is often mostly idle when I'm writing
+code, whereas it could be helping!
 
-(demo)
+Maybe string uppercase test, showing separate assertions failing?
 
-This will also enable things like safe mutation testing. A scary
-number of mutation test frameworks just assume that a small change to
-a test suite is safe to execute without review.
+<video controls>
+  <source src="/speculative_eval_tests.mp4" type="video/mp4" />
+</video>
 
-This also leverages your compute more. My machine is often mostly idle
-when I'm writing code, whereas it could be helping!
+Sandboxed testing also enables safe mutation testing. A scary number
+of mutation test frameworks just assume that a small change to a test
+suite is safe to execute without review.
 
 ## Speculative Library Loading
 
@@ -76,7 +79,7 @@ be sufficient. The IDE could install the library and no additional
 keystrokes would be required.
 
 There are also projects that do this (JS example). Again, without a
-sandbox, this isn't safe. You can reduce the risk with a list of
+sandbox, this isn't safe. You can reduce the risk with an allowlist of
 permitted packages or forbidding post-install scripts, but it's janky.
 
 With a sandbox you can support this workflow properly.
@@ -84,14 +87,14 @@ With a sandbox you can support this workflow properly.
 ## AI Sandboxing
 
 LLMs are pretty good at iterating on code. Agentic tools rely on an
-LLM loop that processes output (compiler errors, test failures etc). This
-is often sufficient to guide the LLM to write a working
-implementation.
+LLM loop that processes output (static errors, runtime errors, test
+failures etc). This is often sufficient to guide the LLM to write a
+working implementation.
 
 This use case is so compelling that some users will run
 `--dangerously-skip-permissions` on their machine directly. Claude
 provides guidance for running it in a Docker container, and
-claude.ai/code also provides an isolated VM to safely allow this
+<claude.ai/code> also provides an isolated VM to safely allow this
 workflow.
 
 These workflows prevent the AI from e.g. deleting all your files, but
@@ -125,14 +128,18 @@ code for you based on examples. You can apply a simple brute-force
 solution ('enumerative synthesis), a smarter type-driven search, or
 just feed it to an LLM.
 
+With a sandbox, you could evaluate all the obvious possibilities and
+if they pass the tests, suggest them to the user.
+
 ## Security
 
 Evaluation of arbitrary code requires significant work to have a
 strong security posture.
 
 The Garden interpreter sandbox prevents I/O (disk, network) as well as
-enforcing resource limits. Memory limits are less enforced today, so a
-sufficiently problematic problem might be able to OOM the interpreter.
+enforcing resource limits. The current implementation is slightly lax
+on memory limits, so a sufficiently problematic program could still
+OOM the interpreter.
 
 The sandbox also provides no protection against side channel attacks,
 such as rowhammer or spectre.

@@ -1198,4 +1198,103 @@ fun main() {
         // Clean up the temporary file
         let _ = std::fs::remove_file(&test_file);
     }
+
+    #[test]
+    fn test_lsp_code_action() {
+        use std::io::Write;
+        use std::process::Stdio;
+
+        // Create a temporary test file with a typo that has a quickfix
+        let test_content = r#"fun main() {
+  Path{ p: "/foo" }.readd()
+}
+"#;
+        let test_file = std::env::temp_dir().join("garden_lsp_test_code_action.gdn");
+        std::fs::write(&test_file, test_content).expect("Failed to write test file");
+
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut child = Command::new(path)
+            .arg("lsp")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn command");
+
+        let file_uri = format!("file://{}", test_file.display());
+
+        // Prepare LSP messages
+        let init_request =
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#;
+        let initialized = r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#;
+
+        // Request code actions at line 1, characters 20-25 (where "readd" is)
+        let code_action_request = format!(
+            r#"{{"jsonrpc":"2.0","id":2,"method":"textDocument/codeAction","params":{{"textDocument":{{"uri":"{}"}},"range":{{"start":{{"line":1,"character":20}},"end":{{"line":1,"character":25}}}},"context":{{"diagnostics":[]}}}}}}"#,
+            file_uri
+        );
+
+        let shutdown_request = r#"{"jsonrpc":"2.0","id":3,"method":"shutdown"}"#;
+        let exit = r#"{"jsonrpc":"2.0","method":"exit"}"#;
+
+        let input = format!(
+            "Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}",
+            init_request.len(), init_request,
+            initialized.len(), initialized,
+            code_action_request.len(), code_action_request,
+            shutdown_request.len(), shutdown_request,
+            exit.len(), exit
+        );
+
+        // Write to stdin
+        {
+            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+            stdin
+                .write_all(input.as_bytes())
+                .expect("Failed to write to stdin");
+        }
+
+        // Wait for the process to complete and get output
+        let output = child
+            .wait_with_output()
+            .expect("Failed to wait for command");
+
+        // Verify the command succeeded
+        assert!(output.status.success());
+
+        // Verify the output contains expected LSP responses
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        // Should contain initialize response
+        assert!(
+            stdout.contains(r#""id":1"#),
+            "Should contain initialize response"
+        );
+
+        // Should contain code action response with id 2
+        assert!(
+            stdout.contains(r#""id":2"#),
+            "Should contain code action response"
+        );
+
+        // Should contain the quickfix title
+        assert!(
+            stdout.contains("read"),
+            "Should contain 'read' in the quickfix suggestion"
+        );
+
+        // Should contain quickfix kind
+        assert!(
+            stdout.contains(r#""kind":"quickfix""#),
+            "Should contain quickfix kind"
+        );
+
+        // Should contain shutdown response
+        assert!(
+            stdout.contains(r#""id":3"#),
+            "Should contain shutdown response"
+        );
+
+        // Clean up the temporary file
+        let _ = std::fs::remove_file(&test_file);
+    }
 }

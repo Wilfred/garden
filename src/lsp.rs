@@ -1,11 +1,14 @@
 //! LSP (Language Server Protocol) support for Garden.
 
-use lsp_types::request::{Completion, Formatting, GotoDefinition, Initialize, Request, Shutdown};
+use lsp_types::request::{
+    CodeActionRequest, Completion, Formatting, GotoDefinition, Initialize, Request, Shutdown,
+};
 use lsp_types::{
-    CompletionItem, CompletionOptions, CompletionParams, Diagnostic, DiagnosticSeverity,
-    DocumentFormattingParams, GotoDefinitionParams, InitializeParams, InitializeResult, Location,
-    Position, PublishDiagnosticsParams, Range, ServerCapabilities, ServerInfo,
-    TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Uri,
+    CodeAction, CodeActionKind, CodeActionOptions, CodeActionParams, CodeActionProviderCapability,
+    CodeActionResponse, CompletionItem, CompletionOptions, CompletionParams, Diagnostic,
+    DiagnosticSeverity, DocumentFormattingParams, GotoDefinitionParams, InitializeParams,
+    InitializeResult, Location, Position, PublishDiagnosticsParams, Range, ServerCapabilities,
+    ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
 };
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
@@ -19,7 +22,7 @@ type DocumentStore = FxHashMap<PathBuf, String>;
 use crate::checks::check_toplevel_items_in_env;
 use crate::checks::type_checker::check_types;
 use crate::completions;
-use crate::diagnostics::{Diagnostic as GardenDiagnostic, Severity};
+use crate::diagnostics::{Autofix, Diagnostic as GardenDiagnostic, Severity};
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::parser::ast::IdGenerator;
@@ -216,6 +219,27 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<Diagnostic> {
     diagnostics
 }
 
+/// Get autofixes for a file.
+fn get_fixes(src: &str, path: &PathBuf) -> Vec<Autofix> {
+    let mut fixes = vec![];
+
+    let mut id_gen = IdGenerator::default();
+    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+
+    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+    let mut env = Env::new(id_gen, vfs);
+    let ns = env.get_or_create_namespace(path);
+    let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, ns.clone());
+    raw_diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, &env, ns));
+
+    for diagnostic in raw_diagnostics {
+        fixes.extend(diagnostic.fixes);
+    }
+
+    fixes
+}
+
 /// Get completion items at the given offset.
 fn get_completions(src: &str, path: &Path, offset: usize) -> Vec<CompletionItem> {
     completions::complete(src, path, offset)
@@ -263,6 +287,10 @@ fn handle_initialize(
             }),
             text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
             document_formatting_provider: Some(lsp_types::OneOf::Left(true)),
+            code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
+                code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
+                ..Default::default()
+            })),
             ..Default::default()
         },
         server_info: Some(ServerInfo {
@@ -513,6 +541,92 @@ fn handle_formatting(
     JsonRpcResponse::new(id, vec![edit])
 }
 
+/// Handle a textDocument/codeAction request.
+fn handle_code_action(
+    id: serde_json::Value,
+    params: CodeActionParams,
+    documents: &DocumentStore,
+) -> JsonRpcResponse<CodeActionResponse> {
+    let uri = &params.text_document.uri;
+
+    // Convert file:// URI to path
+    let url = match Url::parse(uri.as_str()) {
+        Ok(u) => u,
+        Err(_) => return JsonRpcResponse::new(id, vec![]),
+    };
+
+    let path = match url.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return JsonRpcResponse::new(id, vec![]),
+    };
+
+    // Get the document content from our store, falling back to disk
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, vec![]),
+        },
+    };
+
+    let fixes = get_fixes(&src, &path);
+
+    // Convert fixes to code actions
+    let mut actions: CodeActionResponse = vec![];
+    for fix in fixes {
+        let range = garden_pos_to_lsp_range(&fix.position);
+
+        // Only include fixes that overlap with the requested range
+        if !ranges_overlap(&range, &params.range) {
+            continue;
+        }
+
+        let text_edit = TextEdit {
+            range,
+            new_text: fix.new_text,
+        };
+
+        // lsp_types::Uri has interior mutability, but this is the
+        // standard way to construct WorkspaceEdit.
+        #[allow(clippy::mutable_key_type)]
+        let mut changes = std::collections::HashMap::new();
+        changes.insert(uri.clone(), vec![text_edit]);
+
+        let workspace_edit = WorkspaceEdit {
+            changes: Some(changes),
+            ..Default::default()
+        };
+
+        let action = CodeAction {
+            title: fix.description,
+            kind: Some(CodeActionKind::QUICKFIX),
+            edit: Some(workspace_edit),
+            ..Default::default()
+        };
+
+        actions.push(lsp_types::CodeActionOrCommand::CodeAction(action));
+    }
+
+    JsonRpcResponse::new(id, actions)
+}
+
+/// Check if two ranges overlap.
+fn ranges_overlap(a: &Range, b: &Range) -> bool {
+    // a starts after b ends
+    if a.start.line > b.end.line
+        || (a.start.line == b.end.line && a.start.character > b.end.character)
+    {
+        return false;
+    }
+    // a ends before b starts
+    if a.end.line < b.start.line
+        || (a.end.line == b.start.line && a.end.character < b.start.character)
+    {
+        return false;
+    }
+    true
+}
+
 /// Convert line and character position to byte offset in the source.
 fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
     let mut current_line = 0;
@@ -643,6 +757,24 @@ pub(crate) fn run_lsp() {
                         }
                     };
                     let response = handle_formatting(id, params, &documents);
+                    if let Err(e) = write_message(&response) {
+                        eprintln!("Error writing response: {e}");
+                    }
+                }
+            }
+            Some(method) if method == CodeActionRequest::METHOD => {
+                if let Some(id) = parsed.id {
+                    let params: CodeActionParams = match message
+                        .get("params")
+                        .and_then(|p| serde_json::from_value(p.clone()).ok())
+                    {
+                        Some(p) => p,
+                        None => {
+                            eprintln!("Error parsing code action params");
+                            continue;
+                        }
+                    };
+                    let response = handle_code_action(id, params, &documents);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }

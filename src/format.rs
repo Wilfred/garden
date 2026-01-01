@@ -197,10 +197,17 @@ fn collect_comment_edits(
 
             if !processed_lines.contains(&line_num) {
                 // Use the corrected indent of the following token, or its original column
-                let target_indent = corrected_indents
+                let mut target_indent = corrected_indents
                     .get(&token.position.line_number)
                     .copied()
                     .unwrap_or(token.position.column);
+
+                // Comments before a closing brace should be indented at the
+                // block's inner level, not at the brace's level.
+                if token.text == "}" {
+                    target_indent += 2;
+                }
+
                 let current_indent = comment_pos.column;
 
                 if current_indent != target_indent {

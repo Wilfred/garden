@@ -1,0 +1,9 @@
+fun foo() {
+  let num = 123
+  num = num + 1
+  //^
+}
+
+// args: show-type
+// expected stdout: Int
+

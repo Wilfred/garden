@@ -1905,6 +1905,7 @@ impl TypeCheckVisitor<'_> {
     fn get_var_for_assignment(&mut self, sym: &Symbol) -> Type {
         if let Some((sym_ty, position)) = self.bindings.get(&sym.name) {
             self.id_to_def_pos.insert(sym.id, position.clone());
+            self.id_to_ty.insert(sym.id, sym_ty.clone());
             return sym_ty.clone();
         }
 

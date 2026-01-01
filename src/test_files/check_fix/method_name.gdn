@@ -1,0 +1,10 @@
+{
+  Path{ p: "/foo" }.readd()
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// {
+//   Path{ p: "/foo" }.read()
+// }
+

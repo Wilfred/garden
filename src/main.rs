@@ -766,7 +766,15 @@ mod tests {
 
     #[test]
     fn run_test_files() -> TestResult<()> {
-        let mut config = TestConfig::new("target/debug/garden", "src/test_files", "// ")?;
+        // Build the binary to ensure we're testing the latest code.
+        let bin_path = escargot::CargoBuild::new()
+            .bin("garden")
+            .run()
+            .expect("Failed to build garden binary")
+            .path()
+            .to_path_buf();
+
+        let mut config = TestConfig::new(bin_path, "src/test_files", "// ")?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();
         config.run_tests()
     }

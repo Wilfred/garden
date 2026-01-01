@@ -42,8 +42,8 @@ Garden uses golden tests in `src/test_files/` that include a sample
 program and the expected output. New features or bugfixes should
 generally include a new test file.
 
-- cargo build && cargo test run_test_files: Run all the golden tests
-- cargo build && REGENERATE=y cargo test run_test_files: Update the golden test output
+- cargo test run_test_files: Run all the golden tests
+- REGENERATE=y cargo test run_test_files: Update the golden test output
 
 # Running Garden Programs
 - ./target/debug/garden check yourfile.gdn: Check the test program named yourfile.gdn

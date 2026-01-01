@@ -77,6 +77,7 @@ impl UnusedVariableVisitor {
                     Text(" is unused.".to_owned()),
                 ]),
                 position: position.clone(),
+                fixes: vec![],
             });
         }
 
@@ -92,6 +93,7 @@ impl UnusedVariableVisitor {
                     Text(" is unused.".to_owned()),
                 ]),
                 position: position.clone(),
+                fixes: vec![],
             });
         }
 
@@ -104,6 +106,7 @@ impl UnusedVariableVisitor {
                     Text(" is unused.".to_owned()),
                 ]),
                 position: position.clone(),
+                fixes: vec![],
             });
         }
 

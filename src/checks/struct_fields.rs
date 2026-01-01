@@ -36,6 +36,7 @@ impl Visitor for StructFieldVisitor<'_> {
                     msgtext!("."),
                 ]),
                 position: name_sym.position.clone(),
+                fixes: vec![],
             });
             return;
         };
@@ -48,6 +49,7 @@ impl Visitor for StructFieldVisitor<'_> {
                     msgtext!(" is not a struct."),
                 ]),
                 position: name_sym.position.clone(),
+                fixes: vec![],
             });
             return;
         };
@@ -70,6 +72,7 @@ impl Visitor for StructFieldVisitor<'_> {
                         msgtext!(" in struct literal."),
                     ]),
                     position: field_sym.position.clone(),
+                    fixes: vec![],
                 });
             }
 
@@ -87,6 +90,7 @@ impl Visitor for StructFieldVisitor<'_> {
                         msgtext!("."),
                     ]),
                     position: field_sym.position.clone(),
+                    fixes: vec![],
                 });
             }
         }
@@ -102,6 +106,7 @@ impl Visitor for StructFieldVisitor<'_> {
                         msgtext!("."),
                     ]),
                     position: name_sym.position.clone(),
+                    fixes: vec![],
                 });
             }
         }

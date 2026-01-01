@@ -60,6 +60,7 @@ impl Visitor for LoopVisitor {
                         position: expr.position.clone(),
                         notes: vec![],
                         severity: Severity::Error,
+                        fixes: vec![],
                     });
                 }
             }
@@ -78,6 +79,7 @@ impl Visitor for LoopVisitor {
                         position: expr.position.clone(),
                         notes: vec![],
                         severity: Severity::Error,
+                        fixes: vec![],
                     });
                 }
             }

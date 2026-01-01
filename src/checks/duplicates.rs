@@ -37,6 +37,7 @@ impl Visitor for DuplicatesVisitor {
                         position: sym.position.clone(),
                         notes: vec![],
                         severity: Severity::Warning,
+                        fixes: vec![],
                     });
                 } else {
                     self.funs_seen
@@ -69,6 +70,7 @@ impl Visitor for DuplicatesVisitor {
                         position: meth_sym.position.clone(),
                         notes: vec![],
                         severity: Severity::Warning,
+                        fixes: vec![],
                     });
                 }
             }
@@ -83,6 +85,7 @@ impl Visitor for DuplicatesVisitor {
                         position: sym.position.clone(),
                         notes: vec![],
                         severity: Severity::Warning,
+                        fixes: vec![],
                     });
                 } else {
                     self.tests_seen.insert(sym.name.clone());
@@ -99,6 +102,7 @@ impl Visitor for DuplicatesVisitor {
                         position: name_sym.position.clone(),
                         notes: vec![],
                         severity: Severity::Warning,
+                        fixes: vec![],
                     });
                 } else {
                     self.types_seen.insert(name_sym.name.clone());
@@ -115,6 +119,7 @@ impl Visitor for DuplicatesVisitor {
                         position: name_sym.position.clone(),
                         notes: vec![],
                         severity: Severity::Warning,
+                        fixes: vec![],
                     });
                 } else {
                     self.types_seen.insert(name_sym.name.clone());

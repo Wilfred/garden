@@ -104,6 +104,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             position,
             severity,
             notes,
+            ..
         } in raw_diagnostics
         {
             diagnostics.push(CheckDiagnostic {

@@ -38,6 +38,7 @@ impl Visitor for UnreachableVisitor {
                     message: ErrorMessage(vec![Text(reason.to_owned())]),
                     position: expr.position.clone(),
                     notes: vec![],
+                    fixes: vec![],
                     severity: Severity::Warning,
                 });
                 unreachable_reason = None;

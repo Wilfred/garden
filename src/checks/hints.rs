@@ -91,6 +91,7 @@ impl Visitor for HintVisitor<'_> {
                             "Generic type arguments cannot take parameters.".to_owned(),
                         )]),
                         position: first_arg.position.clone(),
+                        fixes: vec![],
                     });
                 }
             }
@@ -122,6 +123,7 @@ impl Visitor for HintVisitor<'_> {
                                         num_expected,
                                     )]),
                                     position: type_args_pos,
+                                    fixes: vec![],
                                 });
                             }
                         }
@@ -140,6 +142,7 @@ impl Visitor for HintVisitor<'_> {
                                         msgtext!("."),
                                     ]),
                                     position: first_arg.position.clone(),
+                                    fixes: vec![],
                                 });
                             }
                         }
@@ -154,6 +157,7 @@ impl Visitor for HintVisitor<'_> {
                                     enum_info.type_params.len(),
                                 )]),
                                 position: type_args_pos,
+                                fixes: vec![],
                             });
                         }
                     }
@@ -167,6 +171,7 @@ impl Visitor for HintVisitor<'_> {
                                     struct_info.type_params.len(),
                                 )]),
                                 position: type_args_pos,
+                                fixes: vec![],
                             });
                         }
                     }
@@ -182,6 +187,7 @@ impl Visitor for HintVisitor<'_> {
                         msgtext!("."),
                     ]),
                     position: type_hint.position.clone(),
+                    fixes: vec![],
                 });
             }
         }

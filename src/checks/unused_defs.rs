@@ -55,6 +55,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                 position: symbol.position.clone(),
                 notes: vec![],
                 severity: Severity::Warning,
+                fixes: vec![],
             });
             already_covered_ids.insert(item_id);
         }
@@ -96,6 +97,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                         position: symbol.position.clone(),
                         notes: vec![],
                         severity: Severity::Warning,
+                        fixes: vec![],
                     });
                 }
             }

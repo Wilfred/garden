@@ -26,6 +26,13 @@ pub(crate) enum Severity {
 }
 
 #[derive(Debug)]
+pub(crate) struct Autofix {
+    pub(crate) description: String,
+    pub(crate) position: Position,
+    pub(crate) new_text: String,
+}
+
+#[derive(Debug)]
 pub(crate) struct Diagnostic {
     /// The primary message.
     pub(crate) message: ErrorMessage,
@@ -35,6 +42,7 @@ pub(crate) struct Diagnostic {
     /// Relevant information from other places in the program, such as
     /// "note: foo() is defined here".
     pub(crate) notes: Vec<(ErrorMessage, Position)>,
+    pub(crate) fixes: Vec<Autofix>,
 }
 
 pub(crate) fn format_error_with_stack(

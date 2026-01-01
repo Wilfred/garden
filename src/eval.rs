@@ -442,6 +442,7 @@ fn load_toplevel_items_(
                         ))]),
                         position,
                         notes: vec![],
+                        fixes: vec![],
                         severity: Severity::Error,
                     });
 
@@ -466,6 +467,7 @@ fn load_toplevel_items_(
                             )]),
                             position: import_info.path_pos.clone(),
                             notes: vec![],
+                            fixes: vec![],
                             severity: Severity::Error,
                         });
 
@@ -520,6 +522,7 @@ fn load_toplevel_items_(
                             message: ErrorMessage(vec![Text(error.message().as_string())]),
                             position: error.position().clone(),
                             notes: vec![],
+                            fixes: vec![],
                             severity: Severity::Error,
                         });
                     }
@@ -710,6 +713,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
                     ]),
                     position: import_info.path_pos.clone(),
                     notes: vec![],
+                    fixes: vec![],
                     severity: Severity::Error,
                 });
             }
@@ -726,6 +730,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
                 message: describe_read_error(&import_info.path, &e),
                 position: import_info.path_pos.clone(),
                 notes: vec![],
+                fixes: vec![],
                 severity: Severity::Error,
             });
         }
@@ -740,6 +745,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
             ]),
             position: import_info.path_pos.clone(),
             notes: vec![],
+            fixes: vec![],
             severity: Severity::Error,
         });
     };
@@ -1416,6 +1422,7 @@ fn update_built_in_type_info(
     let Some(current_def) = env.types.get(&symbol.name) else {
         diagnostics.push(Diagnostic {
             notes: vec![],
+            fixes: vec![],
             severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type `{}` that doesn't exist.",
@@ -1429,6 +1436,7 @@ fn update_built_in_type_info(
     let TypeDef::BuiltIn(kind, _) = &current_def.def else {
         diagnostics.push(Diagnostic {
             notes: vec![],
+            fixes: vec![],
             severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but {} isn't a built-in type.",
@@ -1477,6 +1485,7 @@ fn update_built_in_meth_info(
     let Some(type_def_and_methods) = env.types.get_mut(type_name) else {
         diagnostics.push(Diagnostic {
             notes: vec![],
+            fixes: vec![],
             severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type {type_name} that doesn't exist."
@@ -1496,6 +1505,7 @@ fn update_built_in_meth_info(
             let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
                 diagnostics.push(Diagnostic {
                     notes: vec![],
+                    fixes: vec![],
                     severity: Severity::Warning,
                     message: ErrorMessage(vec![Text(format!(
                         // TODO: we need a better design principle around
@@ -1540,6 +1550,7 @@ fn update_built_in_fun_info(
     let Some(value) = ns.values.get(&symbol.name).cloned() else {
         diagnostics.push(Diagnostic {
             notes: vec![],
+            fixes: vec![],
             severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a function `{}` that doesn't exist.",
@@ -1569,6 +1580,7 @@ fn update_built_in_fun_info(
     let Value_::BuiltInFunction(kind, _, _) = value.as_ref() else {
         diagnostics.push(Diagnostic {
             notes: vec![],
+            fixes: vec![],
             severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but `{}` isn't a built-in function (it's a {}).",

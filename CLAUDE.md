@@ -7,6 +7,10 @@ Hello World in Garden looks like this:
 println("Hello World")
 ```
 
+Remember that Garden does not treat `main` functions specially. You
+can just write expressions in the file directly, such as
+`println("foo")` or `some_func()`.
+
 A function with a unit test looks like this:
 
 ```
@@ -30,20 +34,24 @@ fs::list_directory(Path{ p: "/"})
 
 When adding built-in functions, always update the CHANGELOG.md.
 
-# Verifying changes
+# Checking Changes
 - cargo clippy: Check that your Rust code is correct
+
+# Running Tests
+Garden uses golden tests in `src/test_files/` that include a sample
+program and the expected output. New features or bugfixes should
+generally include a new test file.
+
+- cargo build && cargo test run_test_files: Run all the golden tests
+- cargo build && REGENERATE=y cargo test run_test_files: Update the golden test output
+
+# Running Garden Programs
 - ./target/debug/garden check yourfile.gdn: Check the test program named yourfile.gdn
 - ./target/debug/garden run yourfile.gdn: Run the code in yourfile.gdn.
 - ./target/debug/garden test yourfile.gdn: Run unit tests in yourfile.gdn.
-- cargo build && cargo test run_test_files: Run the integration tests.
-- cargo build && REGENERATE=y cargo test run_test_files: Update the output in the integration tests.
 
 To generate target/debug/garden use `cargo build`. This separation
 allows Claude to set permissions on separate Garden subcommands.
-
-Remember that Garden does not treat `main` functions specially. You
-can just write expressions in the file directly, such as
-`println("foo")` or `some_func()`.
 
 # Site Builder
 

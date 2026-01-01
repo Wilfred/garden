@@ -6,6 +6,8 @@
 
 Added a `format` subcommand that fixes indentation in Garden files.
 
+Added `--fix` to `garden check`.
+
 # 0.22 (released 15 December 2025)
 **Goal: Playground.**
 

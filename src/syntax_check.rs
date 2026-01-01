@@ -3,7 +3,7 @@ use std::io::IsTerminal;
 use std::path::Path;
 
 use crate::checks::check_toplevel_items_in_env;
-use crate::diagnostics::{format_diagnostic, Diagnostic, Severity};
+use crate::diagnostics::{format_diagnostic, Autofix, Diagnostic, Severity};
 use crate::parser::ast::IdGenerator;
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -35,10 +35,35 @@ struct CheckDiagnostic {
     severity: Severity,
 }
 
-pub(crate) fn check(path: &Path, src: &str, json: bool) {
-    let use_color = std::io::stdout().is_terminal() && !json;
+/// Apply fixes to the source code, returning the modified source.
+fn apply_fixes(src: &str, fixes: &[Autofix]) -> String {
+    let mut fixes = fixes.to_vec();
+
+    // Sort fixes by start offset in descending order so we can apply
+    // them from the end without invalidating earlier offsets.
+    fixes.sort_by(|a, b| b.position.start_offset.cmp(&a.position.start_offset));
+
+    let mut result = src.to_owned();
+    for fix in fixes {
+        let start = fix.position.start_offset;
+        let end = fix.position.end_offset;
+        result = format!("{}{}{}", &result[..start], fix.new_text, &result[end..]);
+    }
+    result
+}
+
+pub(crate) fn check(
+    path: &Path,
+    src: &str,
+    json: bool,
+    fix: bool,
+    stdout: bool,
+    original_path: &Path,
+) {
+    let use_color = std::io::stdout().is_terminal() && !json && !fix;
 
     let mut diagnostics = vec![];
+    let mut all_fixes: Vec<Autofix> = vec![];
 
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
@@ -104,9 +129,11 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             position,
             severity,
             notes,
-            ..
+            fixes,
         } in raw_diagnostics
         {
+            all_fixes.extend(fixes);
+
             diagnostics.push(CheckDiagnostic {
                 position: position.clone(),
                 line_number: position.line_number + 1,
@@ -122,6 +149,24 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                 notes,
             });
         }
+    }
+
+    if fix {
+        if all_fixes.is_empty() {
+            // No fixes to apply.
+            if stdout {
+                print!("{}", src);
+            }
+            return;
+        }
+
+        let fixed_src = apply_fixes(src, &all_fixes);
+        if stdout {
+            print!("{}", fixed_src);
+        } else {
+            std::fs::write(original_path, &fixed_src).expect("Failed to write fixed file");
+        }
+        return;
     }
 
     for (i, diagnostic) in diagnostics.iter().enumerate() {

@@ -25,7 +25,7 @@ pub(crate) enum Severity {
     Error,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Autofix {
     pub(crate) description: String,
     pub(crate) position: Position,

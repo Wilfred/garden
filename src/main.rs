@@ -194,6 +194,13 @@ enum CliCommands {
         /// without requiring the user to save.
         #[clap(long)]
         override_path: Option<PathBuf>,
+        /// Apply all available quickfixes to the file.
+        #[clap(long, action)]
+        fix: bool,
+        /// Print the fixed file to stdout instead of modifying in place.
+        /// Only valid with --fix.
+        #[clap(long, action)]
+        stdout: bool,
     },
     /// Show the type of the expression at the position given.
     ShowType {
@@ -248,12 +255,14 @@ fn main() {
             path,
             json,
             override_path,
+            fix,
+            stdout,
         } => {
             let abs_path = to_abs_path(&path);
             let mut src = read_utf8_or_die(&abs_path);
             src = remove_testing_footer(&src);
-            let src_path = to_abs_path(&override_path.unwrap_or(path));
-            syntax_check::check(&src_path, &src, json)
+            let src_path = to_abs_path(&override_path.unwrap_or(path.clone()));
+            syntax_check::check(&src_path, &src, json, fix, stdout, &abs_path)
         }
         CliCommands::Test {
             paths,

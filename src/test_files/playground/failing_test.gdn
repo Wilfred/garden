@@ -1,0 +1,13 @@
+fun add_one(x: Int): Int {
+  x + 1
+}
+
+test add_one {
+  assert(add_one(2) == 100)
+}
+
+// args: playground-run
+// expected stdout:
+// {"error":null,"value":"Failed: add_one src/test_files/playground/failing_test.gdn:6\n  Expected `100` but got `3`.\n\nRan 1 test: 0 passed and 1 failed.\n"}
+// {"error":null,"value":"Unit"}
+

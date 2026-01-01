@@ -27,9 +27,13 @@ pub(crate) enum Severity {
 
 #[derive(Debug)]
 pub(crate) struct Diagnostic {
+    /// The primary message.
     pub(crate) message: ErrorMessage,
     pub(crate) position: Position,
+    /// How bad it is.
     pub(crate) severity: Severity,
+    /// Relevant information from other places in the program, such as
+    /// "note: foo() is defined here".
     pub(crate) notes: Vec<(ErrorMessage, Position)>,
 }
 

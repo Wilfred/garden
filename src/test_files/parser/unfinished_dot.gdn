@@ -61,3 +61,10 @@ fun foo(s: String) {
 //     CurrentFile,
 // )
 
+// expected stderr:
+// Error: Parse error: Expected a method or field name after this.
+// --| src/test_files/parser/unfinished_dot.gdn:2:6
+//  1| fun foo(s: String) {
+//  2|     s.
+//  3| }    ^
+

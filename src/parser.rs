@@ -1175,6 +1175,16 @@ fn parse_expression(
                         );
                     }
                 } else {
+                    // No symbol after the dot, or a symbol afterwards
+                    // that's not immediately touching the dot.
+                    diagnostics.push(ParseError::Invalid {
+                        position: token.position.clone(),
+                        message: ErrorMessage(vec![msgtext!(
+                            "Expected a method or field name after this."
+                        )]),
+                        notes: vec![],
+                    });
+
                     let variable = placeholder_symbol(token.position, id_gen);
 
                     expr = Expression::new(
@@ -1204,6 +1214,14 @@ fn parse_expression(
                         id_gen.next(),
                     );
                 } else {
+                    diagnostics.push(ParseError::Invalid {
+                        position: token.position.clone(),
+                        message: ErrorMessage(vec![msgtext!(
+                            "Expected a namespace symbol after this."
+                        )]),
+                        notes: vec![],
+                    });
+
                     let variable = placeholder_symbol(token.position, id_gen);
 
                     expr = Expression::new(

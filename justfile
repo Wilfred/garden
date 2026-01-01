@@ -3,10 +3,9 @@ default:
 
 # Build and run golden test files.
 watch:
-    # Only watch for changes between runs. This avoids us re-running
-    # simply because the expected output of a test file was
-    # regenerated.
-    REGENERATE=y cargo watch -x 't run_test_files' --watch-when-idle
+    REGENERATE=y cargo watch -x 't golden' --watch-when-idle
+    # We use --watch-when-idle to avoid re-running simply because the
+    # expected output of a test file was regenerated.
 
 # Build and run all tests.
 watch-all:

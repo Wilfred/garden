@@ -764,8 +764,8 @@ mod tests {
 
     use goldentests::{TestConfig, TestResult};
 
-    #[test]
-    fn run_test_files() -> TestResult<()> {
+    /// Helper function to run golden tests for a specific subdirectory.
+    fn run_golden_tests(subdir: &str) -> TestResult<()> {
         // Build the binary to ensure we're testing the latest code.
         let bin_path = escargot::CargoBuild::new()
             .bin("garden")
@@ -774,9 +774,95 @@ mod tests {
             .path()
             .to_path_buf();
 
-        let mut config = TestConfig::new(bin_path, "src/test_files", "// ")?;
+        let test_path = format!("src/test_files/{}", subdir);
+        let mut config = TestConfig::new(bin_path, &test_path, "// ")?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();
         config.run_tests()
+    }
+
+    #[test]
+    fn test_golden_check() -> TestResult<()> {
+        run_golden_tests("check")
+    }
+
+    #[test]
+    fn test_golden_check_fix() -> TestResult<()> {
+        run_golden_tests("check_fix")
+    }
+
+    #[test]
+    fn test_golden_complete() -> TestResult<()> {
+        run_golden_tests("complete")
+    }
+
+    #[test]
+    fn test_golden_destructure() -> TestResult<()> {
+        run_golden_tests("destructure")
+    }
+
+    #[test]
+    fn test_golden_eval_up_to() -> TestResult<()> {
+        run_golden_tests("eval_up_to")
+    }
+
+    #[test]
+    fn test_golden_extract_function() -> TestResult<()> {
+        run_golden_tests("extract_function")
+    }
+
+    #[test]
+    fn test_golden_extract_variable() -> TestResult<()> {
+        run_golden_tests("extract_variable")
+    }
+
+    #[test]
+    fn test_golden_format() -> TestResult<()> {
+        run_golden_tests("format")
+    }
+
+    #[test]
+    fn test_golden_go_to_def() -> TestResult<()> {
+        run_golden_tests("go_to_def")
+    }
+
+    #[test]
+    fn test_golden_hover() -> TestResult<()> {
+        run_golden_tests("hover")
+    }
+
+    #[test]
+    fn test_golden_json_session() -> TestResult<()> {
+        run_golden_tests("json_session")
+    }
+
+    #[test]
+    fn test_golden_parser() -> TestResult<()> {
+        run_golden_tests("parser")
+    }
+
+    #[test]
+    fn test_golden_playground() -> TestResult<()> {
+        run_golden_tests("playground")
+    }
+
+    #[test]
+    fn test_golden_rename() -> TestResult<()> {
+        run_golden_tests("rename")
+    }
+
+    #[test]
+    fn test_golden_runtime() -> TestResult<()> {
+        run_golden_tests("runtime")
+    }
+
+    #[test]
+    fn test_golden_sandboxed_test() -> TestResult<()> {
+        run_golden_tests("sandboxed_test")
+    }
+
+    #[test]
+    fn test_golden_test() -> TestResult<()> {
+        run_golden_tests("test")
     }
 
     #[test]

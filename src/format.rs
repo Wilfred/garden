@@ -8,12 +8,15 @@ use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
 use crate::parser::visitor::Visitor;
 
-/// Format a Garden source file by fixing indentation and spacing.
+/// Format a Garden source file by fixing indentation, spacing, and type annotations.
 ///
 /// This formatter fixes the indentation of top-level expressions in
 /// blocks and function bodies, using 2 spaces per nesting level.
 /// Single-line blocks are formatted to have exactly one space after
 /// `{` and before `}`.
+///
+/// It also ensures there's always a space after `:` in type annotations,
+/// e.g. `x:Int` becomes `x: Int`.
 pub(crate) fn format(src: &str, path: &Path) -> String {
     let mut id_gen = IdGenerator::default();
     let (_vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
@@ -49,7 +52,10 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
     let src_after_indent = apply_indentation_edits(&src_after_spans, &visitor.line_edits);
 
     // Phase 6: Normalize blank lines
-    normalize_blank_lines(&src_after_indent, &visitor.toplevel_start_lines)
+    let src_after_blanks = normalize_blank_lines(&src_after_indent, &visitor.toplevel_start_lines);
+
+    // Phase 7: Fix type annotation spacing
+    fix_type_annotation_spacing(&src_after_blanks, &vfs_path)
 }
 
 /// Represents an indentation edit for a specific line.
@@ -463,4 +469,110 @@ fn normalize_blank_lines(src: &str, toplevel_start_lines: &[usize]) -> String {
     }
 
     result
+}
+
+/// Fix spacing after type annotation colons.
+///
+/// Ensures there's always a space after `:` in type annotations like
+/// `x: Int`, `fun foo(a: String): Bool`, etc.
+///
+/// This function works by:
+/// 1. Tokenizing the source
+/// 2. Finding `:` tokens that are not part of `::`
+/// 3. Checking if they're followed by a type (uppercase letter)
+/// 4. Adding a space after the `:` if there isn't one already
+fn fix_type_annotation_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPathBuf) -> String {
+    let (token_stream, _) = lex_between(vfs_path, src, 0, src.len());
+
+    // Build a list of character positions where we need to insert spaces
+    let mut insert_positions: Vec<usize> = vec![];
+
+    // Convert source to a Vec<char> to handle multi-byte characters correctly
+    let chars: Vec<char> = src.chars().collect();
+
+    // Iterate through tokens to find type annotation colons
+    let tokens: Vec<_> = {
+        let mut ts = token_stream;
+        let mut result = vec![];
+        while let Some(token) = ts.pop() {
+            result.push(token);
+        }
+        result
+    };
+
+    for i in 0..tokens.len() {
+        let token = &tokens[i];
+
+        // Check if this is a colon
+        if token.text != ":" {
+            continue;
+        }
+
+        // Skip if this is part of :: (namespace separator)
+        if i + 1 < tokens.len() && tokens[i + 1].text == ":" {
+            continue;
+        }
+        if i > 0 && tokens[i - 1].text == ":" {
+            continue;
+        }
+
+        // Check if the next token looks like a type name
+        // Type names start with uppercase letters or are known types
+        if i + 1 < tokens.len() {
+            let next_token = &tokens[i + 1];
+            if is_likely_type_name(next_token.text) {
+                // Use the end_offset from the token position (right after the colon)
+                let byte_offset_after_colon = token.position.end_offset;
+
+                // Check if there's already a space after the colon
+                let char_after_offset = get_char_offset(&chars, byte_offset_after_colon);
+                if char_after_offset < chars.len() {
+                    let char_after = chars[char_after_offset];
+                    if char_after != ' ' && !char_after.is_whitespace() {
+                        // Need to insert a space after this colon
+                        insert_positions.push(byte_offset_after_colon);
+                    }
+                }
+            }
+        }
+    }
+
+    // Sort positions in reverse order so we can insert from the end
+    insert_positions.sort_unstable();
+    insert_positions.reverse();
+    insert_positions.dedup();
+
+    // Apply insertions
+    let mut result = src.to_owned();
+    for pos in insert_positions {
+        result.insert(pos, ' ');
+    }
+
+    result
+}
+
+/// Check if a token text looks like a type name.
+/// Type names typically start with an uppercase letter or are tuple types (starting with '(').
+fn is_likely_type_name(text: &str) -> bool {
+    if text.is_empty() {
+        return false;
+    }
+
+    // Type names start with uppercase or '(' for tuple types
+    let first_char = text.chars().next().unwrap();
+    first_char.is_uppercase() || first_char == '('
+}
+
+/// Get the character offset (index in Vec<char>) from a byte offset.
+fn get_char_offset(chars: &[char], byte_offset: usize) -> usize {
+    let mut current_byte = 0;
+
+    for (i, &ch) in chars.iter().enumerate() {
+        if current_byte == byte_offset {
+            return i;
+        }
+        current_byte += ch.len_utf8();
+    }
+
+    chars.len()
 }

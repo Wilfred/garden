@@ -1,0 +1,44 @@
+fun add_one(i:Int):Int {
+  i + 1
+}
+
+let x:String = "hello"
+let y:Int = 42
+
+struct Person {
+  name:String,
+  age:Int,
+}
+
+fun multi_param(a:Int, b:String, c:Bool):Unit {}
+
+let items:List<String> = []
+
+fun tuple_type(x:(Int, String)):Unit {}
+
+// Namespace separator should be preserved
+fs::list_directory(path)
+
+// args: format
+// expected stdout:
+// fun add_one(i: Int): Int {
+//   i + 1
+// }
+// 
+// let x: String = "hello"
+// let y: Int = 42
+// 
+// struct Person {
+//   name: String,
+//   age: Int,
+// }
+// 
+// fun multi_param(a: Int, b: String, c: Bool): Unit {}
+// 
+// let items: List<String> = []
+// 
+// fun tuple_type(x: (Int, String)): Unit {}
+// 
+// // Namespace separator should be preserved
+// fs::list_directory(path)
+

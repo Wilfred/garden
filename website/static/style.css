@@ -52,9 +52,29 @@
    which is under a MIT license. */
 
 :root {
+  /* Primary brand colors */
   --green-primary: #307d30;
   --cream: #ebeee3;
+
+  /* Shadow and overlay colors */
   --shadow-color: #44444457;
+  --shadow-dark: rgba(0, 0, 0, 0.4);
+  --border-subtle: rgba(0, 0, 0, 0.1);
+  --border-medium: #00000030;
+  --border-strong: #00000060;
+  --border-code-title: #00000038;
+
+  /* UI element colors */
+  --border-code: #bcbec0;
+  --button-hover-bg: #dfe2d5;
+  --active-line-bg: #a8dda855;
+
+  /* Syntax highlighting colors */
+  --syntax-keyword: #d05416;
+  --syntax-operator: #880;
+  --syntax-comment: gray;
+  --syntax-string: #910a0a;
+  --syntax-type: #57269c;
 }
 
 ::selection {
@@ -104,7 +124,7 @@ header .title-container > a {
 
 code {
   border-radius: 5px;
-  border: 1px solid #bcbec0;
+  border: 1px solid var(--border-code);
   padding: 2px;
 }
 
@@ -164,7 +184,7 @@ header {
   flex-shrink: 0;
   padding: 4px;
   background: var(--green-primary);
-  border-bottom: 4px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 4px solid var(--border-subtle);
 }
 
 .block,
@@ -226,7 +246,7 @@ header {
   left: 0;
   right: 0;
   z-index: 100;
-  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 4px var(--shadow-dark);
 }
 
 header a {
@@ -235,25 +255,25 @@ header a {
 
 .keyword {
   font-weight: bold;
-  color: #d05416;
+  color: var(--syntax-keyword);
 }
 
 .operator {
-  color: #880;
+  color: var(--syntax-operator);
 }
 
 .comment {
-  color: gray;
+  color: var(--syntax-comment);
 }
 .string {
-  color: #910a0a;
+  color: var(--syntax-string);
 }
 .type {
-  color: #57269c;
+  color: var(--syntax-type);
 }
 
 #playground-wrapper {
-  border: 3px solid #00000030;
+  border: 3px solid var(--border-medium);
   border-radius: 5px;
 }
 
@@ -274,18 +294,18 @@ textarea {
 
 #playground-output {
   padding: 10px;
-  border-top: 3px solid #00000030;
+  border-top: 3px solid var(--border-medium);
   white-space: pre;
 }
 
 .snippet-output {
   white-space: pre;
   padding: 10px;
-  border-top: 3px solid #00000030;
+  border-top: 3px solid var(--border-medium);
 }
 
 .snippet {
-  border: 3px solid #00000030;
+  border: 3px solid var(--border-medium);
   border-radius: 5px;
 
   padding: 0;
@@ -308,7 +328,7 @@ textarea {
 }
 
 button {
-  border: 3px solid #00000030;
+  border: 3px solid var(--border-medium);
   border-radius: 5px;
   min-width: 60px;
 
@@ -322,8 +342,8 @@ button {
 }
 
 button:hover {
-  border-color: #00000060;
-  background-color: #dfe2d5;
+  border-color: var(--border-strong);
+  background-color: var(--button-hover-bg);
 }
 
 .code-title {
@@ -333,7 +353,7 @@ button:hover {
   right: 12px;
 
   background: var(--cream);
-  border: 3px solid #00000038;
+  border: 3px solid var(--border-code-title);
   border-radius: 5px;
 
   font-family: "Lora", serif;
@@ -342,7 +362,7 @@ button:hover {
 
 hr {
   border: none;
-  border-top: 3px solid #00000030;
+  border-top: 3px solid var(--border-medium);
   margin: 30px 0;
 }
 
@@ -419,16 +439,16 @@ ul ul {
 /* Gutters (line numbers, etc) */
 .cm-gutters {
   background-color: var(--cream);
-  border-right: 1px solid #00000030;
+  border-right: 1px solid var(--border-medium);
 }
 
 /* Active line highlighting with pale green to match theme */
 .cm-activeLine {
-  background-color: #a8dda855 !important;
+  background-color: var(--active-line-bg) !important;
 }
 
 .spinner {
-  border: 3px solid #00000030;
+  border: 3px solid var(--border-medium);
   border-top: 3px solid var(--green-primary);
   border-radius: 50%;
   width: 20px;

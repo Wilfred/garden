@@ -1,6 +1,6 @@
 ```metadata
 published: false
-date: 2025-12-30
+date: 2026-01-05
 title: Devlog 2: The Importance of Sandboxing
 ```
 
@@ -65,11 +65,12 @@ eagerly evaluate tests in the sandbox. Eager tests also leverage your
 hardware better. My machine is often mostly idle when I'm writing
 code, whereas it could be helping!
 
-Maybe string uppercase test, showing separate assertions failing?
-
 <video controls>
-  <source src="/speculative_eval_tests.mp4" type="video/mp4" />
+  <source src="/speculative_assertions.mp4" type="video/mp4" />
 </video>
+
+Note how the failing assertion immediately changes as I edit the code
+in this video.
 
 Sandboxed testing also enables safe mutation testing. A scary number
 of mutation test frameworks just assume that a small change to a test
@@ -77,7 +78,7 @@ suite is safe to execute without review.
 
 ## Speculative Library Loading
 
-In an ideal world, writing `require('underscore')` in JavaScript would
+In an ideal world, writing `require("lodash")` in JavaScript would
 be sufficient. The IDE could install the library and no additional
 keystrokes would be required.
 
@@ -90,8 +91,8 @@ With a sandbox you can support this workflow properly.
 
 ## Program Synthesis
 
-I find myself writing programs where the rest of the program is
-obvious.
+I frequently find myself writing programs where the rest of the
+program is obvious.
 
 ```
 test max {
@@ -153,11 +154,6 @@ such as rowhammer or spectre.
 
 I'm delighted to have live evaluation on the website, but there's
 still a ton of features that could be built on top of this sandbox.
-
-There's also open questions about whether the sandbox should be
-exposed as a userland API.
-
----
 
 If you've made it to the end of this long post, thanks for reading!
 Garden is still very much alpha software, but it's all on GitHub if

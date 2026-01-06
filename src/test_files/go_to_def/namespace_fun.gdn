@@ -5,5 +5,5 @@ reflect::lex("abc")
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":617,"end_offset":794,"line_number":36,"end_line_number":40,"column":0,"end_column":1,"path":"GDN_TEST_ROOT/__reflect.gdn"}
+// {"start_offset":618,"end_offset":797,"line_number":36,"end_line_number":40,"column":0,"end_column":1,"path":"GDN_TEST_ROOT/__reflect.gdn"}
 

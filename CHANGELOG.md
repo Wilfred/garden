@@ -2,6 +2,11 @@
 **Goal: LSP.**
 **Goal: Offer actions when runtime errors occur.**
 
+## Syntax
+
+Documentation is now written with triple slashes, e.g. `///`, to
+distinguish from normal comments.
+
 ## CLI
 
 Added a `format` subcommand that fixes indentation in Garden files.

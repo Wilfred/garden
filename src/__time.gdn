@@ -1,9 +1,9 @@
-// Get the current Unix timestamp (seconds since 1970-01-01 00:00:00 UTC).
-//
-// ```
-// import "__time.gdn" as time
-// time::unixtime() //-> 1702534800
-// ```
+/// Get the current Unix timestamp (seconds since 1970-01-01 00:00:00 UTC).
+///
+/// ```
+/// import "__time.gdn" as time
+/// time::unixtime() //-> 1702534800
+/// ```
 public fun unixtime(): Int {
   __BUILT_IN_IMPLEMENTATION
 }

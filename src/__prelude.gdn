@@ -1,17 +1,17 @@
 // Basic types.
 
-// The boolean type. This type represents when something is true or
-// false, such as predicates.
+/// The boolean type. This type represents when something is true or
+/// false, such as predicates.
 enum Bool {
   True,
   False,
 }
 
-// Negate this value.
-//
-// ```
-// True.not() //-> False
-// ```
+/// Negate this value.
+///
+/// ```
+/// True.not() //-> False
+/// ```
 public method not(this: Bool): Bool {
   match this {
     True => False,
@@ -24,44 +24,44 @@ test not {
   assert(False.not() == True)
 }
 
-// The unit type. Use this when your function doesn't have any useful
-// value to return, such as side-effecting functions.
+/// The unit type. Use this when your function doesn't have any useful
+/// value to return, such as side-effecting functions.
 enum Unit {
   Unit
 }
 
-// `Result` represents a value that succeeded, with `Ok(...)`, or
-// failed, with `Err(...)`.
-//
-// For example, reading a file might return `Ok("contents of file")`
-// or `Err("file did not exist")`.
+/// `Result` represents a value that succeeded, with `Ok(...)`, or
+/// failed, with `Err(...)`.
+///
+/// For example, reading a file might return `Ok("contents of file")`
+/// or `Err("file did not exist")`.
 enum Result<T, E> {
   Ok(T),
   Err(E),
 }
 
-// Write an arbitrary value to stdout, along with debugging metadata.
-//
-// Returns the input, so you can use `dbg` in larger expressions
-// `foo(dbg(bar()))`.
-//
-// ```
-// dbg([1, 2])
-// ```
+/// Write an arbitrary value to stdout, along with debugging metadata.
+///
+/// Returns the input, so you can use `dbg` in larger expressions
+/// `foo(dbg(bar()))`.
+///
+/// ```
+/// dbg([1, 2])
+/// ```
 public fun dbg<T>(value: T): T {
   println(string_repr(value))
   value
 }
 
-// Throw an exception because you haven't written this code yet.
-//
-// This is useful for work-in-progress code, and will trigger a
-// warning so you don't forget to finish the code later.
+/// Throw an exception because you haven't written this code yet.
+///
+/// This is useful for work-in-progress code, and will trigger a
+/// warning so you don't forget to finish the code later.
 public fun todo(): NoValue {
   throw("Not yet implemented")
 }
 
-// If this value is `Ok`, unwrap it, otherwise throw an exception.
+/// If this value is `Ok`, unwrap it, otherwise throw an exception.
 public method or_throw<T, E>(this: Result<T, E>): T {
   match this {
     Ok(v) => v
@@ -73,26 +73,26 @@ test result_or_throw {
   assert(Ok("foo").or_throw() == "foo")
 }
 
-// The absence of a value. This is an enum with no variants, so it is
-// impossible to create a value of type `NoValue`.
-//
-// This is useful when you have a function that never returns, such as
-// `throw()`.
-//
-// You can also encounter `NoValue` on empty containers. For example,
-// `[]` has type `List<NoValue>` and `None` has type `Option<NoValue>`.
-//
-// This is sometimes called 'the bottom type'.
+/// The absence of a value. This is an enum with no variants, so it is
+/// impossible to create a value of type `NoValue`.
+///
+/// This is useful when you have a function that never returns, such as
+/// `throw()`.
+///
+/// You can also encounter `NoValue` on empty containers. For example,
+/// `[]` has type `List<NoValue>` and `None` has type `Option<NoValue>`.
+///
+/// This is sometimes called 'the bottom type'.
 enum NoValue {}
 
 // String methods.
 
-// Does this string start with `s`?
-//
-// ```
-// "foobar".starts_with("foo") //-> True
-// "foobar".starts_with("abc") //-> False
-// ```
+/// Does this string start with `s`?
+///
+/// ```
+/// "foobar".starts_with("foo") //-> True
+/// "foobar".starts_with("abc") //-> False
+/// ```
 public method starts_with(this: String, s: String): Bool {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -106,12 +106,12 @@ test starts_with {
   assert("abc".starts_with("abcaa") == False)
 }
 
-// Does this string end with `s`?
-//
-// ```
-// "foobar".ends_with("bar") //-> True
-// "foobar".ends_with("abc") //-> False
-// ```
+/// Does this string end with `s`?
+///
+/// ```
+/// "foobar".ends_with("bar") //-> True
+/// "foobar".ends_with("abc") //-> False
+/// ```
 public method ends_with(this: String, s: String): Bool {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -125,11 +125,11 @@ test ends_with {
   assert("abc".ends_with("aabc") == False)
 }
 
-// Replace all occurrences of `before` with `after` in this string.
-//
-// ```
-// "abc xabc".replace("abc", "def") //-> "def xdef"
-// ```
+/// Replace all occurrences of `before` with `after` in this string.
+///
+/// ```
+/// "abc xabc".replace("abc", "def") //-> "def xdef"
+/// ```
 public method replace(this: String, before: String, after: String): String {
   let parts: List<String> = []
 
@@ -156,12 +156,12 @@ test string_replace {
   assert("abcd cd".replace("cd", "x") == "abx x")
 }
 
-// Split this string on the first occurrence of `needle`, and return
-// the text before and after `needle`.
-//
-// ```
-// "abcd".split_once("b") //-> Some(["a", "cd"])
-// ```
+/// Split this string on the first occurrence of `needle`, and return
+/// the text before and after `needle`.
+///
+/// ```
+/// "abcd".split_once("b") //-> Some(["a", "cd"])
+/// ```
 public method split_once(this: String, needle: String): Option<(String, String)> {
   match this.index_of(needle) {
     None => None
@@ -182,11 +182,11 @@ test split_once {
   assert("abcbe".split_once("b") == Some(("a", "cbe")))
 }
 
-// Join `items` (a list of strings) with this string as a separator.
-//
-// ```
-// ":".join(["a", "b", "c"]) //-> "a:b:c"
-// ```
+/// Join `items` (a list of strings) with this string as a separator.
+///
+/// ```
+/// ":".join(["a", "b", "c"]) //-> "a:b:c"
+/// ```
 public method join(this: String, items: List<String>): String {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -197,12 +197,12 @@ test join {
   assert(" ".join(["x", "y"]) == "x y")
 }
 
-// Does this string contain `substring`?
-//
-// ```
-// "abcd".contains("bc") //-> True
-// "abcd".contains("x") //-> False
-// ```
+/// Does this string contain `substring`?
+///
+/// ```
+/// "abcd".contains("bc") //-> True
+/// "abcd".contains("x") //-> False
+/// ```
 public method contains(this: String, substring: String): Bool {
   if substring.len() > this.len() {
     return False
@@ -221,11 +221,11 @@ public method contains(this: String, substring: String): Bool {
   False
 }
 
-// Remove whitespace at the beginning of this string.
-//
-// ```
-// " foo ".trim_left() //-> "foo "
-// ```
+/// Remove whitespace at the beginning of this string.
+///
+/// ```
+/// " foo ".trim_left() //-> "foo "
+/// ```
 public method trim_left(this: String): String {
   let i = 0
   while i < this.len() {
@@ -247,11 +247,11 @@ test trim_left {
   assert("a ".trim_left() == "a ")
 }
 
-// Remove whitespace at the end of this string.
-//
-// ```
-// " foo ".trim_right() //-> " foo"
-// ```
+/// Remove whitespace at the end of this string.
+///
+/// ```
+/// " foo ".trim_right() //-> " foo"
+/// ```
 public method trim_right(this: String): String {
   let i = this.len() - 1
   while i >= 0 {
@@ -273,7 +273,7 @@ test trim_right {
   assert("a  ".trim_right() == "a")
 }
 
-// Remove whitespace from both the start and end of this string.
+/// Remove whitespace from both the start and end of this string.
 public method trim(this: String): String {
   this.trim_left().trim_right()
 }
@@ -286,13 +286,13 @@ test trim {
 }
 
 
-// Returns this string without the suffix specified. If this string
-// does not end with the suffix, return the string unchanged.
-//
-// ```
-// "foo".strip_suffix("o") //-> "fo"
-// "bar".strip_suffix("o") //-> "bar"
-// ```
+/// Returns this string without the suffix specified. If this string
+/// does not end with the suffix, return the string unchanged.
+///
+/// ```
+/// "foo".strip_suffix("o") //-> "fo"
+/// "bar".strip_suffix("o") //-> "bar"
+/// ```
 public method strip_suffix(this: String, suffix: String): String {
   if this.ends_with(suffix) {
     return this.substring(0, this.len() - suffix.len())
@@ -306,14 +306,14 @@ test strip_suffix {
   assert("abcdef".strip_suffix("xyz") == "abcdef")
 }
 
-// Returns this string without the prefix specified. If this string
-// does not start with the prefix, return the string unchanged.
-//
-// ```
-// "foo".strip_prefix("f") //-> "oo"
-// "bar".strip_prefix("f") //-> "bar"
-// "ffoo".strip_prefix("f") //-> "foo"
-// ```
+/// Returns this string without the prefix specified. If this string
+/// does not start with the prefix, return the string unchanged.
+///
+/// ```
+/// "foo".strip_prefix("f") //-> "oo"
+/// "bar".strip_prefix("f") //-> "bar"
+/// "ffoo".strip_prefix("f") //-> "foo"
+/// ```
 public method strip_prefix(this: String, prefix: String): String {
   if this.starts_with(prefix) {
     // return this.substring(prefix.len(), this.len(), 1)
@@ -328,14 +328,14 @@ test strip_prefix {
   assert("abcdef".strip_prefix("xyz") == "abcdef")
 }
 
-// Split this string on occurrences of `needle`.
-//
-// ```
-// "a,b".split(",") //-> ["a", "b"]
-// "ab".split(",") //-> ["ab"]
-// "a,,b,".split(",") //-> ["a", "", "b", ""]
-// "".split(",") //-> []
-// ```
+/// Split this string on occurrences of `needle`.
+///
+/// ```
+/// "a,b".split(",") //-> ["a", "b"]
+/// "ab".split(",") //-> ["ab"]
+/// "a,,b,".split(",") //-> ["a", "", "b", ""]
+/// "".split(",") //-> []
+/// ```
 public method split(this: String, needle: String): List<String> {
   if this == "" {
     return []
@@ -369,11 +369,11 @@ test split {
   assert("a,b,".split(",") == ["a", "b", ""])
 }
 
-// Return this string as a list of individual characters.
-//
-// ```
-// "abcc".chars() == ["a", "b", "c", "c"]
-// ```
+/// Return this string as a list of individual characters.
+///
+/// ```
+/// "abcc".chars() == ["a", "b", "c", "c"]
+/// ```
 public method chars(this: String): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -382,22 +382,22 @@ test string_chars {
   assert("abcc".chars() == ["a", "b", "c", "c"])
 }
 
-// A filesystem path.
+/// A filesystem path.
 struct Path {
   p: String,
 }
 
-// Get the parent for this path. For directories, this is the parent
-// directory. For files, this is the containing directory.
-//
-// This always returns a `Path`, so the root directory (i.e. `/`) is
-// returned as-is.
-//
-// ```
-// Path{ p: "/foo/bar.txt" }.parent() //-> Path{ p: "/foo" }
-// Path{ p: "/foo/bar/" }.parent() //-> Path{ p: "/foo" }
-// Path{ p: "/" }.parent() //-> Path{ p: "/" }
-// ```
+/// Get the parent for this path. For directories, this is the parent
+/// directory. For files, this is the containing directory.
+///
+/// This always returns a `Path`, so the root directory (i.e. `/`) is
+/// returned as-is.
+///
+/// ```
+/// Path{ p: "/foo/bar.txt" }.parent() //-> Path{ p: "/foo" }
+/// Path{ p: "/foo/bar/" }.parent() //-> Path{ p: "/foo" }
+/// Path{ p: "/" }.parent() //-> Path{ p: "/" }
+/// ```
 public method parent(this: Path): Option<Path> {
   let p = this.p.strip_suffix("/")
   if p == "" {
@@ -420,7 +420,7 @@ test path_parent {
   assert(Path{ p: "/foo/bar/" }.parent() == Some(Path{ p: "/foo" }))
 }
 
-// Append `component` to this path.
+/// Append `component` to this path.
 public method join(this: Path, component: String): Path {
   let p = if this.p.ends_with("/") {
     this.p ^ component
@@ -442,8 +442,8 @@ test path_join {
   assert(root.join("baz").p == "/baz")
 }
 
-// The extension of this path, if this path is a file whose name
-// includes a ".".
+/// The extension of this path, if this path is a file whose name
+/// includes a ".".
 public method extension(this: Path): Option<String> {
   let name = match this.file_name() {
     Some(name) => name
@@ -453,13 +453,13 @@ public method extension(this: Path): Option<String> {
   name.split(".").last()
 }
 
-// The last component of this path.
-//
-// ```
-// Path{ p: "/foo/bar.txt" }.file_name() //-> Some("bar.txt")
-// Path{ p: "/foo/" }.file_name() //-> Some("foo")
-// Path{ p: "/" }.file_name() //-> None
-// ```
+/// The last component of this path.
+///
+/// ```
+/// Path{ p: "/foo/bar.txt" }.file_name() //-> Some("bar.txt")
+/// Path{ p: "/foo/" }.file_name() //-> Some("foo")
+/// Path{ p: "/" }.file_name() //-> None
+/// ```
 public method file_name(this: Path): Option<String> {
   if this.p == "/" {
     return None
@@ -474,13 +474,13 @@ test path_file_name {
   assert(Path{ p: "/"}.file_name() == None)
 }
 
-// Set the extension of the filename to `new_ext`.
-//
-// ```
-// Path{ p: "/foo/bar"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
-// Path{ p: "/foo/bar.txt"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
-// Path{ p: "/foo/bar.txt.gz"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
-// ```
+/// Set the extension of the filename to `new_ext`.
+///
+/// ```
+/// Path{ p: "/foo/bar"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
+/// Path{ p: "/foo/bar.txt"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
+/// Path{ p: "/foo/bar.txt.gz"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
+/// ```
 public method set_extension(this: Path, new_ext: String): Path {
   let new_ext = "." ^ new_ext
   match this.file_name() {
@@ -508,11 +508,11 @@ test path_set_extension {
   assert(Path{ p: "/foo/bar.txt.gz"}.set_extension("log") == Path{ p: "/foo/bar.log"} )
 }
 
-// Return a list from `i` (inclusive) to `j` (exclusive).
-//
-// ```
-// range(1, 5) //-> [1, 2, 3, 4]
-// ```
+/// Return a list from `i` (inclusive) to `j` (exclusive).
+///
+/// ```
+/// range(1, 5) //-> [1, 2, 3, 4]
+/// ```
 public fun range(i: Int, j: Int): List<Int> {
   let items: List<Int> = []
   while i < j {
@@ -528,26 +528,26 @@ test range {
   assert(range(11, 10) == [])
 }
 
-// An immutable sequence of values. For example, `[1, 2, 3]` is a
-// `List<Int>`.
+/// An immutable sequence of values. For example, `[1, 2, 3]` is a
+/// `List<Int>`.
 struct List<T> {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
-// Return a new list with the value added to the end.
-//
-// ```
-// [10].append(11) //-> [10, 11]
-// ```
+/// Return a new list with the value added to the end.
+///
+/// ```
+/// [10].append(11) //-> [10, 11]
+/// ```
 public method append<T>(this: List<T>, value: T): List<T> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Does this list contain `item`?
-//
-// ```
-// [10, 11, 12].contains(12) //-> True
-// ```
+/// Does this list contain `item`?
+///
+/// ```
+/// [10, 11, 12].contains(12) //-> True
+/// ```
 public method contains<T>(this: List<T>, item: T): Bool {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -558,15 +558,15 @@ test list_contains {
   assert([12, 11, 10, 10].contains(10) == True)
 }
 
-// Get the item in the list at the index specified.
-//
-// Returns `None` if the index is less than 0 or if the index is greater
-// than `length - 1`.
-//
-// ```
-// [4, 5, 6].get(1) //-> Some(5)
-// [4, 5, 6].get(3) //-> None
-// ```
+/// Get the item in the list at the index specified.
+///
+/// Returns `None` if the index is less than 0 or if the index is greater
+/// than `length - 1`.
+///
+/// ```
+/// [4, 5, 6].get(1) //-> Some(5)
+/// [4, 5, 6].get(3) //-> None
+/// ```
 public method get<T>(this: List<T>, index: Int): Option<T> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -579,16 +579,16 @@ test list_get {
   assert([].get(-1) == None)
 }
 
-// Return the length of the list.
-//
-// ```
-// [10, 11, 12].len() //-> 3
-// ```
+/// Return the length of the list.
+///
+/// ```
+/// [10, 11, 12].len() //-> 3
+/// ```
 public method len<T>(this: List<T>): Int {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Get the first item in this list, if the list is not empty.
+/// Get the first item in this list, if the list is not empty.
 public method first<T>(this: List<T>): Option<T> {
   this.get(0)
 }
@@ -598,7 +598,7 @@ test first {
   assert([123].first() == Some(123))
 }
 
-// Get the last item in this list, if the list is not empty.
+/// Get the last item in this list, if the list is not empty.
 public method last<T>(this: List<T>): Option<T> {
   this.get(this.len() - 1)
 }
@@ -608,8 +608,8 @@ test last {
   assert([123].last() == Some(123))
 }
 
-// Return a copy of this list with the items where `f(item)` returns
-// True.
+/// Return a copy of this list with the items where `f(item)` returns
+/// True.
 public method filter<T>(this: List<T>, f: Fun<(T), Bool>): List<T> {
   let result: List<T> = []
 
@@ -626,7 +626,7 @@ test filter {
   assert([1, 2].filter(fun(_) { True }) == [1, 2])
 }
 
-// Is this list empty?
+/// Is this list empty?
 public method is_empty<T>(this: List<T>): Bool {
   this.len() == 0
 }
@@ -636,7 +636,7 @@ test is_empty {
   assert([1].is_empty().not())
 }
 
-// Is this list non-empty?
+/// Is this list non-empty?
 public method is_non_empty<T>(this: List<T>): Bool {
   this.len() != 0
 }
@@ -646,12 +646,12 @@ test is_non_empty {
   assert([1].is_non_empty())
 }
 
-// Call `f` on every item in this list, and return a list of the
-// results.
-//
-// ```
-// [1, 2].map(fun(x: Int) { x + 1 }) //-> [2, 3]
-// ```
+/// Call `f` on every item in this list, and return a list of the
+/// results.
+///
+/// ```
+/// [1, 2].map(fun(x: Int) { x + 1 }) //-> [2, 3]
+/// ```
 public method map<T, U>(this: List<T>, f: Fun<(T), U>): List<U> {
   let items: List<U> = []
   for item in this {
@@ -666,14 +666,14 @@ test list_map {
   assert(incremented == [2, 3, 4])
 }
 
-// If `value` is present in this list, return the index of the first
-// instance.
-//
-// ```
-// ["A", "B"].index_of("B") //-> Some(1)
-// ["A", "B", "B"].index_of("B") //-> Some(1)
-// ["A", "B"].index_of("C") //-> None
-// ```
+/// If `value` is present in this list, return the index of the first
+/// instance.
+///
+/// ```
+/// ["A", "B"].index_of("B") //-> Some(1)
+/// ["A", "B", "B"].index_of("B") //-> Some(1)
+/// ["A", "B"].index_of("C") //-> None
+/// ```
 public method index_of<T>(this: List<T>, value: T): Option<Int> {
   for (i, v) in this.enumerate() {
     if v == value {
@@ -690,14 +690,14 @@ test list_index_of {
   assert([10, 11, 11, 12].index_of(11) == Some(1))
 }
 
-// Return a new list consisting of the items from index `i`
-// (inclusive) to index `j` (exclusive). If `j` is negative, count
-// backwards from the end.
-//
-// ```
-// [10, 11, 12].slice(0, 2) //-> [10, 11]
-// [10, 11, 12].slice(1, -1) //-> [11]
-// ```
+/// Return a new list consisting of the items from index `i`
+/// (inclusive) to index `j` (exclusive). If `j` is negative, count
+/// backwards from the end.
+///
+/// ```
+/// [10, 11, 12].slice(0, 2) //-> [10, 11]
+/// [10, 11, 12].slice(1, -1) //-> [11]
+/// ```
 public method slice<T>(this: List<T>, i: Int, j: Int): List<T> {
   if (j < 0) {
     j = this.len() + j
@@ -725,12 +725,12 @@ test list_slice {
   assert([10, 11, 12].slice(0, -1) == [10, 11])
 }
 
-// Return a new list consisting of the items themselves, plus the
-// index of the position of each value.
-//
-// ```
-// ["a", "b"].enumerate() //-> [(0, "a"), (1, "b")]
-// ```
+/// Return a new list consisting of the items themselves, plus the
+/// index of the position of each value.
+///
+/// ```
+/// ["a", "b"].enumerate() //-> [(0, "a"), (1, "b")]
+/// ```
 public method enumerate<T>(this: List<T>): List<(Int, T)> {
   let items: List<(Int, T)> = []
 
@@ -748,14 +748,14 @@ test list_enumerate {
   assert(["a", "b"].enumerate() == [(0, "a"), (1, "b")])
 }
 
-// The option type. Use this when you might have a value, but might
-// not.
+/// The option type. Use this when you might have a value, but might
+/// not.
 enum Option<T> {
   Some(T),
   None,
 }
 
-/// Return True if this value is `Some`.
+//// Return True if this value is `Some`.
 public method is_some<T>(this: Option<T>): Bool {
   match this {
     Some(_) => True,
@@ -763,7 +763,7 @@ public method is_some<T>(this: Option<T>): Bool {
   }
 }
 
-/// Return True if this value is `None`.
+//// Return True if this value is `None`.
 public method is_none<T>(this: Option<T>): Bool {
   match this {
     Some(_) => False,
@@ -771,7 +771,7 @@ public method is_none<T>(this: Option<T>): Bool {
   }
 }
 
-// If this value is `Some(value)`, unwrap it, otherwise throw an exception.
+/// If this value is `Some(value)`, unwrap it, otherwise throw an exception.
 public method or_throw<T>(this: Option<T>): T {
   match this {
     Some(v) => v,
@@ -783,12 +783,12 @@ test option_or_throw {
   assert(Some(123).or_throw() == 123)
 }
 
-// If this value is `Some(x)`, return `x`, otherwise return `value`.
-//
-// ```
-// Some(1).or_value(5) //-> 1
-// None.or_value(5) //-> 5
-// ```
+/// If this value is `Some(x)`, return `x`, otherwise return `value`.
+///
+/// ```
+/// Some(1).or_value(5) //-> 1
+/// None.or_value(5) //-> 5
+/// ```
 public method or_value<T>(this: Option<T>, value: T): T {
   match this {
     Some(v) => v,
@@ -803,79 +803,79 @@ test option_or_value {
   assert(n.or_value(5) == 5)
 }
 
-// A Unicode string, such as `"hello world"`.
+/// A Unicode string, such as `"hello world"`.
 struct String {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
-// A 64-bit signed integer, such as `1234`, `10_000` or `-5`.
+/// A 64-bit signed integer, such as `1234`, `10_000` or `-5`.
 struct Int {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
-// Stop the program immediately, and report the error message given.
-//
-// ```
-// throw("Computer is melting!")
-// ```
+/// Stop the program immediately, and report the error message given.
+///
+/// ```
+/// throw("Computer is melting!")
+/// ```
 public fun throw(message: String): NoValue {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Write a string to stdout.
-//
-// See also `println`.
-//
-// ```
-// print("hello world\n")
-// ```
+/// Write a string to stdout.
+///
+/// See also `println`.
+///
+/// ```
+/// print("hello world\n")
+/// ```
 public fun print(_: String): Unit {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Write a string to stdout, with a newline appended.
-//
-// ```
-// println("hello world")
-// ```
+/// Write a string to stdout, with a newline appended.
+///
+/// ```
+/// println("hello world")
+/// ```
 public fun println(_: String): Unit {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Execute the given string as a shell command, and return stdout
-// concatenated with stderr.
-//
-// ```
-// shell("ls", ["-l", "/"])
-// ```
+/// Execute the given string as a shell command, and return stdout
+/// concatenated with stderr.
+///
+/// ```
+/// shell("ls", ["-l", "/"])
+/// ```
 public fun shell(command: String, args: List<String>): Result<String, String> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Return the pretty-printed string representation of this value.
-//
-// ```
-// string_repr(123) //-> "123"
-// ```
+/// Return the pretty-printed string representation of this value.
+///
+/// ```
+/// string_repr(123) //-> "123"
+/// ```
 public fun string_repr<T>(value: T): String {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Return the path of the directory that contains the current source
-// file. Returns None when run directly in a CLI or JSON session.
-//
-// ```
-// source_directory() //-> Some(Path{ p: "/home/yourname/awesome_garden_project" })
-// ```
+/// Return the path of the directory that contains the current source
+/// file. Returns None when run directly in a CLI or JSON session.
+///
+/// ```
+/// source_directory() //-> Some(Path{ p: "/home/yourname/awesome_garden_project" })
+/// ```
 public fun source_directory(): Option<Path> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Return the number of characters (codepoints) in the string.
-//
-// ```
-// "abc".len() //-> 3
-// ```
+/// Return the number of characters (codepoints) in the string.
+///
+/// ```
+/// "abc".len() //-> 3
+/// ```
 public method len(this: String): Int {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -885,11 +885,11 @@ test string_len {
   assert("☃".len() == 1)
 }
 
-// Split this string into a list of lines.
-//
-// ```
-// "a\nb".lines() //-> ["a", "b"]
-// ```
+/// Split this string into a list of lines.
+///
+/// ```
+/// "a\nb".lines() //-> ["a", "b"]
+/// ```
 public method lines(this: String): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -901,13 +901,13 @@ test string_lines {
   assert("a\nb\n".lines() == ["a", "b"])
 }
 
-// Return the substring of the string between the indexes
-// specified. Indexes are specified in character offsets, not bytes.
-//
-// ```
-// "abcdef".substring(1, 3) //-> "bc"
-// "abc".substring(1, 99) //-> "bc"
-// ```
+/// Return the substring of the string between the indexes
+/// specified. Indexes are specified in character offsets, not bytes.
+///
+/// ```
+/// "abcdef".substring(1, 3) //-> "bc"
+/// "abc".substring(1, 99) //-> "bc"
+/// ```
 public method substring(this: String, from_index: Int, to_index: Int): String {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -917,12 +917,12 @@ test string_substring {
   assert("abc".substring(1, 99) == "bc")
 }
 
-// Find the first index of `needle` in `this`. Positions are in
-// character offsets, not bytes.
-//
-// ```
-// "abc".index_of("c") //-> Some(2)
-// ```
+/// Find the first index of `needle` in `this`. Positions are in
+/// character offsets, not bytes.
+///
+/// ```
+/// "abc".index_of("c") //-> Some(2)
+/// ```
 public method index_of(this: String, needle: String): Option<Int> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -938,12 +938,12 @@ test string_index_of {
   assert("☃c".index_of("c") == Some(1))
 }
 
-// Parse this string as an integer, returning Some if successful.
-//
-// ```
-// "123".as_int() //-> Some(123)
-// "abc".as_int() //-> None
-// ```
+/// Parse this string as an integer, returning Some if successful.
+///
+/// ```
+/// "123".as_int() //-> Some(123)
+/// "abc".as_int() //-> None
+/// ```
 public method as_int(this: String): Option<Int> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -959,16 +959,16 @@ test string_as_int {
   assert(" 123 ".as_int() == None)
 }
 
-// Return True if this path exists.
-//
-// ```
-// Path{ p: "/" }.exists() //-> True
-// Path{ p: "/no_such_file" }.exists() //-> False
-// ```
-//
-// Note that a path may exist without the current user having
-// permission to read it. This function still returns `True` in that
-// situation.
+/// Return True if this path exists.
+///
+/// ```
+/// Path{ p: "/" }.exists() //-> True
+/// Path{ p: "/no_such_file" }.exists() //-> False
+/// ```
+///
+/// Note that a path may exist without the current user having
+/// permission to read it. This function still returns `True` in that
+/// situation.
 public method exists(this: Path): Bool {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -978,11 +978,11 @@ test path_exists {
   assert(Path{ p: "/no_such_dir_for_garden_test" }.exists() == False)
 }
 
-// Read the contents of `path` as a string.
-//
-// ```
-// Path{ p: "/tmp/foo.txt" }.read()
-// ```
+/// Read the contents of `path` as a string.
+///
+/// ```
+/// Path{ p: "/tmp/foo.txt" }.read()
+/// ```
 public method read(this: Path): Result<String, String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -991,23 +991,23 @@ test path_read {
   assert(Path{ p: "/dev/null" }.read() == Ok(""))
 }
 
-// Get the arguments passed when this program was run.
-//
-// For example, if the shell command was `garden run my_program.gdn
-// --foo`, then this function will return `["--foo"]`.
+/// Get the arguments passed when this program was run.
+///
+/// For example, if the shell command was `garden run my_program.gdn
+/// --foo`, then this function will return `["--foo"]`.
 public fun shell_arguments(): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Get the value of an environment variable.
-//
-// Returns `Some(value)` if the environment variable is set, or `None`
-// if it is not set.
-//
-// ```
-// get_env("HOME") //-> Some("/home/user")
-// get_env("NO_SUCH_VAR") //-> None
-// ```
+/// Get the value of an environment variable.
+///
+/// Returns `Some(value)` if the environment variable is set, or `None`
+/// if it is not set.
+///
+/// ```
+/// get_env("HOME") //-> Some("/home/user")
+/// get_env("NO_SUCH_VAR") //-> None
+/// ```
 public fun get_env(name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -1020,66 +1020,66 @@ test get_env {
   assert(nonexistent.is_none())
 }
 
-// A collection of functions and types from importing a file.
+/// A collection of functions and types from importing a file.
 struct Namespace {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
-// An immutable key-value data structure. Keys must be strings.
-//
-// For example, `Dict["x" => 1, "y" ^ "z" => 2]` is a `Dict<Int>`.
-//
-// Dict items are evaluated in order, and the last value wins if there
-// are duplicates.
-//
-// ```
-// Dict["a" => "hello", "a" => "world"]
-// //-> Dict["a" => "world"]
-// ```
+/// An immutable key-value data structure. Keys must be strings.
+///
+/// For example, `Dict["x" => 1, "y" ^ "z" => 2]` is a `Dict<Int>`.
+///
+/// Dict items are evaluated in order, and the last value wins if there
+/// are duplicates.
+///
+/// ```
+/// Dict["a" => "hello", "a" => "world"]
+/// //-> Dict["a" => "world"]
+/// ```
 struct Dict<T> {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
-// Look up `key` in this dict.
-//
-// ```
-// let scores = Dict["Mario" => 10, "Luigi" => 8]
-// scores.get("Mario") //-> Some(10)
-// scores.get("Bowser") //-> None
-// ```
+/// Look up `key` in this dict.
+///
+/// ```
+/// let scores = Dict["Mario" => 10, "Luigi" => 8]
+/// scores.get("Mario") //-> Some(10)
+/// scores.get("Bowser") //-> None
+/// ```
 public method get<T>(this: Dict<T>, key: String): Option<T> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Return a new dict with `key` associated with `value`.
-//
-// ```
-// let scores = Dict["Mario" => 10]
-// scores.set("Mario", 11) //-> Dict["Mario" => 11]
-// 
-// scores.set("Luigi", 8)
-// //-> Dict["Mario" => 10, "Luigi" => 8]
-// ```
+/// Return a new dict with `key` associated with `value`.
+///
+/// ```
+/// let scores = Dict["Mario" => 10]
+/// scores.set("Mario", 11) //-> Dict["Mario" => 11]
+///
+/// scores.set("Luigi", 8)
+/// //-> Dict["Mario" => 10, "Luigi" => 8]
+/// ```
 public method set<T>(this: Dict<T>, key: String, Value: T): Dict<T> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Return a list of all the items in this dict. Items are returned in
-// alphabetical order.
-//
-// ```
-// let scores = Dict["Mario" => 10, "Luigi" => 8]
-// scores.items() //-> [("Luigi", 8), ("Mario", 10)]
-// ```
+/// Return a list of all the items in this dict. Items are returned in
+/// alphabetical order.
+///
+/// ```
+/// let scores = Dict["Mario" => 10, "Luigi" => 8]
+/// scores.items() //-> [("Luigi", 8), ("Mario", 10)]
+/// ```
 public method items<T>(this: Dict<T>): List<(String, T)> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Return the larger value of these two integers.
-// 
-// ```
-// max(1, 2) //-> 2
-// ```
+/// Return the larger value of these two integers.
+///
+/// ```
+/// max(1, 2) //-> 2
+/// ```
 public fun max(x: Int, y: Int): Int {
   if x >= y {
     x
@@ -1092,11 +1092,11 @@ test max {
   assert(max(1, 2) == 2)
 }
 
-// Return the smaller value of these two integers.
-// 
-// ```
-// min(1, 2) //-> 1
-// ```
+/// Return the smaller value of these two integers.
+///
+/// ```
+/// min(1, 2) //-> 1
+/// ```
 public fun min(x: Int, y: Int): Int {
   if x <= y {
     x
@@ -1109,11 +1109,11 @@ test min {
   assert(min(1, 2) == 1)
 }
 
-// A function, which is a value that can be called with arguments.
-//
-// ```
-// let f: Fun<(Int, Int), Int> = fun(x, y) { x + y }
-// ```
+/// A function, which is a value that can be called with arguments.
+///
+/// ```
+/// let f: Fun<(Int, Int), Int> = fun(x, y) { x + y }
+/// ```
 struct Fun<Args, Out> {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }

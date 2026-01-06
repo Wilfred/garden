@@ -2,7 +2,7 @@
 import "__prelude.gdn" as prelude
 import "__fs.gdn" as fs
 
-// Check the syntax of `src`.
+/// Check the syntax of `src`.
 public fun check_snippet(src: String): Result<Unit, List<String>> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -34,8 +34,8 @@ test check_snippet_bad_name {
   }
 }
 
-// Split `src` into individual lexed tokens, along with their offsets
-// in the original string.
+/// Split `src` into individual lexed tokens, along with their offsets
+/// in the original string.
 public fun lex(src: String): List<(Int, String)> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -54,8 +54,8 @@ test lex {
   assert(lex("a // b") == [(0, "a"), (2, "// b")])
 }
 
-// Get the doc comment for `fun_name` in the namespace `ns`. The
-// string does not include the leading `//` comment.
+/// Get the doc comment for `fun_name` in the namespace `ns`. The
+/// string does not include the leading `//` comment.
 public fun doc_comment(ns: Namespace, fun_name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -67,7 +67,7 @@ test doc_comment {
   }
 }
 
-// Get the doc comment for type `type_name`.
+/// Get the doc comment for type `type_name`.
 public fun doc_comment_for_type(type_name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -84,7 +84,7 @@ test doc_comment_for_type {
   }
 }
 
-// Get the doc comment for the method `method_name` on `type_name`.
+/// Get the doc comment for the method `method_name` on `type_name`.
 public fun doc_comment_for_method(type_name: String, method_name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -96,8 +96,8 @@ test doc_comment_for_method {
   }
 }
 
-// A list of all the type names in the prelude, `String`, `Option` and
-// so on. The list is sorted alphabetically.
+/// A list of all the type names in the prelude, `String`, `Option` and
+/// so on. The list is sorted alphabetically.
 public fun prelude_types(): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -110,7 +110,7 @@ test prelude_types {
   assert(prelude_types().first() == Some("Bool"))
 }
 
-// All the keywords in Garden. Variables cannot use these as names.
+/// All the keywords in Garden. Variables cannot use these as names.
 public fun keywords(): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -119,14 +119,14 @@ test keywords {
   assert(keywords().contains("if"))
 }
 
-// All the operators in Garden.
+/// All the operators in Garden.
 public fun operators(): List<String> {
   // Missing: ["/"]
   ["+", "+=", "-", "-=", "*", "**", "==", "!=", "=", "^",
     ">", "<", ">=", "<=", "%"]
 }
 
-// Get the source code for the type definition of `name`.
+/// Get the source code for the type definition of `name`.
 public fun source_for_type(name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -134,7 +134,7 @@ public fun source_for_type(name: String): Option<String> {
 test source_for_type {
   match source_for_type("Unit") {
     Some(source) => {
-      assert(source.starts_with("// "))
+      assert(source.starts_with("/// "))
     }
     None => {
       assert(False)
@@ -142,7 +142,7 @@ test source_for_type {
   }
 }
 
-// Get the source code for the function definition of `name`.
+/// Get the source code for the function definition of `name`.
 public fun source_for_fun(ns: Namespace, name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -151,7 +151,7 @@ test source_for_fun {
   // Built-in function.
   match source_for_fun(prelude, "throw") {
     Some(source) => {
-      assert(source.starts_with("// "))
+      assert(source.starts_with("/// "))
     }
     None => {
       assert(False)
@@ -161,7 +161,7 @@ test source_for_fun {
   // Function implemented in Garden.
   match source_for_fun(prelude, "todo") {
     Some(source) => {
-      assert(source.starts_with("// "))
+      assert(source.starts_with("/// "))
     }
     None => {
       assert(False)
@@ -169,7 +169,7 @@ test source_for_fun {
   }
 }
 
-// Get the source code for the function definition of `name`.
+/// Get the source code for the function definition of `name`.
 public fun source_for_method(type_name: String, method_name): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -177,7 +177,7 @@ public fun source_for_method(type_name: String, method_name): Option<String> {
 test source_for_method {
   match source_for_method("String", "len") {
     Some(source) => {
-      assert(source.starts_with("// "))
+      assert(source.starts_with("/// "))
     }
     None => {
       assert(False)
@@ -185,7 +185,7 @@ test source_for_method {
   }
 }
 
-// All the `external` functions in `ns`.
+/// All the `external` functions in `ns`.
 public fun namespace_functions(ns: Namespace): List<String> {
   // This is deliberately not a method on Namespace, so code
   // completion isn't confusing.
@@ -197,7 +197,7 @@ test namespace_functions {
   assert(items.contains("list_directory"))
 }
 
-// Get all the methods defined on a given type.
+/// Get all the methods defined on a given type.
 public fun methods_for_type(type_name: String): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -207,7 +207,7 @@ test methods_for_type {
   assert(string_methods.contains("len"))
 }
 
-// Get all the built-in file names that can be imported.
+/// Get all the built-in file names that can be imported.
 public fun built_in_files(): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }

@@ -2281,7 +2281,12 @@ fn join_comments(comments: &[(Position, &str)]) -> String {
     let mut comment_texts = contiguous_comments
         .iter()
         .map(|comment| {
-            let comment_text = comment.strip_prefix("//").unwrap_or(comment);
+            let comment_text = if comment.starts_with("///") {
+                comment.strip_prefix("///").unwrap()
+            } else {
+                comment.strip_prefix("//").unwrap_or(comment)
+            };
+
             comment_text.strip_prefix(" ").unwrap_or(comment_text)
         })
         .collect::<Vec<_>>();

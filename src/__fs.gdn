@@ -1,11 +1,11 @@
-// Write `content` to file `path`.
-//
-// If `path` already exists, its content is replaced with `content`.
-//
-// ```
-// import "__fs.gdn" as fs
-// fs::write_file("hello world", Path{ p: "/tmp/foo.txt" })
-// ```
+/// Write `content` to file `path`.
+///
+/// If `path` already exists, its content is replaced with `content`.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::write_file("hello world", Path{ p: "/tmp/foo.txt" })
+/// ```
 public fun write_file(content: String, path: Path): Result<Unit, String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -15,15 +15,15 @@ test write_file {
   write_file("hello world", Path{ p: "/tmp/file_from_garden_testing.txt" })
 }
 
-// Copy the file from `src` to `dest`.
-//
-// If `dest` already exists, its content is replaced with the content
-// from `src`.
-//
-// ```
-// import "__fs.gdn" as fs
-// fs::copy_file(Path{ p: "/tmp/source.txt" }, Path{ p: "/tmp/destination.txt" })
-// ```
+/// Copy the file from `src` to `dest`.
+///
+/// If `dest` already exists, its content is replaced with the content
+/// from `src`.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::copy_file(Path{ p: "/tmp/source.txt" }, Path{ p: "/tmp/destination.txt" })
+/// ```
 public fun copy_file(src: Path, dest: Path): Result<Unit, String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -36,14 +36,14 @@ test copy_file {
   copy_file(src_path, dest_path)
 }
 
-// Remove the file at `path`.
-//
-// Returns an error if the file could not be removed or does not exist.
-//
-// ```
-// import "__fs.gdn" as fs
-// fs::remove_file(Path{ p: "/tmp/my_file.txt" })
-// ```
+/// Remove the file at `path`.
+///
+/// Returns an error if the file could not be removed or does not exist.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::remove_file(Path{ p: "/tmp/my_file.txt" })
+/// ```
 public fun remove_file(path: Path): Result<Unit, String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -54,18 +54,18 @@ test remove_file {
   remove_file(test_path)
 }
 
-// List the contents of the specified directory.
-//
-// ```
-// import "__fs.gdn" as fs
-// fs::list_directory(Path{ p: "/" })
-// ```
+/// List the contents of the specified directory.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::list_directory(Path{ p: "/" })
+/// ```
 public fun list_directory(path: Path): Result<List<Path>, String> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Kludge to perform a runtime check that list_directory returns a
-// list of paths.
+/// Kludge to perform a runtime check that list_directory returns a
+/// list of paths.
 fun takes_list_of_paths(_: List<Path>) {}
 
 test list_directory {
@@ -77,50 +77,50 @@ test list_directory {
   }
 }
 
-// Return the path of the current working directory.
-//
-// ```
-// import "__fs.gdn" as fs
-// fs::working_directory() //-> Path{ p: "/home/yourname/awesome_garden_project" }
-// ```
+/// Return the path of the current working directory.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::working_directory() //-> Path{ p: "/home/yourname/awesome_garden_project" }
+/// ```
 public fun working_directory(): Path {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Change the current working directory to `path`.
-//
-// This affects `working_directory()` as well as imports used in
-// `check_snippet` arguments.
-//
-// ```
-// import "__fs.gdn" as fs
-// fs::set_working_directory(Path{ p: "/tmp" })
-// ```
+/// Change the current working directory to `path`.
+///
+/// This affects `working_directory()` as well as imports used in
+/// `check_snippet` arguments.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::set_working_directory(Path{ p: "/tmp" })
+/// ```
 public fun set_working_directory(path: Path): Result<Unit, String> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Create a directory at `path`.
-//
-// Returns an error if the directory could not be created or already
-// exists.
-//
-// ```
-// import "__fs.gdn" as fs
-// fs::create_dir(Path{ p: "/tmp/my_new_directory" })
-// ```
+/// Create a directory at `path`.
+///
+/// Returns an error if the directory could not be created or already
+/// exists.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::create_dir(Path{ p: "/tmp/my_new_directory" })
+/// ```
 public fun create_dir(path: Path): Result<Unit, String> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-// Remove the directory at `path`.
-//
-// The directory must be empty.
-//
-// ```
-// import "__fs.gdn" as fs
-// fs::remove_dir(Path{ p: "/tmp/my_directory" })
-// ```
+/// Remove the directory at `path`.
+///
+/// The directory must be empty.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::remove_dir(Path{ p: "/tmp/my_directory" })
+/// ```
 public fun remove_dir(path: Path): Result<Unit, String> {
   __BUILT_IN_IMPLEMENTATION
 }

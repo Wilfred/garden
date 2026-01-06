@@ -92,7 +92,7 @@ fn sandboxed_tests_summary(
     let mut num_reached_limit = 0;
 
     let mut tests: FxHashMap<_, TestState> = FxHashMap::default();
-    for (test_sym, err) in &summary.tests {
+    for (test_sym, err, test_body_err_pos) in &summary.tests {
         let mut failure_start_offset = None;
         let mut failure_end_offset = None;
 
@@ -128,6 +128,12 @@ fn sandboxed_tests_summary(
                 "passed".to_owned()
             }
         };
+
+        if let Some(pos) = test_body_err_pos {
+            failure_start_offset = Some(pos.start_offset);
+            failure_end_offset = Some(pos.end_offset);
+        }
+
         tests.insert(
             test_sym.name.text.clone(),
             TestState {
@@ -202,7 +208,7 @@ pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) -> String
     let tests_failed = summary
         .tests
         .iter()
-        .filter(|(_, err)| err.is_some())
+        .filter(|(_, err, _)| err.is_some())
         .count();
     let tests_passed = total_tests - tests_failed;
 
@@ -210,7 +216,7 @@ pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) -> String
     if tests_passed == 0 && tests_failed == 0 {
         s.push_str("No tests found.\n");
     } else {
-        for (test_sym, err) in &summary.tests {
+        for (test_sym, err, _) in &summary.tests {
             let Some(err) = err else {
                 continue;
             };
@@ -324,7 +330,7 @@ pub(crate) fn run_tests_in_files(
     let tests_failed = summary
         .tests
         .iter()
-        .filter(|(_, err)| err.is_some())
+        .filter(|(_, err, _)| err.is_some())
         .count();
 
     print!("{}", describe_tests(&env, &summary));

@@ -1,13 +1,13 @@
 fun foo() {
-    while True {}
+  while True {}
 }
 
 test foo_call {
-    foo()
-    // ^
+  foo()
+  // ^
 }
 
 // args: sandboxed-test
 // expected stdout:
-// {"description":"exceeded resource limit","tests":{"foo_call":{"description":"exceeded resource limit","failure_start_offset":null,"failure_end_offset":null}}}
+// {"description":"exceeded resource limit","tests":{"foo_call":{"description":"exceeded resource limit","failure_start_offset":49,"failure_end_offset":54}}}
 

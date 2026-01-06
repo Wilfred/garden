@@ -1,0 +1,14 @@
+public fun oh_no() {
+  throw("yikes")
+}
+
+test call_an_erroring_func {
+  let _ = 42
+  oh_no()
+  // ^
+}
+
+// args: sandboxed-test
+// expected stdout:
+// {"description":"erroring","tests":{"call_an_erroring_func":{"description":"yikes","failure_start_offset":85,"failure_end_offset":92}}}
+

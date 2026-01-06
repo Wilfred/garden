@@ -300,8 +300,9 @@ pub(crate) struct ToplevelEvalSummary {
     pub(crate) values: Vec<Value>,
     pub(crate) new_syms: Vec<SymbolName>,
     pub(crate) diagnostics: Vec<Diagnostic>,
-    /// Which tests were run, and the error if they failed.
-    pub(crate) tests: Vec<(Symbol, Option<EvalError>)>,
+    /// Which tests were run, the error if they failed, and the
+    /// position of the failure within the test body.
+    pub(crate) tests: Vec<(Symbol, Option<EvalError>, Option<Position>)>,
 }
 
 /// Load, but do not evaluate, `items`.
@@ -863,7 +864,7 @@ pub(crate) fn eval_tests_until_error(
         push_test_stackframe(test, env);
 
         eval(env, session)?;
-        tests.push((test.name_sym.clone(), None));
+        tests.push((test.name_sym.clone(), None, None));
 
         env.stack.pop_to_toplevel();
     }
@@ -882,7 +883,7 @@ pub(crate) fn eval_tests(
     env: &mut Env,
     session: &Session,
 ) -> ToplevelEvalSummary {
-    let mut tests: Vec<(Symbol, Option<EvalError>)> = vec![];
+    let mut tests: Vec<(Symbol, Option<EvalError>, Option<Position>)> = vec![];
 
     let mut test_defs = vec![];
     for item in items {
@@ -903,10 +904,24 @@ pub(crate) fn eval_tests(
 
         match eval(env, session) {
             Ok(_) => {
-                tests.push((test.name_sym.clone(), None));
+                tests.push((test.name_sym.clone(), None, None));
             }
             Err(e) => {
-                tests.push((test.name_sym.clone(), Some(e.clone())));
+                // If we errored when calling something from the test
+                // (i.e. not an assertion in the test body), return
+                // that position too so we can highlight it.
+                let mut test_body_err_pos = None;
+                if let Some(stack_frame) = env.stack.0.get(2) {
+                    // The stack has the toplevel frame, then the
+                    // frame that contains the test body, then the
+                    // function called from the test.
+                    //
+                    // We want to find the caller position in the test
+                    // body from the callee frame.
+                    test_body_err_pos = stack_frame.caller_pos.clone();
+                }
+
+                tests.push((test.name_sym.clone(), Some(e.clone()), test_body_err_pos));
                 if matches!(e, EvalError::Interrupted) {
                     break;
                 }

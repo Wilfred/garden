@@ -18,8 +18,8 @@ use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic,
 use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to,
-    load_toplevel_items_with_stubs, push_test_stackframe, EvalError, EvalUpToErr, ExpressionState,
-    Session, StdoutJsonFormat, StdoutMode,
+    load_toplevel_items_with_stubs, push_test_stackframe, EvalError, EvalUpToErr, ExceptionInfo,
+    ExpressionState, Session, StdoutJsonFormat, StdoutMode,
 };
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position;
@@ -361,7 +361,10 @@ fn handle_eval_up_to_request(
 
 fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
     match e {
-        EvalError::Exception(position, e) => {
+        EvalError::Exception(ExceptionInfo {
+            position,
+            message: e,
+        }) => {
             let stack =
                 format_error_with_stack(&e, &position, &env.stack.0, &env.vfs, &env.project_root);
 
@@ -759,7 +762,10 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             position: None,
             id: None,
         },
-        Err(EvalError::Exception(position, e)) => Response {
+        Err(EvalError::Exception(ExceptionInfo {
+            position,
+            message: e,
+        })) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {

@@ -12,8 +12,8 @@ use crate::commands::{
 use crate::diagnostics::format_error_with_stack;
 use crate::env::Env;
 use crate::eval::{
-    eval, load_toplevel_items_with_stubs, push_test_stackframe, EvalError, ExpressionState,
-    Session, StdoutMode,
+    eval, load_toplevel_items_with_stubs, push_test_stackframe, EvalError, ExceptionInfo,
+    ExpressionState, Session, StdoutMode,
 };
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::{parse_toplevel_items, ParseError};
@@ -204,14 +204,14 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
 
                 is_stopped = false;
             }
-            Err(EvalError::Exception(position, msg)) => {
+            Err(EvalError::Exception(ExceptionInfo { position, message })) => {
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
                 let _ = last_src; // should use this.
                 println!(
                     "{}",
                     &format_error_with_stack(
-                        &msg,
+                        &message,
                         &position,
                         &env.stack.0,
                         &env.vfs,

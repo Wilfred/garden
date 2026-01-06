@@ -9,7 +9,7 @@ use owo_colors::OwoColorize as _;
 use rustc_hash::FxHashMap;
 use serde::Serialize;
 
-use crate::eval::{eval_tests, ToplevelEvalSummary};
+use crate::eval::{eval_tests, ExceptionInfo, ToplevelEvalSummary};
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
@@ -101,7 +101,10 @@ fn sandboxed_tests_summary(
                 num_errored += 1;
                 "interrupted".to_owned()
             }
-            Some(EvalError::Exception(_, msg)) => {
+            Some(EvalError::Exception(ExceptionInfo {
+                position: _,
+                message: msg,
+            })) => {
                 num_errored += 1;
                 msg.as_string()
             }
@@ -223,7 +226,10 @@ pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) -> String
 
             let (pos, msg) = match err {
                 EvalError::Interrupted => (None, None),
-                EvalError::Exception(position, msg) => (Some(position), Some(msg)),
+                EvalError::Exception(ExceptionInfo {
+                    position,
+                    message: msg,
+                }) => (Some(position), Some(msg)),
                 EvalError::AssertionFailed(position, msg) => (Some(position), Some(msg)),
                 EvalError::ReachedTickLimit(position) => (Some(position), None),
                 EvalError::ReachedStackLimit(position) => (Some(position), None),

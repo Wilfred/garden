@@ -8,7 +8,9 @@ use std::time::Instant;
 use serde::Serialize;
 
 use crate::env::Env;
-use crate::eval::{eval_toplevel_items, EvalError, Session, StdoutJsonFormat, StdoutMode};
+use crate::eval::{
+    eval_toplevel_items, EvalError, ExceptionInfo, Session, StdoutJsonFormat, StdoutMode,
+};
 use crate::parser::ast::IdGenerator;
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
@@ -70,7 +72,10 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
 
             items
         }
-        Err(EvalError::Exception(_, msg)) => vec![PlaygroundResponse {
+        Err(EvalError::Exception(ExceptionInfo {
+            position: _,
+            message: msg,
+        })) => vec![PlaygroundResponse {
             error: Some(msg.as_string()),
             value: None,
         }],

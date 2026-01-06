@@ -85,7 +85,9 @@ use test_runner::{run_sandboxed_tests_in_file, run_tests_in_files};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Severity};
 use crate::env::Env;
-use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session, StdoutJsonFormat};
+use crate::eval::{
+    eval_toplevel_items, load_toplevel_items, EvalError, ExceptionInfo, Session, StdoutJsonFormat,
+};
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -531,7 +533,10 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     if let Err(e) = eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
-            EvalError::Exception(_, msg) => eprintln!("{}", msg.as_string()),
+            EvalError::Exception(ExceptionInfo {
+                position: _,
+                message,
+            }) => eprintln!("{}", message.as_string()),
             EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::ReachedTickLimit(_) => eprintln!("Reached the tick limit."),
             EvalError::ReachedStackLimit(_) => eprintln!("Reached the stack limit."),
@@ -550,7 +555,10 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         ),
         Err(EvalUpToErr::EvalError(e)) => match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
-            EvalError::Exception(_, msg) => eprintln!("{}", msg.as_string()),
+            EvalError::Exception(ExceptionInfo {
+                position: _,
+                message,
+            }) => eprintln!("{}", message.as_string()),
             EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::ReachedTickLimit(_) => eprintln!("Reached the tick limit."),
             EvalError::ReachedStackLimit(_) => eprintln!("Reached the stack limit."),
@@ -709,11 +717,11 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
 
     match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
         Ok(_) => {}
-        Err(EvalError::Exception(position, msg)) => {
+        Err(EvalError::Exception(ExceptionInfo { position, message })) => {
             eprintln!(
                 "{}",
                 &format_error_with_stack(
-                    &msg,
+                    &message,
                     &position,
                     &env.stack.0,
                     &env.vfs,

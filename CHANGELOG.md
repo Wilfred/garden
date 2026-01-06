@@ -2,6 +2,12 @@
 **Goal: LSP.**
 **Goal: Offer actions when runtime errors occur.**
 
+## Tooling
+
+Garden now has an LSP server providing go-to-definition, code
+completion, quickfixes and basic formatting. You can start it with
+`garden lsp`.
+
 ## Syntax
 
 Documentation is now written with triple slashes, e.g. `///`, to

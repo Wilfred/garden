@@ -1,13 +1,13 @@
 ```metadata
-published: false
-date: 2026-01-05
+published: true
+date: 2026-01-06
 title: Devlog 2: The Importance of Sandboxing
 ```
 
 A core feature of Garden is the ability to run untrusted code in a
 sandbox. Untrusted evaluation is extremely hard to add to an existing
-language, but Garden is brand new. Sandboxing enables some wonderful
-workflows.
+language, but Garden is brand new. Sandboxing enables some really
+interesting workflows.
 
 ## Interactive Documentation
 
@@ -39,12 +39,13 @@ mobile. wasm builds also impose additional constraints on the
 interpreter.
 
 Snippets on this website are executed on my server, using the
-interpreter's sandbox feature. This was scary to deploy, but the
-experience is really nice to use. I've locked down the execution
-process in a Docker container on a dedicated $1 per month server.
+interpreter's sandbox feature. This was scary to deploy (remote code
+execution as a service!), but I think the experience is worth it. I've
+locked down the execution process in a Docker container on a dedicated
+$1 per month server.
 
-If you *do* find a security bug, feel free to open an issue on the bug
-tracker or email me.
+If you *do* find a security bug, feel free to [open an issue on the bug
+tracker](https://github.com/Wilfred/garden/issues) or email me.
 
 ## Eager evaluation
 
@@ -56,9 +57,10 @@ eagerly execute snippets in the console, safely.
   <source src="/speculative_js.mp4" type="video/mp4" />
 </video>
 
-You can see that the interpreter shows `"FOO"` before we press enter.
-This is a small feature, but lovely to work with. It saves keystrokes
-and gets you feedback faster.
+You can see that the interpreter shows `"FOO"` before I press enter.
+This is a small feature, but once you've experienced it, you'll miss
+it in other languages. It saves keystrokes and gets you feedback
+faster.
 
 Garden doesn't yet have eager evaluation in the REPL, but it can
 eagerly evaluate tests in the sandbox. Eager tests also leverage your
@@ -155,6 +157,5 @@ such as rowhammer or spectre.
 I'm delighted to have live evaluation on the website, but there's
 still a ton of features that could be built on top of this sandbox.
 
-If you've made it to the end of this long post, thanks for reading!
 Garden is still very much alpha software, but it's all on GitHub if
 you want to try it.

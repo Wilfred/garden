@@ -5337,7 +5337,7 @@ fn eval_built_in_method_call(
                         position: arg_positions[0].clone(),
                         message: ErrorMessage(vec![
                             msgtext!("The first argument to "),
-                            msgcode!("String::substring"),
+                            msgcode!("String::substring()"),
                             msgtext!(" must be greater than 0, but got {}.", from_arg),
                         ]),
                     }),
@@ -5358,7 +5358,7 @@ fn eval_built_in_method_call(
                         position: arg_positions[1].clone(),
                         message: ErrorMessage(vec![
                             msgtext!("The first argument ({}) to ", from_arg),
-                            msgcode!("String::substring"),
+                            msgcode!("String::substring()"),
                             msgtext!(" cannot be greater than than the second ({}). ", to_arg),
                             msgtext!(
                                 "The string itself is {} character{} long.",

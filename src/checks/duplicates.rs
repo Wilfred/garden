@@ -33,7 +33,7 @@ impl Visitor for DuplicatesVisitor {
                     self.diagnostics.push(Diagnostic {
                         message: ErrorMessage(vec![
                             msgtext!("The function "),
-                            msgcode!("{}", sym.name),
+                            msgcode!("{}()", sym.name),
                             msgtext!(" is already defined in this file."),
                         ]),
                         position: sym.position.clone(),
@@ -59,7 +59,7 @@ impl Visitor for DuplicatesVisitor {
                             self.diagnostics.push(Diagnostic {
                                 message: ErrorMessage(vec![
                                     msgtext!("The method "),
-                                    msgcode!("{}::{}", type_name, meth_sym.name),
+                                    msgcode!("{}::{}()", type_name, meth_sym.name),
                                     msgtext!(" is already defined in this file."),
                                 ]),
                                 position: meth_sym.position.clone(),

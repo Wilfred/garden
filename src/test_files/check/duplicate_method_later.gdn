@@ -1,0 +1,25 @@
+// Regression test: we should still complain on duplicate methods if
+// we've seen other methods on this type.
+
+public method baz(this: String) {}
+
+public method foo(this: String) {}
+
+public method foo(this: String) {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: The method `String::foo()` is already defined in this file.
+// -| src/test_files/check/duplicate_method_later.gdn:8:15
+// 6| public method foo(this: String) {}
+// 7| 
+// 8| public method foo(this: String) {}
+// 9|               ^^^
+// -| src/test_files/check/duplicate_method_later.gdn:6:15
+// 4| public method baz(this: String) {}
+// 5| 
+// 6| public method foo(this: String) {}
+// 7|               ^^^ Note: Previous definition was here.
+// 8| public method foo(this: String) {}
+

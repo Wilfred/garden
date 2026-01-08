@@ -54,8 +54,10 @@ impl Visitor for DuplicatesVisitor {
                 let type_name = &method_info.receiver_hint.sym.name;
 
                 match self.methods_seen.entry(type_name.clone()) {
-                    Entry::Occupied(occupied) => {
-                        if let Some(prev_pos) = occupied.get().get(&meth_sym.name) {
+                    Entry::Occupied(mut occupied) => {
+                        let methods_for_ty = occupied.get_mut();
+
+                        if let Some(prev_pos) = methods_for_ty.get(&meth_sym.name) {
                             self.diagnostics.push(Diagnostic {
                                 message: ErrorMessage(vec![
                                     msgtext!("The method "),
@@ -70,13 +72,15 @@ impl Visitor for DuplicatesVisitor {
                                 severity: Severity::Warning,
                                 fixes: vec![],
                             });
+                        } else {
+                            methods_for_ty.insert(meth_sym.name.clone(), meth_sym.position.clone());
                         }
                     }
                     Entry::Vacant(vacant) => {
-                        let mut items = FxHashMap::default();
-                        items.insert(meth_sym.name.clone(), meth_sym.position.clone());
+                        let mut methods_for_ty = FxHashMap::default();
+                        methods_for_ty.insert(meth_sym.name.clone(), meth_sym.position.clone());
 
-                        vacant.insert(items);
+                        vacant.insert(methods_for_ty);
                     }
                 }
             }

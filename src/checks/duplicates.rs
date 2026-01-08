@@ -15,6 +15,7 @@ use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
 use crate::parser::visitor::Visitor;
+use crate::{msgcode, msgtext};
 
 struct DuplicatesVisitor {
     funs_seen: FxHashMap<SymbolName, Position>,
@@ -28,14 +29,18 @@ impl Visitor for DuplicatesVisitor {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         match &item {
             ToplevelItem::Fun(sym, _, _) => {
-                if self.funs_seen.contains_key(&sym.name) {
+                if let Some(prev_pos) = self.funs_seen.get(&sym.name) {
                     self.diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![Text(format!(
-                            "The function `{}` is already defined in this file.",
-                            sym.name
-                        ))]),
+                        message: ErrorMessage(vec![
+                            msgtext!("The function "),
+                            msgcode!("{}", sym.name),
+                            msgtext!(" is already defined in this file."),
+                        ]),
                         position: sym.position.clone(),
-                        notes: vec![],
+                        notes: vec![(
+                            ErrorMessage(vec![msgtext!("Previous definition was here.")]),
+                            prev_pos.clone(),
+                        )],
                         severity: Severity::Warning,
                         fixes: vec![],
                     });
@@ -46,12 +51,26 @@ impl Visitor for DuplicatesVisitor {
             }
             ToplevelItem::Method(method_info, _) => {
                 let meth_sym = &method_info.name_sym;
-
-                let mut is_repeat = false;
                 let type_name = &method_info.receiver_hint.sym.name;
+
                 match self.methods_seen.entry(type_name.clone()) {
                     Entry::Occupied(occupied) => {
-                        is_repeat = occupied.get().contains_key(&meth_sym.name);
+                        if let Some(prev_pos) = occupied.get().get(&meth_sym.name) {
+                            self.diagnostics.push(Diagnostic {
+                                message: ErrorMessage(vec![
+                                    msgtext!("The method "),
+                                    msgcode!("{}::{}", type_name, meth_sym.name),
+                                    msgtext!(" is already defined in this file."),
+                                ]),
+                                position: meth_sym.position.clone(),
+                                notes: vec![(
+                                    ErrorMessage(vec![msgtext!("Previous definition was here.")]),
+                                    prev_pos.clone(),
+                                )],
+                                severity: Severity::Warning,
+                                fixes: vec![],
+                            });
+                        }
                     }
                     Entry::Vacant(vacant) => {
                         let mut items = FxHashMap::default();
@@ -59,19 +78,6 @@ impl Visitor for DuplicatesVisitor {
 
                         vacant.insert(items);
                     }
-                }
-
-                if is_repeat {
-                    self.diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![Text(format!(
-                            "The method `{}::{}` is already defined in this file.",
-                            type_name, meth_sym.name
-                        ))]),
-                        position: meth_sym.position.clone(),
-                        notes: vec![],
-                        severity: Severity::Warning,
-                        fixes: vec![],
-                    });
                 }
             }
             ToplevelItem::Test(test_info) => {

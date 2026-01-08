@@ -81,6 +81,7 @@ pub(crate) fn format_error_with_stack(
         true,
         None,
         true,
+        false,
         0,
     ));
 
@@ -95,6 +96,7 @@ pub(crate) fn format_error_with_stack(
                 project_root,
                 true,
                 None,
+                false,
                 false,
                 0,
             ));
@@ -133,6 +135,7 @@ pub(crate) fn format_diagnostic(
         true,
         None,
         matches!(severity, Severity::Error),
+        false,
         2,
     ));
 
@@ -151,6 +154,7 @@ pub(crate) fn format_diagnostic(
                 message.as_string()
             }),
             false,
+            true,
             2,
         ));
     }
@@ -196,6 +200,7 @@ fn format_pos_in_fun(
     underline: bool,
     underline_msg: Option<String>,
     is_error: bool,
+    is_note: bool,
     context_lines: usize,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
@@ -335,7 +340,9 @@ fn format_pos_in_fun(
 
                 let carets = "^".repeat((span.end_col - span.start_col) as usize);
                 if use_color {
-                    res.push_str(&if is_error {
+                    res.push_str(&if is_note {
+                        carets.bold().dimmed().to_string()
+                    } else if is_error {
                         carets.bold().red().to_string()
                     } else {
                         carets.bold().yellow().to_string()

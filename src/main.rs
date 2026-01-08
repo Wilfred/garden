@@ -131,6 +131,8 @@ enum CliCommands {
     SandboxedTest {
         path: PathBuf,
         offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
     },
     /// Rename the local variable at this offset to the new name
     /// specified.
@@ -279,14 +281,20 @@ fn main() {
 
             run_tests_in_files(&paths_and_srcs, name_contains.as_ref(), interrupted)
         }
-        CliCommands::SandboxedTest { path, offset } => {
+        CliCommands::SandboxedTest {
+            path,
+            offset,
+            override_path,
+        } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
-            run_sandboxed_tests_in_file(&src, &abs_path, offset, interrupted)
+
+            let src_path = to_abs_path(&override_path.unwrap_or(path));
+            run_sandboxed_tests_in_file(&src, &src_path, offset, interrupted)
         }
         CliCommands::TestEvalUpTo { path } => {
             let abs_path = to_abs_path(&path);

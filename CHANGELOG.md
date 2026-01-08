@@ -19,6 +19,8 @@ Added a `format` subcommand that fixes indentation in Garden files.
 
 Added `--fix` to `garden check`.
 
+`sandboxed-test` now accepts a `--override-path` argument.
+
 # 0.22 (released 15 December 2025)
 **Goal: Playground.**
 

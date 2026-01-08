@@ -194,7 +194,8 @@ repeated parentheses/brackets on the same line."
          (garden--apply-test-faces buf)
          (setq
           garden--last-test-result
-          (plist-put garden--last-test-result buf (gethash :description summary))))))))
+          (plist-put garden--last-test-result buf (gethash :description summary)))))
+     (list "--override-path" (buffer-file-name)))))
 
 (defface garden-test-pass-face
   '((t :inherit font-lock-function-name-face))

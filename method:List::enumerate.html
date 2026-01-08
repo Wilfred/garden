@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>List::enumerate - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/blocks.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1><code>List::enumerate()</code></h1>
+<p>Return a new list consisting of the items themselves, plus the
+index of the position of each value.</p>
+<div class="snippet"><span class="code-title">Example</span><pre><code>[<span class="string">"a"</span>, <span class="string">"b"</span>].enumerate() <span class="comment">//-&gt; [(0, "a"), (1, "b")]</span></code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> enumerate&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;): <a class="type" href="/type:List.html">List</a>&lt;(<a class="type" href="/type:Int.html">Int</a>, <span class="type">T</span>)&gt; {
+  <a class="keyword" href="/keyword:let.html">let</a> items: <a class="type" href="/type:List.html">List</a>&lt;(<a class="type" href="/type:Int.html">Int</a>, <span class="type">T</span>)&gt; <a class="operator" href="/operator:=.html">=</a> []
+
+  <a class="keyword" href="/keyword:let.html">let</a> i <a class="operator" href="/operator:=.html">=</a> 0
+  <a class="keyword" href="/keyword:for.html">for</a> item <a class="keyword" href="/keyword:in.html">in</a> this {
+    <a class="keyword" href="/keyword:let.html">let</a> t <a class="operator" href="/operator:=.html">=</a> (i, item)
+    items <a class="operator" href="/operator:=.html">=</a> items.append(t)
+    i <a class="operator" href="/operator:+=.html">+=</a> 1
+  }
+
+  items
+}</code></pre><div class="snippet-output" hidden></div></div></div>
+
+    <footer>
+      <a href="/blog.html">Blog</a>
+      🪴
+      <a href="https://github.com/Wilfred/garden">GitHub</a>
+    </footer>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

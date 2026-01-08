@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>Devlog 2: The Importance of Sandboxing - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/blocks.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1>Devlog 2: The Importance of Sandboxing</h1>
+<p><em>2026-01-06</em></p>
+<p>A core feature of Garden is the ability to run untrusted code in a
+sandbox. Untrusted evaluation is extremely hard to add to an existing
+language, but Garden is brand new. Sandboxing enables some really
+interesting workflows.</p>
+<h2>Interactive Documentation</h2>
+<p>Every code snippet on this website has Run and Edit buttons. If you
+want to confirm your understanding of a feature, you can experiment.</p>
+<p>Here's a really simple example.</p>
+<div class="snippet"><pre><code>1 <a class="operator" href="/operator:+.html">+</a> 2</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<p>Since we're allowing arbitrary code, the user might write something
+more problematic (accidentally or otherwise). The sandbox ensures we
+can run this safely.</p>
+<div class="snippet"><pre><code><a class="keyword" href="/keyword:while.html">while</a> <span class="type">True</span> {}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<div class="snippet"><pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/etc/passwd" </span>}.read()</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<p>Some programming languages choose to compile their interpreter to
+wasm, so the execution happens in the browser. This is secure --
+everything occurs on the reader's machine -- but it's slow on
+mobile. wasm builds also impose additional constraints on the
+interpreter.</p>
+<p>Snippets on this website are executed on my server, using the
+interpreter's sandbox feature. This was scary to deploy (remote code
+execution as a service!), but I think the experience is worth it. I've
+locked down the execution process in a Docker container on a dedicated
+$1 per month server.</p>
+<p>If you <em>do</em> find a security bug, feel free to <a href="https://github.com/Wilfred/garden/issues">open an issue on the bug
+tracker</a> or email me.</p>
+<h2>Eager evaluation</h2>
+<p>JavaScript is one of the few languages with a mature sandbox, and it's
+a crucial part of the modern web. JavaScript also has the ability to
+eagerly execute snippets in the console, safely.</p>
+<p><video controls>
+  <source src="/speculative_js.mp4" type="video/mp4" />
+</video></p>
+<p>You can see that the interpreter shows <code>"FOO"</code> before I press enter.
+This is a small feature, but once you've experienced it, you'll miss
+it in other languages. It saves keystrokes and gets you feedback
+faster.</p>
+<p>Garden doesn't yet have eager evaluation in the REPL, but it can
+eagerly evaluate tests in the sandbox. Eager tests also leverage your
+hardware better. My machine is often mostly idle when I'm writing
+code, whereas it could be helping!</p>
+<p><video controls>
+  <source src="/speculative_assertions.mp4" type="video/mp4" />
+</video></p>
+<p>Note how the failing assertion immediately changes as I edit the code
+in this video.</p>
+<p>Sandboxed testing also enables safe mutation testing. A scary number
+of mutation test frameworks just assume that a small change to a test
+suite is safe to execute without review.</p>
+<h2>Speculative Library Loading</h2>
+<p>In an ideal world, writing <code>require("lodash")</code> in JavaScript would
+be sufficient. The IDE could install the library and no additional
+keystrokes would be required.</p>
+<p>There are also projects that do this (such as <a href="https://github.com/siddharthkp/auto-install">auto-install for
+JS</a>). Again, without a
+sandbox, this isn't safe. You can reduce the risk with an allowlist of
+permitted packages or forbidding post-install scripts, but it's janky.</p>
+<p>With a sandbox you can support this workflow properly.</p>
+<h2>Program Synthesis</h2>
+<p>I frequently find myself writing programs where the rest of the
+program is obvious.</p>
+<div class="snippet"><pre><code><a class="keyword" href="/keyword:test.html">test</a> <a href="/fun:__prelude.gdn::max.html">max</a> {
+  <a class="keyword" href="/keyword:assert.html">assert</a>(<a href="/fun:__prelude.gdn::max.html">max</a>(2, 3) <a class="operator" href="/operator:==.html">==</a> 3)
+  <a class="keyword" href="/keyword:assert.html">assert</a>(<a href="/fun:__prelude.gdn::max.html">max</a>(4, 3) <a class="operator" href="/operator:==.html">==</a> 4)
+}
+
+<a class="keyword" href="/keyword:fun.html">fun</a> <a href="/fun:__prelude.gdn::max.html">max</a>(x: <a class="type" href="/type:Int.html">Int</a>, y: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
+  <a class="keyword" href="/keyword:if.html">if</a> x <a class="operator" href="/operator:>.html">&gt;</a> y {
+    <a class="keyword" href="/keyword:return.html">return</a> x
+  }
+
+  <span class="comment">// There aren't many possibilities here!</span>
+  <a href="/fun:__prelude.gdn::todo.html">todo</a>()
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<p>This is a 'program synthesis' problem, asking the computer to write
+code for you based on examples. You can apply a simple brute-force
+solution ('enumerative synthesis'), a smarter type-driven search, or
+just feed it to an LLM.</p>
+<p>With a sandbox, you could evaluate all the obvious possibilities and
+-- if they pass the tests -- suggest them to the user.</p>
+<h2>AI Sandboxing</h2>
+<p>LLMs are pretty good at iterating on code. Agentic tools rely on an
+LLM loop that processes output (static errors, runtime errors, test
+failures etc). This is often sufficient to guide the LLM to write a
+working implementation.</p>
+<p>This use case is so compelling that some users will run
+<code>--dangerously-skip-permissions</code> on their machine directly. Claude
+provides guidance for running it in a Docker container, and
+<a href="https://claude.ai/code/">claude.ai/code</a> also provides an isolated VM
+to safely allow this workflow.</p>
+<p>These workflows prevent the AI from e.g. deleting all your files, but
+make it harder to interactively guide the AI towards the desired
+solution. A sandbox lets you run the LLM and interpreter as normal
+programs, getting the best of both worlds.</p>
+<h2>Security</h2>
+<p>Safely supporting arbitrary code execution is the scariest, most
+security-sensitive code I've ever written. I've spent a good while
+trying to figure out my security posture.</p>
+<p>The Garden interpreter sandbox prevents I/O (disk, network) as well as
+enforcing resource limits. The current implementation is slightly lax
+on memory limits, so a sufficiently problematic program could still
+OOM the interpreter.</p>
+<p>The sandbox does not provide protection against side channel attacks,
+such as rowhammer or spectre.</p>
+<h2>Future Work</h2>
+<p>I'm delighted to have live evaluation on the website, but there's
+still a ton of features that could be built on top of this sandbox.</p>
+<p>Garden is still very much alpha software, but it's all on GitHub if
+you want to try it.</p></div>
+
+    <footer>
+      <a href="/blog.html">Blog</a>
+      🪴
+      <a href="https://github.com/Wilfred/garden">GitHub</a>
+    </footer>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

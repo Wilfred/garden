@@ -11,6 +11,8 @@ dbg(d.get("y"))
 
 dbg(d.items())
 
+dbg(d.remove("x"))
+
 // args: run
 // expected stdout:
 // Some(1)
@@ -18,4 +20,5 @@ dbg(d.items())
 // Some(42)
 // Some(43)
 // [("x", 1), ("y", 43)]
+// Dict["y" => 43]
 

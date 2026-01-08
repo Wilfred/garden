@@ -685,6 +685,7 @@ pub(crate) struct ImportInfo {
 pub(crate) enum BuiltInMethodKind {
     DictGet,
     DictItems,
+    DictRemove,
     DictSet,
     ListAppend,
     ListContains,

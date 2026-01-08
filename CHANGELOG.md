@@ -13,6 +13,10 @@ completion, quickfixes and basic formatting. You can start it with
 Documentation is now written with triple slashes, e.g. `///`, to
 distinguish from normal comments.
 
+## Standard Library
+
+Added `Dict::remove()`.
+
 ## CLI
 
 Added a `format` subcommand that fixes indentation in Garden files.

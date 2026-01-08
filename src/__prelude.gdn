@@ -1075,6 +1075,17 @@ public method items<T>(this: Dict<T>): List<(String, T)> {
   __BUILT_IN_IMPLEMENTATION
 }
 
+/// Return a new dict that has all the same keys and values as this
+/// dict, except it does not have `key`.
+///
+/// ```
+/// let scores = Dict["Mario" => 10, "Luigi" => 8]
+/// scores.remove("Luigi") //-> Dict["Mario" => 10]
+/// ```
+public method remove<T>(this: Dict<T>, key: String): Dict<T> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
 /// Return the larger value of these two integers.
 ///
 /// ```

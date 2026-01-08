@@ -4627,6 +4627,56 @@ fn eval_built_in_method_call(
                 }
             }
         }
+        BuiltInMethodKind::DictRemove => {
+            check_arity(
+                &SymbolName {
+                    text: "Dict::remove".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let key_to_remove =
+                check_string(&arg_values[0], &arg_positions[0], saved_values.clone(), env)?;
+
+            match receiver_value.as_ref() {
+                Value_::Dict { items, value_type } => {
+                    let mut items = items.clone();
+                    items.remove(key_to_remove);
+
+                    if expr_value_is_used {
+                        env.push_value(Value::new(Value_::Dict {
+                            items,
+                            value_type: value_type.clone(),
+                        }));
+                    }
+                }
+                _ => {
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[0].clone(),
+                            message: format_type_error(
+                                &TypeName {
+                                    text: "Dict".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            }
+        }
         BuiltInMethodKind::DictSet => {
             check_arity(
                 &SymbolName {

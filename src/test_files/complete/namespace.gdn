@@ -1,0 +1,6 @@
+import "__random.gdn" as random
+
+random::
+//     ^
+
+// args: complete

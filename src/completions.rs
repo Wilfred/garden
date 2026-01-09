@@ -1,4 +1,6 @@
+use std::cell::RefCell;
 use std::path::Path;
+use std::rc::Rc;
 
 use lsp_types::{CompletionItem, CompletionItemKind, InsertTextFormat};
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -7,10 +9,12 @@ use crate::checks::type_checker::check_types;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::garden_type::Type;
+use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{AstId, Expression_, IdGenerator, SymbolName};
 use crate::parser::parse_toplevel_items;
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
+use crate::values::Value_;
 use crate::Vfs;
 
 pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionItem> {
@@ -30,7 +34,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
         ids_at_pos.extend(find_item_at(&items, offset - 1, offset - 1));
     }
     ids_at_pos.extend(find_item_at(&items, offset, offset));
-    let summary = check_types(&vfs_path, &items, &env, ns);
+    let summary = check_types(&vfs_path, &items, &env, ns.clone());
 
     let mut seen_expr_ids = FxHashSet::default();
     for id in ids_at_pos.iter().rev() {
@@ -56,6 +60,21 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
                     &meth_sym.name.text
                 };
                 return get_methods(&env, recv_ty, prefix);
+            }
+            Expression_::NamespaceAccess(recv, sym) => {
+                let prefix = if sym.name.is_placeholder() {
+                    ""
+                } else {
+                    &sym.name.text
+                };
+
+                // The type checkre requires the receiver of foo::bar
+                // to be a variable we can statically identify, so we
+                // can just assume variable here.
+                if let Expression_::Variable(recv_symbol) = &recv.expr_ {
+                    return get_namespace_functions(ns, &recv_symbol.name, prefix);
+                }
+                return vec![];
             }
             Expression_::Variable(sym) => {
                 let prefix = if sym.name.is_placeholder() {
@@ -168,6 +187,77 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
                 ..Default::default()
             });
         }
+    }
+
+    items.sort_by(|a, b| a.label.cmp(&b.label));
+    items
+}
+
+fn get_namespace_functions(
+    current_ns: Rc<RefCell<NamespaceInfo>>,
+    ns_name: &SymbolName,
+    prefix: &str,
+) -> Vec<CompletionItem> {
+    let current_ns = current_ns.borrow();
+    let Some(value) = current_ns.values.get(ns_name) else {
+        return vec![];
+    };
+
+    let Value_::Namespace { ns_info, .. } = value.as_ref() else {
+        return vec![];
+    };
+
+    let ns_info = ns_info.borrow();
+    let mut items: Vec<CompletionItem> = vec![];
+
+    for (value_name, value) in ns_info.values.iter() {
+        // Don't offer private symbols.
+        if !ns_info.exported_syms.contains(value_name) {
+            continue;
+        }
+
+        if !value_name.text.starts_with(prefix) {
+            continue;
+        }
+
+        // Only complete functions, since that's all we can export
+        // right now.
+        let Some(fun_info) = value.fun_info() else {
+            continue;
+        };
+
+        let params = &fun_info
+            .params
+            .params
+            .iter()
+            .map(|param| match &param.hint {
+                Some(hint) => hint.as_src(),
+                None => "_".to_owned(),
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        let return_hint = match &fun_info.return_hint {
+            Some(hint) => format!(": {}", hint.as_src()),
+            None => "".to_owned(),
+        };
+
+        let (label, insert_text) = if params.is_empty() {
+            let name = format!("{}()", value_name.text);
+            (name.clone(), name)
+        } else {
+            (value_name.text.clone(), format!("{}($0)", value_name.text))
+        };
+
+        let detail = format!("({params}){return_hint}");
+
+        items.push(CompletionItem {
+            label,
+            kind: Some(CompletionItemKind::FUNCTION),
+            detail: Some(detail),
+            insert_text: Some(insert_text),
+            insert_text_format: Some(InsertTextFormat::SNIPPET),
+            ..Default::default()
+        });
     }
 
     items.sort_by(|a, b| a.label.cmp(&b.label));

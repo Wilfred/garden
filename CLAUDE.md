@@ -1,5 +1,5 @@
-Garden is a programming language with a focus on novel developer
-tooling and very high quality documentation.
+Garden is a programming language with a focus on developer tooling and
+high quality documentation.
 
 Hello World in Garden looks like this:
 

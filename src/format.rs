@@ -58,6 +58,24 @@ struct IndentationVisitor {
 }
 
 impl Visitor for IndentationVisitor {
+    fn visit_toplevel_expr(&mut self, toplevel_expr: &crate::parser::ast::ToplevelExpression) {
+        let expr = &toplevel_expr.0;
+        let line_num = expr.position.line_number;
+
+        if !self.processed_lines.contains(&line_num) {
+            let current_indent = expr.position.column;
+
+            if current_indent != 0 {
+                self.line_edits.push(LineEdit {
+                    line_number: line_num,
+                    new_indent: 0,
+                });
+            }
+
+            self.processed_lines.insert(line_num);
+        }
+    }
+
     fn visit_block(&mut self, block: &Block) {
         // Skip single-line blocks
         if block.open_brace.line_number == block.close_brace.line_number {

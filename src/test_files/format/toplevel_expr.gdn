@@ -1,0 +1,10 @@
+// Excess indentation
+  println("one")
+    println("two")
+
+// args: format
+// expected stdout:
+// // Excess indentation
+// println("one")
+// println("two")
+

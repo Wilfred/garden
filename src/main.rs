@@ -174,7 +174,7 @@ enum CliCommands {
         #[clap(long)]
         override_path: Option<PathBuf>,
     },
-    /// Format a Garden file by fixing indentation.
+    /// Format a Garden file and print the re-indented source code.
     Format { path: PathBuf },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.

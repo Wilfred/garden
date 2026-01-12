@@ -6,14 +6,14 @@ import "__prelude.gdn" as prelude
 import "./markdown.gdn"
 import "./log.gdn" as log
 
-// A list of all the files in `website_dir` that have a .md extension.
+/// A list of all the files in `website_dir` that have a .md extension.
 fun markdown_files(website_dir: Path): List<Path> {
   let dir_files = fs::list_directory(website_dir).or_throw()
   dir_files.filter(fun(p: Path) { p.extension() == Some("md") })
 }
 
-// Given a snippet of source code `src`, remove all the leading lines
-// that are just comments.
+/// Given a snippet of source code `src`, remove all the leading lines
+/// that are just comments.
 fun drop_leading_comments(src: String): String {
   let lines = src.lines()
 
@@ -82,7 +82,7 @@ fun write_method_page(type_name: String, method_name: String, out_dir: Path, bas
   }
 }
 
-// Render `doc_comment` as HTML.
+/// Render `doc_comment` as HTML.
 fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>, file: Option<Path>): String {
   let src = match src {
     Some(src) => {
@@ -113,8 +113,8 @@ fun render_type_doc_comment(heading: String, doc_comment: String, src: String, m
   render_markdown(md_src, None)
 }
 
-// Look up the doc comment for `type_name`, render it to HTML and
-// write it to `out_dir`.
+/// Look up the doc comment for `type_name`, render it to HTML and
+/// write it to `out_dir`.
 fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Unit {
   match reflect::doc_comment_for_type(type_name) {
     Some(doc_comment) => {
@@ -256,7 +256,7 @@ fun build_blog(website_dir: Path, out_dir: Path, base_tmpl_src: String): Unit {
   }
 }
 
-// Build the entire garden website.
+/// Build the entire garden website.
 fun build_site(): Unit {
   let website_dir = source_dir_path().parent().or_throw().parent().or_throw().join("website")
   fs::set_working_directory(website_dir).or_throw()
@@ -374,7 +374,7 @@ fun build_site(): Unit {
   }
 }
 
-// Convert `["a", "b", "c"]` to `"a, b and c"`.
+/// Convert `["a", "b", "c"]` to `"a, b and c"`.
 fun join_with_commas_and(items: List<String>): String {
   let last_item = match items.last() {
     Some(item) => item,
@@ -389,16 +389,16 @@ fun join_with_commas_and(items: List<String>): String {
   " and ".join([", ".join(but_last), last_item ^ "."])
 }
 
-// Helper function to create markdown links of the form
+/// Helper function to create markdown links of the form
 //
-// ```text
-// [`foo`](bar.html)
-// ```
+/// ```text
+/// [`foo`](bar.html)
+/// ```
 fun code_link(text: String, url: String): String {
   "[`" ^ text ^ "`](" ^ url ^ ")"
 }
 
-// Replace all __FOO strings in markdown `src` with runtime values.
+/// Replace all __FOO strings in markdown `src` with runtime values.
 fun substitute_shorthand(website_dir: Path, src: String): String {
   let keyword_links = reflect::keywords().map(fun(keyword: String) {
     code_link(keyword, "./keyword:" ^ keyword ^ ".html")
@@ -484,7 +484,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
     .replace("__BLOG_LINKS", blog_links)
 }
 
-// Wrap `page_src` in the base template and write to the file `dest_path`.
+/// Wrap `page_src` in the base template and write to the file `dest_path`.
 fun write_website_page(
   base_tmpl_src: String,
   page_src: String,

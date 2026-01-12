@@ -26,13 +26,13 @@ fun finish_section(in_bullets: Bool, current_section: List<String>): MarkdownPar
   }
 }
 
-// Parse the text after the ``` on markdown blocks.
+/// Parse the text after the ``` on markdown blocks.
 //
-// These labels are generally space-separated, but may contain double quotes.
+/// These labels are generally space-separated, but may contain double quotes.
 //
-// For example:
+/// For example:
 //
-// label1 label2 foo:"label three"
+/// label1 label2 foo:"label three"
 fun parse_labels(src: String): List<String> {
   let labels: List<String> = []
 
@@ -184,8 +184,8 @@ fun render_markdown_header(src: String): String {
   open_tag ^ render_inline(content.trim()) ^ close_tag
 }
 
-// We want to find " < ", which requires trailing whitespace on the
-// previous lexeme as well as the < lexeme.
+/// We want to find " < ", which requires trailing whitespace on the
+/// previous lexeme as well as the < lexeme.
 fun lex_with_ranges(s: String): List<(Int, Int, String)> {
   let items: List<(Int, Int, String)> = []
 
@@ -393,8 +393,8 @@ fun render_inline_backticks(src: String): String {
   "".join(parts)
 }
 
-// Split `src` into a list of strings, where each string is either a
-// link, image, HTML, inline code or a piece of plain text.
+/// Split `src` into a list of strings, where each string is either a
+/// link, image, HTML, inline code or a piece of plain text.
 fun split_inline_parts(src: String): List<String> {
   let parts: List<String> = []
 
@@ -489,8 +489,8 @@ fun split_inline_parts(src: String): List<String> {
   parts
 }
 
-// If `s` contains `terminator`, return the string up to the
-// terminator (inclusive), and the string beyond it.
+/// If `s` contains `terminator`, return the string up to the
+/// terminator (inclusive), and the string beyond it.
 fun split_on_terminator(s: String, terminator: String): Option<(String, String)> {
   match s.split_once(terminator) {
     Some((before, after)) => {
@@ -500,11 +500,11 @@ fun split_on_terminator(s: String, terminator: String): Option<(String, String)>
   }
 }
 
-// Split a markdown link or image from the start of `s`.
+/// Split a markdown link or image from the start of `s`.
 //
-// ```
-// split_markdown_link("[link text](url) rest") // Some(("[link text](url)", " rest"))
-// ```
+/// ```
+/// split_markdown_link("[link text](url) rest") // Some(("[link text](url)", " rest"))
+/// ```
 fun split_markdown_link(s: String): Option<(String, String)> {
   if s.starts_with("[").not() && s.starts_with("![").not() {
     return None
@@ -541,8 +541,8 @@ test split_markdown_link {
   assert(split_markdown_link("[unclosed") == None)
 }
 
-// If `s` contains any of the items in `substrings`, return the index
-// of the first match.
+/// If `s` contains any of the items in `substrings`, return the index
+/// of the first match.
 fun first_idx(s: String, substrings: List<String>): Option<Int> {
   let indices: List<Int> = []
   for char in substrings {

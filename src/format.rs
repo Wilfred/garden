@@ -64,10 +64,8 @@ impl Visitor for IndentationVisitor {
             return;
         }
 
-        // Enter nested level
         self.current_depth += 1;
 
-        // Process each expression in the block
         for expr in &block.exprs {
             let line_num = expr.position.line_number;
 
@@ -86,11 +84,9 @@ impl Visitor for IndentationVisitor {
                 self.processed_lines.insert(line_num);
             }
 
-            // Recurse into expression to handle nested blocks
             self.visit_expr(expr);
         }
 
-        // Exit nested level
         self.current_depth -= 1;
 
         // Format the closing brace at the same level as the block
@@ -118,7 +114,6 @@ impl Visitor for IndentationVisitor {
             // Visit the scrutinee expression first
             self.visit_expr(scrutinee);
 
-            // Enter nested level for match arms
             self.current_depth += 1;
 
             // Track the last case's end line
@@ -149,7 +144,6 @@ impl Visitor for IndentationVisitor {
                 last_case_end_line = case_block.close_brace.line_number;
             }
 
-            // Exit nested level
             self.current_depth -= 1;
 
             // Format the closing brace of the match expression

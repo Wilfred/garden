@@ -309,7 +309,8 @@ fun build_site(): Unit {
   }
 
   for operator in reflect::operators() {
-    if seen_operator_pages.contains(operator).not() {
+    let page_name = if operator == "/" { "slash" } else { operator }
+    if seen_operator_pages.contains(page_name).not() {
       log::warn("Expected a page documenting operator: " ^ operator)
     }
   }
@@ -397,7 +398,8 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
   let keyword_links = join_with_commas_and(keyword_links)
 
   let operator_links = reflect::operators().map(fun(operator: String) {
-    "".join(["[`", operator, "`](./operator:", operator, ".html)"])
+    let page_name = if operator == "/" { "slash" } else { operator }
+    "".join(["[`", operator, "`](./operator:", page_name, ".html)"])
   })
 
   let operator_links = join_with_commas_and(operator_links)

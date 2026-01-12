@@ -209,7 +209,7 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
 
 fun render_markdown_code(snippet: Snippet): String {
   let is_garden = snippet.labels.is_empty() || snippet.labels.contains("garden")
-  
+
   let (inner, output_div) = if is_garden {
     (render_markdown_garden_code(snippet),
      "<div class=\"snippet-output\" hidden></div>")
@@ -241,7 +241,7 @@ fun check_source(src: String, path: Option<Path>): Unit {
         Some(p) => p.p ^ ": "
         None => ""
       }
-      
+
       log::warn(path_desc ^ "Found an error when checking: " ^ src)
       for message in messages {
         log::info("  " ^ message)
@@ -293,6 +293,12 @@ fun render_markdown_garden_code(snippet: Snippet): String {
         "<a class=\"keyword\" href=\"/keyword:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if operators.contains(tok) {
         if prev_had_trailing_ws && has_trailing_ws {
+          let url = if tok == "/" {
+            "/operator:slash.html"
+          } else {
+            "/operator:" ^ tok ^ ".html"
+          }
+
           // We want to distinguish `List<Int>`, where there isn't an
           // operator, from `1 < 2` where there is an operator.
           //
@@ -300,7 +306,7 @@ fun render_markdown_garden_code(snippet: Snippet): String {
           // the lexer. It would be better to expose the full parser
           // to userland Garden code.
           let after_tok = part.substring(tok.len(), part.len())
-          "<a class=\"operator\" href=\"/operator:" ^ tok ^ ".html\">" ^ escape_angle_brackets(tok) ^ "</a>" ^ after_tok
+          "<a class=\"operator\" href=\"" ^ url ^ "\">" ^ escape_angle_brackets(tok) ^ "</a>" ^ after_tok
         } else {
           escape_angle_brackets(part)
         }

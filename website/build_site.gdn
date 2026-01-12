@@ -389,49 +389,58 @@ fun join_with_commas_and(items: List<String>): String {
   " and ".join([", ".join(but_last), last_item ^ "."])
 }
 
+// Helper function to create markdown links of the form
+//
+// ```text
+// [`foo`](bar.html)
+// ```
+fun code_link(text: String, url: String): String {
+  "[`" ^ text ^ "`](" ^ url ^ ")"
+}
+
 // Replace all __FOO strings in markdown `src` with runtime values.
 fun substitute_shorthand(website_dir: Path, src: String): String {
   let keyword_links = reflect::keywords().map(fun(keyword: String) {
-    "".join(["[`", keyword, "`](./keyword:", keyword, ".html)"])
+    code_link(keyword, "./keyword:" ^ keyword ^ ".html")
   })
 
   let keyword_links = join_with_commas_and(keyword_links)
 
   let operator_links = reflect::operators().map(fun(operator: String) {
     let page_name = if operator == "/" { "slash" } else { operator }
-    "".join(["[`", operator, "`](./operator:", page_name, ".html)"])
+    code_link(operator, "./operator:" ^ page_name ^ ".html")
   })
 
   let operator_links = join_with_commas_and(operator_links)
 
   let type_links = reflect::prelude_types().map(fun(name: String) {
-    "".join(["[`", name, "`](./type:", name, ".html)"])
+    code_link(name, "./type:" ^ name ^ ".html")
   })
 
   let type_links = join_with_commas_and(type_links)
 
   let prelude_funs = reflect::namespace_functions(prelude).map(fun(name: String) {
-    "".join(["[`", name ^ "()", "`](./fun:__prelude.gdn::", name, ".html)"])
+    code_link(name ^ "()", "./fun:__prelude.gdn::" ^ name ^ ".html")
   })
   let prelude_funs = join_with_commas_and(prelude_funs)
 
   let fs_funs = reflect::namespace_functions(fs).map(fun(name: String) {
-    "".join(["[`", name ^ "()", "`](./fun:__fs.gdn::", name, ".html)"])
+    code_link(name ^ "()", "./fun:__fs.gdn::" ^ name ^ ".html")
   })
   let fs_funs = join_with_commas_and(fs_funs)
 
   let random_funs = reflect::namespace_functions(random).map(fun(name: String) {
-    "".join(["[`", name ^ "()", "`](./fun:__random.gdn::", name, ".html)"])
+    code_link(name ^ "()", "./fun:__random.gdn::" ^ name ^ ".html")
   })
   let random_funs = join_with_commas_and(random_funs)
 
   let reflect_funs = reflect::namespace_functions(reflect).map(fun(name: String) {
-    "".join(["[`", name ^ "()", "`](./fun:__reflect.gdn::", name, ".html)"])
+    code_link(name ^ "()", "./fun:__reflect.gdn::" ^ name ^ ".html")
   })
   let reflect_funs = join_with_commas_and(reflect_funs)
 
   let time_funs = reflect::namespace_functions(time).map(fun(name: String) {
-    "".join(["[`", name ^ "()", "`](./fun:__time.gdn::", name, ".html)"])
+    code_link(name ^ "()", "./fun:__time.gdn::" ^ name ^ ".html")
   })
   let time_funs = join_with_commas_and(time_funs)
 

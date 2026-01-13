@@ -6,7 +6,7 @@ fun foo(): Int {}
 
 // args: run
 // expected stderr:
-// Error: Expected `Int`, but got `Unit`
+// Exception: Expected `Int`, but got `Unit`
 // --| src/test_files/runtime/return_invalid_unit.gdn:1:12	 fun foo()
 //  1| fun foo(): Int {}
 //   |            ^^^

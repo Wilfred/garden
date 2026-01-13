@@ -11,7 +11,7 @@ fun foo(b: Bool): Int {
 
 // args: run
 // expected stderr:
-// Error: Expected `Int`, but got `Unit`
+// Exception: Expected `Int`, but got `Unit`
 // --| src/test_files/runtime/if_without_else.gdn:1:19	 fun foo()
 //  1| fun foo(b: Bool): Int {
 //   |                   ^^^

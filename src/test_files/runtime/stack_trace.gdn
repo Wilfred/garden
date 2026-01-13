@@ -16,7 +16,7 @@ fun call_it2() {
 
 // args: run
 // expected stderr:
-// Error: No such variable `no_such`.
+// Exception: No such variable `no_such`.
 // --| src/test_files/runtime/stack_trace.gdn:6:5	 fun call_it()
 //  6|     no_such()
 //   |     ^^^^^^^

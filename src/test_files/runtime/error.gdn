@@ -12,7 +12,7 @@ fun caller() {
 
 // args: run
 // expected stderr:
-// Error: oh no
+// Exception: oh no
 // oh dear
 // --| src/test_files/runtime/error.gdn:2:3	 fun callee()
 //  2|   throw("oh no\noh dear")

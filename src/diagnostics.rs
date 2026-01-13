@@ -45,7 +45,7 @@ pub(crate) struct Diagnostic {
     pub(crate) fixes: Vec<Autofix>,
 }
 
-pub(crate) fn format_error_with_stack(
+pub(crate) fn format_exception_with_stack(
     message: &ErrorMessage,
     position: &Position,
     stack: &[StackFrame],
@@ -59,9 +59,9 @@ pub(crate) fn format_error_with_stack(
     res.push_str(&format!(
         "{}: {}\n",
         if use_color {
-            "Error".bold().red().to_string()
+            "Exception".bold().red().to_string()
         } else {
-            "Error".to_owned()
+            "Exception".to_owned()
         },
         if use_color {
             message.as_styled_string()

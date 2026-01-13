@@ -46,8 +46,8 @@
 //               "end_column": 20,
 //               "path": "__user.gdn"
 //             },
-//             "message": "Error: x",
-//             "stack": "Error: x\n-| __user.gdn:1:11\t fun f()\n1| fun f() { throw(\"x\") }\n |           ^^^^^^^^^^\n-| __user.gdn:1:1\t __toplevel__\n?| f()"
+//             "message": "Exception: x",
+//             "stack": "Exception: x\n-| __user.gdn:1:11\t fun f()\n1| fun f() { throw(\"x\") }\n |           ^^^^^^^^^^\n-| __user.gdn:1:1\t __toplevel__\n?| f()"
 //           }
 //         ]
 //       },
@@ -72,7 +72,7 @@
 //               "end_column": 20,
 //               "path": "__user.gdn"
 //             },
-//             "message": "Error: x",
+//             "message": "Exception: x",
 //             "stack": null
 //           }
 //         ]

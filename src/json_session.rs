@@ -14,7 +14,7 @@ use crate::checks::check_toplevel_items_in_env;
 use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError, EvalAction,
 };
-use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Severity};
+use crate::diagnostics::{format_diagnostic, format_exception_with_stack, Diagnostic, Severity};
 use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to,
@@ -365,15 +365,20 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             position,
             message: e,
         }) => {
-            let stack =
-                format_error_with_stack(&e, &position, &env.stack.0, &env.vfs, &env.project_root);
+            let stack = format_exception_with_stack(
+                &e,
+                &position,
+                &env.stack.0,
+                &env.vfs,
+                &env.project_root,
+            );
 
             Response {
                 kind: ResponseKind::Evaluate {
                     warnings: vec![],
                     value: Err(vec![ResponseError {
                         position: Some(position),
-                        message: format!("Error: {}", e.as_string()),
+                        message: format!("Exception: {}", e.as_string()),
                         stack: Some(stack),
                     }]),
                     stack_frame_name: Some(env.top_frame_name()),
@@ -383,7 +388,7 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             }
         }
         EvalError::AssertionFailed(position, message) => {
-            let stack = format_error_with_stack(
+            let stack = format_exception_with_stack(
                 &message,
                 &position,
                 &env.stack.0,
@@ -770,7 +775,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: Some(position),
-                    message: format!("Error: {}", e.as_string()),
+                    message: format!("Exception: {}", e.as_string()),
                     stack: None,
                 }]),
                 stack_frame_name: Some(env.top_frame_name()),

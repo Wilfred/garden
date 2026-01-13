@@ -9,7 +9,7 @@ fun foo(): Option<Int> {
 
 // args: run
 // expected stderr:
-// Error: Expected `Option<Int>`, but got `Option<String>`: `Some("")`
+// Exception: Expected `Option<Int>`, but got `Option<String>`: `Some("")`
 // --| src/test_files/runtime/return_invalid_option.gdn:1:12	 fun foo()
 //  1| fun foo(): Option<Int> {
 //   |            ^^^^^^^^^^^

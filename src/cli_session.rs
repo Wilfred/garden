@@ -9,7 +9,7 @@ use std::time::Instant;
 use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError, EvalAction,
 };
-use crate::diagnostics::format_error_with_stack;
+use crate::diagnostics::format_exception_with_stack;
 use crate::env::Env;
 use crate::eval::{
     eval, load_toplevel_items_with_stubs, push_test_stackframe, EvalError, ExceptionInfo,
@@ -210,7 +210,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 let _ = last_src; // should use this.
                 println!(
                     "{}",
-                    &format_error_with_stack(
+                    &format_exception_with_stack(
                         &message,
                         &position,
                         &env.stack.0,
@@ -223,7 +223,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
             Err(EvalError::AssertionFailed(position, msg)) => {
                 println!(
                     "{}",
-                    &format_error_with_stack(
+                    &format_exception_with_stack(
                         &msg,
                         &position,
                         &env.stack.0,

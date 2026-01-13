@@ -83,7 +83,7 @@ use json_session::{handle_request, start_eval_thread};
 use parser::vfs::{to_abs_path, Vfs, VfsPathBuf};
 use test_runner::{run_sandboxed_tests_in_file, run_tests_in_files};
 
-use crate::diagnostics::{format_diagnostic, format_error_with_stack, Severity};
+use crate::diagnostics::{format_diagnostic, format_exception_with_stack, Severity};
 use crate::env::Env;
 use crate::eval::{
     eval_toplevel_items, load_toplevel_items, EvalError, ExceptionInfo, Session, StdoutJsonFormat,
@@ -728,7 +728,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         Err(EvalError::Exception(ExceptionInfo { position, message })) => {
             eprintln!(
                 "{}",
-                &format_error_with_stack(
+                &format_exception_with_stack(
                     &message,
                     &position,
                     &env.stack.0,
@@ -740,7 +740,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         Err(EvalError::AssertionFailed(position, msg)) => {
             eprintln!(
                 "{}",
-                &format_error_with_stack(
+                &format_exception_with_stack(
                     &msg,
                     &position,
                     &env.stack.0,

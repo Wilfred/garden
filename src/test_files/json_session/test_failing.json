@@ -18,8 +18,8 @@
 //               "end_column": 23,
 //               "path": "__user.gdn"
 //             },
-//             "message": "Error: foo",
-//             "stack": "Error: foo\n-| __user.gdn:1:12\t test foo\n1| test foo { throw(\"foo\") }\n |            ^^^^^^^^^^^^"
+//             "message": "Exception: foo",
+//             "stack": "Exception: foo\n-| __user.gdn:1:12\t test foo\n1| test foo { throw(\"foo\") }\n |            ^^^^^^^^^^^^"
 //           }
 //         ]
 //       },

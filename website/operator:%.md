@@ -8,7 +8,7 @@ second number.
 7 % 3 //-> 1
 ```
 
-As with division, `% 0` will throw an error.
+As with division, `% 0` will throw an exception.
 
 ```
 6 % 0 // Division by zero error.

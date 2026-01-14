@@ -38,6 +38,7 @@
 #![allow(clippy::cmp_owned)]
 
 mod caret_finder;
+mod check_markdown;
 mod checks;
 mod cli_session;
 mod colors;
@@ -206,6 +207,8 @@ enum CliCommands {
         #[clap(long, action)]
         stdout: bool,
     },
+    /// Check code examples in a markdown file.
+    CheckMarkdown { path: PathBuf },
     /// Show the type of the expression at the position given.
     ShowType {
         path: PathBuf,
@@ -267,6 +270,11 @@ fn main() {
             src = remove_testing_footer(&src);
             let src_path = to_abs_path(&override_path.unwrap_or(path.clone()));
             syntax_check::check(&src_path, &src, json, fix, stdout, &abs_path)
+        }
+        CliCommands::CheckMarkdown { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            check_markdown::check_markdown(&src, &abs_path, interrupted)
         }
         CliCommands::Test {
             paths,
@@ -804,6 +812,11 @@ mod tests {
     #[test]
     fn test_golden_check_fix() -> TestResult<()> {
         run_golden_tests("check_fix")
+    }
+
+    #[test]
+    fn test_golden_check_markdown() -> TestResult<()> {
+        run_golden_tests("check_markdown")
     }
 
     #[test]

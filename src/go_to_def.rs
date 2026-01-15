@@ -21,6 +21,9 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize, in_test_suite: bo
     let ns = env.get_or_create_namespace(path);
     load_toplevel_items(&items, &mut env, ns.clone());
 
+    // The type checker records where it found every value as it runs,
+    // so we can use `summary` to find the relevant position of what
+    // we're looking at.
     let summary = check_types(&vfs_path, &items, &env, ns);
 
     let mut ids_at_query_pos = vec![];

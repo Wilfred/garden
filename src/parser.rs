@@ -1654,7 +1654,7 @@ fn parse_import(
         return None;
     };
 
-    let position = Position::merge_token(&import_token, &path_token.position);
+    let mut position = Position::merge_token(&import_token, &path_token.position);
 
     let path_s = if path_token.text.starts_with('\"') {
         let (errors, s) = unescape_string(&path_token);
@@ -1681,7 +1681,10 @@ fn parse_import(
     if peeked_symbol_is(tokens, "as") {
         tokens.pop();
 
-        namespace_sym = Some(parse_symbol(tokens, id_gen, diagnostics, None));
+        let sym = parse_symbol(tokens, id_gen, diagnostics, None);
+        position = Position::merge(&position, &sym.position);
+
+        namespace_sym = Some(sym);
     }
 
     let import_info = ImportInfo {

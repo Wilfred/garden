@@ -401,16 +401,25 @@ fn check_file(file_path: &Path, interrupted: Arc<AtomicBool>, project_root: &Pat
         .extension()
         .is_some_and(|ext| ext == "gdn");
 
-    // Extract code blocks
-    let code_blocks = if is_gdn {
-        // For .gdn files, treat the entire file as one code block
-        vec![CodeBlock {
-            start_offset: 0,
-            end_offset: src.len(),
-        }]
+    // Extract code blocks and the source to use for parsing
+    let (code_blocks, parse_src) = if is_gdn {
+        // For .gdn files, extract doc comments as markdown
+        let mut doc_markdown = String::new();
+        for line in src.lines() {
+            let trimmed = line.trim_start();
+            if let Some(comment_content) = trimmed.strip_prefix("///") {
+                doc_markdown.push_str(comment_content);
+                doc_markdown.push('\n');
+            }
+        }
+
+        // Extract code blocks from the markdown
+        let blocks = extract_code_blocks(&doc_markdown);
+        (blocks, doc_markdown)
     } else {
-        // For markdown files, extract code blocks
-        extract_code_blocks(&src)
+        // For markdown files, use the original source
+        let blocks = extract_code_blocks(&src);
+        (blocks, src.clone())
     };
 
     if code_blocks.is_empty() {
@@ -425,8 +434,8 @@ fn check_file(file_path: &Path, interrupted: Arc<AtomicBool>, project_root: &Pat
 
     // Process each code block
     for (block_idx, block) in code_blocks.iter().enumerate() {
-        // Evaluate the code block
-        match eval_code_block(block, &src, file_path, block_idx, interrupted.clone(), project_root) {
+        // Evaluate the code block using the appropriate source
+        match eval_code_block(block, &parse_src, file_path, block_idx, interrupted.clone(), project_root) {
             Ok(results) => {
                 for result in results {
                     // Get string representation of value

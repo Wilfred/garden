@@ -1,13 +1,23 @@
-// Test running a .gdn file with assertions
+/// Test running a .gdn file with doc comment code blocks.
+///
+/// Simple arithmetic:
+/// ```garden
+/// 1 + 1 //-> 2
+/// "hello".len() //-> 5
+/// [1, 2, 3].len() //-> 3
+/// ```
+///
+/// Function definition and usage:
+/// ```garden
+/// fun double(x: Int): Int {
+///   x * 2
+/// }
+///
+/// double(5) //-> 10
+/// ```
 
-1 + 1 //-> 2
-"hello".len() //-> 5
-[1, 2, 3].len() //-> 3
-
-fun double(x: Int): Int {
-  x * 2
+fun example() {
+  // This is a regular function, not in a doc comment
 }
-
-double(5) //-> 10
 
 // args: run-code-blocks

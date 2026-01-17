@@ -27,6 +27,7 @@ Added `--fix` to `garden check`.
 
 Added a `run-code-blocks` subcommand (renamed from `check-markdown`)
 that validates Garden code examples in markdown files and .gdn files.
+For .gdn files, code blocks are extracted from doc comments (`///`).
 Code blocks with `//->` comments are checked to ensure the expression
 value matches the expected value.
 

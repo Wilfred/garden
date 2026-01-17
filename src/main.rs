@@ -38,6 +38,7 @@
 #![allow(clippy::cmp_owned)]
 
 mod caret_finder;
+mod check_markdown;
 mod checks;
 mod cli_session;
 mod colors;
@@ -206,6 +207,8 @@ enum CliCommands {
         #[clap(long, action)]
         stdout: bool,
     },
+    /// Run Garden code blocks in markdown and .gdn files.
+    RunCodeBlocks { paths: Vec<PathBuf> },
     /// Show the type of the expression at the position given.
     ShowType {
         path: PathBuf,
@@ -267,6 +270,9 @@ fn main() {
             src = remove_testing_footer(&src);
             let src_path = to_abs_path(&override_path.unwrap_or(path.clone()));
             syntax_check::check(&src_path, &src, json, fix, stdout, &abs_path)
+        }
+        CliCommands::RunCodeBlocks { paths } => {
+            check_markdown::run_code_blocks(&paths, interrupted);
         }
         CliCommands::Test {
             paths,
@@ -804,6 +810,11 @@ mod tests {
     #[test]
     fn test_golden_check_fix() -> TestResult<()> {
         run_golden_tests("check_fix")
+    }
+
+    #[test]
+    fn test_golden_run_code_blocks() -> TestResult<()> {
+        run_golden_tests("run_code_blocks")
     }
 
     #[test]

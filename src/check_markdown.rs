@@ -1,4 +1,4 @@
-//! Check code examples in markdown files.
+//! Check code examples in markdown files and .gdn files.
 
 use std::path::Path;
 use std::rc::Rc;
@@ -386,18 +386,32 @@ fn check_expression(value: &str, expected: Option<&str>) -> CheckResult {
     }
 }
 
-/// Check a single markdown file.
-fn check_markdown_file(markdown_path: &Path, interrupted: Arc<AtomicBool>, project_root: &Path) -> bool {
-    let src = match std::fs::read_to_string(markdown_path) {
+/// Check a single file (markdown or .gdn).
+fn check_file(file_path: &Path, interrupted: Arc<AtomicBool>, project_root: &Path) -> bool {
+    let src = match std::fs::read_to_string(file_path) {
         Ok(src) => src,
         Err(e) => {
-            eprintln!("Error reading {}: {}", markdown_path.display(), e);
+            eprintln!("Error reading {}: {}", file_path.display(), e);
             return false;
         }
     };
 
+    // Determine if this is a .gdn file or markdown file
+    let is_gdn = file_path
+        .extension()
+        .is_some_and(|ext| ext == "gdn");
+
     // Extract code blocks
-    let code_blocks = extract_code_blocks(&src);
+    let code_blocks = if is_gdn {
+        // For .gdn files, treat the entire file as one code block
+        vec![CodeBlock {
+            start_offset: 0,
+            end_offset: src.len(),
+        }]
+    } else {
+        // For markdown files, extract code blocks
+        extract_code_blocks(&src)
+    };
 
     if code_blocks.is_empty() {
         return true; // No code blocks is fine
@@ -412,7 +426,7 @@ fn check_markdown_file(markdown_path: &Path, interrupted: Arc<AtomicBool>, proje
     // Process each code block
     for (block_idx, block) in code_blocks.iter().enumerate() {
         // Evaluate the code block
-        match eval_code_block(block, &src, markdown_path, block_idx, interrupted.clone(), project_root) {
+        match eval_code_block(block, &src, file_path, block_idx, interrupted.clone(), project_root) {
             Ok(results) => {
                 for result in results {
                     // Get string representation of value
@@ -431,8 +445,8 @@ fn check_markdown_file(markdown_path: &Path, interrupted: Arc<AtomicBool>, proje
                         }
                         CheckResult::Failed { expected, got } => {
                             had_error = true;
-                            // Use the markdown path, not the synthetic path
-                            let relative_path = to_project_relative(markdown_path, project_root);
+                            // Use the actual path
+                            let relative_path = to_project_relative(file_path, project_root);
                             eprintln!(
                                 "{}:{}: Check failed",
                                 relative_path.display(),
@@ -459,10 +473,10 @@ fn check_markdown_file(markdown_path: &Path, interrupted: Arc<AtomicBool>, proje
     !had_error
 }
 
-/// Main entry point for checking markdown files with multiple paths.
+/// Main entry point for checking markdown and .gdn files with multiple paths.
 pub(crate) fn check_markdown(paths: &[std::path::PathBuf], interrupted: Arc<AtomicBool>) {
     if paths.is_empty() {
-        eprintln!("No markdown files specified");
+        eprintln!("No files specified");
         std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     }
 
@@ -471,7 +485,7 @@ pub(crate) fn check_markdown(paths: &[std::path::PathBuf], interrupted: Arc<Atom
     let mut all_success = true;
     for path in paths {
         let abs_path = to_abs_path(path);
-        if !check_markdown_file(&abs_path, interrupted.clone(), &project_root) {
+        if !check_file(&abs_path, interrupted.clone(), &project_root) {
             all_success = false;
         }
     }

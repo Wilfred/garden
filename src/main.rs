@@ -207,8 +207,8 @@ enum CliCommands {
         #[clap(long, action)]
         stdout: bool,
     },
-    /// Check Garden code snippets in markdown files.
-    CheckMarkdown { paths: Vec<PathBuf> },
+    /// Run Garden code blocks in markdown and .gdn files.
+    RunCodeBlocks { paths: Vec<PathBuf> },
     /// Show the type of the expression at the position given.
     ShowType {
         path: PathBuf,
@@ -271,7 +271,7 @@ fn main() {
             let src_path = to_abs_path(&override_path.unwrap_or(path.clone()));
             syntax_check::check(&src_path, &src, json, fix, stdout, &abs_path)
         }
-        CliCommands::CheckMarkdown { paths } => {
+        CliCommands::RunCodeBlocks { paths } => {
             check_markdown::check_markdown(&paths, interrupted);
         }
         CliCommands::Test {
@@ -813,8 +813,8 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_check_markdown() -> TestResult<()> {
-        run_golden_tests("check_markdown")
+    fn test_golden_run_code_blocks() -> TestResult<()> {
+        run_golden_tests("run_code_blocks")
     }
 
     #[test]

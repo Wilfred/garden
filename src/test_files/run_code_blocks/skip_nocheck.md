@@ -12,4 +12,4 @@ This block should be checked.
 1 + 1 //-> 2
 ```
 
-// args: check-markdown
+// args: run-code-blocks

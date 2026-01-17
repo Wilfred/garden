@@ -8,4 +8,4 @@ Simple expressions with assertions.
 [1, 2, 3].len() //-> 3
 ```
 
-// args: check-markdown
+// args: run-code-blocks

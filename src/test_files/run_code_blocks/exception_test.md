@@ -24,4 +24,4 @@ Mixed success and exception:
 3 + 3 //-> 6
 ```
 
-// args: check-markdown
+// args: run-code-blocks

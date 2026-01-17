@@ -1,0 +1,13 @@
+// Test running a .gdn file with assertions
+
+1 + 1 //-> 2
+"hello".len() //-> 5
+[1, 2, 3].len() //-> 3
+
+fun double(x: Int): Int {
+  x * 2
+}
+
+double(5) //-> 10
+
+// args: run-code-blocks

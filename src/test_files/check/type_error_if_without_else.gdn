@@ -7,6 +7,14 @@ public fun foo(b: Bool): Int {
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Warning: Unused value.
+// -| src/test_files/check/type_error_if_without_else.gdn:3:9
+// 1| public fun foo(b: Bool): Int {
+// 2|     if b {
+// 3|         123
+// 4|     }   ^^^
+// 5| }
+// 
 // Error: Expected `Unit`, but got `Int`.
 // -| src/test_files/check/type_error_if_without_else.gdn:3:9
 // 1| public fun foo(b: Bool): Int {

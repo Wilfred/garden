@@ -1,0 +1,11 @@
+public fun nums(): List<Int> {
+  [1, 2]
+  [3, 4]
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// public fun nums(): List<Int> {
+//   [3, 4]
+// }
+

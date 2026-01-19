@@ -1,0 +1,46 @@
+public fun example() {
+  42
+  "hello"
+  [1, 2, 3]
+  Dict[]
+
+  let x = 10
+  x
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Unused value.
+// --| src/test_files/check/unused_literal.gdn:2:3
+//  1| public fun example() {
+//  2|   42
+//   |   ^^
+//  3|   "hello"
+//  4|   [1, 2, 3]
+// 
+// Warning: Unused value.
+// --| src/test_files/check/unused_literal.gdn:3:3
+//  1| public fun example() {
+//  2|   42
+//  3|   "hello"
+//   |   ^^^^^^^
+//  4|   [1, 2, 3]
+//  5|   Dict[]
+// 
+// Warning: Unused value.
+// --| src/test_files/check/unused_literal.gdn:4:3
+//  2|   42
+//  3|   "hello"
+//  4|   [1, 2, 3]
+//   |   ^^^^^^^^^
+//  5|   Dict[]
+// 
+// Warning: Unused value.
+// --| src/test_files/check/unused_literal.gdn:5:3
+//  3|   "hello"
+//  4|   [1, 2, 3]
+//  5|   Dict[]
+//  6|   ^^^^^^
+//  7|   let x = 10
+

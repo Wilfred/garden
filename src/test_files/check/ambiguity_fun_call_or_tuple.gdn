@@ -14,3 +14,13 @@ fun add_one(i: Int): Int {
 }
 
 // args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Unused value.
+// --| src/test_files/check/ambiguity_fun_call_or_tuple.gdn:6:3
+//  4|   // Definitely a tuple, because there's whitespace before it.
+//  5|   let _y = x
+//  6|   (10, 11)
+//  7|   ^^^^^^^^
+//  8|   // Should be parsed as a call, not an if followed by a tuple (5).
+

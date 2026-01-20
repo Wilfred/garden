@@ -13,5 +13,5 @@ This assertion should fail.
 //   Expected: 3
 //   Got:      2
 // 
-// Checked 1 blocks in 1 files.
+// Checked 1 block in 1 file.
 

@@ -13,17 +13,24 @@ divide(10, 0) //-> *exception*
 Multiple blocks with exceptions:
 
 ```garden
-[1, 2, 3][10] //-> *exception*
+fun divide2(a: Int, b: Int): Int {
+  a / b
+}
+
+divide2(5, 0) //-> *exception*
 ```
 
 Mixed success and exception:
 
 ```garden
 1 + 1 //-> 2
-[][0] //-> *exception*
+fun divide3(a: Int, b: Int): Int {
+  a / b
+}
+divide3(8, 0) //-> *exception*
 3 + 3 //-> 6
 ```
 
 // args: run-code-blocks
-// expected stderr: Checked 3 blocks in 1 files.
+// expected stderr: Checked 3 blocks in 1 file.
 

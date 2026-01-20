@@ -21,5 +21,5 @@ fun example() {
 }
 
 // args: run-code-blocks
-// expected stderr: Checked 2 blocks in 1 files.
+// expected stderr: Checked 2 blocks in 1 file.
 

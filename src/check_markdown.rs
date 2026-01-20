@@ -38,6 +38,7 @@ enum CheckResult {
     Passed,
     Failed { expected: String, got: String },
     ExpectedException,
+    MissingException { got: String },
     NoAssertion,
 }
 
@@ -334,8 +335,15 @@ fn check_expression(value: &str, expected: Option<&str>) -> CheckResult {
         Some(expected) => {
             let expected = expected.trim();
             if expected == "*exception*" {
-                // Exception was expected and handled earlier
-                CheckResult::ExpectedException
+                // Exception was expected - check if it was unit (meaning exception occurred)
+                // or a real value (meaning no exception occurred)
+                if value == "Unit" {
+                    CheckResult::ExpectedException
+                } else {
+                    CheckResult::MissingException {
+                        got: value.to_owned(),
+                    }
+                }
             } else if value == expected {
                 CheckResult::Passed
             } else {
@@ -432,6 +440,18 @@ fn run_blocks_in_file(file_path: &Path, interrupted: Arc<AtomicBool>, project_ro
                             eprintln!("  Got:      {}", got);
                             eprintln!();
                         }
+                        CheckResult::MissingException { got } => {
+                            had_error = true;
+                            // Use the actual path
+                            let relative_path = to_project_relative(file_path, project_root);
+                            eprintln!(
+                                "{}:{}: Expected exception but expression succeeded",
+                                relative_path.display(),
+                                result.position.line_number + 1 // Convert 0-indexed to 1-indexed
+                            );
+                            eprintln!("  Got:      {}", got);
+                            eprintln!();
+                        }
                         CheckResult::NoAssertion => {
                             // Don't print values by default (less verbose)
                         }
@@ -472,7 +492,9 @@ pub(crate) fn run_code_blocks(paths: &[std::path::PathBuf], interrupted: Arc<Ato
     }
 
     // Print summary
-    eprintln!("Checked {} blocks in {} files.", total_blocks, total_files);
+    let block_word = if total_blocks == 1 { "block" } else { "blocks" };
+    let file_word = if total_files == 1 { "file" } else { "files" };
+    eprintln!("Checked {} {} in {} {}.", total_blocks, block_word, total_files, file_word);
 
     if !all_success {
         std::process::exit(1);

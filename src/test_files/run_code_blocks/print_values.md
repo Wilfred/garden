@@ -9,5 +9,5 @@ Expressions without assertions should print their values.
 ```
 
 // args: run-code-blocks
-// expected stderr: Checked 1 blocks in 1 files.
+// expected stderr: Checked 1 block in 1 file.
 

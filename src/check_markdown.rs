@@ -349,12 +349,12 @@ fn check_expression(value: &str, expected: Option<&str>) -> CheckResult {
     }
 }
 
-fn run_blocks_in_file(file_path: &Path, interrupted: Arc<AtomicBool>, project_root: &Path) -> bool {
+fn run_blocks_in_file(file_path: &Path, interrupted: Arc<AtomicBool>, project_root: &Path) -> (bool, usize) {
     let src = match std::fs::read_to_string(file_path) {
         Ok(src) => src,
         Err(e) => {
             eprintln!("Error reading {}: {}", file_path.display(), e);
-            return false;
+            return (false, 0);
         }
     };
 
@@ -381,8 +381,10 @@ fn run_blocks_in_file(file_path: &Path, interrupted: Arc<AtomicBool>, project_ro
         (blocks, src.clone())
     };
 
+    let block_count = code_blocks.len();
+
     if code_blocks.is_empty() {
-        return true; // No code blocks is fine
+        return (true, 0); // No code blocks is fine
     }
 
     // Track failures
@@ -444,7 +446,7 @@ fn run_blocks_in_file(file_path: &Path, interrupted: Arc<AtomicBool>, project_ro
         }
     }
 
-    !had_error
+    (!had_error, block_count)
 }
 
 pub(crate) fn run_code_blocks(paths: &[std::path::PathBuf], interrupted: Arc<AtomicBool>) {
@@ -456,12 +458,21 @@ pub(crate) fn run_code_blocks(paths: &[std::path::PathBuf], interrupted: Arc<Ato
     let project_root = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("/"));
 
     let mut all_success = true;
+    let mut total_files = 0;
+    let mut total_blocks = 0;
+
     for path in paths {
         let abs_path = to_abs_path(path);
-        if !run_blocks_in_file(&abs_path, interrupted.clone(), &project_root) {
+        let (success, block_count) = run_blocks_in_file(&abs_path, interrupted.clone(), &project_root);
+        if !success {
             all_success = false;
         }
+        total_files += 1;
+        total_blocks += block_count;
     }
+
+    // Print summary
+    eprintln!("Checked {} blocks in {} files.", total_blocks, total_files);
 
     if !all_success {
         std::process::exit(1);

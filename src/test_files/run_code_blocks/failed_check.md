@@ -12,4 +12,6 @@ This assertion should fail.
 // src/test_files/run_code_blocks/failed_check.md:6: Check failed
 //   Expected: 3
 //   Got:      2
+// 
+// Checked 1 blocks in 1 files.
 

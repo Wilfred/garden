@@ -25,3 +25,5 @@ Mixed success and exception:
 ```
 
 // args: run-code-blocks
+// expected stderr: Checked 3 blocks in 1 files.
+

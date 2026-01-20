@@ -1,0 +1,9 @@
+fun foo<T, U>(x: U): U {
+  x
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// fun foo<U>(x: U): U {
+//   x
+// }

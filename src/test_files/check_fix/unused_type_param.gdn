@@ -1,0 +1,9 @@
+fun foo<T>(): Int {
+  1
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// fun foo(): Int {
+//   1
+// }

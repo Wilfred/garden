@@ -1,6 +1,6 @@
 use rustc_hash::FxHashMap;
 
-use crate::diagnostics::{Diagnostic, Severity};
+use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::parser::ast::{
     Block, Expression, Expression_, FunInfo, ImportInfo, InternedSymbolId, LetDestination,
     MethodInfo, Pattern, Symbol, SymbolName, ToplevelItem, TypeHint, TypeName, TypeSymbol,
@@ -18,11 +18,48 @@ pub(crate) fn check_unused_variables(items: &[ToplevelItem]) -> Vec<Diagnostic> 
     visitor.diagnostics()
 }
 
+/// Information about type parameters in a function/method.
+#[derive(Debug, Clone)]
+struct TypeParamInfo {
+    /// All type parameters and their use states.
+    params: Vec<(TypeSymbol, UseState)>,
+}
+
 #[derive(Debug, Clone)]
 enum UseState {
     Used,
     /// An unused variable, along with its definition position.
     NotUsed(Position),
+}
+
+/// Tracks information needed for import use checking.
+#[derive(Debug, Clone)]
+enum ImportUseState {
+    Used,
+    /// Symbol position and full import position.
+    NotUsed {
+        symbol_position: Position,
+        import_position: Position,
+    },
+}
+
+/// Information about an unused local variable and how to fix it.
+#[derive(Debug, Clone)]
+struct UnusedLocalVar {
+    name: SymbolName,
+    /// Position of the variable name (for the warning).
+    name_position: Position,
+    /// How to fix this unused variable.
+    fix: UnusedVarFix,
+}
+
+/// The type of fix to apply for an unused variable.
+#[derive(Debug, Clone)]
+enum UnusedVarFix {
+    /// Rename the variable with underscore prefix (for parameters).
+    Rename,
+    /// Remove the `let x = ` part, keeping just the expression.
+    RemoveLet { removal_position: Position },
 }
 
 struct UnusedVariableVisitor {
@@ -39,19 +76,33 @@ struct UnusedVariableVisitor {
     bound_scopes: Vec<Vec<(InternedSymbolId, SymbolName, UseState)>>,
     /// Symbols that are bound in the current file, such as `foo` in
     /// `import "x.gdn" as foo`.
-    file_bindings: FxHashMap<SymbolName, UseState>,
+    file_bindings: FxHashMap<SymbolName, ImportUseState>,
 
-    /// Unused variables (e.g. locals, parameters).
-    unused: Vec<(SymbolName, Position)>,
+    /// Unused local variables with their fix info.
+    unused: Vec<UnusedLocalVar>,
+
+    /// For let bindings, track the removal position (from `let` to value expr).
+    /// Key is the interned symbol ID.
+    let_removal_positions: FxHashMap<InternedSymbolId, Position>,
 
     method_this_type_hint: Option<TypeHint>,
 
-    /// All type variables in the current definition, and whether
-    /// they're used.
-    type_vars: Vec<FxHashMap<TypeName, UseState>>,
+    /// Type parameter tracking for the current function/method.
+    /// Stores all type params and their use states.
+    type_param_info: Vec<TypeParamInfo>,
 
-    /// Unused type parameters.
-    unused_type_vars: Vec<(TypeName, Position)>,
+    /// Unused type parameters with their removal info.
+    unused_type_params: Vec<UnusedTypeParam>,
+}
+
+/// Information about an unused type parameter and how to remove it.
+#[derive(Debug, Clone)]
+struct UnusedTypeParam {
+    name: TypeName,
+    /// Position of the type parameter name (for the warning).
+    name_position: Position,
+    /// Position to remove (may include comma and the `<>` brackets).
+    removal_position: Position,
 }
 
 impl UnusedVariableVisitor {
@@ -60,44 +111,80 @@ impl UnusedVariableVisitor {
             bound_scopes: vec![vec![]],
             file_bindings: FxHashMap::default(),
             unused: vec![],
+            let_removal_positions: FxHashMap::default(),
             method_this_type_hint: None,
-            type_vars: vec![],
-            unused_type_vars: vec![],
+            type_param_info: vec![],
+            unused_type_params: vec![],
         }
     }
 
     fn diagnostics(&self) -> Vec<Diagnostic> {
         let mut diagnostics = vec![];
-        for (name, position) in &self.unused {
+
+        // Unused local variables
+        for unused_var in &self.unused {
+            let fix = match &unused_var.fix {
+                UnusedVarFix::Rename => Autofix {
+                    description: format!("Rename to `_{}`", unused_var.name),
+                    position: unused_var.name_position.clone(),
+                    new_text: format!("_{}", unused_var.name),
+                },
+                UnusedVarFix::RemoveLet { removal_position } => Autofix {
+                    description: "Remove this let binding".to_owned(),
+                    position: removal_position.clone(),
+                    new_text: String::new(),
+                },
+            };
+
             diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Warning,
-                message: ErrorMessage(vec![msgcode!("{}", name), msgtext!(" is unused.")]),
-                position: position.clone(),
-                fixes: vec![],
+                message: ErrorMessage(vec![
+                    msgcode!("{}", unused_var.name),
+                    msgtext!(" is unused."),
+                ]),
+                position: unused_var.name_position.clone(),
+                fixes: vec![fix],
             });
         }
 
+        // Unused imports - remove the entire import
         for (name, use_state) in &self.file_bindings {
-            let UseState::NotUsed(position) = use_state else {
+            let ImportUseState::NotUsed {
+                symbol_position,
+                import_position,
+            } = use_state
+            else {
                 continue;
             };
             diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Warning,
-                message: ErrorMessage(vec![msgcode!("{}", name), msgtext!(" is unused.")]),
-                position: position.clone(),
-                fixes: vec![],
+                message: ErrorMessage(vec![msgcode!("{name}"), msgtext!(" is unused.")]),
+                position: symbol_position.clone(),
+                fixes: vec![Autofix {
+                    description: "Remove this import".to_owned(),
+                    position: import_position.clone(),
+                    new_text: String::new(),
+                }],
             });
         }
 
-        for (name, position) in &self.unused_type_vars {
+        // Unused type parameters - remove the type parameter
+        for unused_type_param in &self.unused_type_params {
             diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Warning,
-                message: ErrorMessage(vec![msgcode!("{}", name), msgtext!(" is unused.")]),
-                position: position.clone(),
-                fixes: vec![],
+                message: ErrorMessage(vec![
+                    msgcode!("{}", unused_type_param.name),
+                    msgtext!(" is unused."),
+                ]),
+                position: unused_type_param.name_position.clone(),
+                fixes: vec![Autofix {
+                    description: "Remove this type parameter".to_owned(),
+                    position: unused_type_param.removal_position.clone(),
+                    new_text: String::new(),
+                }],
             });
         }
 
@@ -169,7 +256,7 @@ impl UnusedVariableVisitor {
             .pop()
             .expect("Tried to pop an empty scope stack.");
 
-        for (_id, name, use_state) in scope.into_iter() {
+        for (id, name, use_state) in scope.into_iter() {
             // TODO: Use the actual receiver symbol name rather than
             // hardcoding `self` here.
             if name.to_string().starts_with('_') || name.to_string() == "self" {
@@ -177,19 +264,121 @@ impl UnusedVariableVisitor {
             }
 
             if let UseState::NotUsed(position) = use_state {
-                self.unused.push((name, position));
+                // Check if this is a let binding with removal info
+                let fix = if let Some(removal_position) = self.let_removal_positions.remove(&id) {
+                    UnusedVarFix::RemoveLet { removal_position }
+                } else {
+                    UnusedVarFix::Rename
+                };
+
+                self.unused.push(UnusedLocalVar {
+                    name,
+                    name_position: position,
+                    fix,
+                });
             }
         }
     }
 
     fn check_symbol(&mut self, var: &Symbol) {
         if let Some(use_state) = self.file_bindings.get_mut(&var.name) {
-            *use_state = UseState::Used;
+            *use_state = ImportUseState::Used;
             return;
         }
 
         if self.is_locally_bound(var) {
             self.mark_used(var);
+        }
+    }
+
+    /// Process type parameters after visiting a function, generating
+    /// removal positions for unused ones.
+    fn process_unused_type_params(
+        &mut self,
+        type_param_info: &TypeParamInfo,
+        open_paren: &Position,
+    ) {
+        let params = &type_param_info.params;
+        if params.is_empty() {
+            return;
+        }
+
+        // Find which params are unused (and not prefixed with _).
+        let unused_indices: Vec<usize> = params
+            .iter()
+            .enumerate()
+            .filter_map(|(i, (tp, state))| {
+                if tp.name.text.starts_with('_') {
+                    return None;
+                }
+                if matches!(state, UseState::NotUsed(_)) {
+                    Some(i)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        if unused_indices.is_empty() {
+            return;
+        }
+
+        let all_unused = unused_indices.len() == params.len();
+
+        for &idx in &unused_indices {
+            let (tp, _) = &params[idx];
+            let name_position = tp.position.clone();
+
+            let removal_position = if all_unused {
+                // Remove entire <...> section. The `<` is right before the first
+                // type param, and `>` is right after the last one (before open paren).
+                let first_tp = &params[0].0;
+                let last_tp = &params[params.len() - 1].0;
+                Position {
+                    // Start at `<` which is one char before the first type param
+                    start_offset: first_tp.position.start_offset - 1,
+                    // End at `>` which is right before the open paren
+                    end_offset: open_paren.start_offset,
+                    line_number: first_tp.position.line_number,
+                    end_line_number: last_tp.position.end_line_number,
+                    column: first_tp.position.column.saturating_sub(1),
+                    end_column: open_paren.column,
+                    path: tp.position.path.clone(),
+                    vfs_path: tp.position.vfs_path.clone(),
+                }
+            } else if idx == 0 {
+                // First param but not all unused: remove "T, " (param and trailing comma+space)
+                let next_tp = &params[idx + 1].0;
+                Position {
+                    start_offset: tp.position.start_offset,
+                    end_offset: next_tp.position.start_offset,
+                    line_number: tp.position.line_number,
+                    end_line_number: next_tp.position.line_number,
+                    column: tp.position.column,
+                    end_column: next_tp.position.column,
+                    path: tp.position.path.clone(),
+                    vfs_path: tp.position.vfs_path.clone(),
+                }
+            } else {
+                // Not first param: remove ", T" (leading comma+space and param)
+                let prev_tp = &params[idx - 1].0;
+                Position {
+                    start_offset: prev_tp.position.end_offset,
+                    end_offset: tp.position.end_offset,
+                    line_number: prev_tp.position.end_line_number,
+                    end_line_number: tp.position.end_line_number,
+                    column: prev_tp.position.end_column,
+                    end_column: tp.position.end_column,
+                    path: tp.position.path.clone(),
+                    vfs_path: tp.position.vfs_path.clone(),
+                }
+            };
+
+            self.unused_type_params.push(UnusedTypeParam {
+                name: tp.name.clone(),
+                name_position,
+                removal_position,
+            });
         }
     }
 }
@@ -253,7 +442,10 @@ impl Visitor for UnusedVariableVisitor {
 
         self.file_bindings.insert(
             namespace_sym.name.clone(),
-            UseState::NotUsed(namespace_sym.position.clone()),
+            ImportUseState::NotUsed {
+                symbol_position: namespace_sym.position.clone(),
+                import_position: import_info.pos.clone(),
+            },
         );
     }
 
@@ -264,13 +456,14 @@ impl Visitor for UnusedVariableVisitor {
     }
 
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
-        let mut type_vars_in_scope = FxHashMap::default();
-        for type_param in &fun_info.type_params {
-            type_vars_in_scope.insert(
-                type_param.name.clone(),
-                UseState::NotUsed(type_param.position.clone()),
-            );
-        }
+        // Track all type parameters with their use state.
+        let mut type_param_info = TypeParamInfo {
+            params: fun_info
+                .type_params
+                .iter()
+                .map(|tp| (tp.clone(), UseState::NotUsed(tp.position.clone())))
+                .collect(),
+        };
 
         // Given a method definition `method foo(this: List<T>)` we
         // want `T` to be marked as used.
@@ -280,18 +473,22 @@ impl Visitor for UnusedVariableVisitor {
         // completely generic. `method foo(this: List<(Foo, Bar)>)`
         // isn't supported, for example.
         if let Some(this_type_hint) = &self.method_this_type_hint {
-            if type_vars_in_scope.contains_key(&this_type_hint.sym.name) {
-                type_vars_in_scope.insert(this_type_hint.sym.name.clone(), UseState::Used);
+            for (tp, state) in &mut type_param_info.params {
+                if tp.name == this_type_hint.sym.name {
+                    *state = UseState::Used;
+                }
             }
 
             for type_arg in &this_type_hint.args {
-                if type_vars_in_scope.contains_key(&type_arg.sym.name) {
-                    type_vars_in_scope.insert(type_arg.sym.name.clone(), UseState::Used);
+                for (tp, state) in &mut type_param_info.params {
+                    if tp.name == type_arg.sym.name {
+                        *state = UseState::Used;
+                    }
                 }
             }
         }
 
-        self.type_vars.push(type_vars_in_scope);
+        self.type_param_info.push(type_param_info);
 
         if let Some(ret_hint) = &fun_info.return_hint {
             self.visit_type_hint(ret_hint);
@@ -310,16 +507,8 @@ impl Visitor for UnusedVariableVisitor {
 
         self.pop_scope();
 
-        let type_scope = self.type_vars.pop().unwrap();
-        for (name, use_state) in type_scope {
-            if name.text.starts_with("_") {
-                continue;
-            }
-
-            if let UseState::NotUsed(position) = use_state {
-                self.unused_type_vars.push((name, position));
-            }
-        }
+        let type_param_info = self.type_param_info.pop().unwrap();
+        self.process_unused_type_params(&type_param_info, &fun_info.params.open_paren);
     }
 
     fn visit_expr_variable(&mut self, var: &Symbol) {
@@ -336,6 +525,47 @@ impl Visitor for UnusedVariableVisitor {
                     self.add_binding(symbol);
                 }
             }
+        }
+    }
+
+    fn visit_expr(&mut self, expr: &Expression) {
+        // Special handling for let expressions to track removal positions.
+        if let Expression_::Let(dest, hint, value_expr) = &expr.expr_ {
+            // Visit the expression before the destination, so we're not
+            // confused by cases like `let x = x`.
+            self.visit_expr(value_expr);
+
+            // Calculate the removal position: from start of `let` to start of value expr.
+            let removal_position = Position {
+                start_offset: expr.position.start_offset,
+                end_offset: value_expr.position.start_offset,
+                line_number: expr.position.line_number,
+                end_line_number: value_expr.position.line_number,
+                column: expr.position.column,
+                end_column: value_expr.position.column,
+                path: expr.position.path.clone(),
+                vfs_path: expr.position.vfs_path.clone(),
+            };
+
+            // Register removal positions for symbols in the destination.
+            match dest {
+                LetDestination::Symbol(symbol) => {
+                    self.let_removal_positions
+                        .insert(symbol.interned_id, removal_position);
+                }
+                LetDestination::Destructure(_) => {
+                    // For destructuring, we can't simply remove the let,
+                    // so we don't register removal positions.
+                }
+            }
+
+            self.visit_dest(dest);
+
+            if let Some(hint) = hint {
+                self.visit_type_hint(hint);
+            }
+        } else {
+            self.visit_expr_(&expr.expr_);
         }
     }
 
@@ -385,10 +615,12 @@ impl Visitor for UnusedVariableVisitor {
     }
 
     fn visit_type_symbol(&mut self, type_sym: &TypeSymbol) {
-        for type_scope in self.type_vars.iter_mut().rev() {
-            if type_scope.contains_key(&type_sym.name) {
-                type_scope.insert(type_sym.name.clone(), UseState::Used);
-                return;
+        for type_info in self.type_param_info.iter_mut().rev() {
+            for (tp, state) in &mut type_info.params {
+                if tp.name == type_sym.name {
+                    *state = UseState::Used;
+                    return;
+                }
             }
         }
     }

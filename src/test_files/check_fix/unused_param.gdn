@@ -1,0 +1,9 @@
+fun foo(x: Int): Int {
+  1
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// fun foo(_x: Int): Int {
+//   1
+// }

@@ -11,7 +11,7 @@ second number.
 As with division, `% 0` will throw an exception.
 
 ```
-6 % 0 // Division by zero error.
+6 % 0 //-> *exception*
 ```
 
 `%` also works with negative numbers, using the Euclidean

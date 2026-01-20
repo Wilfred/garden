@@ -1,0 +1,13 @@
+/// ```
+/// 1 + 1 //-> 2
+/// ```
+fun foo() {
+
+// args: run-code-blocks
+// expected exit status: 1
+// expected stderr:
+// Expected `}` here, but got EOF.
+// Expected `}`, but got EOF.
+// Parsing failed.
+// Checked 1 block in 1 file.
+

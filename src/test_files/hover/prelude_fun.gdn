@@ -8,7 +8,7 @@ fun foo() {
 // Fun<(String), NoValue>
 // Stop the program immediately, and report the error message given.
 // 
-// ```
+// ```garden nocheck
 // throw("Computer is melting!")
 // ```
 

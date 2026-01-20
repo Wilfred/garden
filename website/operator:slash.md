@@ -17,5 +17,5 @@ Division always rounds towards 0.
 Dividing by zero will throw an exception.
 
 ```
-4 / 0 // exception
+4 / 0 //-> *exception*
 ```

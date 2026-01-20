@@ -160,7 +160,7 @@ test string_replace {
 /// the text before and after `needle`.
 ///
 /// ```
-/// "abcd".split_once("b") //-> Some(["a", "cd"])
+/// "abcd".split_once("b") //-> Some(("a", "cd"))
 /// ```
 public method split_once(this: String, needle: String): Option<(String, String)> {
   match this.index_of(needle) {
@@ -394,9 +394,9 @@ struct Path {
 /// returned as-is.
 ///
 /// ```
-/// Path{ p: "/foo/bar.txt" }.parent() //-> Path{ p: "/foo" }
-/// Path{ p: "/foo/bar/" }.parent() //-> Path{ p: "/foo" }
-/// Path{ p: "/" }.parent() //-> Path{ p: "/" }
+/// Path{ p: "/foo/bar.txt" }.parent() //-> Some(Path{ p: "/foo" })
+/// Path{ p: "/foo/bar/" }.parent() //-> Some(Path{ p: "/foo" })
+/// Path{ p: "/" }.parent() //-> None
 /// ```
 public method parent(this: Path): Option<Path> {
   let p = this.p.strip_suffix("/")
@@ -477,9 +477,9 @@ test path_file_name {
 /// Set the extension of the filename to `new_ext`.
 ///
 /// ```
-/// Path{ p: "/foo/bar"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
-/// Path{ p: "/foo/bar.txt"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
-/// Path{ p: "/foo/bar.txt.gz"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
+/// Path{ p: "/foo/bar"}.set_extension("log") //-> Path{ p: "/foo/bar.log" }
+/// Path{ p: "/foo/bar.txt"}.set_extension("log") //-> Path{ p: "/foo/bar.log" }
+/// Path{ p: "/foo/bar.txt.gz"}.set_extension("log") //-> Path{ p: "/foo/bar.log" }
 /// ```
 public method set_extension(this: Path, new_ext: String): Path {
   let new_ext = "." ^ new_ext
@@ -815,7 +815,7 @@ struct Int {
 
 /// Stop the program immediately, and report the error message given.
 ///
-/// ```
+/// ```garden nocheck
 /// throw("Computer is melting!")
 /// ```
 public fun throw(message: String): NoValue {
@@ -865,7 +865,7 @@ public fun string_repr<T>(value: T): String {
 /// file. Returns None when run directly in a CLI or JSON session.
 ///
 /// ```
-/// source_directory() //-> Some(Path{ p: "/home/yourname/awesome_garden_project" })
+/// source_directory() // Some(Path{ p: "/home/yourname/awesome_garden_project" })
 /// ```
 public fun source_directory(): Option<Path> {
   __BUILT_IN_IMPLEMENTATION
@@ -1005,8 +1005,8 @@ public fun shell_arguments(): List<String> {
 /// if it is not set.
 ///
 /// ```
-/// get_env("HOME") //-> Some("/home/user")
-/// get_env("NO_SUCH_VAR") //-> None
+/// get_env("HOME") // Some("/home/user")
+/// get_env("NO_SUCH_VAR") // None
 /// ```
 public fun get_env(name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION

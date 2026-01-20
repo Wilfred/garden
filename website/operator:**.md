@@ -10,5 +10,5 @@
 `**` will throw an exception if the second argument is negative.
 
 ```
-2 ** -1 // (throws)
+2 ** -1 //-> *exception*
 ```

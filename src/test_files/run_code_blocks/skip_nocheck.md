@@ -6,11 +6,6 @@ Blocks with the nocheck attribute should be skipped.
 this is invalid syntax and should be skipped
 ```
 
-// expected exit status: 2
-// expected stderr:
-// error: unrecognized subcommand 'src/test_files/run_code_blocks/skip_nocheck.md'
-// 
-// Usage: garden <COMMAND>
-// 
-// For more information, try '--help'.
+// args: run-code-blocks
+// expected stderr: Checked 0 blocks in 1 file.
 

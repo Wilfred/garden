@@ -6,9 +6,9 @@ use crate::parser::ast::{
     MethodInfo, Pattern, Symbol, SymbolName, ToplevelItem, TypeHint, TypeName, TypeSymbol,
 };
 use crate::parser::diagnostics::ErrorMessage;
-use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
 use crate::parser::visitor::Visitor;
+use crate::{msgcode, msgtext};
 
 pub(crate) fn check_unused_variables(items: &[ToplevelItem]) -> Vec<Diagnostic> {
     let mut visitor = UnusedVariableVisitor::new();
@@ -72,10 +72,7 @@ impl UnusedVariableVisitor {
             diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Warning,
-                message: ErrorMessage(vec![
-                    Code(format!("{name}")),
-                    Text(" is unused.".to_owned()),
-                ]),
+                message: ErrorMessage(vec![msgcode!("{}", name), msgtext!(" is unused.")]),
                 position: position.clone(),
                 fixes: vec![],
             });
@@ -88,10 +85,7 @@ impl UnusedVariableVisitor {
             diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Warning,
-                message: ErrorMessage(vec![
-                    Code(format!("{name}")),
-                    Text(" is unused.".to_owned()),
-                ]),
+                message: ErrorMessage(vec![msgcode!("{}", name), msgtext!(" is unused.")]),
                 position: position.clone(),
                 fixes: vec![],
             });
@@ -101,10 +95,7 @@ impl UnusedVariableVisitor {
             diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Warning,
-                message: ErrorMessage(vec![
-                    Code(format!("{name}")),
-                    Text(" is unused.".to_owned()),
-                ]),
+                message: ErrorMessage(vec![msgcode!("{}", name), msgtext!(" is unused.")]),
                 position: position.clone(),
                 fixes: vec![],
             });

@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
 use crate::parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
-use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::diagnostics::{ErrorMessage, MessagePart};
 use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
@@ -87,8 +86,8 @@ impl Visitor for HintVisitor<'_> {
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
                         severity: Severity::Error,
-                        message: ErrorMessage(vec![Text(
-                            "Generic type arguments cannot take parameters.".to_owned(),
+                        message: ErrorMessage(vec![msgtext!(
+                            "Generic type arguments cannot take parameters."
                         )]),
                         position: first_arg.position.clone(),
                         fixes: vec![],
@@ -201,12 +200,12 @@ impl Visitor for HintVisitor<'_> {
 fn format_type_arity_error(type_hint: &TypeHint, num_expected: usize) -> MessagePart {
     let num_actual = type_hint.args.len();
 
-    Text(format!(
+    msgtext!(
         "{} takes {} type argument{}, but got {} argument{}.",
         &type_hint.sym.name,
         num_expected,
         if num_expected == 1 { "" } else { "s" },
         num_actual,
         if num_actual == 1 { "" } else { "s" },
-    ))
+    )
 }

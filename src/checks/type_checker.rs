@@ -2675,10 +2675,10 @@ fn check_match_exhaustive(
 
 fn format_type_mismatch(expected_ty: &Type, actual_ty: &Type) -> ErrorMessage {
     ErrorMessage(vec![
-        Text("Expected ".to_owned()),
-        Code(expected_ty.to_string()),
-        Text(", but got ".to_owned()),
-        Code(actual_ty.to_string()),
-        Text(".".to_owned()),
+        msgtext!("Expected "),
+        msgcode!("{}", expected_ty),
+        msgtext!(", but got "),
+        msgcode!("{}", actual_ty),
+        msgtext!("."),
     ])
 }

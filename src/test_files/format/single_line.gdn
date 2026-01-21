@@ -1,8 +1,14 @@
 fun foo() { x }
 fun bar() { if True { y } else { z } }
+fun extra_spaces() {  a  }
+fun no_spaces() {b}
+fun mixed() {  c}
 
 // args: format
 // expected stdout:
 // fun foo() { x }
 // fun bar() { if True { y } else { z } }
+// fun extra_spaces() { a }
+// fun no_spaces() { b }
+// fun mixed() { c }
 

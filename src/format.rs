@@ -8,12 +8,12 @@ use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
 use crate::parser::visitor::Visitor;
 
-/// Format a Garden source file by fixing indentation.
+/// Format a Garden source file by fixing indentation and spacing.
 ///
 /// This formatter fixes the indentation of top-level expressions in
 /// blocks and function bodies, using 2 spaces per nesting level.
-/// Only multi-line blocks are formatted; single-line blocks are
-/// preserved as-is.
+/// Single-line blocks are formatted to have exactly one space after
+/// `{` and before `}`.
 pub(crate) fn format(src: &str, path: &Path) -> String {
     let mut id_gen = IdGenerator::default();
     let (_vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
@@ -25,6 +25,8 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
         current_depth: 0,
         line_edits: vec![],
         processed_lines: FxHashSet::default(),
+        span_edits: vec![],
+        src: src.to_owned(),
     };
 
     for item in &items {
@@ -39,8 +41,11 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
         &mut visitor.processed_lines,
     );
 
-    // Phase 4: Apply all edits
-    apply_indentation_edits(src, &visitor.line_edits)
+    // Phase 4: Apply span edits first (single-line block spacing)
+    let src_after_spans = apply_span_edits(src, &mut visitor.span_edits);
+
+    // Phase 5: Apply indentation edits
+    apply_indentation_edits(&src_after_spans, &visitor.line_edits)
 }
 
 /// Represents an indentation edit for a specific line.
@@ -50,11 +55,65 @@ struct LineEdit {
     new_indent: usize,
 }
 
+/// Represents a span replacement edit for fixing spacing within a line.
+#[derive(Debug)]
+struct SpanEdit {
+    start_offset: usize,
+    end_offset: usize,
+    replacement: String,
+}
+
 /// Visitor that tracks nesting depth and collects indentation edits.
 struct IndentationVisitor {
     current_depth: usize,
     line_edits: Vec<LineEdit>,
     processed_lines: FxHashSet<usize>,
+    span_edits: Vec<SpanEdit>,
+    src: String,
+}
+
+impl IndentationVisitor {
+    /// Fix spacing inside a single-line block to ensure exactly one space
+    /// after `{` and before `}`.
+    fn fix_single_line_block_spacing(&mut self, block: &Block) {
+        if block.exprs.is_empty() {
+            return;
+        }
+
+        let open_end = block.open_brace.end_offset;
+        let close_start = block.close_brace.start_offset;
+
+        // Some blocks (e.g., braceless match arms) don't have actual braces,
+        // so skip them.
+        if open_end >= close_start {
+            return;
+        }
+
+        // Find first non-whitespace position after `{`
+        let after_open = &self.src[open_end..close_start];
+        let leading_ws_len = after_open.len() - after_open.trim_start().len();
+
+        // Find last non-whitespace position before `}`
+        let trailing_ws_len = after_open.len() - after_open.trim_end().len();
+
+        // Fix leading space (after `{`)
+        if leading_ws_len != 1 || !after_open.starts_with(' ') {
+            self.span_edits.push(SpanEdit {
+                start_offset: open_end,
+                end_offset: open_end + leading_ws_len,
+                replacement: " ".to_owned(),
+            });
+        }
+
+        // Fix trailing space (before `}`)
+        if trailing_ws_len != 1 || !after_open.ends_with(' ') {
+            self.span_edits.push(SpanEdit {
+                start_offset: close_start - trailing_ws_len,
+                end_offset: close_start,
+                replacement: " ".to_owned(),
+            });
+        }
+    }
 }
 
 impl Visitor for IndentationVisitor {
@@ -74,11 +133,19 @@ impl Visitor for IndentationVisitor {
 
             self.processed_lines.insert(line_num);
         }
+
+        // Continue visiting nested expressions (e.g., if blocks)
+        self.visit_expr(expr);
     }
 
     fn visit_block(&mut self, block: &Block) {
-        // Skip single-line blocks
+        // Handle single-line blocks: enforce exactly one space inside
         if block.open_brace.line_number == block.close_brace.line_number {
+            self.fix_single_line_block_spacing(block);
+            // Still recurse into nested expressions within the block
+            for expr in &block.exprs {
+                self.visit_expr(expr);
+            }
             return;
         }
 
@@ -293,6 +360,26 @@ fn apply_indentation_edits(src: &str, line_edits: &[LineEdit]) -> String {
     // Preserve final newline if original had one
     if src.ends_with('\n') && !result.ends_with('\n') {
         result.push('\n');
+    }
+
+    result
+}
+
+/// Apply span edits to the source string.
+///
+/// Span edits are applied in reverse order of start_offset to avoid
+/// invalidating later offsets when earlier edits change the string length.
+fn apply_span_edits(src: &str, span_edits: &mut [SpanEdit]) -> String {
+    if span_edits.is_empty() {
+        return src.to_owned();
+    }
+
+    // Sort by start_offset in descending order so we can apply from end to start
+    span_edits.sort_by(|a, b| b.start_offset.cmp(&a.start_offset));
+
+    let mut result = src.to_owned();
+    for edit in span_edits.iter() {
+        result.replace_range(edit.start_offset..edit.end_offset, &edit.replacement);
     }
 
     result

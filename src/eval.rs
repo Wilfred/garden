@@ -2089,18 +2089,18 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
     let parts = if actual_ty.is_unit() {
         vec![
             msgtext!("Expected "),
-            Code(expected.to_string()),
+            msgcode!("{}", expected.to_string()),
             msgtext!(", but got "),
-            Code("Unit".to_owned()),
+            msgcode!("Unit"),
         ]
     } else {
         vec![
             msgtext!("Expected "),
-            Code(expected.to_string()),
+            msgcode!("{}", expected.to_string()),
             msgtext!(", but got "),
-            Code(format!("{}", Type::from_value(value))),
+            msgcode!("{}", Type::from_value(value)),
             msgtext!(": "),
-            Code(value.display(env)),
+            msgcode!("{}", value.display(env)),
         ]
     };
 
@@ -4290,7 +4290,7 @@ fn check_param_types(
                             position: arg_positions[i].clone(),
                             message: ErrorMessage(vec![
                                 msgtext!("Unbound type in hint: "),
-                                Code(e),
+                                msgcode!("{}", e),
                             ]),
                         }),
                     ));

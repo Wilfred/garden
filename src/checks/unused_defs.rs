@@ -3,10 +3,9 @@ use std::collections::HashSet;
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::msgtext;
 use crate::parser::ast::{ToplevelItem, ToplevelItemId, Visibility};
 use crate::parser::diagnostics::ErrorMessage;
-use crate::parser::diagnostics::MessagePart::*;
+use crate::{msgcode, msgtext};
 
 use super::type_checker::TCSummary;
 
@@ -49,7 +48,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
         if !all_called_defs.contains(&item_id) {
             diagnostics.push(Diagnostic {
                 message: ErrorMessage(vec![
-                    Code(format!("{}", symbol.name)),
+                    msgcode!("{}", symbol.name),
                     msgtext!(" is never called."),
                 ]),
                 position: symbol.position.clone(),
@@ -91,7 +90,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                 if reachable_from_item_ids.is_disjoint(&already_covered_ids) {
                     diagnostics.push(Diagnostic {
                         message: ErrorMessage(vec![
-                            Code(format!("{}", &symbol.name)),
+                            msgcode!("{}", &symbol.name),
                             msgtext!(" is never called."),
                         ]),
                         position: symbol.position.clone(),

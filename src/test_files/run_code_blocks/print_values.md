@@ -8,7 +8,7 @@ Expressions without assertions should print their values.
 "hello world"
 ```
 
-// args: check-markdown
+// args: run-code-blocks
 // expected stdout:
 // 2
 // [1, 2, 3]

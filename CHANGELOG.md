@@ -25,9 +25,11 @@ Added `--fix` to `garden check`.
 
 `sandboxed-test` now accepts a `--override-path` argument.
 
-Added a `check-markdown` subcommand that validates Garden code examples
-in markdown files. Code blocks with `//->` comments are checked to
-ensure the expression value matches the expected value.
+Added a `run-code-blocks` subcommand that runs Garden code examples in
+markdown files. Code blocks without a language specifier, or those
+marked as `garden`, are treated as Garden code. Code blocks with `//->`
+comments are checked to ensure the expression value matches the
+expected value.
 
 # 0.22 (released 15 December 2025)
 **Goal: Playground.**

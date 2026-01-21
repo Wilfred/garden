@@ -12,5 +12,5 @@ This block should be checked.
 1 + 1 //-> 2
 ```
 
-// args: check-markdown
+// args: run-code-blocks
 // expected stdout: All checks passed in skip_nocheck.md (1 code blocks, 1 expressions)

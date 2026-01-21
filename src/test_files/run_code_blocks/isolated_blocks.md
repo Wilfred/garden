@@ -14,7 +14,7 @@ let y = 20
 y //-> 20
 ```
 
-// args: check-markdown
+// args: run-code-blocks
 // expected stdout:
 // Unit
 // Unit

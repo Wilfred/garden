@@ -8,7 +8,7 @@ Multiple expressions in one block, some with assertions and some without.
 "test".len() //-> 4
 ```
 
-// args: check-markdown
+// args: run-code-blocks
 // expected stdout:
 // 15
 // All checks passed in multiple_expressions.md (1 code blocks, 3 expressions)

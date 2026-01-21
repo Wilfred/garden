@@ -1,4 +1,4 @@
-//! Check code examples in markdown files.
+//! Run code examples in markdown files.
 
 use std::path::Path;
 use std::rc::Rc;
@@ -261,8 +261,8 @@ fn check_expression(value: &str, expected: Option<&str>) -> CheckResult {
     }
 }
 
-/// Main entry point for checking markdown files.
-pub(crate) fn check_markdown(src: &str, markdown_path: &Path, interrupted: Arc<AtomicBool>) {
+/// Main entry point for running code blocks in markdown files.
+pub(crate) fn run_code_blocks(src: &str, markdown_path: &Path, interrupted: Arc<AtomicBool>) {
     // Extract code blocks
     let code_blocks = extract_code_blocks(src);
 

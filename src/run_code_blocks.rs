@@ -370,14 +370,15 @@ fn run_blocks_in_file(
 
     // Extract code blocks and the source to use for parsing
     let (code_blocks, parse_src) = if is_gdn {
-        // For .gdn files, extract doc comments as markdown
+        // For .gdn files, extract doc comments as markdown, taking
+        // care to use the same number of lines.
         let mut doc_markdown = String::new();
         for line in src.lines() {
             let trimmed = line.trim_start();
             if let Some(comment_content) = trimmed.strip_prefix("///") {
                 doc_markdown.push_str(comment_content);
-                doc_markdown.push('\n');
             }
+            doc_markdown.push('\n');
         }
 
         // Extract code blocks from the markdown

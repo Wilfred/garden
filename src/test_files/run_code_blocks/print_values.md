@@ -1,12 +1,14 @@
 # Print Values
 
-Expressions without assertions should print their values.
+Expressions without `//->` should be evaluated silently.
 
 ```garden
-1 + 1
-[1, 2, 3]
 "hello world"
+dbg("goodbye world")
 ```
+
+This makes print debugging harder, but avoids noise in dbg() examples
+in blocks.
 
 // args: run-code-blocks
 // expected stderr: Checked 1 block in 1 file.

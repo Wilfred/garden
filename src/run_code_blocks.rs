@@ -294,7 +294,7 @@ fn eval_code_block(
                     });
                 }
             }
-            Err(EvalError::Exception(_)) => {
+            Err(EvalError::Exception(exception_info)) => {
                 // Check if exception was expected
                 if let Some(comment) = &expected_comment {
                     if comment.trim() == "*exception*" {
@@ -307,14 +307,15 @@ fn eval_code_block(
                         continue;
                     }
                 }
-                // Exception was not expected, propagate error
-                // Use the markdown path, not the synthetic path
-                let relative_path = to_project_relative(markdown_path, project_root);
-                return Err(format!(
-                    "{}:{}: Unexpected exception",
-                    relative_path.display(),
-                    expr.0.position.line_number + 1, // Convert 0-indexed to 1-indexed
-                ));
+                // Exception was not expected, propagate error with full stack trace
+                let error_msg = format_exception_with_stack(
+                    &exception_info.message,
+                    &exception_info.position,
+                    &env.stack.0,
+                    &env.vfs,
+                    &env.project_root,
+                );
+                return Err(error_msg);
             }
             Err(e) => {
                 return Err(format!("Evaluation error: {:?}", e));

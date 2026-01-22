@@ -27,7 +27,8 @@ Added `--fix` to `garden check`.
 
 Added a `run-code-blocks` that executes code blocks in .md and and
 .gdn files. Comments of the form `//->` are also checked that the
-expression matches the comment.
+expression matches the comment. Unexpected exceptions now show the full
+stack trace and exception message.
 
 # 0.22 (released 15 December 2025)
 **Goal: Playground.**

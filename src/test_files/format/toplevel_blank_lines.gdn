@@ -1,0 +1,26 @@
+fun foo() {
+  1
+}
+fun bar() {
+  2
+}
+
+
+
+fun baz() {
+  3
+}
+
+// args: format
+// expected stdout:
+// fun foo() {
+//   1
+// }
+// 
+// fun bar() {
+//   2
+// }
+// 
+// fun baz() {
+//   3
+// }

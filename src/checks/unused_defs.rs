@@ -46,11 +46,25 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
 
         // Report unreachable functions that have no callers at all.
         if !all_called_defs.contains(&item_id) {
-            diagnostics.push(Diagnostic {
-                message: ErrorMessage(vec![
+            let message = if symbol.name.text == "main" {
+                ErrorMessage(vec![
+                    msgcode!("{}", symbol.name),
+                    msgtext!(" is never called. Garden does not treat "),
+                    msgcode!("main"),
+                    msgtext!(" functions specially. To run code, write expressions directly in the file (e.g., "),
+                    msgcode!("println(\"Hello\")"),
+                    msgtext!("), or call "),
+                    msgcode!("main()"),
+                    msgtext!(" from a top-level block."),
+                ])
+            } else {
+                ErrorMessage(vec![
                     msgcode!("{}", symbol.name),
                     msgtext!(" is never called."),
-                ]),
+                ])
+            };
+            diagnostics.push(Diagnostic {
+                message,
                 position: symbol.position.clone(),
                 notes: vec![],
                 severity: Severity::Warning,
@@ -88,11 +102,25 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                     .filter_map(|def_id| *def_id)
                     .collect();
                 if reachable_from_item_ids.is_disjoint(&already_covered_ids) {
-                    diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![
+                    let message = if symbol.name.text == "main" {
+                        ErrorMessage(vec![
+                            msgcode!("{}", &symbol.name),
+                            msgtext!(" is never called. Garden does not treat "),
+                            msgcode!("main"),
+                            msgtext!(" functions specially. To run code, write expressions directly in the file (e.g., "),
+                            msgcode!("println(\"Hello\")"),
+                            msgtext!("), or call "),
+                            msgcode!("main()"),
+                            msgtext!(" from a top-level block."),
+                        ])
+                    } else {
+                        ErrorMessage(vec![
                             msgcode!("{}", &symbol.name),
                             msgtext!(" is never called."),
-                        ]),
+                        ])
+                    };
+                    diagnostics.push(Diagnostic {
+                        message,
                         position: symbol.position.clone(),
                         notes: vec![],
                         severity: Severity::Warning,

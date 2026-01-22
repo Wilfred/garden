@@ -1,0 +1,27 @@
+fun foo() {
+  1
+}
+// comment for bar
+fun bar() {
+  2
+}
+/// doc comment for baz
+fun baz() {
+  3
+}
+
+// args: format
+// expected stdout:
+// fun foo() {
+//   1
+// }
+// 
+// // comment for bar
+// fun bar() {
+//   2
+// }
+// 
+// /// doc comment for baz
+// fun baz() {
+//   3
+// }

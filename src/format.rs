@@ -2,7 +2,7 @@ use std::path::Path;
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::parser::ast::{Block, Expression, Expression_, IdGenerator};
+use crate::parser::ast::{Block, Expression, Expression_, IdGenerator, ToplevelItem};
 use crate::parser::lex::lex_between;
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
@@ -27,6 +27,7 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
         processed_lines: FxHashSet::default(),
         span_edits: vec![],
         src: src.to_owned(),
+        toplevel_start_lines: vec![],
     };
 
     for item in &items {
@@ -45,7 +46,10 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
     let src_after_spans = apply_span_edits(src, &mut visitor.span_edits);
 
     // Phase 5: Apply indentation edits
-    apply_indentation_edits(&src_after_spans, &visitor.line_edits)
+    let src_after_indent = apply_indentation_edits(&src_after_spans, &visitor.line_edits);
+
+    // Phase 6: Normalize blank lines
+    normalize_blank_lines(&src_after_indent, &visitor.toplevel_start_lines)
 }
 
 /// Represents an indentation edit for a specific line.
@@ -70,6 +74,8 @@ struct IndentationVisitor {
     processed_lines: FxHashSet<usize>,
     span_edits: Vec<SpanEdit>,
     src: String,
+    /// Line numbers where toplevel items start (for blank line enforcement).
+    toplevel_start_lines: Vec<usize>,
 }
 
 impl IndentationVisitor {
@@ -117,6 +123,26 @@ impl IndentationVisitor {
 }
 
 impl Visitor for IndentationVisitor {
+    fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
+        // Track the starting line of toplevel definitions (not expressions) for blank line enforcement
+        let start_line = match item {
+            ToplevelItem::Fun(_, fun_info, _) => Some(fun_info.pos.line_number),
+            ToplevelItem::Method(method_info, _) => Some(method_info.pos.line_number),
+            ToplevelItem::Test(test_info) => Some(test_info.name_sym.position.line_number),
+            ToplevelItem::Enum(enum_info) => Some(enum_info.name_sym.position.line_number),
+            ToplevelItem::Struct(struct_info) => Some(struct_info.name_sym.position.line_number),
+            ToplevelItem::Import(import_info) => Some(import_info.path_pos.line_number),
+            // Toplevel expressions and blocks don't require blank lines between them
+            ToplevelItem::Expr(_) | ToplevelItem::Block(_) => None,
+        };
+        if let Some(line) = start_line {
+            self.toplevel_start_lines.push(line);
+        }
+
+        // Continue with default visitor behavior
+        self.visit_toplevel_item_default(item);
+    }
+
     fn visit_toplevel_expr(&mut self, toplevel_expr: &crate::parser::ast::ToplevelExpression) {
         let expr = &toplevel_expr.0;
         let line_num = expr.position.line_number;
@@ -380,6 +406,60 @@ fn apply_span_edits(src: &str, span_edits: &mut [SpanEdit]) -> String {
     let mut result = src.to_owned();
     for edit in span_edits.iter() {
         result.replace_range(edit.start_offset..edit.end_offset, &edit.replacement);
+    }
+
+    result
+}
+
+/// Normalize blank lines in the formatted source.
+///
+/// - Between toplevel definitions: exactly one blank line
+/// - Inside blocks: at most one blank line between lines
+fn normalize_blank_lines(src: &str, toplevel_start_lines: &[usize]) -> String {
+    let lines: Vec<&str> = src.lines().collect();
+    if lines.is_empty() {
+        return src.to_owned();
+    }
+
+    let toplevel_lines: FxHashSet<usize> = toplevel_start_lines.iter().copied().collect();
+    let mut result = String::with_capacity(src.len());
+
+    let mut i = 0;
+    while i < lines.len() {
+        let line = lines[i];
+
+        // If this line is blank
+        if line.trim().is_empty() {
+            // Count consecutive blank lines
+            while i < lines.len() && lines[i].trim().is_empty() {
+                i += 1;
+            }
+
+            // If there's a next line, emit at most one blank line
+            if i < lines.len() {
+                result.push('\n');
+            }
+            // If we're at the end, don't add trailing blank lines
+            continue;
+        }
+
+        // This line is not blank - add it
+        result.push_str(line);
+        result.push('\n');
+        i += 1;
+
+        // Check if the next line (after any blanks) starts a new toplevel definition
+        // If so, we need exactly one blank line between them
+        if i < lines.len() && !lines[i].trim().is_empty() && toplevel_lines.contains(&i) {
+            // Next non-blank line is a toplevel definition, but there's no blank line
+            // Insert one blank line
+            result.push('\n');
+        }
+    }
+
+    // Preserve final newline if original had one, but remove if we already have it
+    if src.ends_with('\n') && !result.ends_with('\n') {
+        result.push('\n');
     }
 
     result

@@ -2,7 +2,7 @@
 ///
 /// ```
 /// import "__time.gdn" as time
-/// time::unixtime() //-> 1702534800
+/// time::unixtime() // e.g. 1702534800
 /// ```
 public fun unixtime(): Int {
   __BUILT_IN_IMPLEMENTATION

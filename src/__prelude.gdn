@@ -160,7 +160,7 @@ test string_replace {
 /// the text before and after `needle`.
 ///
 /// ```
-/// "abcd".split_once("b") //-> Some(["a", "cd"])
+/// "abcd".split_once("b") //-> Some(("a", "cd"))
 /// ```
 public method split_once(this: String, needle: String): Option<(String, String)> {
   match this.index_of(needle) {
@@ -477,9 +477,9 @@ test path_file_name {
 /// Set the extension of the filename to `new_ext`.
 ///
 /// ```
-/// Path{ p: "/foo/bar"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
-/// Path{ p: "/foo/bar.txt"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
-/// Path{ p: "/foo/bar.txt.gz"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
+/// Path{ p: "/foo/bar"}.set_extension("log") //-> Path{ p: "/foo/bar.log" }
+/// Path{ p: "/foo/bar.txt"}.set_extension("log") //-> Path{ p: "/foo/bar.log" }
+/// Path{ p: "/foo/bar.txt.gz"}.set_extension("log") //-> Path{ p: "/foo/bar.log" }
 /// ```
 public method set_extension(this: Path, new_ext: String): Path {
   let new_ext = "." ^ new_ext

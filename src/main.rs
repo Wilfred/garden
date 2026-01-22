@@ -38,7 +38,6 @@
 #![allow(clippy::cmp_owned)]
 
 mod caret_finder;
-mod check_markdown;
 mod checks;
 mod cli_session;
 mod colors;
@@ -61,6 +60,7 @@ mod parser;
 mod pos_to_id;
 mod prompt;
 mod rename;
+mod run_code_blocks;
 mod sandboxed_playground;
 mod syntax_check;
 mod syntax_highlighter;
@@ -275,6 +275,9 @@ fn main() {
             };
             run_file(&src, &abs_path, &arguments, interrupted)
         }
+        CliCommands::RunCodeBlocks { paths } => {
+            run_code_blocks::run_code_blocks(&paths, interrupted);
+        }
         CliCommands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
         }
@@ -290,9 +293,6 @@ fn main() {
             src = remove_testing_footer(&src);
             let src_path = to_abs_path(&override_path.unwrap_or(path.clone()));
             syntax_check::check(&src_path, &src, json, fix, stdout, &abs_path)
-        }
-        CliCommands::RunCodeBlocks { paths } => {
-            check_markdown::run_code_blocks(&paths, interrupted);
         }
         CliCommands::Test {
             paths,

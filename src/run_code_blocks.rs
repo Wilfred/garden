@@ -220,14 +220,9 @@ fn eval_code_block(
         return Err(error_messages.join("\n"));
     }
 
-    // Create environment
     let mut env = Env::new(id_gen, vfs);
-
-    // Set up namespace for this code block (using the same synthetic path as VFS)
     let ns = env.get_or_create_namespace(&synthetic_path);
 
-    // Load all items (definitions and expressions) into the environment
-    // This registers functions, types, etc. and runs type checking
     let (load_diagnostics, _) = crate::eval::load_toplevel_items(&items, &mut env, ns);
 
     // Check for errors during loading
@@ -239,7 +234,7 @@ fn eval_code_block(
 
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::WriteDirectly,
+        stdout_mode: StdoutMode::DoNotWrite,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,
@@ -400,7 +395,6 @@ fn run_blocks_in_file(
         return (true, 0); // No code blocks is fine
     }
 
-    // Track failures
     let mut had_error = false;
 
     // Create a temporary env for displaying values
@@ -457,9 +451,7 @@ fn run_blocks_in_file(
                             eprintln!("  Got:      {}", got);
                             eprintln!();
                         }
-                        CheckResult::NoAssertion => {
-                            // Don't print values by default (less verbose)
-                        }
+                        CheckResult::NoAssertion => {}
                     }
                 }
             }

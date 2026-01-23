@@ -79,6 +79,7 @@ generally include a new test file.
 # Running Garden Programs
 - ./target/debug/garden check yourfile.gdn: Check the test program named yourfile.gdn
 - ./target/debug/garden run yourfile.gdn: Run the code in yourfile.gdn.
+- ./target/debug/garden run -c 'println("Hello")': Run a code snippet directly without a file.
 - ./target/debug/garden test yourfile.gdn: Run unit tests in yourfile.gdn.
 
 To generate target/debug/garden use `cargo build`. This separation

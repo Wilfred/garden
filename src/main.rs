@@ -114,7 +114,10 @@ enum CliCommands {
     JsonExample,
     /// Execute a Garden program at the path specified.
     Run {
-        path: PathBuf,
+        /// Evaluate the given code instead of reading from a file.
+        #[clap(short)]
+        c: Option<String>,
+        path: Option<PathBuf>,
         arguments: Vec<String>,
     },
     /// Run all the tests in the Garden files specified.
@@ -247,9 +250,26 @@ fn main() {
     match args.command {
         CliCommands::Repl => cli_session::repl(interrupted),
         CliCommands::Json => json_session::json_session(interrupted),
-        CliCommands::Run { path, arguments } => {
-            let abs_path = to_abs_path(&path);
-            let src = read_utf8_or_die(&abs_path);
+        CliCommands::Run { c, path, arguments } => {
+            let (src, abs_path) = match (c, path) {
+                (Some(code), None) => {
+                    // Use a synthetic absolute path for code provided via -c
+                    (code, PathBuf::from("/<cli>"))
+                }
+                (None, Some(path)) => {
+                    let abs_path = to_abs_path(&path);
+                    let src = read_utf8_or_die(&abs_path);
+                    (src, abs_path)
+                }
+                (Some(_), Some(_)) => {
+                    eprintln!("Error: Cannot specify both -c and a file path.");
+                    std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+                }
+                (None, None) => {
+                    eprintln!("Error: Either -c or a file path must be specified.");
+                    std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+                }
+            };
             run_file(&src, &abs_path, &arguments, interrupted)
         }
         CliCommands::JsonExample => {
@@ -776,6 +796,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
 #[cfg(test)]
 mod tests {
     use assert_cmd::prelude::*;
+    use predicates::prelude::*;
     use std::process::Command;
 
     use goldentests::{TestConfig, TestResult};
@@ -1406,5 +1427,43 @@ fun main() {
 
         // Clean up the temporary file
         let _ = std::fs::remove_file(&test_file);
+    }
+
+    #[test]
+    fn test_run_with_c_flag() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("run").arg("-c").arg(r#"println("hello from -c")"#);
+        cmd.assert().success().stdout("hello from -c\n");
+    }
+
+    #[test]
+    fn test_run_c_flag_with_path_errors() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("run")
+            .arg("-c")
+            .arg(r#"println("test")"#)
+            .arg("some_file.gdn");
+        cmd.assert()
+            .code(super::BAD_CLI_REQUEST_EXIT_CODE)
+            .stderr(predicates::str::contains(
+                "Cannot specify both -c and a file path",
+            ));
+    }
+
+    #[test]
+    fn test_run_without_c_or_path_errors() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("run");
+        cmd.assert()
+            .code(super::BAD_CLI_REQUEST_EXIT_CODE)
+            .stderr(predicates::str::contains(
+                "Either -c or a file path must be specified",
+            ));
     }
 }

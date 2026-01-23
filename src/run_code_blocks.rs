@@ -158,8 +158,8 @@ fn extract_arrow_comment(src: &str, end_offset: usize) -> Option<String> {
 fn eval_code_block(
     block: &CodeBlock,
     markdown_src: &str,
-    markdown_path: &Path,
-    block_idx: usize,
+    file_path: &Path,
+    is_gdn: bool,
     interrupted: Arc<AtomicBool>,
     project_root: &Path,
 ) -> Result<Vec<ExpressionResult>, String> {
@@ -167,12 +167,16 @@ fn eval_code_block(
     let mut id_gen = IdGenerator::default();
     let mut vfs = Vfs::default();
 
-    // Use a synthetic path for the VFS entry so namespace lookup works correctly
-    let synthetic_path = markdown_path
-        .with_file_name(format!("block_{}", block_idx + 1))
-        .with_extension("gdn");
+    // Determine the VFS path based on file type
+    let vfs_file_path = if is_gdn {
+        // For .gdn files, use the actual file path
+        file_path.to_path_buf()
+    } else {
+        // For .md files, append .gdn extension
+        std::path::PathBuf::from(format!("{}.gdn", file_path.display()))
+    };
 
-    let vfs_path = vfs.insert(Rc::new(synthetic_path.clone()), markdown_src.to_owned());
+    let vfs_path = vfs.insert(Rc::new(vfs_file_path.clone()), markdown_src.to_owned());
 
     // Parse the code block using offsets into the markdown source
     let (items, parse_errors) = parse_toplevel_items_from_span(
@@ -194,8 +198,8 @@ fn eval_code_block(
                 } => {
                     let adjusted_pos =
                         adjust_todo_position(&position, markdown_src, block.start_offset);
-                    // Use the markdown path, not the synthetic path
-                    let relative_path = to_project_relative(markdown_path, project_root);
+                    // Use the actual file path
+                    let relative_path = to_project_relative(file_path, project_root);
                     error_messages.push(format!(
                         "{}:{}: {}",
                         relative_path.display(),
@@ -206,8 +210,8 @@ fn eval_code_block(
                 ParseError::Incomplete { message, position } => {
                     let adjusted_pos =
                         adjust_todo_position(&position, markdown_src, block.start_offset);
-                    // Use the markdown path, not the synthetic path
-                    let relative_path = to_project_relative(markdown_path, project_root);
+                    // Use the actual file path
+                    let relative_path = to_project_relative(file_path, project_root);
                     error_messages.push(format!(
                         "{}:{}: Parse error (incomplete): {}",
                         relative_path.display(),
@@ -221,7 +225,7 @@ fn eval_code_block(
     }
 
     let mut env = Env::new(id_gen, vfs);
-    let ns = env.get_or_create_namespace(&synthetic_path);
+    let ns = env.get_or_create_namespace(&vfs_file_path);
 
     let (load_diagnostics, _) = crate::eval::load_toplevel_items(&items, &mut env, ns);
 
@@ -402,13 +406,13 @@ fn run_blocks_in_file(
     // Create a temporary env for displaying values
     let display_env = Env::new(IdGenerator::default(), Vfs::default());
 
-    for (block_idx, block) in code_blocks.iter().enumerate() {
+    for block in code_blocks.iter() {
         // Evaluate the code block using the appropriate source
         match eval_code_block(
             block,
             &parse_src,
             file_path,
-            block_idx,
+            is_gdn,
             interrupted.clone(),
             project_root,
         ) {

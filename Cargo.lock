@@ -340,12 +340,8 @@ dependencies = [
  "normalize-path",
  "ordered-float",
  "owo-colors",
-<<<<<<< HEAD
  "predicates",
-||||||| parent of 75422b89 (Add run-code-blocks command for validating Garden code in documentation)
-=======
  "pulldown-cmark",
->>>>>>> 75422b89 (Add run-code-blocks command for validating Garden code in documentation)
  "rand",
  "regex",
  "rustc-hash",

@@ -2,7 +2,9 @@ use std::path::Path;
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::parser::ast::{Block, Expression, Expression_, IdGenerator, ToplevelItem};
+use crate::parser::ast::{
+    Block, Expression, Expression_, IdGenerator, ParenthesizedArguments, ToplevelItem,
+};
 use crate::parser::lex::lex_between;
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
@@ -124,6 +126,62 @@ impl IndentationVisitor {
                 end_offset: close_start,
                 replacement: " ".to_owned(),
             });
+        }
+    }
+
+    /// Fix indentation of function call arguments that span multiple lines.
+    /// Arguments on lines after the opening parenthesis are indented one level
+    /// deeper than the call expression itself.
+    fn fix_function_argument_indentation(&mut self, paren_args: &ParenthesizedArguments) {
+        // Only process multiline function calls
+        if paren_args.open_paren.line_number == paren_args.close_paren.line_number {
+            return;
+        }
+
+        // Target indentation for arguments is one level deeper than current depth
+        let target_indent = (self.current_depth + 1) * 2;
+
+        for arg in &paren_args.arguments {
+            let line_num = arg.expr.position.line_number;
+
+            // Skip arguments on the same line as the opening paren
+            if line_num == paren_args.open_paren.line_number {
+                continue;
+            }
+
+            // Avoid processing the same line twice
+            if !self.processed_lines.contains(&line_num) {
+                let current_indent = arg.expr.position.column;
+
+                // Only adjust indentation if it's less than the target
+                // (don't reduce indentation if already more indented)
+                if current_indent < target_indent {
+                    self.line_edits.push(LineEdit {
+                        line_number: line_num,
+                        new_indent: target_indent,
+                    });
+                }
+
+                self.processed_lines.insert(line_num);
+            }
+        }
+
+        // Also indent the closing paren at the base depth
+        let close_line = paren_args.close_paren.line_number;
+        if close_line != paren_args.open_paren.line_number
+            && !self.processed_lines.contains(&close_line)
+        {
+            let current_indent = paren_args.close_paren.column;
+            let target_close_indent = self.current_depth * 2;
+
+            if current_indent < target_close_indent {
+                self.line_edits.push(LineEdit {
+                    line_number: close_line,
+                    new_indent: target_close_indent,
+                });
+            }
+
+            self.processed_lines.insert(close_line);
         }
     }
 }
@@ -278,6 +336,115 @@ impl Visitor for IndentationVisitor {
         } else {
             // For all other expressions, use the default visitor behavior
             self.visit_expr_(&expr.expr_);
+        }
+    }
+
+    fn visit_expr_(&mut self, expr_: &Expression_) {
+        // Handle function calls specially to format multiline argument lists
+        if let Expression_::Call(recv, paren_args) = expr_ {
+            self.visit_expr(recv);
+            self.fix_function_argument_indentation(paren_args);
+
+            // Increase depth while visiting arguments so nested calls are indented correctly
+            self.current_depth += 1;
+            for arg in &paren_args.arguments {
+                self.visit_expr(&arg.expr);
+            }
+            self.current_depth -= 1;
+        } else if let Expression_::MethodCall(recv, meth_name, paren_args) = expr_ {
+            self.visit_symbol(meth_name);
+            self.visit_expr(recv);
+            self.fix_function_argument_indentation(paren_args);
+
+            // Increase depth while visiting arguments so nested calls are indented correctly
+            self.current_depth += 1;
+            for arg in &paren_args.arguments {
+                self.visit_expr(&arg.expr);
+            }
+            self.current_depth -= 1;
+        } else {
+            // For all other expression types, delegate to the visitor's default behavior
+            // which handles recursion into nested expressions
+            match expr_ {
+                Expression_::Match(scrutinee, cases) => {
+                    self.visit_expr_match(scrutinee, cases);
+                }
+                Expression_::If(cond, then_body, else_body) => {
+                    self.visit_expr_if(cond, then_body, else_body.as_ref());
+                }
+                Expression_::While(cond, body) => {
+                    self.visit_expr_while(cond, body);
+                }
+                Expression_::ForIn(sym, expr, body) => {
+                    self.visit_expr_for_in(sym, expr, body);
+                }
+                Expression_::Break => {}
+                Expression_::Continue => {}
+                Expression_::Assign(sym, expr) => {
+                    self.visit_expr_assign(sym, expr);
+                }
+                Expression_::AssignUpdate(sym, _, expr) => {
+                    self.visit_expr_assign_update(sym, expr);
+                }
+                Expression_::Let(dest, hint, expr) => {
+                    self.visit_expr_let(dest, hint.as_ref(), expr);
+                }
+                Expression_::Return(expr) => {
+                    if let Some(expr) = expr {
+                        self.visit_expr(expr);
+                    }
+                }
+                Expression_::ListLiteral(exprs) => {
+                    for expr in exprs {
+                        self.visit_expr(&expr.expr);
+                    }
+                }
+                Expression_::DictLiteral(pairs) => {
+                    for (key_expr, _arrow_pos, value_expr) in pairs {
+                        self.visit_expr(key_expr);
+                        self.visit_expr(value_expr);
+                    }
+                }
+                Expression_::TupleLiteral(exprs) => {
+                    for expr in exprs {
+                        self.visit_expr(expr);
+                    }
+                }
+                Expression_::StructLiteral(name_sym, field_exprs) => {
+                    self.visit_expr_struct_literal(name_sym, field_exprs);
+                }
+                Expression_::BinaryOperator(lhs, _, rhs) => {
+                    self.visit_expr(lhs);
+                    self.visit_expr(rhs);
+                }
+                Expression_::Variable(var) => {
+                    self.visit_expr_variable(var);
+                }
+                Expression_::Call(_, _) | Expression_::MethodCall(_, _, _) => {
+                    // Already handled above
+                    unreachable!()
+                }
+                Expression_::FunLiteral(fun_info) => {
+                    self.visit_expr_fun_literal(fun_info);
+                }
+                Expression_::IntLiteral(_) => {}
+                Expression_::StringLiteral(_) => {}
+                Expression_::DotAccess(recv, field_sym) => {
+                    self.visit_symbol(field_sym);
+                    self.visit_expr(recv);
+                }
+                Expression_::NamespaceAccess(recv, sym) => {
+                    self.visit_symbol(sym);
+                    self.visit_expr(recv);
+                }
+                Expression_::Assert(expr) => {
+                    self.visit_expr(expr);
+                }
+                Expression_::Parentheses(_, expr, _) => {
+                    self.visit_expr(expr);
+                }
+                Expression_::Invalid => {}
+            }
         }
     }
 }

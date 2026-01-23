@@ -21,7 +21,8 @@ Added `Dict::remove()`.
 
 ## CLI
 
-Added a `format` subcommand that fixes indentation in Garden files.
+Added a `format` subcommand that fixes indentation in Garden files. The
+formatter now indents multiline function call arguments by one level.
 
 Added `--fix` to `garden check`.
 

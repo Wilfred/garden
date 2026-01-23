@@ -1,0 +1,60 @@
+// Before formatting - arguments not indented
+fun test_call() {
+foo(
+1,
+2,
+3
+)
+}
+
+// Before formatting - nested function call
+fun test_nested() {
+bar(
+baz(
+4,
+5
+),
+6
+)
+}
+
+// Before formatting - already indented more than needed
+fun test_already_indented() {
+qux(
+    10,
+      20,
+  30
+)
+}
+
+// args: format
+// expected stdout:
+// // Before formatting - arguments not indented
+// fun test_call() {
+//   foo(
+//     1,
+//     2,
+//     3
+//   )
+// }
+// 
+// // Before formatting - nested function call
+// fun test_nested() {
+//   bar(
+//     baz(
+//       4,
+//       5
+//     ),
+//     6
+//   )
+// }
+// 
+// // Before formatting - already indented more than needed
+// fun test_already_indented() {
+//   qux(
+//     10,
+//       20,
+//     30
+//   )
+// }
+

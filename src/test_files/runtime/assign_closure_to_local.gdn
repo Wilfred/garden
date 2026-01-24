@@ -1,0 +1,28 @@
+fun stuff() {
+  // Regression test: we want to allow assigning a closure to an
+  // annotated `let`, and typing is happy with this.
+  //
+  // However, at runtime we check that the RHS of `let` is compatible
+  // with the annotated type. This requires choosing a type for the
+  // closure at runtime.
+  //
+  // We can't just run static type inference, because any function
+  // calls in the closure could change after the closure is evaluated.
+  //
+  // We do need to support this case though. `let f = fun(x) { x + 1
+  // }` is a totally reasonable thing to write in a REPL or
+  // debugger. Closures without much context will happen.
+  //
+  // Instead, we choose a runtime type of Fun<(Any, Any), NoValue>,
+  // which is compatible with any more specific type for a function of
+  // two arguments.
+  let f: Fun<(Int, Int), Int> = fun(x, y) { x + y }
+  
+  dbg(f(2, 3))
+}
+
+stuff()
+
+// args: run
+// expected stdout: 5
+

@@ -313,10 +313,14 @@ impl Type {
                 if fun_info.body.exprs.is_empty() {
                     Self::unit()
                 } else {
-                    // We don't necessarily know what values are being
-                    // passed in to this closure, so conservatively
-                    // use Any.
-                    Type::Any
+                    // We don't know what the return type of this
+                    // function is, and it could change anyway if
+                    // callees are redefined.
+                    //
+                    // Use the bottom type. This ensures we can use
+                    // closures without annotations in arbitrary
+                    // positions are runtime.
+                    Type::no_value()
                 }
             }
         };

@@ -1,0 +1,105 @@
+fun foo(p) {
+    p.0
+    p.1
+}
+
+// args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol"foo",
+//     FunInfo {
+//         pos: Position { ... },
+//         doc_comment: None,
+//         name_sym: Some(
+//             Symbol"foo",
+//         ),
+//         item_id: Some(
+//             ToplevelItemId(
+//                 12,
+//             ),
+//         ),
+//         type_params: [],
+//         params: ParenthesizedParameters {
+//             open_paren: Position { ... },
+//             params: [
+//                 SymbolWithHint {
+//                     symbol: Symbol"p",
+//                     hint: None,
+//                 },
+//             ],
+//             close_paren: Position { ... },
+//         },
+//         return_hint: None,
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [
+//                 Expression {
+//                     position: Position { ... },
+//                     expr_: DotAccess(
+//                         Expression {
+//                             position: Position { ... },
+//                             expr_: Variable(
+//                                 Symbol"p",
+//                             ),
+//                             value_is_used: true,
+//                             id: SyntaxId(3),
+//                         },
+//                         Symbol"__placeholder",
+//                     ),
+//                     value_is_used: false,
+//                     id: SyntaxId(5),
+//                 },
+//                 Expression {
+//                     position: Position { ... },
+//                     expr_: IntLiteral(
+//                         0,
+//                     ),
+//                     value_is_used: false,
+//                     id: SyntaxId(6),
+//                 },
+//                 Expression {
+//                     position: Position { ... },
+//                     expr_: DotAccess(
+//                         Expression {
+//                             position: Position { ... },
+//                             expr_: Variable(
+//                                 Symbol"p",
+//                             ),
+//                             value_is_used: true,
+//                             id: SyntaxId(8),
+//                         },
+//                         Symbol"__placeholder",
+//                     ),
+//                     value_is_used: false,
+//                     id: SyntaxId(10),
+//                 },
+//                 Expression {
+//                     position: Position { ... },
+//                     expr_: IntLiteral(
+//                         1,
+//                     ),
+//                     value_is_used: true,
+//                     id: SyntaxId(11),
+//                 },
+//             ],
+//             close_brace: Position { ... },
+//         },
+//     },
+//     CurrentFile,
+// )
+
+// expected stderr:
+// Error: Parse error: Garden does not support tuple field access like `.0` or `.1`. Use destructuring instead, for example: `let (x, y) = value`.
+// ---| src/test_files/parser/tuple_field_access.gdn:2:6
+//   1| fun foo(p) {
+//   2|     p.0
+//    |      ^
+//   3|     p.1
+//   4| }
+// Error: Parse error: Garden does not support tuple field access like `.0` or `.1`. Use destructuring instead, for example: `let (x, y) = value`.
+// ---| src/test_files/parser/tuple_field_access.gdn:3:6
+//   1| fun foo(p) {
+//   2|     p.0
+//   3|     p.1
+//   4| }    ^
+

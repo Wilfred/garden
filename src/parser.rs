@@ -2594,11 +2594,29 @@ fn parse_symbol(
     if !SYMBOL_RE.is_match(variable_token.text) {
         let description = description.unwrap_or("symbol");
 
-        diagnostics.push(ParseError::Invalid {
-            position: prev_token_pos,
-            message: ErrorMessage(vec![msgtext!("Expected a {description} after this.")]),
-            notes: vec![],
-        });
+        // Check if this is a numeric field access (e.g., foo.0 or foo.1)
+        // Only show the tuple error message when parsing method/field names
+        if INTEGER_RE.is_match(variable_token.text) && description.contains("method") {
+            diagnostics.push(ParseError::Invalid {
+                position: prev_token_pos,
+                message: ErrorMessage(vec![
+                    msgtext!("Garden does not support tuple field access like "),
+                    msgcode!(".0"),
+                    msgtext!(" or "),
+                    msgcode!(".1"),
+                    msgtext!(". Use destructuring instead, for example: "),
+                    msgcode!("let (x, y) = value"),
+                    msgtext!("."),
+                ]),
+                notes: vec![],
+            });
+        } else {
+            diagnostics.push(ParseError::Invalid {
+                position: prev_token_pos,
+                message: ErrorMessage(vec![msgtext!("Expected a {description} after this.")]),
+                notes: vec![],
+            });
+        }
         tokens.unpop();
         return placeholder_symbol(variable_token.position, id_gen);
     }

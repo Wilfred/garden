@@ -796,7 +796,6 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
 #[cfg(test)]
 mod tests {
     use assert_cmd::prelude::*;
-    use predicates::prelude::*;
     use std::process::Command;
 
     use goldentests::{TestConfig, TestResult};

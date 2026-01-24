@@ -8,8 +8,6 @@ Garden now has an LSP server providing go-to-definition, code
 completion, quickfixes and basic formatting. You can start it with
 `garden lsp`.
 
-`garden check` now warns about unused literal values.
-
 ## Syntax
 
 Documentation is now written with triple slashes, e.g. `///`, to
@@ -21,8 +19,7 @@ Added `Dict::remove()`.
 
 ## CLI
 
-Added a `format` subcommand that fixes indentation in Garden files. The
-formatter now indents multiline function call arguments by one level.
+Added a `format` subcommand that fixes indentation in Garden files.
 
 Added `--fix` to `garden check`.
 

@@ -33,6 +33,7 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
         span_edits: vec![],
         src: src.to_owned(),
         toplevel_start_lines: vec![],
+        last_toplevel_expr_end: None,
     };
 
     for item in &items {
@@ -84,6 +85,8 @@ struct IndentationVisitor {
     src: String,
     /// Line numbers where toplevel items start (for blank line enforcement).
     toplevel_start_lines: Vec<usize>,
+    /// Track the last toplevel expression's end position for detecting multiple expressions on the same line.
+    last_toplevel_expr_end: Option<(usize, usize)>, // (line_number, end_offset)
 }
 
 impl IndentationVisitor {
@@ -203,18 +206,53 @@ impl Visitor for IndentationVisitor {
             self.toplevel_start_lines.push(line);
         }
 
-        // Continue with default visitor behavior
-        self.visit_toplevel_item_default(item);
+        // Handle toplevel blocks directly to avoid treating them as toplevel expressions
+        if let ToplevelItem::Block(block) = item {
+            self.visit_block(block);
+        } else {
+            // Continue with default visitor behavior
+            self.visit_toplevel_item_default(item);
+        }
     }
 
     fn visit_toplevel_expr(&mut self, toplevel_expr: &crate::parser::ast::ToplevelExpression) {
         let expr = &toplevel_expr.0;
         let line_num = expr.position.line_number;
+        let start_offset = expr.position.start_offset;
+        let end_offset = expr.position.end_offset;
+
+        // Check if this line has already been processed by visit_block
+        // If so, skip it to avoid interference
+        let line_start = &self.src[start_offset..].lines().next().unwrap_or("");
+        let has_leading_whitespace = line_start.starts_with(' ') || line_start.starts_with('\t');
+
+        // Skip expressions on lines with leading whitespace - they're inside blocks
+        if has_leading_whitespace && self.processed_lines.contains(&line_num) {
+            return;
+        }
+
+        // Check if this expression is on the same line as the previous toplevel expression
+        if let Some((last_line, last_end_offset)) = self.last_toplevel_expr_end {
+            if last_line == line_num {
+                // Same line - insert a newline between them
+                let new_content = String::from("\n");
+
+                self.span_edits.push(SpanEdit {
+                    start_offset: last_end_offset,
+                    end_offset: start_offset,
+                    replacement: new_content,
+                });
+            }
+        }
+
+        // Update the last toplevel expression end position
+        self.last_toplevel_expr_end = Some((line_num, end_offset));
 
         if !self.processed_lines.contains(&line_num) {
             let current_indent = expr.position.column;
 
             if current_indent != 0 {
+                // This expression has indentation, set it to 0
                 self.line_edits.push(LineEdit {
                     line_number: line_num,
                     new_indent: 0,
@@ -241,6 +279,35 @@ impl Visitor for IndentationVisitor {
 
         self.current_depth += 1;
 
+        // Fix multiple expressions on the same line by inserting newlines
+        // Track if we inserted any newlines that will shift line numbers
+        let mut inserted_newlines = 0;
+        for i in 0..block.exprs.len().saturating_sub(1) {
+            let curr_expr = &block.exprs[i];
+            let next_expr = &block.exprs[i + 1];
+
+            if curr_expr.position.line_number == next_expr.position.line_number {
+                // Same line - insert a newline between them
+                let end_offset = curr_expr.position.end_offset;
+                let start_offset = next_expr.position.start_offset;
+
+                // Replace the span between them with a newline + proper indentation
+                // We include indentation here because the indentation phase won't process
+                // this line (it's marked as already processed since it was on the same line
+                // as the previous expression)
+                let target_indent = self.current_depth * 2;
+                let new_content = format!("\n{}", " ".repeat(target_indent));
+
+                self.span_edits.push(SpanEdit {
+                    start_offset: end_offset,
+                    end_offset: start_offset,
+                    replacement: new_content,
+                });
+
+                inserted_newlines += 1;
+            }
+        }
+
         for expr in &block.exprs {
             let line_num = expr.position.line_number;
 
@@ -265,19 +332,22 @@ impl Visitor for IndentationVisitor {
         self.current_depth -= 1;
 
         // Format the closing brace at the same level as the block
-        let close_line = block.close_brace.line_number;
-        if !self.processed_lines.contains(&close_line) {
-            let target_indent = self.current_depth * 2;
-            let current_indent = block.close_brace.column;
+        // Skip if we inserted newlines (which would shift line numbers)
+        if inserted_newlines == 0 {
+            let close_line = block.close_brace.line_number;
+            if !self.processed_lines.contains(&close_line) {
+                let target_indent = self.current_depth * 2;
+                let current_indent = block.close_brace.column;
 
-            if current_indent != target_indent {
-                self.line_edits.push(LineEdit {
-                    line_number: close_line,
-                    new_indent: target_indent,
-                });
+                if current_indent != target_indent {
+                    self.line_edits.push(LineEdit {
+                        line_number: close_line,
+                        new_indent: target_indent,
+                    });
+                }
+
+                self.processed_lines.insert(close_line);
             }
-
-            self.processed_lines.insert(close_line);
         }
     }
 

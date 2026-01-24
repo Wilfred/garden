@@ -81,7 +81,7 @@ test list_directory {
 ///
 /// ```
 /// import "__fs.gdn" as fs
-/// fs::working_directory() //-> Path{ p: "/home/yourname/awesome_garden_project" }
+/// fs::working_directory() // Path{ p: "/home/yourname/awesome_garden_project" }
 /// ```
 public fun working_directory(): Path {
   __BUILT_IN_IMPLEMENTATION

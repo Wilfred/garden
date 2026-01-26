@@ -460,28 +460,12 @@ fn load_toplevel_items_(
                     import_info.path.to_owned()
                 } else {
                     let norm_path = enclosing_dir.join(&import_info.path).normalize();
-                    let Ok(abs_path) = std::path::absolute(&norm_path) else {
-                        let current_dir_descr = match std::env::current_dir() {
-                            Ok(d) => format!(" (currently {})", d.display()),
-                            Err(_) => "".to_owned(),
-                        };
 
-                        diagnostics.push(Diagnostic {
-                            message: ErrorMessage(vec![msgtext!(
-                                "Could not convert `{}` to an absolute path. The working directory{} may not exist.",
-                                import_info.path.display(),
-                                current_dir_descr
-                            )]),
-                            position: import_info.path_pos.clone(),
-                            notes: vec![],
-                            fixes: vec![],
-                            severity: Severity::Error,
-                        });
-
-                        continue;
-                    };
-
-                    abs_path
+                    if norm_path.is_absolute() {
+                        norm_path
+                    } else {
+                        env.working_directory.join(norm_path)
+                    }
                 };
 
                 if paths_seen.contains(&abs_path) {
@@ -2852,6 +2836,11 @@ fn eval_built_in_call(
             };
 
             let path = PathBuf::from(&path_s);
+            let path = if path.is_relative() {
+                env.working_directory.join(path)
+            } else {
+                path
+            };
 
             let value = match path.read_dir() {
                 Ok(dir_iter) => {
@@ -3013,10 +3002,9 @@ fn eval_built_in_call(
             };
 
             let path = PathBuf::from(path_s);
-            let v = match std::env::set_current_dir(path) {
-                Ok(()) => Value::ok(Value::unit()),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{e}")))),
-            };
+            env.working_directory = path;
+
+            let v = Value::ok(Value::unit());
 
             if expr_value_is_used {
                 env.push_value(v);
@@ -3034,8 +3022,7 @@ fn eval_built_in_call(
                 arg_values,
             )?;
 
-            // TODO: when we have a userland result type, use that.
-            let path = std::env::current_dir().unwrap_or_default();
+            let path = env.working_directory.clone();
 
             if expr_value_is_used {
                 env.push_value(Value::path(path.display().to_string()));
@@ -3093,6 +3080,11 @@ fn eval_built_in_call(
             };
 
             let path = PathBuf::from(&path_s);
+            let path = if path.is_relative() {
+                env.working_directory.join(path)
+            } else {
+                path
+            };
 
             let v = match std::fs::write(&path, content_s) {
                 Ok(()) => Value::ok(Value::unit()),
@@ -3150,6 +3142,11 @@ fn eval_built_in_call(
             };
 
             let path = PathBuf::from(&path_s);
+            let path = if path.is_relative() {
+                env.working_directory.join(path)
+            } else {
+                path
+            };
             let v = match std::fs::create_dir(&path) {
                 Ok(()) => Value::ok(Value::unit()),
                 Err(e) => {
@@ -3206,6 +3203,11 @@ fn eval_built_in_call(
             };
 
             let path = PathBuf::from(&path_s);
+            let path = if path.is_relative() {
+                env.working_directory.join(path)
+            } else {
+                path
+            };
             let v = match std::fs::remove_dir(&path) {
                 Ok(()) => Value::ok(Value::unit()),
                 Err(e) => {
@@ -3280,7 +3282,17 @@ fn eval_built_in_call(
             };
 
             let src_path = PathBuf::from(&src_path_s);
+            let src_path = if src_path.is_relative() {
+                env.working_directory.join(src_path)
+            } else {
+                src_path
+            };
             let dest_path = PathBuf::from(&dest_path_s);
+            let dest_path = if dest_path.is_relative() {
+                env.working_directory.join(dest_path)
+            } else {
+                dest_path
+            };
             let v = match std::fs::copy(&src_path, &dest_path) {
                 Ok(_) => Value::ok(Value::unit()),
                 Err(e) => {
@@ -3337,6 +3349,11 @@ fn eval_built_in_call(
             };
 
             let path = PathBuf::from(&path_s);
+            let path = if path.is_relative() {
+                env.working_directory.join(path)
+            } else {
+                path
+            };
             let v = match std::fs::remove_file(&path) {
                 Ok(()) => Value::ok(Value::unit()),
                 Err(e) => {
@@ -4982,6 +4999,11 @@ fn eval_built_in_method_call(
 
             if expr_value_is_used {
                 let path = PathBuf::from(path_s);
+                let path = if path.is_relative() {
+                    env.working_directory.join(path)
+                } else {
+                    path
+                };
                 env.push_value(Value::bool(path.exists()));
             }
         }
@@ -5029,6 +5051,11 @@ fn eval_built_in_method_call(
             };
 
             let path = PathBuf::from(path_s.clone());
+            let path = if path.is_relative() {
+                env.working_directory.join(path)
+            } else {
+                path
+            };
 
             let v = match std::fs::read_to_string(path) {
                 Ok(s) => Value::ok(Value::new(Value_::String(s))),

@@ -79,6 +79,10 @@ pub(crate) struct Env {
     /// relative paths in e.g. errors.
     pub(crate) project_root: PathBuf,
 
+    /// The current working directory for file operations and imports.
+    /// This is independent of the OS working directory.
+    pub(crate) working_directory: PathBuf,
+
     /// The arguments used the last time each function was
     /// called. Used for eval-up-to.
     pub(crate) prev_call_args: FxHashMap<(SymbolName, PathBuf), Vec<Value>>,
@@ -149,12 +153,14 @@ impl Env {
             types: FxHashMap::default(),
         }));
 
+        let current_dir = std::env::current_dir().unwrap_or(PathBuf::from("/"));
         let mut env = Self {
             tests: FxHashMap::default(),
             types: built_in_types(),
             prelude_namespace: temp_prelude,
             namespaces,
-            project_root: std::env::current_dir().unwrap_or(PathBuf::from("/")),
+            project_root: current_dir.clone(),
+            working_directory: current_dir,
             prev_call_args: FxHashMap::default(),
             prev_method_call_args: FxHashMap::default(),
             stack: Stack::new(user_namespace.clone()),

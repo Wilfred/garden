@@ -17,6 +17,10 @@ distinguish from normal comments.
 
 Added `Dict::remove()`.
 
+`set_working_directory()` now only updates the Garden environment,
+not the OS working directory. File operations and imports resolve
+relative paths using this environment working directory.
+
 ## CLI
 
 Added a `format` subcommand that fixes indentation in Garden files.

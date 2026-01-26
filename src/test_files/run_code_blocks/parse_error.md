@@ -9,6 +9,6 @@ let x =
 // args: run-code-blocks
 // expected exit status: 1
 // expected stderr:
-// src/test_files/run_code_blocks/parse_error.md:6: Parse error (incomplete): Expected an expression.
+// src/test_files/run_code_blocks/parse_error.md:6: Parse error (incomplete): Expected an expression after this.
 // Checked 1 block in 1 file.
 

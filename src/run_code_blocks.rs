@@ -12,7 +12,6 @@ use crate::diagnostics::{format_exception_with_stack, Severity};
 use crate::env::Env;
 use crate::eval::{eval_toplevel_items, EvalError, Session, StdoutMode};
 use crate::parser::ast::{IdGenerator, ToplevelItem};
-use crate::parser::position::Position;
 use crate::parser::vfs::{to_abs_path, to_project_relative, Vfs};
 use crate::parser::{parse_toplevel_items_from_span, ParseError};
 use crate::BAD_CLI_REQUEST_EXIT_CODE;
@@ -96,34 +95,6 @@ fn extract_code_blocks(markdown: &str) -> Vec<CodeBlock> {
     blocks
 }
 
-/// Adjust a position that may have been created with Position::todo() to use
-/// the correct offset and line number from the markdown source.
-fn adjust_todo_position(pos: &Position, markdown_src: &str, block_start_offset: usize) -> Position {
-    // If this is a todo position (all zeros), calculate the correct position
-    // from the block start offset
-    if pos.start_offset == 0 && pos.end_offset == 0 && pos.line_number == 0 {
-        let line_number = markdown_src[..block_start_offset].matches('\n').count();
-        let column = markdown_src[..block_start_offset]
-            .rfind('\n')
-            .map_or(block_start_offset, |last_newline| {
-                block_start_offset - last_newline - 1
-            });
-
-        Position {
-            start_offset: block_start_offset,
-            end_offset: block_start_offset,
-            line_number,
-            end_line_number: line_number,
-            column,
-            end_column: column,
-            path: pos.path.clone(),
-            vfs_path: pos.vfs_path.clone(),
-        }
-    } else {
-        pos.clone()
-    }
-}
-
 fn is_garden_block(info: &str) -> bool {
     let info = info.trim();
     if info.is_empty() {
@@ -196,8 +167,7 @@ fn eval_code_block(
                     message,
                     notes: _,
                 } => {
-                    let adjusted_pos =
-                        adjust_todo_position(&position, markdown_src, block.start_offset);
+                    let adjusted_pos = position.clone();
                     // Use the actual file path
                     let relative_path = to_project_relative(file_path, project_root);
                     error_messages.push(format!(
@@ -208,8 +178,7 @@ fn eval_code_block(
                     ));
                 }
                 ParseError::Incomplete { message, position } => {
-                    let adjusted_pos =
-                        adjust_todo_position(&position, markdown_src, block.start_offset);
+                    let adjusted_pos = position.clone();
                     // Use the actual file path
                     let relative_path = to_project_relative(file_path, project_root);
                     error_messages.push(format!(

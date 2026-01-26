@@ -1,25 +1,54 @@
-/// Test running a .gdn file with doc comment code blocks.
+/// Basic standalone code snippets in blocks.
 ///
-/// Simple arithmetic:
-/// ```garden
+/// ```
 /// 1 + 1 //-> 2
 /// "hello".len() //-> 5
 /// [1, 2, 3].len() //-> 3
 /// ```
 ///
-/// Function definition and usage:
-/// ```garden
-/// fun double(x: Int): Int {
-///   x * 2
+fun example() {
+}
+
+/// A block referencing definitions in the current file.
+///
+/// ```
+/// add_one(2) //-> 3
+/// ```
+fun add_one(x: Int): Int {
+  x + 1
+}
+
+/// Environment changes (e.g. redefinition) shouldn't change the
+/// results in other blocks.
+///
+/// ```
+/// fun add_one(x: Int): Int {
+///   x + 2
 /// }
 ///
-/// double(5) //-> 10
+/// add_one(2) //-> 4
 /// ```
+fun foo() {}
 
-fun example() {
-  // This is a regular function, not in a doc comment
+/// This block should not be affected by the previous.
+///
+/// ```
+/// add_one(2) //-> 3
+/// ```
+fun bar() {
+  x + 1
 }
 
 // args: run-code-blocks
-// expected stderr: Checked 2 blocks in 1 file.
+// expected exit status: 1
+// expected stderr:
+// Exception: No such variable `add_one`. Did you mean `None` instead?
+// --| src/test_files/run_code_blocks/basic_gdn_file.gdn:15:2	 __toplevel__
+// 15|  add_one(2) //-> 3
+//   |  ^^^^^^^
+// Exception: No such variable `add_one`. Did you mean `None` instead?
+// --| src/test_files/run_code_blocks/basic_gdn_file.gdn:36:2	 __toplevel__
+// 36|  add_one(2) //-> 3
+//   |  ^^^^^^^
+// Checked 4 blocks in 1 file.
 

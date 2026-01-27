@@ -1,6 +1,6 @@
 //! Check code examples in markdown files and .gdn files.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
@@ -10,28 +10,31 @@ use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag, TagEnd};
 
 use crate::diagnostics::{format_exception_with_stack, Severity};
 use crate::env::Env;
-use crate::eval::{eval_toplevel_items, EvalError, Session, StdoutMode};
+use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session, StdoutMode};
 use crate::parser::ast::{IdGenerator, ToplevelItem};
+use crate::parser::position::Position;
 use crate::parser::vfs::{to_abs_path, to_project_relative, Vfs};
 use crate::parser::{parse_toplevel_items_from_span, ParseError};
+use crate::values::Value;
 use crate::BAD_CLI_REQUEST_EXIT_CODE;
 
 /// A code block extracted from markdown.
 #[derive(Debug)]
 struct CodeBlock {
-    /// The byte offset where the code block content starts in the markdown source
+    /// The byte offset where the code block content starts in the
+    /// markdown source.
     start_offset: usize,
-    /// The byte offset where the code block content ends in the markdown source
+    /// The byte offset where the code block content ends in the
+    /// markdown source.
     end_offset: usize,
 }
 
 /// Result of evaluating an expression in a code block.
 #[derive(Debug)]
 struct ExpressionResult {
-    value: crate::values::Value,
+    value: Value,
     expected_comment: Option<String>,
-    /// Position in the source file
-    position: crate::parser::position::Position,
+    position: Position,
 }
 
 /// Result of checking an expression value against an expected value.
@@ -130,7 +133,6 @@ fn eval_code_block(
     block: &CodeBlock,
     markdown_src: &str,
     file_path: &Path,
-    is_gdn: bool,
     interrupted: Arc<AtomicBool>,
     project_root: &Path,
 ) -> Result<Vec<ExpressionResult>, String> {
@@ -138,13 +140,16 @@ fn eval_code_block(
     let mut id_gen = IdGenerator::default();
     let mut vfs = Vfs::default();
 
-    // Determine the VFS path based on file type
+    let is_gdn = match file_path.extension() {
+        Some(ext) => ext == "gdn",
+        None => false,
+    };
+
+    // Ensure paths always end .gdn.
     let vfs_file_path = if is_gdn {
-        // For .gdn files, use the actual file path
         file_path.to_path_buf()
     } else {
-        // For .md files, append .gdn extension
-        std::path::PathBuf::from(format!("{}.gdn", file_path.display()))
+        PathBuf::from(format!("{}.gdn", file_path.display()))
     };
 
     let vfs_path = vfs.insert(Rc::new(vfs_file_path.clone()), markdown_src.to_owned());
@@ -196,9 +201,7 @@ fn eval_code_block(
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(&vfs_file_path);
 
-    let (load_diagnostics, _) = crate::eval::load_toplevel_items(&items, &mut env, ns);
-
-    // Check for errors during loading
+    let (load_diagnostics, _) = load_toplevel_items(&items, &mut env, ns);
     for diagnostic in load_diagnostics {
         if matches!(diagnostic.severity, Severity::Error) {
             return Err(diagnostic.message.as_string());
@@ -273,7 +276,7 @@ fn eval_code_block(
                     if comment.trim() == "*exception*" {
                         // Exception was expected, this is fine
                         results.push(ExpressionResult {
-                            value: crate::values::Value::unit(),
+                            value: Value::unit(),
                             expected_comment: expected_comment.clone(),
                             position: expr.0.position.clone(),
                         });
@@ -364,12 +367,6 @@ fn run_blocks_in_file(
         (blocks, src.clone())
     };
 
-    let block_count = code_blocks.len();
-
-    if code_blocks.is_empty() {
-        return (true, 0); // No code blocks is fine
-    }
-
     let mut had_error = false;
 
     // Create a temporary env for displaying values
@@ -381,26 +378,19 @@ fn run_blocks_in_file(
             block,
             &parse_src,
             file_path,
-            is_gdn,
             interrupted.clone(),
             project_root,
         ) {
             Ok(results) => {
                 for result in results {
-                    // Get string representation of value
                     let value_str = result.value.display(&display_env);
 
-                    // Check against expected value
                     let check_result =
                         check_expression(&value_str, result.expected_comment.as_deref());
 
                     match check_result {
-                        CheckResult::Passed => {
-                            // Silent on success
-                        }
-                        CheckResult::ExpectedException => {
-                            // Expected exception occurred, silent on success
-                        }
+                        CheckResult::Passed => {}
+                        CheckResult::ExpectedException => {}
                         CheckResult::Failed { expected, got } => {
                             had_error = true;
                             // Use the actual path
@@ -438,16 +428,16 @@ fn run_blocks_in_file(
         }
     }
 
-    (!had_error, block_count)
+    (!had_error, code_blocks.len())
 }
 
-pub(crate) fn run_code_blocks(paths: &[std::path::PathBuf], interrupted: Arc<AtomicBool>) {
+pub(crate) fn run_code_blocks(paths: &[PathBuf], interrupted: Arc<AtomicBool>) {
     if paths.is_empty() {
         eprintln!("No files specified");
         std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     }
 
-    let project_root = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("/"));
+    let project_root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/"));
 
     let mut all_success = true;
     let mut total_files = 0;
@@ -464,7 +454,6 @@ pub(crate) fn run_code_blocks(paths: &[std::path::PathBuf], interrupted: Arc<Ato
         total_blocks += block_count;
     }
 
-    // Print summary
     let block_word = if total_blocks == 1 { "block" } else { "blocks" };
     let file_word = if total_files == 1 { "file" } else { "files" };
     eprintln!(

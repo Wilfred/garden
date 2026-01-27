@@ -9,9 +9,9 @@
 //  | ^
 // 2| 
 // 
-// Error: Expected an expression.
+// Error: Expected an expression after this.
 // -| src/test_files/check/incomplete_binop.gdn:1:1
 // 1| /
-//  | 
+//  | ^
 // 2|
 

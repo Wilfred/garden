@@ -10,7 +10,7 @@
 //         "Err": [
 //           {
 //             "position": null,
-//             "message": "Expected an expression.",
+//             "message": "Expected an expression after this.",
 //             "stack": null
 //           }
 //         ]

@@ -768,9 +768,14 @@ fn parse_simple_expression(
         return Expression::new(token.position, Expression_::Invalid, id_gen.next());
     }
 
+    let error_position = match prev_token {
+        Some(prev_token) => prev_token.position.clone(),
+        None => Position::todo(&tokens.vfs_path),
+    };
+
     diagnostics.push(ParseError::Incomplete {
-        message: ErrorMessage(vec![Text("Expected an expression.".to_owned())]),
-        position: Position::todo(&tokens.vfs_path),
+        message: ErrorMessage(vec![Text("Expected an expression after this.".to_owned())]),
+        position: error_position,
     });
 
     Expression::new(

@@ -14,7 +14,7 @@ use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session, 
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_abs_path, to_project_relative, Vfs};
-use crate::parser::{parse_toplevel_items_from_span, ParseError};
+use crate::parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 use crate::values::Value;
 use crate::BAD_CLI_REQUEST_EXIT_CODE;
 
@@ -136,10 +136,6 @@ fn eval_code_block(
     interrupted: Arc<AtomicBool>,
     project_root: &Path,
 ) -> Result<Vec<ExpressionResult>, String> {
-    // Create isolated environment for this block
-    let mut id_gen = IdGenerator::default();
-    let mut vfs = Vfs::default();
-
     let is_gdn = match file_path.extension() {
         Some(ext) => ext == "gdn",
         None => false,
@@ -152,13 +148,37 @@ fn eval_code_block(
         PathBuf::from(format!("{}.gdn", file_path.display()))
     };
 
+    let mut vfs = Vfs::default();
     let vfs_path = vfs.insert(Rc::new(vfs_file_path.clone()), markdown_src.to_owned());
+
+    let mut id_gen = IdGenerator::default();
+    let mut file_env = Env::new(id_gen, vfs);
+    let ns = file_env.get_or_create_namespace(&vfs_file_path);
+
+    if is_gdn {
+        // Parse and load the definitions in the .gdn file, outside of
+        // the blocks.
+        let (file_items, file_parse_errors) =
+            parse_toplevel_items(&vfs_path, markdown_src, &mut file_env.id_gen);
+
+        if !file_parse_errors.is_empty() {
+            return Err("Parsing failed.".to_owned());
+        }
+
+        let (file_load_diagnostics, _) =
+            load_toplevel_items(&file_items, &mut file_env, ns.clone());
+        if !file_load_diagnostics.is_empty() {
+            return Err("Loading failed".to_owned());
+        }
+    }
+
+    let mut block_env = file_env.clone();
 
     // Parse the code block using offsets into the markdown source
     let (items, parse_errors) = parse_toplevel_items_from_span(
         &vfs_path,
         markdown_src,
-        &mut id_gen,
+        &mut block_env.id_gen,
         block.start_offset,
         block.end_offset,
     );
@@ -198,10 +218,7 @@ fn eval_code_block(
         return Err(error_messages.join("\n"));
     }
 
-    let mut env = Env::new(id_gen, vfs);
-    let ns = env.get_or_create_namespace(&vfs_file_path);
-
-    let (load_diagnostics, _) = load_toplevel_items(&items, &mut env, ns);
+    let (load_diagnostics, _) = load_toplevel_items(&items, &mut block_env, ns.clone());
     for diagnostic in load_diagnostics {
         if matches!(diagnostic.severity, Severity::Error) {
             return Err(diagnostic.message.as_string());
@@ -230,15 +247,18 @@ fn eval_code_block(
         }
     }
 
-    match eval_toplevel_items(&vfs_path, &defs, &mut env, &session) {
+    let (load_diagnostics, _) = load_toplevel_items(&items, &mut block_env, ns.clone());
+
+    // Evaluate definitions within the block.
+    match eval_toplevel_items(&vfs_path, &defs, &mut block_env, &session) {
         Ok(_) => {}
         Err(EvalError::Exception(exception_info)) => {
             let error_msg = format_exception_with_stack(
                 &exception_info.message,
                 &exception_info.position,
-                &env.stack.0,
-                &env.vfs,
-                &env.project_root,
+                &file_env.stack.0,
+                &file_env.vfs,
+                &file_env.project_root,
             );
             return Err(error_msg);
         }
@@ -257,7 +277,7 @@ fn eval_code_block(
         match eval_toplevel_items(
             &vfs_path,
             &[ToplevelItem::Expr(expr.clone())],
-            &mut env,
+            &mut block_env,
             &session,
         ) {
             Ok(summary) => {
@@ -287,9 +307,9 @@ fn eval_code_block(
                 let error_msg = format_exception_with_stack(
                     &exception_info.message,
                     &exception_info.position,
-                    &env.stack.0,
-                    &env.vfs,
-                    &env.project_root,
+                    &block_env.stack.0,
+                    &block_env.vfs,
+                    &block_env.project_root,
                 );
                 return Err(error_msg);
             }

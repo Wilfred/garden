@@ -131,6 +131,7 @@ fn extract_arrow_comment(src: &str, end_offset: usize) -> Option<String> {
 /// Evaluate expressions in a code block and return results with expected values.
 fn eval_code_block(
     block: &CodeBlock,
+    src: &str,
     markdown_src: &str,
     file_path: &Path,
     interrupted: Arc<AtomicBool>,
@@ -151,17 +152,20 @@ fn eval_code_block(
     let mut vfs = Vfs::default();
     let vfs_path = vfs.insert(Rc::new(vfs_file_path.clone()), markdown_src.to_owned());
 
-    let mut id_gen = IdGenerator::default();
-    let mut file_env = Env::new(id_gen, vfs);
+    let mut file_env = Env::new(IdGenerator::default(), vfs);
     let ns = file_env.get_or_create_namespace(&vfs_file_path);
 
     if is_gdn {
         // Parse and load the definitions in the .gdn file, outside of
         // the blocks.
         let (file_items, file_parse_errors) =
-            parse_toplevel_items(&vfs_path, markdown_src, &mut file_env.id_gen);
+            parse_toplevel_items(&vfs_path, src, &mut file_env.id_gen);
 
         if !file_parse_errors.is_empty() {
+            for error in file_parse_errors {
+                eprintln!("{}", error.message().as_string());
+            }
+
             return Err("Parsing failed.".to_owned());
         }
 
@@ -366,7 +370,7 @@ fn run_blocks_in_file(
     let is_gdn = file_path.extension().is_some_and(|ext| ext == "gdn");
 
     // Extract code blocks and the source to use for parsing
-    let (code_blocks, parse_src) = if is_gdn {
+    let (code_blocks, markdown_src) = if is_gdn {
         // For .gdn files, extract doc comments as markdown, taking
         // care to use the same number of lines.
         let mut doc_markdown = String::new();
@@ -396,7 +400,8 @@ fn run_blocks_in_file(
         // Evaluate the code block using the appropriate source
         match eval_code_block(
             block,
-            &parse_src,
+            &src,
+            &markdown_src,
             file_path,
             interrupted.clone(),
             project_root,

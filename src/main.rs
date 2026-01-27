@@ -60,6 +60,7 @@ mod parser;
 mod pos_to_id;
 mod prompt;
 mod rename;
+mod run_code_blocks;
 mod sandboxed_playground;
 mod syntax_check;
 mod syntax_highlighter;
@@ -209,6 +210,8 @@ enum CliCommands {
         #[clap(long, action)]
         stdout: bool,
     },
+    /// Run Garden code blocks in markdown and .gdn files.
+    RunCodeBlocks { paths: Vec<PathBuf> },
     /// Show the type of the expression at the position given.
     ShowType {
         path: PathBuf,
@@ -271,6 +274,9 @@ fn main() {
                 }
             };
             run_file(&src, &abs_path, &arguments, interrupted)
+        }
+        CliCommands::RunCodeBlocks { paths } => {
+            run_code_blocks::run_code_blocks(&paths, interrupted);
         }
         CliCommands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
@@ -824,6 +830,11 @@ mod tests {
     #[test]
     fn test_golden_check_fix() -> TestResult<()> {
         run_golden_tests("check_fix")
+    }
+
+    #[test]
+    fn test_golden_run_code_blocks() -> TestResult<()> {
+        run_golden_tests("run_code_blocks")
     }
 
     #[test]

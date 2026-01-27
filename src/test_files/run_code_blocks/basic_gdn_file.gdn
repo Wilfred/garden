@@ -1,0 +1,54 @@
+/// Basic standalone code snippets in blocks.
+///
+/// ```
+/// 1 + 1 //-> 2
+/// "hello".len() //-> 5
+/// [1, 2, 3].len() //-> 3
+/// ```
+///
+fun example() {
+}
+
+/// A block referencing definitions in the current file.
+///
+/// ```
+/// add_one(2) //-> 3
+/// ```
+fun add_one(x: Int): Int {
+  x + 1
+}
+
+/// Environment changes (e.g. redefinition) shouldn't change the
+/// results in other blocks.
+///
+/// ```
+/// fun add_one(x: Int): Int {
+///   x + 2
+/// }
+///
+/// add_one(2) //-> 4
+/// ```
+fun foo() {}
+
+/// This block should not be affected by the previous.
+///
+/// ```
+/// add_one(2) //-> 3
+/// ```
+fun bar() {
+  x + 1
+}
+
+// args: run-code-blocks
+// expected exit status: 1
+// expected stderr:
+// Exception: No such variable `add_one`. Did you mean `None` instead?
+// --| src/test_files/run_code_blocks/basic_gdn_file.gdn:15:2	 __toplevel__
+// 15|  add_one(2) //-> 3
+//   |  ^^^^^^^
+// Exception: No such variable `add_one`. Did you mean `None` instead?
+// --| src/test_files/run_code_blocks/basic_gdn_file.gdn:36:2	 __toplevel__
+// 36|  add_one(2) //-> 3
+//   |  ^^^^^^^
+// Checked 4 blocks in 1 file.
+

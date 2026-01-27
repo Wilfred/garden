@@ -26,6 +26,7 @@ lsp-types = "0.97.0"
 ordered-float = "3.7.0"
 url = "2.5.0"
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
+pulldown-cmark = "0.12"
 rand = "0.9.1"
 regex = "1.7.1"
 rustyline = "17.0.1"

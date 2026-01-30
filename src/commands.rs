@@ -13,6 +13,18 @@ use strum_macros::EnumIter;
 
 use crate::colors::green;
 use crate::env::Env;
+
+/// Convert an absolute path to use `~` when the path is inside the current
+/// user's home directory.
+fn path_with_home(path: &Path) -> String {
+    if let Ok(home) = std::env::var("HOME") {
+        let home_path = Path::new(&home);
+        if let Ok(relative) = path.strip_prefix(home_path) {
+            return format!("~/{}", relative.display());
+        }
+    }
+    path.display().to_string()
+}
 use crate::eval::{eval_exprs, Session};
 use crate::garden_type::Type;
 use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
@@ -443,7 +455,7 @@ pub(crate) fn run_command<T: Write>(
                 }
 
                 let ns = ns.borrow();
-                write!(buf, "\n{}", path.display())?;
+                write!(buf, "\n{}", path_with_home(path))?;
 
                 let mut syms = ns.exported_syms.iter().collect::<Vec<_>>();
                 syms.sort_by_key(|s| s.text.to_ascii_lowercase());
@@ -455,7 +467,7 @@ pub(crate) fn run_command<T: Write>(
 
             writeln!(buf, "\n")?;
             let ns = env.prelude_namespace.borrow();
-            write!(buf, "{}", ns.abs_path.display())?;
+            write!(buf, "{}", path_with_home(&ns.abs_path))?;
 
             let mut syms = ns.exported_syms.iter().collect::<Vec<_>>();
             syms.sort_by_key(|s| s.text.to_ascii_lowercase());

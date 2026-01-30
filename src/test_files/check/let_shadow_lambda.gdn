@@ -22,3 +22,6 @@
 //  4|         ^
 //  5|     let f = fun() {
 
+// expected stderr:
+// 1 issue can be fixed automatically (use `--fix`).
+

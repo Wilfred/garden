@@ -187,6 +187,14 @@ pub(crate) fn check(
     }
 
     if !diagnostics.is_empty() {
+        if !json && !all_fixes.is_empty() {
+            let num_fixable = all_fixes.len();
+            eprintln!(
+                "\n{} {} can be fixed automatically (use `--fix`).",
+                num_fixable,
+                if num_fixable == 1 { "issue" } else { "issues" }
+            );
+        }
         std::process::exit(1);
     }
 }

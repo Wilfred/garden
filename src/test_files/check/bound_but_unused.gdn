@@ -8,3 +8,6 @@ public fun foo(x: Int) {}
 // 1| public fun foo(x: Int) {}
 // 2|                ^
 
+// expected stderr:
+// 1 issue can be fixed automatically (use `--fix`).
+

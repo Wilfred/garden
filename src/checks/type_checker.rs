@@ -21,7 +21,7 @@ use crate::parser::position::Position;
 use crate::parser::vfs::{VfsId, VfsPathBuf};
 use crate::types::TypeDef;
 use crate::values::{Value, Value_};
-use crate::{msgcode, msgtext};
+use crate::{msgcode, msglink, msgtext};
 
 #[derive(Debug)]
 pub(crate) struct TCSummary {
@@ -1559,8 +1559,67 @@ impl TypeCheckVisitor<'_> {
         expected_return_ty: &Type,
     ) -> Type {
         match op {
-            BinaryOperatorKind::Add
-            | BinaryOperatorKind::Subtract
+            BinaryOperatorKind::Add => {
+                let lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
+                let rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
+
+                // Check if user is trying to concatenate strings with +
+                // (but not if either operand is an error type from a previous error)
+                if !lhs_ty.is_error()
+                    && !rhs_ty.is_error()
+                    && is_subtype(&lhs_ty, &Type::string())
+                    && is_subtype(&rhs_ty, &Type::string())
+                {
+                    // Calculate operator position for the fix (between LHS and RHS)
+                    let op_position = Position {
+                        start_offset: lhs.position.end_offset,
+                        end_offset: rhs.position.start_offset,
+                        line_number: lhs.position.end_line_number,
+                        end_line_number: rhs.position.line_number,
+                        column: lhs.position.end_column,
+                        end_column: rhs.position.column,
+                        path: lhs.position.path.clone(),
+                        vfs_path: lhs.position.vfs_path.clone(),
+                    };
+
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        fixes: vec![Autofix {
+                            description: "Replace `+` with `^`".to_owned(),
+                            position: op_position,
+                            new_text: " ^ ".to_owned(),
+                        }],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![
+                            msgtext!("Cannot use "),
+                            msgcode!("+"),
+                            msgtext!(" to concatenate strings. In Garden, "),
+                            msgcode!("+"),
+                            msgtext!(" is only for integers.\n\nUse the "),
+                            msgcode!("^"),
+                            msgtext!(" operator for string concatenation. See: "),
+                            msglink!(
+                                "https://www.garden-lang.org/operator:%5E.html",
+                                "operator:^"
+                            ),
+                        ]),
+                        position: pos.clone(),
+                    });
+
+                    return Type::string();
+                }
+
+                // Normal integer addition - verify both operands are Int
+                if !is_subtype(&lhs_ty, &Type::int()) {
+                    self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
+                }
+                if !is_subtype(&rhs_ty, &Type::int()) {
+                    self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
+                }
+
+                Type::int()
+            }
+            BinaryOperatorKind::Subtract
             | BinaryOperatorKind::Multiply
             | BinaryOperatorKind::Divide
             | BinaryOperatorKind::Modulo

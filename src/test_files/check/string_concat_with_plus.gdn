@@ -1,0 +1,18 @@
+public fun foo() {
+  "a" + "b"
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Cannot use `+` to concatenate strings. In Garden, `+` is only for integers.
+// 
+// Use the `^` operator for string concatenation. See: operator:^ (https://www.garden-lang.org/operator:%5E.html)
+// -| src/test_files/check/string_concat_with_plus.gdn:2:3
+// 1| public fun foo() {
+// 2|   "a" + "b"
+// 3| } ^^^^^^^^^
+
+// expected stderr: 
+1 issue can be fixed automatically (use `--fix`).
+

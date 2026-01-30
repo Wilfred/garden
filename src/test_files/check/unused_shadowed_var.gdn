@@ -27,3 +27,6 @@ public fun f(): Int {
 //  7|       ^
 //  8|   let x = 1
 
+// expected stderr:
+// 2 issues can be fixed automatically (use `--fix`).
+

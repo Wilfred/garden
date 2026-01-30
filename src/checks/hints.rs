@@ -14,6 +14,7 @@ pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> 
         env,
         diagnostics: vec![],
         bound_type_params: HashSet::new(),
+        in_method_receiver: false,
     };
     for item in items {
         visitor.visit_toplevel_item(item);
@@ -28,6 +29,9 @@ struct HintVisitor<'a> {
     env: &'a Env,
     diagnostics: Vec<Diagnostic>,
     bound_type_params: HashSet<TypeName>,
+    /// Whether we're currently visiting the receiver type hint of a method.
+    /// Non-existent types in method receivers are warnings, not errors.
+    in_method_receiver: bool,
 }
 
 impl Visitor for HintVisitor<'_> {
@@ -42,7 +46,16 @@ impl Visitor for HintVisitor<'_> {
             }
         }
 
-        self.visit_method_info_default(method_info);
+        // Visit the receiver hint with the flag set, so we emit
+        // warnings rather than errors for non-existent types.
+        self.in_method_receiver = true;
+        self.visit_type_hint(&method_info.receiver_hint);
+        self.in_method_receiver = false;
+
+        self.visit_symbol(&method_info.receiver_sym);
+        if let Some(fun_info) = method_info.fun_info() {
+            self.visit_fun_info(fun_info);
+        }
 
         self.bound_type_params = old_type_params;
     }
@@ -177,9 +190,15 @@ impl Visitor for HintVisitor<'_> {
                 }
             }
             None => {
+                let severity = if self.in_method_receiver {
+                    Severity::Warning
+                } else {
+                    Severity::Error
+                };
+
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
-                    severity: Severity::Error,
+                    severity,
                     message: ErrorMessage(vec![
                         msgtext!("No such type "),
                         msgcode!("{}", type_hint.sym),

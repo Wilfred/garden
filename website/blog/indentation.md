@@ -1,7 +1,7 @@
 ```metadata
 published: false
-date: 2026-01-15
-title: Devlog 3: Picking Two Space Indentation
+date: 2026-02-02
+title: Devlog 3: Indents and Indentability
 ```
 
 There are few engineering debates more heated and more shallow than

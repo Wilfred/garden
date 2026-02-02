@@ -2225,14 +2225,7 @@ fn parse_block(
                 break;
             }
         } else {
-            diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(&tokens.vfs_path),
-                message: ErrorMessage(vec![
-                    msgtext!("Expected "),
-                    msgcode!("}}"),
-                    msgtext!(" here, but got EOF."),
-                ]),
-            });
+            // EOF, we'll error below about a missing closing brace.
             break;
         }
 

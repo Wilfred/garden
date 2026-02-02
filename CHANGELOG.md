@@ -21,6 +21,10 @@ Added `Dict::remove()`.
 
 Added a `format` subcommand that fixes indentation in Garden files.
 
+Added a `run-code-blocks` subcommand that evaluates code snippets in
+.md files and in doc comments, and checks the output against `//->`
+comments (if present).
+
 Added `--fix` to `garden check`.
 
 `sandboxed-test` now accepts a `--override-path` argument.

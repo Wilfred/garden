@@ -1946,7 +1946,10 @@ impl TypeCheckVisitor<'_> {
     }
 
     fn get_var(&self, name: &SymbolName) -> Option<Value> {
-        let ns = self.env.get_namespace(&self.path.path).unwrap();
+        let ns = self.env.get_namespace(&self.path.path).expect(&format!(
+            "Should have a namespace created for this path: {}",
+            self.path.path.display()
+        ));
         if let Some(v) = ns.borrow().values.get(name) {
             return Some(v.clone());
         }

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>dbg - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/blocks.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1><code>dbg()</code></h1>
+<p>Write an arbitrary value to stdout, along with debugging metadata.</p>
+<p>Returns the input, so you can use <code>dbg</code> in larger expressions
+<code>foo(dbg(bar()))</code>.</p>
+<div class="snippet"><span class="code-title">Example</span><pre><code><a href="/fun:__prelude.gdn::dbg.html">dbg</a>([1, 2])</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> <a href="/fun:__prelude.gdn::dbg.html">dbg</a>&lt;<span class="type">T</span>&gt;(value: <span class="type">T</span>): <span class="type">T</span> {
+  <a href="/fun:__prelude.gdn::println.html">println</a>(<a href="/fun:__prelude.gdn::string_repr.html">string_repr</a>(value))
+  value
+}</code></pre><div class="snippet-output" hidden></div></div></div>
+
+    <footer>
+      <a href="/blog.html">Blog</a>
+      🪴
+      <a href="https://github.com/Wilfred/garden">GitHub</a>
+    </footer>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

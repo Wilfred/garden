@@ -2585,6 +2585,40 @@ fn eval_built_in_call(
                 env.push_value(Value::unit());
             }
         }
+        BuiltInFunctionKind::PreludeReadLine => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut line = String::new();
+            let v = match std::io::stdin().read_line(&mut line) {
+                Ok(_) => {
+                    // Remove trailing newline if present
+                    if line.ends_with('\n') {
+                        line.pop();
+                        if line.ends_with('\r') {
+                            line.pop();
+                        }
+                    }
+                    Value::ok(Value::new(Value_::String(line)))
+                }
+                Err(e) => {
+                    let s = Value::new(Value_::String(format!("{e}")));
+                    Value::err(s)
+                }
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltInFunctionKind::PreludeShell => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];

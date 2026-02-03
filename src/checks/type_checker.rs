@@ -961,6 +961,7 @@ impl TypeCheckVisitor<'_> {
                 Type::no_value()
             }
             Expression_::IntLiteral(_) => Type::int(),
+            Expression_::FloatLiteral(_) => Type::error("Float type not yet implemented"),
             Expression_::StringLiteral(_) => Type::string(),
             Expression_::ListLiteral(items) => {
                 let item_tys = items

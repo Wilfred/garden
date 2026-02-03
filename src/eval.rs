@@ -5661,6 +5661,12 @@ fn eval_expr(
                 env.push_value(Value::new(Value_::Integer(*i)));
             }
         }
+        Expression_::FloatLiteral(f) => {
+            *expr_state = ExpressionState::EvaluatedAllSubexpressions;
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::Float(f.into_inner())));
+            }
+        }
         Expression_::StringLiteral(s) => {
             *expr_state = ExpressionState::EvaluatedAllSubexpressions;
             if expr_value_is_used {

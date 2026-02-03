@@ -10,6 +10,8 @@ completion, quickfixes and basic formatting. You can start it with
 
 ## Syntax
 
+Added float literal syntax, e.g. `1.5` or `-3.14`.
+
 Documentation is now written with triple slashes, e.g. `///`, to
 distinguish from normal comments.
 

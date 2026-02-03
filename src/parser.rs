@@ -13,7 +13,7 @@ use position::Position;
 use ast::*;
 use diagnostics::ErrorMessage;
 use diagnostics::MessagePart::*;
-use lex::{lex, lex_between, Token, TokenStream, INTEGER_RE, SYMBOL_RE};
+use lex::{lex, lex_between, Token, TokenStream, FLOAT_RE, INTEGER_RE, SYMBOL_RE};
 use rustc_hash::FxHashMap;
 use vfs::VfsPathBuf;
 
@@ -190,6 +190,43 @@ fn parse_integer(
         Expression::new(
             token.position,
             Expression_::IntLiteral(11223344),
+            id_gen.next(),
+        )
+    }
+}
+
+fn parse_float(
+    tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let token = require_a_token(tokens, diagnostics, "float literal");
+
+    if FLOAT_RE.is_match(token.text) {
+        let text = token.text.replace('_', "");
+        let f: f64 = text.parse().unwrap();
+        Expression::new(
+            token.position,
+            Expression_::FloatLiteral(f.into()),
+            id_gen.next(),
+        )
+    } else {
+        diagnostics.push(ParseError::Invalid {
+            position: token.position.clone(),
+            message: ErrorMessage(vec![
+                msgcode!("{}", token.text),
+                msgtext!(" is not a valid float literal. Float literals look like "),
+                msgcode!("1.5"),
+                msgtext!("."),
+            ]),
+            notes: vec![],
+        });
+
+        // Choose an arbitrary value that's hopefully unlikely to
+        // occur in real code.
+        Expression::new(
+            token.position,
+            Expression_::FloatLiteral(1122.3344.into()),
             id_gen.next(),
         )
     }
@@ -748,6 +785,10 @@ fn parse_simple_expression(
                 Expression_::StringLiteral(unescaped),
                 id_gen.next(),
             );
+        }
+
+        if FLOAT_RE.is_match(token.text) {
+            return parse_float(tokens, id_gen, diagnostics);
         }
 
         if INTEGER_RE.is_match(token.text) {

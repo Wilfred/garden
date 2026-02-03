@@ -199,6 +199,9 @@ pub(crate) trait Visitor {
             Expression_::IntLiteral(_) => {
                 // TODO: custom method for this variant
             }
+            Expression_::FloatLiteral(_) => {
+                // TODO: custom method for this variant
+            }
             Expression_::StringLiteral(_) => {
                 // TODO: custom method for this variant
             }

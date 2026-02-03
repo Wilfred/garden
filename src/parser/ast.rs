@@ -1,5 +1,6 @@
 //! Syntax tree definitions for Garden.
 
+use ordered_float::OrderedFloat;
 use rustc_hash::FxHashMap;
 
 use std::fmt::Display;
@@ -361,6 +362,10 @@ pub(crate) enum Expression_ {
     /// 123
     /// ```
     IntLiteral(i64),
+    /// ```garden
+    /// 1.5
+    /// ```
+    FloatLiteral(OrderedFloat<f64>),
     /// ```garden
     /// "foo"
     /// ```

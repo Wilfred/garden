@@ -366,6 +366,7 @@ pub(crate) enum BuiltInFunctionKind {
     PreludeGetEnv,
     PreludePrint,
     PreludePrintln,
+    PreludeReadLine,
     PreludeShell,
     // TODO: It's a little confusing that we have both shell() and
     // shell_arguments(), these should go in separate namespaces once
@@ -408,6 +409,7 @@ impl BuiltInFunctionKind {
             | BuiltInFunctionKind::PreludeStringRepr
             | BuiltInFunctionKind::PreludePrint
             | BuiltInFunctionKind::PreludePrintln
+            | BuiltInFunctionKind::PreludeReadLine
             | BuiltInFunctionKind::PreludeSourceDirectory
             | BuiltInFunctionKind::PreludeShellArguments
             | BuiltInFunctionKind::PreludeGetEnv => PathBuf::from("__prelude.gdn"),
@@ -447,6 +449,7 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::PreludeStringRepr => "string_repr",
             BuiltInFunctionKind::PreludePrint => "print",
             BuiltInFunctionKind::PreludePrintln => "println",
+            BuiltInFunctionKind::PreludeReadLine => "read_line",
             BuiltInFunctionKind::PreludeSourceDirectory => "source_directory",
             BuiltInFunctionKind::PreludeShellArguments => "shell_arguments",
             BuiltInFunctionKind::FsSetWorkingDirectory => "set_working_directory",

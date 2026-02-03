@@ -15,6 +15,8 @@ distinguish from normal comments.
 
 ## Standard Library
 
+Added `read_line()` for reading a single line of text from stdin.
+
 Added `Dict::remove()`.
 
 ## CLI

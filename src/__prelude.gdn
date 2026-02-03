@@ -842,6 +842,21 @@ public fun println(_: String): Unit {
   __BUILT_IN_IMPLEMENTATION
 }
 
+/// Read a single line of text from stdin.
+///
+/// Returns `Ok` with the line (without trailing newline) on success,
+/// or `Err` with an error message on failure.
+///
+/// ```
+/// match read_line() {
+///   Ok(line) => println("You entered: " + line)
+///   Err(e) => println("Error: " + e)
+/// }
+/// ```
+public fun read_line(): Result<String, String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
 /// Execute the given string as a shell command, and return stdout
 /// concatenated with stderr.
 ///

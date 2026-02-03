@@ -9,6 +9,7 @@ use crate::{msgcode, msgtext, ParseError};
 use super::vfs::VfsPathBuf;
 
 lazy_static! {
+    pub(crate) static ref FLOAT_RE: Regex = Regex::new(r"^-?[0-9][0-9_]*\.[0-9][0-9_]*").unwrap();
     pub(crate) static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9][0-9_]*").unwrap();
     pub(crate) static ref STRING_RE: Regex = Regex::new(r#"^"(\\"|[^"])*("|\z)"#).unwrap();
     pub(crate) static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
@@ -174,6 +175,31 @@ pub(crate) fn lex_between<'a>(
                 offset += token_str.len();
                 continue 'outer;
             }
+        }
+
+        // Match floats before integers, so 1.5 is treated as a float,
+        // not integer 1 followed by .5.
+        if let Some(float_match) = FLOAT_RE.find(s) {
+            let (line_number, column) = lp.from_offset(offset);
+
+            tokens.push(Token {
+                position: Position {
+                    start_offset: offset,
+                    end_offset: offset + float_match.end(),
+                    line_number: line_number.as_usize(),
+                    end_line_number: line_number.as_usize(),
+                    column,
+                    end_column: column + float_match.end(),
+                    path: vfs_path.path.clone(),
+                    vfs_path: vfs_path.clone(),
+                },
+                text: float_match.as_str(),
+                preceding_comments,
+            });
+            preceding_comments = vec![];
+
+            offset += float_match.end();
+            continue;
         }
 
         // Match integers before binary operators, so -1 is treated as

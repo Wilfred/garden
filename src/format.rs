@@ -428,6 +428,7 @@ impl Visitor for IndentationVisitor {
                     self.visit_expr_fun_literal(fun_info);
                 }
                 Expression_::IntLiteral(_) => {}
+                Expression_::FloatLiteral(_) => {}
                 Expression_::StringLiteral(_) => {}
                 Expression_::DotAccess(recv, field_sym) => {
                     self.visit_symbol(field_sym);

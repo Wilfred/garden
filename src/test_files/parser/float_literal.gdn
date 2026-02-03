@@ -1,0 +1,21 @@
+let x = 1.5
+
+// args: dump-ast
+// expected stdout:
+// Let(
+//     Symbol(
+//         Symbol"x",
+//     ),
+//     None,
+//     Expression {
+//         position: Position { ... },
+//         expr_: FloatLiteral(
+//             OrderedFloat(
+//                 1.5,
+//             ),
+//         ),
+//         value_is_used: true,
+//         id: SyntaxId(1),
+//     },
+// )
+

@@ -265,6 +265,7 @@ impl Type {
     pub(crate) fn from_value(value: &Value) -> Self {
         match value.as_ref() {
             Value_::Integer(_) => Type::int(),
+            Value_::Float(_) => Type::error("Float type not yet implemented"),
             Value_::Fun { runtime_type, .. } => runtime_type.clone(),
             Value_::Closure(_, _, runtime_type) => runtime_type.clone(),
             Value_::BuiltInFunction(_, _, Some(runtime_type)) => runtime_type.clone(),

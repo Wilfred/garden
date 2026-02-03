@@ -29,12 +29,6 @@ Added `--fix` to `garden check`.
 
 `sandboxed-test` now accepts a `--override-path` argument.
 
-Added a `run-code-blocks` that executes code blocks in .md and and
-.gdn files. Comments of the form `//->` are also checked that the
-expression matches the comment. Unexpected exceptions now show the full
-stack trace and exception message. Error messages now show the correct
-file paths (.gdn files use the actual path, .md files use path.md.gdn).
-
 # 0.22 (released 15 December 2025)
 **Goal: Playground.**
 

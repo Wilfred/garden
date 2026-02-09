@@ -19,6 +19,10 @@ Added `read_line()` for reading a single line of text from stdin.
 
 Added `Dict::remove()`.
 
+## Commands
+
+`:file` is now `:namespace`.
+
 ## CLI
 
 Added a `format` subcommand that fixes indentation in Garden files.

@@ -41,7 +41,7 @@ pub(crate) enum Command {
     Help(Option<String>),
     Functions,
     Locals,
-    File(Option<String>),
+    Namespace(Option<String>),
     Forget(Option<String>),
     ForgetCalls,
     ForgetLocal(Option<String>),
@@ -87,7 +87,6 @@ impl Display for Command {
         let name = match self {
             Command::Abort => ":abort",
             Command::Doc(_) => ":doc",
-            Command::File(_) => ":file",
             Command::Forget(_) => ":forget",
             Command::ForgetCalls => ":forget_calls",
             Command::ForgetLocal(_) => ":forget_local",
@@ -98,6 +97,7 @@ impl Display for Command {
             Command::Help(_) => ":help",
             Command::Locals => ":locals",
             Command::Methods(_) => ":methods",
+            Command::Namespace(_) => ":namespace",
             Command::Namespaces(_) => ":namespaces",
             Command::Parse(_) => ":parse",
             Command::Quit => ":quit",
@@ -127,7 +127,6 @@ impl Command {
         match command_name.to_lowercase().as_str() {
             ":abort" => Ok(Command::Abort),
             ":doc" => Ok(Command::Doc(args)),
-            ":file" => Ok(Command::File(args)),
             ":forget" => Ok(Command::Forget(args)),
             ":forget_calls" => Ok(Command::ForgetCalls),
             ":forget_local" => Ok(Command::ForgetLocal(args)),
@@ -138,6 +137,7 @@ impl Command {
             ":help" => Ok(Command::Help(args)),
             ":locals" => Ok(Command::Locals),
             ":methods" => Ok(Command::Methods(args)),
+            ":namespace" => Ok(Command::Namespace(args)),
             ":namespaces" => Ok(Command::Namespaces(args)),
             ":parse" => Ok(Command::Parse(args)),
             ":quit" => Ok(Command::Quit),
@@ -588,7 +588,7 @@ pub(crate) fn run_command<T: Write>(
                 write!(buf, "{}{}", if i == 0 { "" } else { "\n" }, var_name)?;
             }
         }
-        Command::File(name) => {
+        Command::Namespace(name) => {
             let working_dir = std::env::current_dir().unwrap_or(PathBuf::from("/"));
 
             match name {
@@ -989,7 +989,6 @@ fn command_help(command: Command) -> &'static str {
         Command::Abort => "The :abort command stops evaluation of the current expression, bringing you back to the toplevel.\n\nExample usage:\n\n:abort",
         Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExamples:\n\n:doc print\n:doc String::starts_with\n:doc some_namespace::some_fun",
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
-        Command::File(_) => "The :file command shows the current file where evaluation is occurring. It can also change the file of the toplevel.\n\nExample:\n\n:file\n:file myproject.gdn",
         // TODO: add a more comprehensive example of :forget_local usage.
         Command::Forget(_) => "The :forget command undefines a function or enum value.\n\nExample:\n\n:forget function_name",
         Command::ForgetCalls => "The :forget_calls command discards previously saved values from function and method calls. This ensures that the next call is saved instead.\n\nExample:\n\n:forget_calls",
@@ -1000,6 +999,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Globals => "The :globals command displays information about global values in the current file.\n\nExample:\n\n:globals",
         Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
         Command::Methods(_) => "The :methods command displays all the methods currently defined. If given an argument, limits to names containing that substring.\n\nExample:\n\n:methods\n:method Str",
+        Command::Namespace(_) => "The :namespace command shows the current file where evaluation is occurring. It can also change the file of the toplevel.\n\nExample:\n\n:file\n:file myproject.gdn",
         Command::Namespaces(_) => "The :namespaces command displays all the namespaces of all the files loaded.\n\nExample:\n\n:namespaces",
         Command::Parse(_) => "The :parse command displays the parse tree generated for the expression given.\n\nExample:\n\n:parse 1 + 2",
         Command::Quit => "The :quit command terminates this Garden session and exits.\n\nExample:\n\n:quit",

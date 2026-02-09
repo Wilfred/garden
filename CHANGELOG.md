@@ -2,7 +2,7 @@
 **Goal: Better REPL experience.**
 **Goal: Offer actions when runtime errors occur.**
 
-# 0.23 (unreleased)
+# 0.23 (released 9 February 2026)
 **Goal: LSP.**
 
 ## Tooling

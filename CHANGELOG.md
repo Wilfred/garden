@@ -1,6 +1,9 @@
+# 0.24 (unreleased)
+**Goal: Better REPL experience.**
+**Goal: Offer actions when runtime errors occur.**
+
 # 0.23 (unreleased)
 **Goal: LSP.**
-**Goal: Offer actions when runtime errors occur.**
 
 ## Tooling
 

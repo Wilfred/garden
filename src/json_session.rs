@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::io::{BufRead, Read};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -21,6 +22,7 @@ use crate::eval::{
     load_toplevel_items_with_stubs, push_test_stackframe, EvalError, EvalUpToErr, ExceptionInfo,
     ExpressionState, Session, StdoutJsonFormat, StdoutMode,
 };
+use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_project_relative, Vfs};
@@ -176,15 +178,7 @@ fn handle_load_request(
         )
     };
 
-    // Change the top stack frame to match the file we're loading, so
-    // we can immediately start experimenting with locally defined
-    // files.
-    let stack_frame = env
-        .stack
-        .0
-        .first_mut()
-        .expect("Should always have at least one frame");
-    stack_frame.namespace = ns;
+    switch_toplevel_namespace(env, ns);
 
     Response {
         kind: ResponseKind::Evaluate {
@@ -195,6 +189,24 @@ fn handle_load_request(
         position: None,
         id,
     }
+}
+
+/// If we're in the toplevel, change its file to `ns`. This lets us
+/// immediately start experimenting with new definitions.
+///
+/// If we're deeper in the stack (e.g. in the middle of handling an
+/// exception), do nothing.
+fn switch_toplevel_namespace(env: &mut Env, ns: Rc<RefCell<NamespaceInfo>>) {
+    if env.stack.0.len() > 1 {
+        return;
+    }
+
+    let stack_frame = env
+        .stack
+        .0
+        .first_mut()
+        .expect("Should always have at least one stack frame");
+    stack_frame.namespace = ns;
 }
 
 pub(crate) fn start_eval_thread(session: Session, receiver: Receiver<String>) -> JoinHandle<()> {
@@ -680,7 +692,7 @@ fn handle_run_eval_request(
         Err(e) => return err_to_response(e, env, id),
     };
 
-    match eval_toplevel_exprs_then_stop(&items, env, session, ns) {
+    let response = match eval_toplevel_exprs_then_stop(&items, env, session, ns.clone()) {
         Ok(value) => {
             let relative_path = to_project_relative(&path, &env.project_root);
 
@@ -753,7 +765,11 @@ fn handle_run_eval_request(
             }
         }
         Err(e) => err_to_response(e, env, id),
-    }
+    };
+
+    switch_toplevel_namespace(env, ns);
+
+    response
 }
 
 fn eval_to_response(env: &mut Env, session: &Session) -> Response {

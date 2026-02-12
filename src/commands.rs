@@ -164,6 +164,43 @@ impl Command {
     }
 }
 
+fn command_group(command: &Command) -> &'static str {
+    match command {
+        Command::Abort => "evaluation",
+        Command::Forget(_) => "evaluation",
+        Command::ForgetCalls => "evaluation",
+        Command::ForgetLocal(_) => "evaluation",
+        Command::Replace(_) => "evaluation",
+        Command::Resume => "evaluation",
+        Command::Skip => "evaluation",
+        Command::Test(_) => "evaluation",
+        Command::Type(_) => "evaluation",
+
+        Command::Doc(_) => "help",
+        Command::Help(_) => "help",
+
+        Command::Locals => "inspect",
+        Command::Namespace(_) => "inspect",
+        Command::Functions => "inspect",
+        Command::Globals => "inspect",
+        Command::Methods(_) => "inspect",
+        Command::Namespaces(_) => "inspect",
+        Command::Search(_) => "inspect",
+        Command::Source(_) => "inspect",
+        Command::Stack => "inspect",
+        Command::Types => "inspect",
+
+        Command::Parse(_) => "debugging",
+        Command::FrameValues => "debugging",
+        Command::FrameStatements => "debugging",
+        Command::Trace => "debugging",
+
+        Command::Quit => "session",
+        Command::Uptime => "session",
+        Command::Version => "session",
+    }
+}
+
 pub(crate) fn print_available_commands<T: Write>(
     attempted: &str,
     buf: &mut T,
@@ -171,18 +208,34 @@ pub(crate) fn print_available_commands<T: Write>(
     if !attempted.is_empty() {
         writeln!(buf, "No such command `{attempted}`.")?;
     }
-    write!(buf, "The available commands are")?;
 
-    let mut command_names: Vec<String> = Command::iter().map(|c| c.to_string()).collect();
-    command_names.sort();
+    let mut grouped_commands: FxHashMap<&'static str, Vec<String>> = FxHashMap::default();
+    for command in Command::iter() {
+        let group = command_group(&command);
+        let commands_in_group = grouped_commands.entry(group).or_insert(vec![]);
+        commands_in_group.push(command.to_string());
+    }
 
-    for (i, name) in command_names.iter().enumerate() {
-        if i == command_names.len() - 1 {
-            write!(buf, " and {}.", green(name))?;
-        } else if i == command_names.len() - 2 {
-            write!(buf, " {}", green(name))?;
-        } else {
-            write!(buf, " {},", green(name))?;
+    let mut groups = grouped_commands.keys().copied().collect::<Vec<_>>();
+    groups.sort();
+
+    for (i, group) in groups.iter().enumerate() {
+        if i > 0 {
+            write!(buf, "\n\n")?;
+        }
+        writeln!(buf, "{}", group)?;
+
+        let commands_in_group = grouped_commands.get_mut(group).unwrap();
+        commands_in_group.sort();
+
+        for (i, name) in commands_in_group.iter().enumerate() {
+            if i == commands_in_group.len() - 1 {
+                write!(buf, " and {}.", green(name))?;
+            } else if i == commands_in_group.len() - 2 {
+                write!(buf, " {}", green(name))?;
+            } else {
+                write!(buf, " {},", green(name))?;
+            }
         }
     }
 

@@ -547,12 +547,8 @@ fn load_toplevel_items_(
     for enum_info in enum_infos {
         // Add the values in the enum to the value environment.
         for (variant_idx, variant_sym) in enum_info.variants.iter().enumerate() {
-            let enum_value = if variant_sym.payload_hint.is_some() {
-                let runtime_type = enum_constructor_type(
-                    env,
-                    enum_info,
-                    variant_sym.payload_hint.as_ref().unwrap(),
-                );
+            let enum_value = if let Some(variant_payload_hint) = &variant_sym.payload_hint {
+                let runtime_type = enum_constructor_type(env, enum_info, variant_payload_hint);
                 Value::new(Value_::EnumConstructor {
                     type_name: enum_info.name_sym.name.clone(),
                     variant_idx,

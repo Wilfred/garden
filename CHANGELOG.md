@@ -7,6 +7,10 @@
 Added a warning when all code paths in a function return the same
 literal value.
 
+## Standard Library
+
+Added `random::choose()`.
+
 # 0.23 (released 9 February 2026)
 **Goal: LSP.**
 

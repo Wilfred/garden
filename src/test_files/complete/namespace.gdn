@@ -5,4 +5,5 @@ random::
 
 // args: complete
 // expected stdout:
+// {"label":"choose","kind":3,"detail":"(List<T>): Option<T>","insertText":"choose($0)","insertTextFormat":2}
 // {"label":"int()","kind":3,"detail":"(): Int","insertText":"int()","insertTextFormat":2}

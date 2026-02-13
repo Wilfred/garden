@@ -1,4 +1,4 @@
-// Generate a random integer value.
+/// Generate a random integer value.
 ///
 /// This is a pseudorandom number, and should not be used for
 /// cryptographic purposes.
@@ -8,4 +8,17 @@ public fun int(): Int {
 
 test random_int {
   int()
+}
+
+/// Randomly choose an item from `items`.
+public fun choose<T>(items: List<T>): Option<T> {
+  if items.is_empty() {
+    return None
+  }
+
+  items.get(int() % items.len())
+}
+
+test random_choose {
+  assert(choose([42]) == Some(42))
 }

@@ -1,0 +1,168 @@
+// Should warn: early return and final expression are the same literal.
+public fun early_return_int(b: Bool): Int {
+    if b {
+        return 1
+    }
+    1
+}
+
+// Should warn: all explicit returns are the same literal.
+public fun all_explicit_returns(b: Bool): Int {
+    if b {
+        return 1
+    }
+    return 1
+}
+
+// Should warn: if/else branches return the same literal.
+public fun if_else_same(b: Bool): Int {
+    if b {
+        1
+    } else {
+        1
+    }
+}
+
+// Should warn: match arms return the same literal.
+public fun match_same(x: Option<Int>): String {
+    match x {
+        None => { "yes" }
+        Some(_) => { "yes" }
+    }
+}
+
+// Should warn: all paths return the same enum variant.
+public fun always_true(b: Bool): Bool {
+    if b {
+        return True
+    }
+    True
+}
+
+// Should not warn: returns are different.
+public fun different_returns(b: Bool): Int {
+    if b {
+        return 1
+    }
+    2
+}
+
+// Should not warn: only one return path.
+public fun single_return(): Int {
+    1
+}
+
+// Should not warn: non-literal return.
+public fun non_literal_return(x: Int): Int {
+    if x > 0 {
+        return 1
+    }
+    x
+}
+
+// Should not warn: different enum variants.
+public fun different_variants(b: Bool): Bool {
+    if b {
+        return True
+    }
+    False
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: All code paths in `early_return_int()` return the same value `1`.
+// --| src/test_files/check/same_literal_returns.gdn:2:12
+//  1| // Should warn: early return and final expression are the same literal.
+//  2| public fun early_return_int(b: Bool): Int {
+//  3|     if b { ^^^^^^^^^^^^^^^^
+//  4|         return 1
+// --| src/test_files/check/same_literal_returns.gdn:4:16
+//  2| public fun early_return_int(b: Bool): Int {
+//  3|     if b {
+//  4|         return 1
+//  5|     }          ^ Note: Same value here.
+//  6|     1
+// --| src/test_files/check/same_literal_returns.gdn:6:5
+//  4|         return 1
+//  5|     }
+//  6|     1
+//  7| }   ^ Note: Same value here.
+// 
+// Warning: All code paths in `all_explicit_returns()` return the same value `1`.
+// --| src/test_files/check/same_literal_returns.gdn:10:12
+//  9| // Should warn: all explicit returns are the same literal.
+// 10| public fun all_explicit_returns(b: Bool): Int {
+// 11|     if b { ^^^^^^^^^^^^^^^^^^^^
+// 12|         return 1
+// --| src/test_files/check/same_literal_returns.gdn:12:16
+// 10| public fun all_explicit_returns(b: Bool): Int {
+// 11|     if b {
+// 12|         return 1
+// 13|     }          ^ Note: Same value here.
+// 14|     return 1
+// --| src/test_files/check/same_literal_returns.gdn:14:12
+// 12|         return 1
+// 13|     }
+// 14|     return 1
+// 15| }          ^ Note: Same value here.
+// 
+// Warning: All code paths in `if_else_same()` return the same value `1`.
+// --| src/test_files/check/same_literal_returns.gdn:18:12
+// 17| // Should warn: if/else branches return the same literal.
+// 18| public fun if_else_same(b: Bool): Int {
+// 19|     if b { ^^^^^^^^^^^^
+// 20|         1
+// --| src/test_files/check/same_literal_returns.gdn:20:9
+// 18| public fun if_else_same(b: Bool): Int {
+// 19|     if b {
+// 20|         1
+//   |         ^ Note: Same value here.
+// 21|     } else {
+// 22|         1
+// --| src/test_files/check/same_literal_returns.gdn:22:9
+// 20|         1
+// 21|     } else {
+// 22|         1
+// 23|     }   ^ Note: Same value here.
+// 24| }
+// 
+// Warning: All code paths in `match_same()` return the same value `"yes"`.
+// --| src/test_files/check/same_literal_returns.gdn:27:12
+// 26| // Should warn: match arms return the same literal.
+// 27| public fun match_same(x: Option<Int>): String {
+//   |            ^^^^^^^^^^
+// 28|     match x {
+// 29|         None => { "yes" }
+// --| src/test_files/check/same_literal_returns.gdn:29:19
+// 27| public fun match_same(x: Option<Int>): String {
+// 28|     match x {
+// 29|         None => { "yes" }
+//   |                   ^^^^^ Note: Same value here.
+// 30|         Some(_) => { "yes" }
+// 31|     }
+// --| src/test_files/check/same_literal_returns.gdn:30:22
+// 28|     match x {
+// 29|         None => { "yes" }
+// 30|         Some(_) => { "yes" }
+// 31|     }                ^^^^^ Note: Same value here.
+// 32| }
+// 
+// Warning: All code paths in `always_true()` return the same value `True`.
+// --| src/test_files/check/same_literal_returns.gdn:35:12
+// 34| // Should warn: all paths return the same enum variant.
+// 35| public fun always_true(b: Bool): Bool {
+// 36|     if b { ^^^^^^^^^^^
+// 37|         return True
+// --| src/test_files/check/same_literal_returns.gdn:37:16
+// 35| public fun always_true(b: Bool): Bool {
+// 36|     if b {
+// 37|         return True
+// 38|     }          ^^^^ Note: Same value here.
+// 39|     True
+// --| src/test_files/check/same_literal_returns.gdn:39:5
+// 37|         return True
+// 38|     }
+// 39|     True
+// 40| }   ^^^^ Note: Same value here.
+

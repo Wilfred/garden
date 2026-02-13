@@ -2,6 +2,11 @@
 **Goal: Better REPL experience.**
 **Goal: Offer actions when runtime errors occur.**
 
+## Checks
+
+Added a warning when all code paths in a function return the same
+literal value.
+
 # 0.23 (released 9 February 2026)
 **Goal: LSP.**
 

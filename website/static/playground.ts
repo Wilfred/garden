@@ -135,18 +135,20 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
       }
 
       if (!hasError) {
-        let output = "";
+        snippetDiv.innerHTML = "";
+
         if (stdoutParts.length > 0) {
-          output = stdoutParts.join("");
+          const stdoutDiv = document.createElement("div");
+          stdoutDiv.className = "output-stdout";
+          stdoutDiv.textContent = stdoutParts.join("");
+          snippetDiv.appendChild(stdoutDiv);
         }
         if (valueParts.length > 0) {
-          if (output.length > 0) {
-            output += "\n";
-          }
-          output += valueParts.join("\n");
+          const valueDiv = document.createElement("div");
+          valueDiv.className = "output-value";
+          valueDiv.textContent = valueParts.join("\n");
+          snippetDiv.appendChild(valueDiv);
         }
-
-        snippetDiv.innerHTML = output;
       }
     })
     .catch((error: unknown) => {

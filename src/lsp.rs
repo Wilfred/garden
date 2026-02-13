@@ -282,7 +282,7 @@ fn handle_initialize(
         capabilities: ServerCapabilities {
             definition_provider: Some(lsp_types::OneOf::Left(true)),
             completion_provider: Some(CompletionOptions {
-                trigger_characters: Some(vec![".".to_owned()]),
+                trigger_characters: Some(vec![".".to_owned(), "::".to_owned()]),
                 ..Default::default()
             }),
             text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),

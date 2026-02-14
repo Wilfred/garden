@@ -1,0 +1,9 @@
+method forgot_receiver() {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Methods require a receiver parameter, e.g. `this: SomeType`. This is the value that the method is called on. See the documentation (https://www.garden-lang.org/keyword:method.html).
+// -| src/test_files/check/missing_receiver_param.gdn:1:23
+// 1| method forgot_receiver() {}
+// 2|                       ^^

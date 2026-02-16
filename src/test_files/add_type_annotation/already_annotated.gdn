@@ -1,0 +1,8 @@
+fun foo() {
+  let x: Int = 1
+  //  ^
+  let _ = x
+}
+
+// args: add-type-annotation
+// expected stderr: No let binding without a type annotation found at this position.

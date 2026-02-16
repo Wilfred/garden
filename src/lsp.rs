@@ -19,6 +19,7 @@ use url::Url;
 /// Storage for open document contents, keyed by file path.
 type DocumentStore = FxHashMap<PathBuf, String>;
 
+use crate::add_type_annotation;
 use crate::checks::check_toplevel_items_in_env;
 use crate::checks::type_checker::check_types;
 use crate::completions;
@@ -288,7 +289,7 @@ fn handle_initialize(
             text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
             document_formatting_provider: Some(lsp_types::OneOf::Left(true)),
             code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
-                code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
+                code_action_kinds: Some(vec![CodeActionKind::QUICKFIX, CodeActionKind::REFACTOR]),
                 ..Default::default()
             })),
             ..Default::default()
@@ -570,6 +571,7 @@ fn handle_code_action(
     };
 
     let fixes = get_fixes(&src, &path);
+    let type_annotation_actions = add_type_annotation::get_type_annotation_actions(&src, &path);
 
     // Convert fixes to code actions
     let mut actions: CodeActionResponse = vec![];
@@ -600,6 +602,37 @@ fn handle_code_action(
         let action = CodeAction {
             title: fix.description,
             kind: Some(CodeActionKind::QUICKFIX),
+            edit: Some(workspace_edit),
+            ..Default::default()
+        };
+
+        actions.push(lsp_types::CodeActionOrCommand::CodeAction(action));
+    }
+
+    for fix in type_annotation_actions {
+        let range = garden_pos_to_lsp_range(&fix.position);
+
+        if !ranges_overlap(&range, &params.range) {
+            continue;
+        }
+
+        let text_edit = TextEdit {
+            range,
+            new_text: fix.new_text,
+        };
+
+        #[allow(clippy::mutable_key_type)]
+        let mut changes = std::collections::HashMap::new();
+        changes.insert(uri.clone(), vec![text_edit]);
+
+        let workspace_edit = WorkspaceEdit {
+            changes: Some(changes),
+            ..Default::default()
+        };
+
+        let action = CodeAction {
+            title: fix.description,
+            kind: Some(CodeActionKind::REFACTOR),
             edit: Some(workspace_edit),
             ..Default::default()
         };

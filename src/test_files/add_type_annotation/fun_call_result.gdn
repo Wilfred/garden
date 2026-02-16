@@ -1,0 +1,21 @@
+fun get_num(): Int {
+  42
+}
+
+fun foo() {
+  let x = get_num()
+  //  ^
+  let _ = x
+}
+
+// args: add-type-annotation
+// expected stdout:
+// fun get_num(): Int {
+//   42
+// }
+// 
+// fun foo() {
+//   let x: Int = get_num()
+//   let _ = x
+// }
+

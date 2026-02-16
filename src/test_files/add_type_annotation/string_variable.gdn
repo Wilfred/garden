@@ -1,0 +1,12 @@
+fun foo() {
+  let s = "hello"
+  //  ^
+  let _ = s
+}
+
+// args: add-type-annotation
+// expected stdout:
+// fun foo() {
+//   let s: String = "hello"
+//   let _ = s
+// }

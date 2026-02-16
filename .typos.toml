@@ -2,4 +2,6 @@
 # Used in a doc comment example.
 fo = "fo"
 
+# TODO: upstream these to typos
 destructuing = "destructuring"
+checkre = "checker"

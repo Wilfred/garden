@@ -68,7 +68,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
                     &sym.name.text
                 };
 
-                // The type checkre requires the receiver of foo::bar
+                // The type checker requires the receiver of foo::bar
                 // to be a variable we can statically identify, so we
                 // can just assume variable here.
                 if let Expression_::Variable(recv_symbol) = &recv.expr_ {

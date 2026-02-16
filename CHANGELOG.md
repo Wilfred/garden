@@ -7,6 +7,9 @@
 Added a warning when all code paths in a function return the same
 literal value.
 
+Added an autofix for `some_list.len` suggesting `some_list.len()`
+when accessing a name that matches a method on the type.
+
 ## Standard Library
 
 Added `random::choose()`.

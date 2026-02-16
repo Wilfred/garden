@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>while - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/blocks.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1><code>while</code> keyword</h1>
+<p><code>for</code> runs a block code repeatedly, while an expression evaluates to
+<code>True</code>.</p>
+<div class="snippet"><span class="code-title">Example</span><pre><code><a class="keyword" href="/keyword:let.html">let</a> nums <a class="operator" href="/operator:=.html">=</a> [1, 2, 3]
+
+<a class="keyword" href="/keyword:let.html">let</a> i <a class="operator" href="/operator:=.html">=</a> 0
+<a class="keyword" href="/keyword:while.html">while</a> i <a class="operator" href="/operator:<.html">&lt;</a> nums.len() {
+  <a class="keyword" href="/keyword:let.html">let</a> num <a class="operator" href="/operator:=.html">=</a> nums.get(i)
+  <a href="/fun:__prelude.gdn::dbg.html">dbg</a>(num)
+
+  i <a class="operator" href="/operator:+=.html">+=</a> 1
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<p>For looping when you have a list, see
+<a href="./keyword:for.html"><code>for</code></a>.</p></div>
+
+    <footer>
+      <a href="/blog.html">Blog</a>
+      🪴
+      <a href="https://github.com/Wilfred/garden">GitHub</a>
+    </footer>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

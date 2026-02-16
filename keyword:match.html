@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>match - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/blocks.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1><code>match</code> keyword</h1>
+<p><code>match</code> evaluates code depending on a value of an enum.</p>
+<div class="snippet"><span class="code-title">Example 1</span><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> say_hello(name: <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:String.html">String</a>&gt;) {
+  <a class="keyword" href="/keyword:match.html">match</a> name {
+    <span class="type">Some</span>(n) =&gt; <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Hello " </span><a class="operator" href="/operator:^.html">^</a> n)
+    <span class="type">None</span> =&gt; <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Hello there!"</span>)
+  }
+}
+
+say_hello(<span class="type">None</span>) <span class="comment">// Hello there!</span>
+say_hello(<span class="type">Some</span>(<span class="string">"Wilfred"</span>)) <span class="comment">// Hello Wilfred</span></code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<p>If you want to ignore some cases, use <code>_</code>.</p>
+<div class="snippet"><span class="code-title">Example 2</span><pre><code><a class="keyword" href="/keyword:enum.html">enum</a> <span class="type">Flavor</span> {
+  <span class="type">Chocolate</span>,
+  <span class="type">Strawberry</span>,
+  <span class="type">Vanilla</span>,
+}
+
+<a class="keyword" href="/keyword:fun.html">fun</a> describe_flavor(f: <span class="type">Flavor</span>) {
+  <a class="keyword" href="/keyword:match.html">match</a> f {
+    <span class="type">Chocolate</span> =&gt; <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Tasty!"</span>)
+    _ =&gt; {
+      <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Some other flavor."</span>)
+      <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Could be strawberry or vanilla."</span>)
+    }
+  }
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<p><code>match</code> also supports destructuring of tuples.</p>
+<div class="snippet"><span class="code-title">Example 3</span><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> describe_email(address: <a class="type" href="/type:String.html">String</a>) {
+  <a class="keyword" href="/keyword:match.html">match</a> address.split_once(<span class="string">"@"</span>) {
+    <span class="type">Some</span>((_, domain)) =&gt; {
+      <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Looks like an email at domain " </span><a class="operator" href="/operator:^.html">^</a> domain)
+    }
+    <span class="type">None</span> =&gt; {
+      <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Doesn't look like an email address."</span>)
+    }
+  }
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div></div>
+
+    <footer>
+      <a href="/blog.html">Blog</a>
+      🪴
+      <a href="https://github.com/Wilfred/garden">GitHub</a>
+    </footer>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

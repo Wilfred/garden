@@ -37,6 +37,7 @@
 // compile.
 #![allow(clippy::cmp_owned)]
 
+mod add_type_annotation;
 mod caret_finder;
 mod checks;
 mod cli_session;
@@ -169,6 +170,15 @@ enum CliCommands {
         override_path: Option<PathBuf>,
         #[clap(long)]
         name: String,
+    },
+    /// Add an explicit type annotation to the let binding at the
+    /// offset specified.
+    AddTypeAnnotation {
+        path: PathBuf,
+        offset: Option<usize>,
+        end_offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
     },
     /// Wrap the expression at the offset specified in a `match`.
     Destructure {
@@ -483,6 +493,37 @@ fn main() {
 
             let src_path = to_abs_path(&override_path.unwrap_or(path));
             match extract_function::extract_function(&src, &src_path, offset, end_offset, &name) {
+                Ok(new_src) => {
+                    print!("{new_src}");
+                }
+                Err(msg) => {
+                    eprintln!("{msg}");
+                    std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+                }
+            }
+        }
+        CliCommands::AddTypeAnnotation {
+            path,
+            offset,
+            end_offset,
+            override_path,
+        } => {
+            let abs_path = to_abs_path(&path);
+            let mut src = read_utf8_or_die(&abs_path);
+            let (offset, end_offset) = match (offset, end_offset) {
+                (Some(offset), Some(end_offset)) => (offset, end_offset),
+                _ => {
+                    src = remove_testing_footer(&src);
+                    let region = caret_finder::find_caret_region(&src)
+                        .expect("Could not find comment region containing `^^` in source.");
+                    src = caret_finder::remove_caret(&src);
+
+                    region
+                }
+            };
+
+            let src_path = to_abs_path(&override_path.unwrap_or(path));
+            match add_type_annotation::add_type_annotation(&src, &src_path, offset, end_offset) {
                 Ok(new_src) => {
                     print!("{new_src}");
                 }
@@ -820,6 +861,11 @@ mod tests {
         let mut config = TestConfig::new(bin_path, &test_path, "// ")?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();
         config.run_tests()
+    }
+
+    #[test]
+    fn test_golden_add_type_annotation() -> TestResult<()> {
+        run_golden_tests("add_type_annotation")
     }
 
     #[test]

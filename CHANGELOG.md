@@ -11,6 +11,9 @@ Added a warning for unnecessary `let` bindings where a variable is
 bound and immediately returned (e.g. `let x = foo() x` can be
 simplified to `foo()`), with an autofix.
 
+Added an autofix for `some_list.len` suggesting `some_list.len()`
+when accessing a name that matches a method on the type.
+
 ## Commands
 
 Added :load to evaluate all definitions in a file and switch to that

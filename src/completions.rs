@@ -83,6 +83,8 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
                     &sym.name.text
                 };
                 if let Some(bindings) = summary.id_to_bindings.get(expr_id) {
+                    // Not currently bounds, see if there's a local
+                    // that starts with this prefix.
                     return get_local_variables(bindings, prefix);
                 }
                 return vec![];

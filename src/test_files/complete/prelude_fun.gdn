@@ -1,0 +1,6 @@
+read_
+//  ^
+
+// args: complete
+// expected stdout: {"label":"read_line","kind":6,"detail":": Fun<(), Result<String, String>>"}
+

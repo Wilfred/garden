@@ -83,9 +83,11 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
                     &sym.name.text
                 };
                 if let Some(bindings) = summary.id_to_bindings.get(expr_id) {
-                    // Not currently bounds, see if there's a local
-                    // that starts with this prefix.
-                    return get_local_variables(bindings, prefix);
+                    let mut items = get_local_variables(bindings, prefix);
+                    items.extend_from_slice(&get_namespace_values(ns, prefix));
+                    items.sort_by(|a, b| a.label.cmp(&b.label));
+
+                    return items;
                 }
                 return vec![];
             }
@@ -93,6 +95,32 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
         }
     }
     vec![]
+}
+
+/// Values that are available in the toplevel of this namespace.
+fn get_namespace_values(
+    current_ns: Rc<RefCell<NamespaceInfo>>,
+    prefix: &str,
+) -> Vec<CompletionItem> {
+    let current_ns = current_ns.borrow();
+
+    let mut items: Vec<CompletionItem> = vec![];
+
+    for (name, value) in current_ns.values.iter() {
+        if !name.text.starts_with(prefix) {
+            continue;
+        }
+
+        let ty = Type::from_value(value);
+        items.push(CompletionItem {
+            label: name.text.clone(),
+            kind: Some(CompletionItemKind::VARIABLE),
+            detail: Some(format!(": {}", ty)),
+            ..Default::default()
+        });
+    }
+
+    items
 }
 
 fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<CompletionItem> {

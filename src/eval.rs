@@ -216,10 +216,7 @@ pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Opti
 /// Return up to two most similar names from `available`, ordered by
 /// similarity (most similar first). Only names with a similarity
 /// score above 0.4 are included.
-pub(crate) fn most_similar_two(
-    available: &[&SymbolName],
-    name: &SymbolName,
-) -> Vec<SymbolName> {
+pub(crate) fn most_similar_two(available: &[&SymbolName], name: &SymbolName) -> Vec<SymbolName> {
     let mut scored: Vec<_> = available
         .iter()
         .map(|n| {

@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: ls
-      - uses: raven-actions/actionlint@v1
+      - uses: raven-actions/actionlint@v2
 
   build_docs:
     name: Build documentation

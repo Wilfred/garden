@@ -7,7 +7,7 @@ struct Foo {}
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Struct `Foo` has no field `bar`.
+// Error: Struct `Foo` has no field `bar` (it has no fields).
 // -| src/test_files/check/no_such_struct_field.gdn:4:11
 // 3| {
 // 4|     Foo{}.bar

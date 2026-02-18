@@ -7,7 +7,7 @@ use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::env::Env;
-use crate::eval::most_similar;
+use crate::eval::{most_similar, most_similar_two};
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
@@ -1137,17 +1137,52 @@ impl TypeCheckVisitor<'_> {
                         None => vec![],
                     };
 
+                    let available_fields: Vec<_> =
+                        struct_info.fields.iter().map(|f| &f.sym.name).collect();
+                    let similar = most_similar_two(&available_fields, &field_sym.name);
+                    let num_fields = struct_info.fields.len();
+
+                    let mut fixes = vec![];
+                    let mut message_parts = vec![
+                        msgtext!("Struct "),
+                        msgcode!("{}", recv_ty_name),
+                        msgtext!(" has no field "),
+                        msgcode!("{}", field_sym.name),
+                    ];
+
+                    if num_fields == 0 {
+                        message_parts.push(msgtext!(" (it has no fields)."));
+                    } else {
+                        message_parts.push(msgtext!(
+                            " ({} {} total).",
+                            num_fields,
+                            if num_fields == 1 { "field" } else { "fields" }
+                        ));
+                    }
+
+                    if !similar.is_empty() {
+                        message_parts.push(msgtext!(" Did you mean "));
+                        if similar.len() == 1 {
+                            message_parts.push(msgcode!("{}", similar[0]));
+                        } else {
+                            message_parts.push(msgcode!("{}", similar[0]));
+                            message_parts.push(msgtext!(" or "));
+                            message_parts.push(msgcode!("{}", similar[1]));
+                        }
+                        message_parts.push(msgtext!("?"));
+
+                        fixes.push(Autofix {
+                            description: format!("Use `{}` here.", similar[0]),
+                            position: field_sym.position.clone(),
+                            new_text: similar[0].text.clone(),
+                        });
+                    }
+
                     self.diagnostics.push(Diagnostic {
                         notes,
-                        fixes: vec![],
+                        fixes,
                         severity: Severity::Error,
-                        message: ErrorMessage(vec![
-                            msgtext!("Struct "),
-                            msgcode!("{}", recv_ty_name),
-                            msgtext!(" has no field "),
-                            msgcode!("{}", field_sym.name),
-                            msgtext!("."),
-                        ]),
+                        message: ErrorMessage(message_parts),
                         position: field_sym.position.clone(),
                     });
 

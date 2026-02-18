@@ -213,6 +213,27 @@ pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Opti
     None
 }
 
+/// Return up to two most similar names from `available`, ordered by
+/// similarity (most similar first). Only names with a similarity
+/// score above 0.4 are included.
+pub(crate) fn most_similar_two(
+    available: &[&SymbolName],
+    name: &SymbolName,
+) -> Vec<SymbolName> {
+    let mut scored: Vec<_> = available
+        .iter()
+        .map(|n| {
+            let score = strsim::sorensen_dice(&n.text, &name.text);
+            (score, (*n).clone())
+        })
+        .filter(|(score, _)| *score > 0.4)
+        .collect();
+
+    scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+    scored.truncate(2);
+    scored.into_iter().map(|(_, n)| n).collect()
+}
+
 fn most_similar_var(name: &SymbolName, env: &Env) -> Option<SymbolName> {
     let ns = env.current_namespace();
     let ns = ns.borrow();

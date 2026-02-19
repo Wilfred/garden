@@ -1584,7 +1584,7 @@ fn parse_struct(
         (fields, close_brace.position)
     };
 
-    let position = Position::merge_token(&struct_token, &close_brace_pos);
+    let position = Position::merge_token(&first_token, &close_brace_pos);
 
     ToplevelItem::Struct(StructInfo {
         pos: position,

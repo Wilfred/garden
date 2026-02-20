@@ -1,20 +1,23 @@
-/// What is the remainder when dividing `x` by `y`?
-fun mod(x: Int, y: Int): Int {
-  x - ((x / y) * y)
+/// Is `x` divisible by `y`?
+fun is_divisible_by(x: Int, y: Int): Bool {
+  x % y == 0
 }
 
-{
-  let i = 1
-  while i < 21 {
-    if mod(i, 15) == 0 {
+/// Print all the numbers between `from` (inclusive) and `to`
+/// (exclusive), but print Fizz for numbers divisible by 3, and Buzz
+/// for numbers divisible by 5.
+fun fizzbuzz(from: Int, to: Int): Unit {
+  for i in range(from, to) {
+    if is_divisible_by(i, 15) {
       println("FizzBuzz")
-    } else if mod(i, 5) == 0 {
+    } else if is_divisible_by(i, 5) {
       println("Buzz")
-    } else if mod(i, 3) == 0 {
+    } else if is_divisible_by(i, 3) {
       println("Fizz")
     } else {
       println(string_repr(i))
     }
-    i = i + 1
   }
 }
+
+fizzbuzz(1, 21)

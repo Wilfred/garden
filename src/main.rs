@@ -238,6 +238,11 @@ enum CliCommands {
     PlaygroundRun { path: PathBuf },
     /// Start the Language Server Protocol (LSP) server.
     Lsp,
+    /// Evaluate all the entries in the .jsonl file as if they were LSP
+    /// requests.
+    ///
+    /// Lines starting `//` are ignored.
+    TestLsp { path: PathBuf },
 }
 
 fn main() {
@@ -537,6 +542,11 @@ fn main() {
         }
         CliCommands::Lsp => {
             lsp::run_lsp();
+        }
+        CliCommands::TestLsp { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            lsp::run_lsp_test(&src);
         }
     }
 }

@@ -1858,10 +1858,13 @@ fn eval_for_in(
                     RestoreValues(vec![iteree_current_elem.clone()]),
                     EvalError::Exception(ExceptionInfo {
                         position: iteree_pos.clone(),
-                        message: ErrorMessage(vec![Text(format!(
-                            "Incorrect type for variable: {}",
-                            "x"
-                        ))]),
+                        message: format_type_error(
+                            &TypeName {
+                                text: "Tuple".into(),
+                            },
+                            &iteree_current_elem,
+                            env,
+                        ),
                     }),
                 ));
             }
@@ -2033,14 +2036,18 @@ fn eval_let(
                 }
             }
             _ => {
+                let message = format_type_error(
+                    &TypeName {
+                        text: "Tuple".into(),
+                    },
+                    &expr_value,
+                    env,
+                );
                 return Err((
                     RestoreValues(vec![expr_value]),
                     EvalError::Exception(ExceptionInfo {
                         position: init_value_pos.clone(),
-                        message: ErrorMessage(vec![Text(format!(
-                            "Incorrect type for variable: {}",
-                            "x"
-                        ))]),
+                        message,
                     }),
                 ));
             }

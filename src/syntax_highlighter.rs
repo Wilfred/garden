@@ -8,7 +8,9 @@ use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
 use rustyline::validate::Validator;
 use rustyline::Helper;
+use strum::IntoEnumIterator;
 
+use crate::commands::Command;
 use crate::parser::lex::{lex, STRING_RE, SYMBOL_RE};
 use crate::parser::KEYWORDS;
 use crate::Vfs;
@@ -24,6 +26,27 @@ impl GardenHighlighter {
 
 impl Completer for GardenHighlighter {
     type Candidate = String;
+
+    fn complete(
+        &self,
+        line: &str,
+        pos: usize,
+        _ctx: &rustyline::Context<'_>,
+    ) -> rustyline::Result<(usize, Vec<Self::Candidate>)> {
+        let line_to_cursor = &line[..pos];
+
+        // Only complete command names: input starts with ':' and no space yet.
+        if !line_to_cursor.starts_with(':') || line_to_cursor.contains(' ') {
+            return Ok((pos, vec![]));
+        }
+
+        let candidates: Vec<String> = Command::iter()
+            .map(|cmd| cmd.to_string())
+            .filter(|name| name.starts_with(line_to_cursor))
+            .collect();
+
+        Ok((0, candidates))
+    }
 }
 
 impl Hinter for GardenHighlighter {

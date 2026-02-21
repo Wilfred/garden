@@ -3,5 +3,5 @@
 }
 
 // args: run
-// expected stdout: Some("source_directory.gdn")
+// expected stdout: Some("runtime")
 

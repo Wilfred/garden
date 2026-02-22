@@ -103,4 +103,13 @@ method used_meth(this: String): Unit {}
 //   |     ^^^^^^^^^^^^^^^^^^^
 // 22|   unreachable_cycle_1()
 // 23| }
+// 
+// Warning: Function `unreachable_cycle` calls itself on every code path, which will cause infinite recursion.
+// --| src/test_files/check/unused_func.gdn:25:5
+// 23| }
+// 24| 
+// 25| fun unreachable_cycle() {
+//   |     ^^^^^^^^^^^^^^^^^
+// 26|   unreachable_cycle()
+// 27| }
 

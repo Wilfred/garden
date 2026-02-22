@@ -1,0 +1,65 @@
+// Should warn: unconditional recursion with no base case.
+public fun infinite() {
+    infinite()
+}
+
+// Should warn: all branches recurse.
+public fun both_branches(b: Bool) {
+    if b {
+        both_branches(True)
+    } else {
+        both_branches(False)
+    }
+}
+
+// Should warn: return with recursive call.
+public fun return_recurse(): Int {
+    return return_recurse()
+}
+
+// Should not warn: has a base case via early return.
+public fun factorial(n: Int): Int {
+    if n <= 1 {
+        return 1
+    }
+    n * factorial(n - 1)
+}
+
+// Should not warn: only one branch recurses.
+public fun one_branch(n: Int) {
+    if n > 0 {
+        one_branch(n - 1)
+    }
+}
+
+// Should not warn: no recursion at all.
+public fun no_recursion(): Int {
+    42
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Function `infinite` calls itself on every code path, which will cause infinite recursion.
+// --| src/test_files/check/unconditional_recursion.gdn:2:12
+//  1| // Should warn: unconditional recursion with no base case.
+//  2| public fun infinite() {
+//   |            ^^^^^^^^
+//  3|     infinite()
+//  4| }
+// 
+// Warning: Function `both_branches` calls itself on every code path, which will cause infinite recursion.
+// --| src/test_files/check/unconditional_recursion.gdn:7:12
+//  6| // Should warn: all branches recurse.
+//  7| public fun both_branches(b: Bool) {
+//  8|     if b { ^^^^^^^^^^^^^
+//  9|         both_branches(True)
+// 
+// Warning: Function `return_recurse` calls itself on every code path, which will cause infinite recursion.
+// --| src/test_files/check/unconditional_recursion.gdn:16:12
+// 15| // Should warn: return with recursive call.
+// 16| public fun return_recurse(): Int {
+//   |            ^^^^^^^^^^^^^^
+// 17|     return return_recurse()
+// 18| }
+

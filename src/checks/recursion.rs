@@ -5,55 +5,76 @@
 //! recursion.
 
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::parser::ast::{Block, Expression, Expression_, FunInfo, ToplevelItem};
+use crate::parser::ast::{Block, Expression, Expression_, FunInfo, MethodInfo, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
 
-pub(crate) fn check_recursion(items: &[ToplevelItem]) -> Vec<Diagnostic> {
-    let mut diagnostics = vec![];
+struct RecursionVisitor {
+    diagnostics: Vec<Diagnostic>,
+}
 
-    for item in items {
-        match item {
-            ToplevelItem::Fun(sym, fun_info, _) => {
-                if block_always_recurses(&fun_info.body, &sym.name.text) {
-                    diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![
-                            msgtext!("Function "),
-                            msgcode!("{}", sym.name),
-                            msgtext!(" calls itself on every code path, which will cause infinite recursion."),
-                        ]),
-                        position: sym.position.clone(),
-                        notes: vec![],
-                        fixes: vec![],
-                        severity: Severity::Warning,
-                    });
-                }
+impl Visitor for RecursionVisitor {
+    fn visit_fun_info(&mut self, fun_info: &FunInfo) {
+        if let Some(name_sym) = &fun_info.name_sym {
+            if block_always_recurses(&fun_info.body, &name_sym.name.text) {
+                self.diagnostics.push(Diagnostic {
+                    message: ErrorMessage(vec![
+                        msgtext!("Function "),
+                        msgcode!("{}", name_sym.name),
+                        msgtext!(
+                            " calls itself on every code path, \
+                             which will cause infinite recursion."
+                        ),
+                    ]),
+                    position: name_sym.position.clone(),
+                    notes: vec![],
+                    fixes: vec![],
+                    severity: Severity::Warning,
+                });
             }
-            ToplevelItem::Method(method_info, _) => {
-                if let Some(fun_info) = method_info.fun_info() {
-                    if body_always_recurses_method(fun_info, &method_info.name_sym.name.text) {
-                        diagnostics.push(Diagnostic {
-                            message: ErrorMessage(vec![
-                                msgtext!("Method "),
-                                msgcode!("{}", method_info.full_name()),
-                                msgtext!(
-                                    " calls itself on every code path, \
-                                     which will cause infinite recursion."
-                                ),
-                            ]),
-                            position: method_info.name_sym.position.clone(),
-                            notes: vec![],
-                            fixes: vec![],
-                            severity: Severity::Warning,
-                        });
-                    }
-                }
-            }
-            _ => {}
         }
+
+        // Continue recursing to check nested function literals.
+        self.visit_fun_info_default(fun_info);
     }
 
-    diagnostics
+    fn visit_method_info(&mut self, method_info: &MethodInfo) {
+        if let Some(fun_info) = method_info.fun_info() {
+            let name = &method_info.name_sym.name.text;
+            if block_always_recurses_method(&fun_info.body, name) {
+                self.diagnostics.push(Diagnostic {
+                    message: ErrorMessage(vec![
+                        msgtext!("Method "),
+                        msgcode!("{}", method_info.full_name()),
+                        msgtext!(
+                            " calls itself on every code path, \
+                             which will cause infinite recursion."
+                        ),
+                    ]),
+                    position: method_info.name_sym.position.clone(),
+                    notes: vec![],
+                    fixes: vec![],
+                    severity: Severity::Warning,
+                });
+            }
+        }
+
+        // Continue recursing to check nested function literals.
+        self.visit_method_info_default(method_info);
+    }
+}
+
+pub(crate) fn check_recursion(items: &[ToplevelItem]) -> Vec<Diagnostic> {
+    let mut visitor = RecursionVisitor {
+        diagnostics: vec![],
+    };
+
+    for item in items {
+        visitor.visit_toplevel_item(item);
+    }
+
+    visitor.diagnostics
 }
 
 /// Does this block always end up calling the function `name`?
@@ -149,12 +170,6 @@ fn block_might_exit_without_recursion(block: &Block, name: &str) -> bool {
         .exprs
         .iter()
         .any(|e| might_exit_without_recursion(e, name))
-}
-
-/// Check if a method body always calls the same method name via
-/// `self.method_name(...)`.
-fn body_always_recurses_method(fun_info: &FunInfo, method_name: &str) -> bool {
-    block_always_recurses_method(&fun_info.body, method_name)
 }
 
 fn block_always_recurses_method(block: &Block, name: &str) -> bool {

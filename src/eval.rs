@@ -4761,7 +4761,7 @@ fn eval_built_in_method_call(
                     if expr_value_is_used {
                         // TODO: check that the new value has the same
                         // type as the existing dict values.
-                        let value_type = Type::from_value(&arg_values[0]);
+                        let value_type = Type::from_value(&arg_values[1]);
 
                         env.push_value(Value::new(Value_::Dict { items, value_type }));
                     }

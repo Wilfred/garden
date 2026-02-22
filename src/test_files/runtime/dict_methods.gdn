@@ -1,24 +1,29 @@
+// Use an explicit function to enforce the type parameters at runtime.
+fun print_dict(d: Dict<Int>) {
+  dbg(d)
+}
+
 let d = Dict["x" => 1]
 
 dbg(d.get("x"))
 dbg(d.get("y"))
 
 d = d.set("y", 42)
-dbg(d.get("y"))
+print_dict(d)
 
 d = d.set("y", 43)
-dbg(d.get("y"))
+print_dict(d)
 
 dbg(d.items())
 
-dbg(d.remove("x"))
+print_dict(d.remove("x"))
 
 // args: run
 // expected stdout:
 // Some(1)
 // None
-// Some(42)
-// Some(43)
+// Dict["x" => 1, "y" => 42]
+// Dict["x" => 1, "y" => 43]
 // [("x", 1), ("y", 43)]
 // Dict["y" => 43]
 

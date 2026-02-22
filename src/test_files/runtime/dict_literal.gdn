@@ -1,4 +1,9 @@
-dbg(Dict["a" => "hello", "z" => "", "b" ^ "c" => "world"])
+// Use a function to verify the inferred type too.
+fun get_dict(): Dict<String> {
+  Dict["a" => "hello", "z" => "", "b" ^ "c" => "world"]
+}
+
+dbg(get_dict())
 
 // args: run
 // expected stdout: Dict["a" => "hello", "bc" => "world", "z" => ""]

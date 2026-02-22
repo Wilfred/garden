@@ -11,6 +11,9 @@ literal value.
 
 Added `random::choose()`.
 
+Fixed an issue with `Dict::set()` where the output values had an
+incorrect type at runtime.
+
 # 0.23 (released 9 February 2026)
 **Goal: LSP.**
 

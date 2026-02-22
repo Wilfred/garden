@@ -1,0 +1,39 @@
+// Should warn: y is only used in the recursive call.
+public fun foo(x: Int, y: Int): Int {
+    if (x == 0) {
+        return 0
+    }
+    foo(x - 1, y)
+}
+
+// Should not warn: y is used in a non-recursive context.
+public fun bar(x: Int, y: Int): Int {
+    if (x == 0) {
+        return y
+    }
+    bar(x - 1, y + 1)
+}
+
+// Should not warn: no recursion at all.
+public fun baz(x: Int, y: Int): Int {
+    x + y
+}
+
+// Should not warn: underscore-prefixed params are intentionally unused.
+public fun qux(x: Int, _y: Int): Int {
+    if (x == 0) {
+        return 0
+    }
+    qux(x - 1, _y)
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `y` is only used in recursion, so is effectively unused.
+// --| src/test_files/check/recursion_variable.gdn:2:24
+//  1| // Should warn: y is only used in the recursive call.
+//  2| public fun foo(x: Int, y: Int): Int {
+//  3|     if (x == 0) {      ^
+//  4|         return 0
+

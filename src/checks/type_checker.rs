@@ -486,12 +486,19 @@ impl TypeCheckVisitor<'_> {
                 // This argument looks like it matches the next parameter, presumably we
                 // forgot an argument.
                 if is_subtype(arg_ty, next_expected_ty) {
-                    let message = ErrorMessage(vec![
-                        formatted_name,
-                        msgtext!(" requires an additional ",),
-                        msgcode!("{}", expected_ty),
-                        msgtext!(" argument here."),
-                    ]);
+                    let message = if expected_ty.is_no_value() {
+                        ErrorMessage(vec![
+                            formatted_name,
+                            msgtext!(" requires an additional argument here."),
+                        ])
+                    } else {
+                        ErrorMessage(vec![
+                            formatted_name,
+                            msgtext!(" requires an additional ",),
+                            msgcode!("{}", expected_ty),
+                            msgtext!(" argument here."),
+                        ])
+                    };
 
                     let mut position = paren_args.open_paren.clone();
                     if i > 0 {
@@ -544,12 +551,19 @@ impl TypeCheckVisitor<'_> {
 
         if let Some(last_param_ty) = expected_args.last() {
             if paren_args.arguments.len() + 1 == expected_args.len() {
-                let message = ErrorMessage(vec![
-                    formatted_name,
-                    msgtext!(" requires an additional ",),
-                    msgcode!("{}", last_param_ty),
-                    msgtext!(" argument."),
-                ]);
+                let message = if last_param_ty.is_no_value() {
+                    ErrorMessage(vec![
+                        formatted_name,
+                        msgtext!(" requires an additional argument."),
+                    ])
+                } else {
+                    ErrorMessage(vec![
+                        formatted_name,
+                        msgtext!(" requires an additional ",),
+                        msgcode!("{}", last_param_ty),
+                        msgtext!(" argument."),
+                    ])
+                };
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
                     fixes: vec![],

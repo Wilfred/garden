@@ -1,0 +1,15 @@
+public fun foo(): Int {
+  return 1
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Unnecessary `return` at the end of a function body.
+// -| src/test_files/check/unnecessary_return.gdn:2:3
+// 1| public fun foo(): Int {
+// 2|   return 1
+// 3| } ^^^^^^^^
+
+// expected stderr:
+// 1 issue can be fixed automatically (use `--fix`).

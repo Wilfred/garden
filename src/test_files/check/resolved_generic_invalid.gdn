@@ -1,0 +1,19 @@
+fun id<T>(v: T): T {
+  v
+}
+
+fun takes_int(_: Int) {}
+
+public fun h() {
+  takes_int(id(""))
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Int`, but got `String`.
+// --| src/test_files/check/resolved_generic_invalid.gdn:8:13
+//  7| public fun h() {
+//  8|   takes_int(id(""))
+//  9| }           ^^^^^^
+

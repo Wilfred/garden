@@ -12,4 +12,14 @@ public fun foo() {
 // 2|     let s = ""
 // 3|     return s.no_such_meth()
 // 4| }            ^^^^^^^^^^^^
+// 
+// Warning: Unnecessary `return` at the end of a function body.
+// -| src/test_files/check/type_error_return.gdn:3:5
+// 1| public fun foo() {
+// 2|     let s = ""
+// 3|     return s.no_such_meth()
+// 4| }   ^^^^^^^^^^^^^^^^^^^^^^^
+
+// expected stderr:
+// 1 issue can be fixed automatically (use `--fix`).
 

@@ -165,4 +165,14 @@ public fun different_variants(b: Bool): Bool {
 // 38|     }
 // 39|     True
 // 40| }   ^^^^ Note: Same value here.
+// 
+// Warning: Unnecessary `return` at the end of a function body.
+// --| src/test_files/check/same_literal_returns.gdn:14:5
+// 12|         return 1
+// 13|     }
+// 14|     return 1
+// 15| }   ^^^^^^^^
+
+// expected stderr:
+// 1 issue can be fixed automatically (use `--fix`).
 

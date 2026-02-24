@@ -152,6 +152,7 @@ fn visit_fun_info(&mut self, fun_info: &FunInfo) {
 See `src/checks/loops.rs` for a concise real example.
 
 # Checking Changes
+- cargo fmt: Format your Rust code
 - cargo clippy: Check that your Rust code is correct
 
 # Running Tests

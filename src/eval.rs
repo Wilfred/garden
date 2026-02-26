@@ -2860,8 +2860,8 @@ fn eval_built_in_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
@@ -2919,7 +2919,10 @@ fn eval_built_in_call(
             )?;
 
             let v = match std::fs::canonicalize(position.path.as_ref()) {
-                Ok(abspath) => Value::some(Value::path(abspath.display().to_string())),
+                Ok(abspath) => match abspath.parent() {
+                    Some(dir) => Value::some(Value::path(dir.display().to_string())),
+                    None => Value::none(),
+                },
                 Err(_) => Value::none(),
             };
 
@@ -3026,8 +3029,8 @@ fn eval_built_in_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
@@ -3104,8 +3107,8 @@ fn eval_built_in_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
@@ -3166,8 +3169,8 @@ fn eval_built_in_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
@@ -3227,8 +3230,8 @@ fn eval_built_in_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
@@ -3288,8 +3291,8 @@ fn eval_built_in_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
@@ -3306,8 +3309,8 @@ fn eval_built_in_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
@@ -3373,8 +3376,8 @@ fn eval_built_in_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
@@ -4668,7 +4671,7 @@ fn eval_built_in_method_call(
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
-                            position: arg_positions[0].clone(),
+                            position: receiver_pos.clone(),
                             message: format_type_error(
                                 &TypeName {
                                     text: "Dict".into(),
@@ -4978,7 +4981,7 @@ fn eval_built_in_method_call(
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
-                            position: arg_positions[0].clone(),
+                            position: receiver_pos.clone(),
                             message: format_type_error(
                                 &TypeName {
                                     text: "List".into(),
@@ -5022,8 +5025,8 @@ fn eval_built_in_method_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
@@ -5075,8 +5078,8 @@ fn eval_built_in_method_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
                     }
+                    saved_values.push(receiver_value.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {

@@ -1,0 +1,105 @@
+// Self-assignment: should warn.
+public fun assign_self(x: Int): Int {
+    x = x
+    x
+}
+
+// Self-comparison with ==: should warn.
+public fun compare_equal(x: Int): Bool {
+    x == x
+}
+
+// Self-comparison with !=: should warn.
+public fun compare_not_equal(x: Int): Bool {
+    x != x
+}
+
+// Self-comparison with <: should warn.
+public fun compare_less(x: Int): Bool {
+    x < x
+}
+
+// Self-comparison with integer literals: should warn.
+public fun compare_literals(): Bool {
+    1 == 1
+}
+
+// Normal assignment: should not warn.
+public fun assign_different(x: Int): Int {
+    let y = x
+    y
+}
+
+// Normal comparison: should not warn.
+public fun compare_different(x: Int, y: Int): Bool {
+    x == y
+}
+
+// Warning: Both sides of `==` are identical.
+// --| src/test_files/check/self_assign_compare.gdn:9:5
+//  8| public fun compare_equal(x: Int): Bool {
+//  9|     x == x
+//  10|     ^^^^^^
+//  11| }
+//
+// Warning: Both sides of `!=` are identical.
+// --| src/test_files/check/self_assign_compare.gdn:14:5
+// 13| public fun compare_not_equal(x: Int): Bool {
+// 14|     x != x
+//   |     ^^^^^^
+// 15| }
+//
+// Warning: Both sides of `<` are identical.
+// --| src/test_files/check/self_assign_compare.gdn:19:5
+// 18| public fun compare_less(x: Int): Bool {
+// 19|     x < x
+//   |     ^^^^^
+// 20| }
+//
+// Warning: Both sides of `==` are identical.
+// --| src/test_files/check/self_assign_compare.gdn:24:5
+// 23| public fun compare_literals(): Bool {
+// 24|     1 == 1
+//   |     ^^^^^^
+// 25| }
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `x` is assigned to itself.
+// --| src/test_files/check/self_assign_compare.gdn:3:5
+//  1| // Self-assignment: should warn.
+//  2| public fun assign_self(x: Int): Int {
+//  3|     x = x
+//   |     ^^^^^
+//  4|     x
+//  5| }
+// 
+// Warning: Both sides of `==` are identical.
+// --| src/test_files/check/self_assign_compare.gdn:9:5
+//  7| // Self-comparison with ==: should warn.
+//  8| public fun compare_equal(x: Int): Bool {
+//  9|     x == x
+// 10| }   ^^^^^^
+// 
+// Warning: Both sides of `!=` are identical.
+// --| src/test_files/check/self_assign_compare.gdn:14:5
+// 12| // Self-comparison with !=: should warn.
+// 13| public fun compare_not_equal(x: Int): Bool {
+// 14|     x != x
+// 15| }   ^^^^^^
+// 
+// Warning: Both sides of `<` are identical.
+// --| src/test_files/check/self_assign_compare.gdn:19:5
+// 17| // Self-comparison with <: should warn.
+// 18| public fun compare_less(x: Int): Bool {
+// 19|     x < x
+// 20| }   ^^^^^
+// 
+// Warning: Both sides of `==` are identical.
+// --| src/test_files/check/self_assign_compare.gdn:24:5
+// 22| // Self-comparison with integer literals: should warn.
+// 23| public fun compare_literals(): Bool {
+// 24|     1 == 1
+// 25| }   ^^^^^^
+

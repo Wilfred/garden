@@ -196,7 +196,7 @@ fn handle_load_request(
 ///
 /// If we're deeper in the stack (e.g. in the middle of handling an
 /// exception), do nothing.
-fn switch_toplevel_namespace(env: &mut Env, ns: Rc<RefCell<NamespaceInfo>>) {
+pub(crate) fn switch_toplevel_namespace(env: &mut Env, ns: Rc<RefCell<NamespaceInfo>>) {
     if env.stack.0.len() > 1 {
         return;
     }

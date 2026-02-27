@@ -25,10 +25,11 @@ fn path_with_home(path: &Path) -> String {
     }
     path.display().to_string()
 }
-use crate::eval::{eval_exprs, Session};
+use crate::eval::{eval_exprs, load_toplevel_items_with_stubs, Session};
 use crate::garden_type::Type;
+use crate::json_session::switch_toplevel_namespace;
 use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
-use crate::parser::vfs::{to_project_relative, Vfs};
+use crate::parser::vfs::{to_abs_path, to_project_relative, Vfs};
 use crate::parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 use crate::types::{BuiltInType, TypeDef};
 use crate::values::{Value, Value_};
@@ -40,6 +41,7 @@ pub(crate) enum Command {
     Doc(Option<String>),
     Help(Option<String>),
     Functions,
+    Load(Option<String>),
     Locals,
     Namespace(Option<String>),
     Forget(Option<String>),
@@ -95,6 +97,7 @@ impl Display for Command {
             Command::Functions => ":funs",
             Command::Globals => ":globals",
             Command::Help(_) => ":help",
+            Command::Load(_) => ":load",
             Command::Locals => ":locals",
             Command::Methods(_) => ":methods",
             Command::Namespace(_) => ":namespace",
@@ -135,6 +138,7 @@ impl Command {
             ":funs" => Ok(Command::Functions),
             ":globals" => Ok(Command::Globals),
             ":help" => Ok(Command::Help(args)),
+            ":load" => Ok(Command::Load(args)),
             ":locals" => Ok(Command::Locals),
             ":methods" => Ok(Command::Methods(args)),
             ":namespace" => Ok(Command::Namespace(args)),
@@ -170,6 +174,7 @@ fn command_group(command: &Command) -> &'static str {
         Command::Forget(_) => "evaluation",
         Command::ForgetCalls => "evaluation",
         Command::ForgetLocal(_) => "evaluation",
+        Command::Load(_) => "evaluation",
         Command::Replace(_) => "evaluation",
         Command::Resume => "evaluation",
         Command::Skip => "evaluation",
@@ -894,6 +899,69 @@ pub(crate) fn run_command<T: Write>(
 
             write!(buf, "Discarded all saved values for method and function calls. The next call will be saved.")?;
         }
+        Command::Load(path) => {
+            let Some(path) = path else {
+                write!(
+                    buf,
+                    ":load requires a path to a source file, e.g. `:load yourproject/somefile.gdn`"
+                )?;
+                return Ok(());
+            };
+
+            let path = PathBuf::from(path);
+            let abs_path = to_abs_path(&path);
+            let Ok(src) = std::fs::read_to_string(abs_path.clone()) else {
+                write!(
+                    buf,
+                    "Could not load file {}, does it exist?",
+                    path.display(),
+                )?;
+                return Ok(());
+            };
+
+            let vfs_path = env.vfs.insert(Rc::new(abs_path.clone()), src.clone());
+            let (items, errors) = parse_toplevel_items(&vfs_path, &src, &mut env.id_gen);
+
+            let ns = env.get_or_create_namespace(&abs_path);
+            let (diagnostics, new_syms) = load_toplevel_items_with_stubs(&items, env, ns.clone());
+
+            let mut summary = format!(
+                "Loaded {} item{}",
+                new_syms.len(),
+                if new_syms.len() == 1 { "" } else { "s" }
+            );
+
+            if let Some(first_parse_error) = errors.first() {
+                summary.push_str(&format!(
+                    " with parse error \"{}\"",
+                    first_parse_error.message().as_string()
+                ));
+
+                if errors.len() > 1 {
+                    summary.push_str(&format!(
+                        " (and {} other error{})",
+                        errors.len() - 1,
+                        if errors.len() == 2 { "" } else { "s" }
+                    ));
+                }
+            }
+
+            if !diagnostics.is_empty() {
+                let plural = if diagnostics.len() == 1 { "" } else { "s" };
+                summary.push_str(&format!(
+                    " with {} load warning{}/error{}",
+                    diagnostics.len(),
+                    plural,
+                    plural
+                ));
+            }
+
+            write!(buf, "{}.", summary)?;
+
+            switch_toplevel_namespace(env, ns);
+
+            return Ok(());
+        }
     }
     Ok(())
 }
@@ -1050,6 +1118,7 @@ fn command_help(command: Command) -> &'static str {
         Command::FrameStatements => "The :fstmts command displays the statement stack in the current stack frame.\n\nExample:\n\n:fstmts",
         Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",
         Command::Globals => "The :globals command displays information about global values in the current file.\n\nExample:\n\n:globals",
+        Command::Load(_) => "The :load command loads all the definitions in the file specified, and switches to it.\n\nExample:\n\n:load myfile.gdn",
         Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
         Command::Methods(_) => "The :methods command displays all the methods currently defined. If given an argument, limits to names containing that substring.\n\nExample:\n\n:methods\n:method Str",
         Command::Namespace(_) => "The :namespace command shows the current file where evaluation is occurring. It can also change the file of the toplevel.\n\nExample:\n\n:file\n:file myproject.gdn",

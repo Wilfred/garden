@@ -1,0 +1,14 @@
+{ "method": "run", "input": ":load no_such_file.gdn" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "run_command": {
+//       "message": "Could not load file no_such_file.gdn, does it exist?",
+//       "stack_frame_name": "__user.gdn"
+//     }
+//   },
+//   "position": null
+// }
+

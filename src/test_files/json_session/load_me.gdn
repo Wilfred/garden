@@ -1,0 +1,12 @@
+fun add_one(x: Int): Int {
+  x + 1
+}
+
+// expected exit status: 2
+// expected stderr:
+// error: unrecognized subcommand 'src/test_files/json_session/load_me.gdn'
+// 
+// Usage: garden <COMMAND>
+// 
+// For more information, try '--help'.
+

@@ -1,0 +1,27 @@
+{ "method": "run", "input": ":load src/test_files/json_session/load_me.gdn" }
+{ "method": "run", "input": "add_one(3)" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "run_command": {
+//       "message": "Loaded 1 item.",
+//       "stack_frame_name": "load_me.gdn"
+//     }
+//   },
+//   "position": null
+// }
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Ok": "4"
+//       },
+//       "stack_frame_name": "load_me.gdn"
+//     }
+//   },
+//   "position": null
+// }
+

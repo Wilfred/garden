@@ -574,7 +574,7 @@ fn apply_span_edits(src: &str, span_edits: &mut [SpanEdit]) -> String {
     }
 
     // Sort by start_offset in descending order so we can apply from end to start
-    span_edits.sort_by(|a, b| b.start_offset.cmp(&a.start_offset));
+    span_edits.sort_by_key(|b| std::cmp::Reverse(b.start_offset));
 
     let mut result = src.to_owned();
     for edit in span_edits.iter() {

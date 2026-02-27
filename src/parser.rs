@@ -2219,13 +2219,9 @@ fn parse_block(
     }
 
     let mut exprs: Vec<Expression> = vec![];
-    loop {
-        if let Some(token) = tokens.peek() {
-            if token.text == "}" {
-                break;
-            }
-        } else {
-            // EOF, we'll error below about a missing closing brace.
+
+    while let Some(token) = tokens.peek() {
+        if token.text == "}" {
             break;
         }
 

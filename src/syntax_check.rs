@@ -41,7 +41,7 @@ fn apply_fixes(src: &str, fixes: &[Autofix]) -> String {
 
     // Sort fixes by start offset in descending order so we can apply
     // them from the end without invalidating earlier offsets.
-    fixes.sort_by(|a, b| b.position.start_offset.cmp(&a.position.start_offset));
+    fixes.sort_by_key(|b| std::cmp::Reverse(b.position.start_offset));
 
     let mut result = src.to_owned();
     for fix in fixes {

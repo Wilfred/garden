@@ -612,8 +612,8 @@ fn canonicalize_namespace_path(abs_path: &Path) -> PathBuf {
     // Canonicalise stdlib paths, which always start with __.
     //
     // We treat "foo/bar/__fs.gdn" as "__fs.gdn". This ensures we can
-    // use refer to stdlib files directly (e.g. `import "__fs.gdn"`)
-    // as well as pass them to the CLI (e.g. `garden check
+    // refer to stdlib files directly (e.g. `import "__fs.gdn"`) as
+    // well as pass them to the CLI (e.g. `garden check
     // src/__fs.gdn`).
     if let Some(name_osstr) = abs_path.file_name() {
         let name = name_osstr.to_string_lossy();

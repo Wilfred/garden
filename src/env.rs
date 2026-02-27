@@ -14,7 +14,7 @@ use crate::parser::ast::{
 };
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
-use crate::parser::vfs::{to_abs_path, Vfs};
+use crate::parser::vfs::Vfs;
 use crate::types::{BuiltInType, TypeDef, TypeDefAndMethods};
 use crate::values::{BuiltInFunctionKind, Value, Value_};
 use crate::VfsPathBuf;
@@ -609,7 +609,7 @@ pub(crate) struct StackFrame {
 }
 
 fn canonicalize_namespace_path(abs_path: &Path) -> PathBuf {
-    // Canonicalise stdlib paths, which always start with __.
+    // Canonicalize stdlib paths, which always start with __.
     //
     // We treat "foo/bar/__fs.gdn" as "__fs.gdn". This ensures we can
     // refer to stdlib files directly (e.g. `import "__fs.gdn"`) as
@@ -622,5 +622,5 @@ fn canonicalize_namespace_path(abs_path: &Path) -> PathBuf {
         }
     }
 
-    to_abs_path(abs_path)
+    abs_path.to_path_buf()
 }

@@ -1,3 +1,4 @@
+mod duplicate_exprs;
 mod duplicates;
 mod hints;
 mod loops;
@@ -21,6 +22,7 @@ use crate::eval::load_toplevel_items;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::ToplevelItem;
 use crate::parser::vfs::VfsPathBuf;
+use duplicate_exprs::check_duplicate_exprs;
 use loops::check_loops;
 use recursion_variable::check_recursion_variables;
 use same_literal_returns::check_same_literal_returns;
@@ -79,6 +81,7 @@ pub(crate) fn check_toplevel_items_in_env(
     diagnostics.extend(check_recursion_variables(items));
     diagnostics.extend(check_unnecessary_return(items));
     diagnostics.extend(check_self_assign_compare(items));
+    diagnostics.extend(check_duplicate_exprs(items));
 
     diagnostics
 }

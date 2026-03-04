@@ -26,4 +26,13 @@ public fun foo() {
 //  8|         // Bad
 //  9|         fun() { break }
 // 10|     }           ^^^^^
+// 
+// Warning: This loop always `break`s on the first iteration, so it can only execute once.
+// --| src/test_files/check/break_without_loop.gdn:4:16
+//  2|     break
+//  3| 
+//  4|     while True {
+//   |                ^
+//  5|         // Good
+//  6|         break
 

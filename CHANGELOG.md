@@ -4,6 +4,9 @@
 
 ## Checks
 
+Added a warning when a loop unconditionally breaks on the first
+iteration, so it can only execute once.
+
 Added a warning when all code paths in a function return the same
 literal value.
 

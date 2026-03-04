@@ -1,0 +1,62 @@
+// Bad: while loop with unconditional break.
+public fun while_break() {
+    while True {
+        break
+    }
+}
+
+// Bad: for loop with unconditional break.
+public fun for_break() {
+    for _x in [1, 2, 3] {
+        break
+    }
+}
+
+// Bad: break in all branches of if/else.
+public fun if_else_break() {
+    while True {
+        if True {
+            break
+        } else {
+            break
+        }
+    }
+}
+
+// Good: conditional break (no else).
+public fun conditional_break() {
+    while True {
+        if True {
+            break
+        }
+    }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: This loop always `break`s on the first iteration, so it can only execute once.
+// --| src/test_files/check/unconditional_break.gdn:3:16
+//  1| // Bad: while loop with unconditional break.
+//  2| public fun while_break() {
+//  3|     while True {
+//  4|         break  ^
+//  5|     }
+// 
+// Warning: This loop always `break`s on the first iteration, so it can only execute once.
+// --| src/test_files/check/unconditional_break.gdn:10:25
+//  8| // Bad: for loop with unconditional break.
+//  9| public fun for_break() {
+// 10|     for _x in [1, 2, 3] {
+// 11|         break           ^
+// 12|     }
+// 
+// Warning: This loop always `break`s on the first iteration, so it can only execute once.
+// --| src/test_files/check/unconditional_break.gdn:17:16
+// 15| // Bad: break in all branches of if/else.
+// 16| public fun if_else_break() {
+// 17|     while True {
+//   |                ^
+// 18|         if True {
+// 19|             break
+

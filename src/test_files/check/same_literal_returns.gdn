@@ -172,6 +172,36 @@ public fun different_variants(b: Bool): Bool {
 // 13|     }
 // 14|     return 1
 // 15| }   ^^^^^^^^
+// 
+// Warning: The if and else branches have identical expressions.
+// --| src/test_files/check/same_literal_returns.gdn:19:5
+// 17| // Should warn: if/else branches return the same literal.
+// 18| public fun if_else_same(b: Bool): Int {
+// 19|     if b {
+//   |     ^^^^^^
+// 20|         1
+//   | ^^^^^^^^^
+// 21|     } else {
+//   | ^^^^^^^^^^^^
+// 22|         1
+//   | ^^^^^^^^^
+// 23|     }
+//   | ^^^^^
+// 24| }
+// 
+// Warning: All match arms have identical expressions.
+// --| src/test_files/check/same_literal_returns.gdn:28:5
+// 26| // Should warn: match arms return the same literal.
+// 27| public fun match_same(x: Option<Int>): String {
+// 28|     match x {
+//   |     ^^^^^^^^^
+// 29|         None => { "yes" }
+//   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+// 30|         Some(_) => { "yes" }
+//   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+// 31|     }
+//   | ^^^^^
+// 32| }
 
 // expected stderr:
 // 1 issue can be fixed automatically (use `--fix`).

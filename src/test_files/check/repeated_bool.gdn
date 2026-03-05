@@ -1,0 +1,73 @@
+// Repeated operand in ||: should warn.
+fun repeated_or(x: Bool, y: Bool): Bool {
+    x || y || x
+}
+
+// Repeated operand in &&: should warn.
+fun repeated_and(x: Bool, y: Bool): Bool {
+    x && y && x
+}
+
+// Function calls are impure: should not warn.
+fun impure_or(): Bool {
+    some_bool() || some_bool()
+}
+
+fun some_bool(): Bool {
+    True
+}
+
+// No repeats: should not warn.
+fun no_repeats(x: Bool, y: Bool, z: Bool): Bool {
+    x || y || z
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `repeated_or` is never called.
+// --| src/test_files/check/repeated_bool.gdn:2:5
+//  1| // Repeated operand in ||: should warn.
+//  2| fun repeated_or(x: Bool, y: Bool): Bool {
+//   |     ^^^^^^^^^^^
+//  3|     x || y || x
+//  4| }
+// 
+// Warning: `repeated_and` is never called.
+// --| src/test_files/check/repeated_bool.gdn:7:5
+//  6| // Repeated operand in &&: should warn.
+//  7| fun repeated_and(x: Bool, y: Bool): Bool {
+//   |     ^^^^^^^^^^^^
+//  8|     x && y && x
+//  9| }
+// 
+// Warning: `impure_or` is never called.
+// --| src/test_files/check/repeated_bool.gdn:12:5
+// 11| // Function calls are impure: should not warn.
+// 12| fun impure_or(): Bool {
+//   |     ^^^^^^^^^
+// 13|     some_bool() || some_bool()
+// 14| }
+// 
+// Warning: `no_repeats` is never called.
+// --| src/test_files/check/repeated_bool.gdn:21:5
+// 20| // No repeats: should not warn.
+// 21| fun no_repeats(x: Bool, y: Bool, z: Bool): Bool {
+//   |     ^^^^^^^^^^
+// 22|     x || y || z
+// 23| }
+// 
+// Warning: This expression has already appeared in this `||` chain.
+// --| src/test_files/check/repeated_bool.gdn:3:15
+//  1| // Repeated operand in ||: should warn.
+//  2| fun repeated_or(x: Bool, y: Bool): Bool {
+//  3|     x || y || x
+//  4| }             ^
+// 
+// Warning: This expression has already appeared in this `&&` chain.
+// --| src/test_files/check/repeated_bool.gdn:8:15
+//  6| // Repeated operand in &&: should warn.
+//  7| fun repeated_and(x: Bool, y: Bool): Bool {
+//  8|     x && y && x
+//  9| }             ^
+

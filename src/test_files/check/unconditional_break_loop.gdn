@@ -1,0 +1,73 @@
+public fun bad1() {
+  while True {
+    break
+  }
+}
+
+public fun bad2(xs: List<Int>) {
+  for x in xs {
+    if x == 1 {
+      break
+    } else {
+      break
+    }
+  }
+}
+
+fun get_bool(): Bool {
+  False
+}
+
+public fun good1() {
+  while get_bool() {
+    if get_bool() {
+      break
+    }
+
+    println("again")
+  }
+}
+
+public fun good2() {
+  while True {
+    if get_bool() {
+      return
+    }
+
+    break
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: This loop always reaches `break` on the first iteration.
+// --| src/test_files/check/unconditional_break_loop.gdn:2:3
+//  1| public fun bad1() {
+//  2|   while True {
+//   |   ^^^^^^^^^^^^
+//  3|     break
+//   | ^^^^^^^^^
+//  4|   }
+//   | ^^^
+//  5| }
+// 
+// Warning: This loop always reaches `break` on the first iteration.
+// --| src/test_files/check/unconditional_break_loop.gdn:8:3
+//  7| public fun bad2(xs: List<Int>) {
+//  8|   for x in xs {
+//   |   ^^^^^^^^^^^^^
+//  9|     if x == 1 {
+//   | ^^^^^^^^^^^^^^^
+// 10|       break
+//   | ^^^^^^^^^^^
+// 11|     } else {
+//   | ^^^^^^^^^^^^
+// 12|       break
+//   | ^^^^^^^^^^^
+// 13|     }
+//   | ^^^^^
+// 14|   }
+//   | ^^^
+// 15| }
+

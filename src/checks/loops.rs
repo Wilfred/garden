@@ -18,9 +18,7 @@ impl Visitor for LoopVisitor {
 
         let prev_in_loop = self.in_loop;
         self.in_loop = true;
-
         self.visit_block(body);
-
         self.in_loop = prev_in_loop;
     }
 
@@ -29,9 +27,7 @@ impl Visitor for LoopVisitor {
 
         let prev_in_loop = self.in_loop;
         self.in_loop = true;
-
         self.visit_block(body);
-
         self.in_loop = prev_in_loop;
     }
 

@@ -1,0 +1,7 @@
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///test.gdn","languageId":"garden","version":1,"text":"let x: Int = \"hello\"\n"}}}
+
+// args: test-lsp
+// expected stdout:
+// {"id":1,"jsonrpc":"2.0","result":{"capabilities":{"completionProvider":{"triggerCharacters":["."]},"definitionProvider":true,"textDocumentSync":1},"serverInfo":{"name":"garden-lsp","version":"0.1.0"}}}
+// {"jsonrpc":"2.0","method":"textDocument/publishDiagnostics","params":{"diagnostics":[{"message":"Expected `Int`, but got `String`.","range":{"end":{"character":20,"line":0},"start":{"character":13,"line":0}},"severity":1}],"uri":"file:///test.gdn"}}

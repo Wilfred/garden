@@ -1560,7 +1560,30 @@ impl TypeCheckVisitor<'_> {
             self.save_enum_variant_id(sym, value.clone());
         }
 
-        Type::from_value(&value)
+        let ty = Type::from_value(&value);
+
+        // from_fun_info uses NoValue as the return type for unannotated
+        // non-empty functions so closures are assignable to any function type
+        // at runtime. For type inference, use Any to indicate an unknown
+        // return type, consistent with how visit_fun_info handles unannotated
+        // functions.
+        match (fun_info, ty) {
+            (
+                Some(fi),
+                Type::Fun {
+                    type_params,
+                    params,
+                    return_,
+                    name_sym,
+                },
+            ) if fi.return_hint.is_none() && return_.is_no_value() => Type::Fun {
+                type_params,
+                params,
+                return_: Box::new(Type::Any),
+                name_sym,
+            },
+            (_, ty) => ty,
+        }
     }
 
     fn infer_binary_op(

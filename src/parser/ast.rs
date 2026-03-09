@@ -294,6 +294,13 @@ pub(crate) struct DictKeyValue {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ParenthesizedExpression {
+    pub(crate) open_paren: Position,
+    pub(crate) expr: Rc<Expression>,
+    pub(crate) close_paren: Position,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ParenthesizedArguments {
     pub(crate) open_paren: Position,
     pub(crate) arguments: Vec<ExpressionWithComma>,
@@ -435,7 +442,7 @@ pub(crate) enum Expression_ {
     /// (x)
     /// x * (y * z)
     /// ```
-    Parentheses(Position, Rc<Expression>, Position),
+    Parentheses(ParenthesizedExpression),
     /// We had a parse error in this position, so there's no
     /// expression.
     Invalid,

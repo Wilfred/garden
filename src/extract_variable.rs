@@ -38,7 +38,7 @@ pub(crate) fn extract_variable(
             // wrapped in Parentheses, we want to remove the
             // parentheses too when extracting.
             if let Some(expr) = find_expr_of_id(&items, *syntax_id) {
-                if let Expression_::Parentheses(_, _, _) = expr.expr_ {
+                if let Expression_::Parentheses(_) = expr.expr_ {
                     expr_id = Some(syntax_id);
                 }
             }
@@ -114,7 +114,7 @@ pub(crate) fn extract_variable(
         return Err("No expression found for the ID at the selected position.".to_owned());
     };
     let var_init_expr = match expr.expr_ {
-        Expression_::Parentheses(_, inner_expr, _) => inner_expr,
+        Expression_::Parentheses(paren) => paren.expr,
         _ => Rc::new(expr.clone()),
     };
 

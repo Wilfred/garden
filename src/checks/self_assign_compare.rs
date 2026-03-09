@@ -17,7 +17,7 @@ fn expr_key(expr: &Expression) -> Option<String> {
         Expression_::Variable(sym) => Some(sym.name.text.clone()),
         Expression_::IntLiteral(n) => Some(format!("int:{}", n)),
         Expression_::StringLiteral(s) => Some(format!("str:{}", s)),
-        Expression_::Parentheses(_, inner, _) => expr_key(inner),
+        Expression_::Parentheses(paren) => expr_key(&paren.expr),
         _ => None,
     }
 }

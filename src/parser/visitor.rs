@@ -214,8 +214,8 @@ pub(crate) trait Visitor {
             Expression_::Assert(expr) => {
                 self.visit_expr(expr);
             }
-            Expression_::Parentheses(_, expr, _) => {
-                self.visit_expr(expr);
+            Expression_::Parentheses(paren) => {
+                self.visit_expr(&paren.expr);
             }
             Expression_::Invalid => {
                 // TODO: custom method for this variant

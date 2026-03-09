@@ -1007,12 +1007,12 @@ impl TypeCheckVisitor<'_> {
             }
             Expression_::DictLiteral(items) => {
                 let mut value_tys = vec![];
-                for (key_expr, _, value_expr) in items {
-                    self.verify_expr(&Type::string(), key_expr, type_bindings, expected_return_ty);
+                for kv in items {
+                    self.verify_expr(&Type::string(), &kv.key, type_bindings, expected_return_ty);
 
                     let inferred_value_ty =
-                        self.infer_expr(value_expr, type_bindings, expected_return_ty);
-                    value_tys.push((inferred_value_ty, value_expr.position.clone()));
+                        self.infer_expr(&kv.value, type_bindings, expected_return_ty);
+                    value_tys.push((inferred_value_ty, kv.value.position.clone()));
                 }
 
                 let value_ty = match unify_all(&value_tys) {

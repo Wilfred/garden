@@ -5707,7 +5707,7 @@ fn eval_expr(
                 let mut items: FxHashMap<String, Value> = FxHashMap::default();
                 let mut value_type = Type::no_value();
 
-                for (key_expr, _arrow, _v) in item_exprs {
+                for kv in item_exprs {
                     // The evaluated value of key-value pair.
                     let value_value = env
                         .pop_value()
@@ -5723,7 +5723,7 @@ fn eval_expr(
 
                     let key_str = check_string(
                         &key_value,
-                        &key_expr.position,
+                        &kv.key.position,
                         // TODO: set saved_values properly here.
                         vec![],
                         env,
@@ -5741,9 +5741,9 @@ fn eval_expr(
                     outer_expr.clone(),
                 );
 
-                for (key_expr, _, value_expr) in item_exprs.iter() {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, value_expr.clone());
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, key_expr.clone());
+                for kv in item_exprs.iter() {
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, kv.value.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, kv.key.clone());
                 }
             }
         }

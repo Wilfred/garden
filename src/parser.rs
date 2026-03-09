@@ -287,11 +287,11 @@ fn parse_tuple_literal_or_parentheses(
     let position = Position::merge(&open_paren.position, &close_paren.position);
     Expression::new(
         position,
-        Expression_::Parentheses(
-            open_paren.position.clone(),
-            Rc::new(expr),
-            close_paren.position.clone(),
-        ),
+        Expression_::Parentheses(ParenthesizedExpression {
+            open_paren: open_paren.position.clone(),
+            expr: Rc::new(expr),
+            close_paren: close_paren.position.clone(),
+        }),
         id_gen.next(),
     )
 }

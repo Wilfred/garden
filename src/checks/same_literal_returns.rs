@@ -92,7 +92,7 @@ fn expr_as_constant(expr: &Expression) -> Option<LiteralValue> {
                 None
             }
         }
-        Expression_::Parentheses(_, inner, _) => expr_as_constant(inner),
+        Expression_::Parentheses(paren) => expr_as_constant(&paren.expr),
         _ => None,
     }
 }

@@ -53,16 +53,18 @@ fun foo(src) {
 //                 Expression {
 //                     position: Position { ... },
 //                     expr_: Parentheses(
-//                         Position { ... },
-//                         Expression {
-//                             position: Position { ... },
-//                             expr_: StringLiteral(
-//                                 "",
-//                             ),
-//                             value_is_used: true,
-//                             id: SyntaxId(5),
+//                         ParenthesizedExpression {
+//                             open_paren: Position { ... },
+//                             expr: Expression {
+//                                 position: Position { ... },
+//                                 expr_: StringLiteral(
+//                                     "",
+//                                 ),
+//                                 value_is_used: true,
+//                                 id: SyntaxId(5),
+//                             },
+//                             close_paren: Position { ... },
 //                         },
-//                         Position { ... },
 //                     ),
 //                     value_is_used: true,
 //                     id: SyntaxId(6),

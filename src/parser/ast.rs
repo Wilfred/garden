@@ -287,6 +287,13 @@ pub(crate) struct ExpressionWithComma {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct DictKeyValue {
+    pub(crate) key: Rc<Expression>,
+    pub(crate) arrow_pos: Position,
+    pub(crate) value: Rc<Expression>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ParenthesizedArguments {
     pub(crate) open_paren: Position,
     pub(crate) arguments: Vec<ExpressionWithComma>,
@@ -372,7 +379,7 @@ pub(crate) enum Expression_ {
     /// ```garden
     /// Dict[x => 1, y ^ z => 2]
     /// ```
-    DictLiteral(Vec<(Rc<Expression>, Position, Rc<Expression>)>),
+    DictLiteral(Vec<DictKeyValue>),
     /// ```garden
     /// ()
     /// (x,)

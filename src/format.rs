@@ -400,9 +400,9 @@ impl Visitor for IndentationVisitor {
                     }
                 }
                 Expression_::DictLiteral(pairs) => {
-                    for (key_expr, _arrow_pos, value_expr) in pairs {
-                        self.visit_expr(key_expr);
-                        self.visit_expr(value_expr);
+                    for pair in pairs {
+                        self.visit_expr(&pair.key);
+                        self.visit_expr(&pair.value);
                     }
                 }
                 Expression_::TupleLiteral(exprs) => {

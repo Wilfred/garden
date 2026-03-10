@@ -87,11 +87,23 @@ impl TypeSymbol {
 /// Represents a type name in source code. This might be a concrete
 /// type, such as `List<Int>`, or may refer to generics
 /// e.g. `List<T>`.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Eq)]
 pub(crate) struct TypeHint {
     pub(crate) sym: TypeSymbol,
     pub(crate) args: Vec<TypeHint>,
     pub(crate) position: Position,
+}
+
+/// Structural equality: ignore position.
+impl PartialEq for TypeHint {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            sym,
+            args,
+            position: _,
+        } = self;
+        *sym == other.sym && *args == other.args
+    }
 }
 
 impl TypeHint {
@@ -155,12 +167,25 @@ pub(crate) struct InternedSymbolId(pub(crate) usize);
 /// function name or a method name.
 ///
 /// See also [`TypeSymbol`].
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Eq)]
 pub(crate) struct Symbol {
     pub(crate) position: Position,
     pub(crate) name: SymbolName,
     pub(crate) id: SyntaxId,
     pub(crate) interned_id: InternedSymbolId,
+}
+
+/// Structural equality: ignore position and IDs.
+impl PartialEq for Symbol {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            position: _,
+            name,
+            id: _,
+            interned_id: _,
+        } = self;
+        *name == other.name
+    }
 }
 
 impl Symbol {
@@ -280,31 +305,75 @@ pub(crate) struct Pattern {
     pub(crate) payload: Option<LetDestination>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct ExpressionWithComma {
     pub(crate) expr: Rc<Expression>,
     pub(crate) comma: Option<Position>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Structural equality: ignore comma position.
+impl PartialEq for ExpressionWithComma {
+    fn eq(&self, other: &Self) -> bool {
+        let Self { expr, comma: _ } = self;
+        *expr == other.expr
+    }
+}
+
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct DictKeyValue {
     pub(crate) key: Rc<Expression>,
     pub(crate) arrow_pos: Position,
     pub(crate) value: Rc<Expression>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Structural equality: ignore arrow position.
+impl PartialEq for DictKeyValue {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            key,
+            arrow_pos: _,
+            value,
+        } = self;
+        *key == other.key && *value == other.value
+    }
+}
+
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct ParenthesizedExpression {
     pub(crate) open_paren: Position,
     pub(crate) expr: Rc<Expression>,
     pub(crate) close_paren: Position,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Structural equality: ignore paren positions.
+impl PartialEq for ParenthesizedExpression {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            open_paren: _,
+            expr,
+            close_paren: _,
+        } = self;
+        *expr == other.expr
+    }
+}
+
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct ParenthesizedArguments {
     pub(crate) open_paren: Position,
     pub(crate) arguments: Vec<ExpressionWithComma>,
     pub(crate) close_paren: Position,
+}
+
+/// Structural equality: ignore paren positions.
+impl PartialEq for ParenthesizedArguments {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            open_paren: _,
+            arguments,
+            close_paren: _,
+        } = self;
+        *arguments == other.arguments
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -552,7 +621,7 @@ impl IdGenerator {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct Expression {
     pub(crate) position: Position,
     pub(crate) expr_: Expression_,
@@ -561,6 +630,19 @@ pub(crate) struct Expression {
     /// `foo()` is ignored.
     pub(crate) value_is_used: bool,
     pub(crate) id: SyntaxId,
+}
+
+/// Structural equality: ignore position and ID.
+impl PartialEq for Expression {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            position: _,
+            expr_,
+            value_is_used,
+            id: _,
+        } = self;
+        *expr_ == other.expr_ && *value_is_used == other.value_is_used
+    }
 }
 
 impl Expression {
@@ -584,23 +666,46 @@ impl Expression {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct Block {
     pub(crate) open_brace: Position,
     pub(crate) exprs: Vec<Rc<Expression>>,
     pub(crate) close_brace: Position,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Structural equality: ignore brace positions.
+impl PartialEq for Block {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            open_brace: _,
+            exprs,
+            close_brace: _,
+        } = self;
+        *exprs == other.exprs
+    }
+}
+
+#[derive(Debug, Clone, Eq)]
 pub(crate) enum Visibility {
     Public(Position),
     CurrentFile,
 }
 
+/// Structural equality: ignore position in Public variant.
+impl PartialEq for Visibility {
+    fn eq(&self, other: &Self) -> bool {
+        matches!(
+            (self, other),
+            (Visibility::Public(_), Visibility::Public(_))
+                | (Visibility::CurrentFile, Visibility::CurrentFile)
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ToplevelExpression(pub(crate) Expression);
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct FunInfo {
     pub(crate) pos: Position,
     pub(crate) doc_comment: Option<String>,
@@ -614,19 +719,66 @@ pub(crate) struct FunInfo {
     pub(crate) body: Block,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Structural equality: ignore position and item_id.
+impl PartialEq for FunInfo {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            pos: _,
+            doc_comment,
+            name_sym,
+            item_id: _,
+            type_params,
+            params,
+            return_hint,
+            body,
+        } = self;
+        *doc_comment == other.doc_comment
+            && *name_sym == other.name_sym
+            && *type_params == other.type_params
+            && *params == other.params
+            && *return_hint == other.return_hint
+            && *body == other.body
+    }
+}
+
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct ParenthesizedParameters {
     pub(crate) open_paren: Position,
     pub(crate) params: Vec<SymbolWithHint>,
     pub(crate) close_paren: Position,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Structural equality: ignore paren positions.
+impl PartialEq for ParenthesizedParameters {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            open_paren: _,
+            params,
+            close_paren: _,
+        } = self;
+        *params == other.params
+    }
+}
+
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct TestInfo {
     pub(crate) pos: Position,
     pub(crate) doc_comment: Option<String>,
     pub(crate) name_sym: Symbol,
     pub(crate) body: Block,
+}
+
+/// Structural equality: ignore position.
+impl PartialEq for TestInfo {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            pos: _,
+            doc_comment,
+            name_sym,
+            body,
+        } = self;
+        *doc_comment == other.doc_comment && *name_sym == other.name_sym && *body == other.body
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -644,7 +796,7 @@ pub(crate) struct FieldInfo {
     pub(crate) doc_comment: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct EnumInfo {
     pub(crate) pos: Position,
     pub(crate) visibility: Visibility,
@@ -654,7 +806,26 @@ pub(crate) struct EnumInfo {
     pub(crate) variants: Vec<VariantInfo>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Structural equality: ignore position.
+impl PartialEq for EnumInfo {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            pos: _,
+            visibility,
+            doc_comment,
+            name_sym,
+            type_params,
+            variants,
+        } = self;
+        *visibility == other.visibility
+            && *doc_comment == other.doc_comment
+            && *name_sym == other.name_sym
+            && *type_params == other.type_params
+            && *variants == other.variants
+    }
+}
+
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct StructInfo {
     pub(crate) pos: Position,
     pub(crate) visibility: Visibility,
@@ -669,7 +840,26 @@ pub(crate) struct StructInfo {
     pub(crate) fields: Vec<FieldInfo>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Structural equality: ignore position.
+impl PartialEq for StructInfo {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            pos: _,
+            visibility,
+            doc_comment,
+            name_sym,
+            type_params,
+            fields,
+        } = self;
+        *visibility == other.visibility
+            && *doc_comment == other.doc_comment
+            && *name_sym == other.name_sym
+            && *type_params == other.type_params
+            && *fields == other.fields
+    }
+}
+
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct ImportInfo {
     pub(crate) pos: Position,
     /// The actual path being imported. For example, if the user
@@ -690,6 +880,20 @@ pub(crate) struct ImportInfo {
     pub(crate) namespace_sym: Option<Symbol>,
 
     pub(crate) id: SyntaxId,
+}
+
+/// Structural equality: ignore positions and ID.
+impl PartialEq for ImportInfo {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            pos: _,
+            path,
+            path_pos: _,
+            namespace_sym,
+            id: _,
+        } = self;
+        *path == other.path && *namespace_sym == other.namespace_sym
+    }
 }
 
 /// All the methods implemented as primitives rather than Garden code.
@@ -724,7 +928,7 @@ pub(crate) enum MethodKind {
     UserDefinedMethod(FunInfo),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct MethodInfo {
     pub(crate) pos: Position,
     /// The type that has this method.
@@ -740,6 +944,23 @@ pub(crate) struct MethodInfo {
     pub(crate) name_sym: Symbol,
     /// User-defined or built-in.
     pub(crate) kind: MethodKind,
+}
+
+/// Structural equality: ignore position.
+impl PartialEq for MethodInfo {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            pos: _,
+            receiver_hint,
+            receiver_sym,
+            name_sym,
+            kind,
+        } = self;
+        *receiver_hint == other.receiver_hint
+            && *receiver_sym == other.receiver_sym
+            && *name_sym == other.name_sym
+            && *kind == other.kind
+    }
 }
 
 impl MethodInfo {

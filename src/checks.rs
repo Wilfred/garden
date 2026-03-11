@@ -11,6 +11,7 @@ mod unnecessary_return;
 mod unreachable;
 mod unused_defs;
 mod unused_literals;
+mod unused_result;
 mod unused_vars;
 
 use std::cell::RefCell;
@@ -30,6 +31,7 @@ use self_assign_compare::check_self_assign_compare;
 use unnecessary_return::check_unnecessary_return;
 use unreachable::check_unreachable;
 use unused_defs::check_unused_defs;
+use unused_result::check_unused_results;
 
 use self::duplicates::check_duplicates;
 use self::hints::check_hints;
@@ -72,6 +74,7 @@ pub(crate) fn check_toplevel_items_in_env(
 
     let summary = check_types(vfs_path, items, env, namespace);
     diagnostics.extend(check_unused_defs(items, &summary));
+    diagnostics.extend(check_unused_results(items, &summary));
 
     diagnostics.extend(summary.diagnostics);
     diagnostics.extend(check_duplicates(items, env));

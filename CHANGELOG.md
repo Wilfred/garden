@@ -4,6 +4,9 @@
 
 ## Checks
 
+Added a warning when a `Result` value from a function or method call
+is unused. Use `let _ = ...` to explicitly ignore the result.
+
 Added a warning when all code paths in a function return the same
 literal value.
 

@@ -1,0 +1,23 @@
+fun returns_result(): Result<Int, String> {
+    Ok(1)
+}
+
+public fun example() {
+    // Should warn: unused Result value.
+    returns_result()
+
+    // Should not warn: Result assigned to let _.
+    let _ = returns_result()
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Unused `Result` value. Use `let _ = ...` if intentionally ignoring the result.
+// --| src/test_files/check/unused_result.gdn:7:5
+//  5| public fun example() {
+//  6|     // Should warn: unused Result value.
+//  7|     returns_result()
+//  8|     ^^^^^^^^^^^^^^^^
+//  9|     // Should not warn: Result assigned to let _.
+

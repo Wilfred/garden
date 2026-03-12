@@ -8,6 +8,7 @@ mod struct_fields;
 pub mod type_checker;
 mod unnecessary_return;
 mod unreachable;
+mod unused_assignments;
 mod unused_defs;
 mod unused_literals;
 mod unused_vars;
@@ -27,6 +28,7 @@ use same_literal_returns::check_same_literal_returns;
 use self_assign_compare::check_self_assign_compare;
 use unnecessary_return::check_unnecessary_return;
 use unreachable::check_unreachable;
+use unused_assignments::check_unused_assignments;
 use unused_defs::check_unused_defs;
 
 use self::duplicates::check_duplicates;
@@ -79,6 +81,7 @@ pub(crate) fn check_toplevel_items_in_env(
     diagnostics.extend(check_recursion_variables(items));
     diagnostics.extend(check_unnecessary_return(items));
     diagnostics.extend(check_self_assign_compare(items));
+    diagnostics.extend(check_unused_assignments(items));
 
     diagnostics
 }

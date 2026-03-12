@@ -1,0 +1,84 @@
+// Overwritten assignment: should warn about x = 1.
+public fun overwritten(x: Int): Int {
+    x = 1
+    x = 2
+    x
+}
+
+// Unused final assignment: should warn.
+public fun unused_final(x: Int): Unit {
+    x = 1
+}
+
+// Unused assign-update: should warn.
+public fun unused_update(x: Int): Unit {
+    x += 1
+}
+
+// Overwritten by assign-update: should warn about x = 1.
+public fun overwritten_by_update(x: Int): Int {
+    x = 1
+    x += 2
+    x
+}
+
+// OK: assignment is used.
+public fun used_assignment(x: Int): Int {
+    x = 1
+    x
+}
+
+// OK: assign-update is used.
+public fun used_update(x: Int): Int {
+    x += 1
+    x
+}
+
+// OK: assignment is used via x = x + 1.
+public fun self_referencing_assign(x: Int): Int {
+    x = 1
+    x = x + 1
+    x
+}
+
+// OK: assignment used in loop.
+public fun loop_assign(): Int {
+    let x = 0
+    while x < 10 {
+        x += 1
+    }
+    x
+}
+
+// OK: variable with underscore prefix.
+public fun underscore_prefix(): Unit {
+    let _x = 0
+    _x = 1
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `x` is not read after this assignment.
+// --| src/test_files/check/unused_assignment.gdn:3:5
+//  1| // Overwritten assignment: should warn about x = 1.
+//  2| public fun overwritten(x: Int): Int {
+//  3|     x = 1
+//   |     ^^^^^
+//  4|     x = 2
+//  5|     x
+// 
+// Warning: `x` is not read after this assignment.
+// --| src/test_files/check/unused_assignment.gdn:10:5
+//  8| // Unused final assignment: should warn.
+//  9| public fun unused_final(x: Int): Unit {
+// 10|     x = 1
+// 11| }   ^^^^^
+// 
+// Warning: `x` is not read after this assignment.
+// --| src/test_files/check/unused_assignment.gdn:15:5
+// 13| // Unused assign-update: should warn.
+// 14| public fun unused_update(x: Int): Unit {
+// 15|     x += 1
+// 16| }   ^^^^^^
+

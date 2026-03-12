@@ -22,4 +22,18 @@ public fun foo() {
 // 5|   let y = no_such_func()
 // 6|   y += 1  ^^^^^^^^^^^^
 // 7| }
+// 
+// Warning: `x` is not read after this assignment.
+// -| src/test_files/check/assign_update_error_type.gdn:3:3
+// 1| public fun foo() {
+// 2|   let x = todo()
+// 3|   x += 1
+// 4|   ^^^^^^
+// 5|   let y = no_such_func()
+// 
+// Warning: `y` is not read after this assignment.
+// -| src/test_files/check/assign_update_error_type.gdn:6:3
+// 5|   let y = no_such_func()
+// 6|   y += 1
+// 7| } ^^^^^^
 

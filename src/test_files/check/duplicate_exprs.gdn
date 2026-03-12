@@ -132,3 +132,6 @@ fun if_no_else(x: Bool): Unit {
 //   | ^^^^^
 // 12| }
 
+// expected stderr:
+// 4 issues can be fixed automatically (use `--fix`).
+

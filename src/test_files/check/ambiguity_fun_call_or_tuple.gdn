@@ -31,5 +31,5 @@ fun add_one(i: Int): Int {
 // 10| }              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // expected stderr:
-// 1 issue can be fixed automatically (use `--fix`).
+// 3 issues can be fixed automatically (use `--fix`).
 

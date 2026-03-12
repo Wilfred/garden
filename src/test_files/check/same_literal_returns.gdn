@@ -204,5 +204,5 @@ public fun different_variants(b: Bool): Bool {
 // 32| }
 
 // expected stderr:
-// 1 issue can be fixed automatically (use `--fix`).
+// 5 issues can be fixed automatically (use `--fix`).
 

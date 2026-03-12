@@ -1,39 +1,28 @@
 public fun foo() {
   let x = todo()
   x += 1
+  let _a = x
 
   let y = no_such_func()
   y += 1
+  let _b = y
 }
 
 // args: check
 // expected exit status: 1
 // expected stdout:
 // Warning: Unfinished code.
-// -| src/test_files/check/assign_update_error_type.gdn:2:11
-// 1| public fun foo() {
-// 2|   let x = todo()
-// 3|   x += 1  ^^^^^^
+// --| src/test_files/check/assign_update_error_type.gdn:2:11
+//  1| public fun foo() {
+//  2|   let x = todo()
+//  3|   x += 1  ^^^^^^
+//  4|   let _a = x
 // 
 // Error: Unbound symbol: `no_such_func`
-// -| src/test_files/check/assign_update_error_type.gdn:5:11
-// 3|   x += 1
-// 4| 
-// 5|   let y = no_such_func()
-// 6|   y += 1  ^^^^^^^^^^^^
-// 7| }
-// 
-// Warning: `x` is not read after this assignment.
-// -| src/test_files/check/assign_update_error_type.gdn:3:3
-// 1| public fun foo() {
-// 2|   let x = todo()
-// 3|   x += 1
-// 4|   ^^^^^^
-// 5|   let y = no_such_func()
-// 
-// Warning: `y` is not read after this assignment.
-// -| src/test_files/check/assign_update_error_type.gdn:6:3
-// 5|   let y = no_such_func()
-// 6|   y += 1
-// 7| } ^^^^^^
+// --| src/test_files/check/assign_update_error_type.gdn:6:11
+//  4|   let _a = x
+//  5| 
+//  6|   let y = no_such_func()
+//  7|   y += 1  ^^^^^^^^^^^^
+//  8|   let _b = y
 

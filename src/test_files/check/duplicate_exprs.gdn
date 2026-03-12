@@ -1,0 +1,137 @@
+// If/else with identical bodies: should warn.
+fun if_else_same(x: Bool): Int {
+    if x { 1 } else { 1 }
+}
+
+// Match with all identical arms: should warn.
+fun match_all_same(x: Option<Int>): Int {
+    match x {
+        None => { 0 }
+        Some(_) => { 0 }
+    }
+}
+
+// If/else with different bodies: should not warn.
+fun if_else_different(x: Bool): Int {
+    if x { 1 } else { 2 }
+}
+
+// Match with different arms: should not warn.
+fun match_different(x: Option<Int>): Int {
+    match x {
+        None => { 0 }
+        Some(y) => { y }
+    }
+}
+
+// If without else: should not warn.
+fun if_no_else(x: Bool): Unit {
+    if x { println("hi") }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `if_else_same` is never called.
+// --| src/test_files/check/duplicate_exprs.gdn:2:5
+//  1| // If/else with identical bodies: should warn.
+//  2| fun if_else_same(x: Bool): Int {
+//   |     ^^^^^^^^^^^^
+//  3|     if x { 1 } else { 1 }
+//  4| }
+// 
+// Warning: `match_all_same` is never called.
+// --| src/test_files/check/duplicate_exprs.gdn:7:5
+//  6| // Match with all identical arms: should warn.
+//  7| fun match_all_same(x: Option<Int>): Int {
+//   |     ^^^^^^^^^^^^^^
+//  8|     match x {
+//  9|         None => { 0 }
+// 
+// Warning: `if_else_different` is never called.
+// --| src/test_files/check/duplicate_exprs.gdn:15:5
+// 14| // If/else with different bodies: should not warn.
+// 15| fun if_else_different(x: Bool): Int {
+//   |     ^^^^^^^^^^^^^^^^^
+// 16|     if x { 1 } else { 2 }
+// 17| }
+// 
+// Warning: `match_different` is never called.
+// --| src/test_files/check/duplicate_exprs.gdn:20:5
+// 19| // Match with different arms: should not warn.
+// 20| fun match_different(x: Option<Int>): Int {
+//   |     ^^^^^^^^^^^^^^^
+// 21|     match x {
+// 22|         None => { 0 }
+// 
+// Warning: `if_no_else` is never called.
+// --| src/test_files/check/duplicate_exprs.gdn:28:5
+// 27| // If without else: should not warn.
+// 28| fun if_no_else(x: Bool): Unit {
+//   |     ^^^^^^^^^^
+// 29|     if x { println("hi") }
+// 30| }
+// 
+// Warning: All code paths in `if_else_same()` return the same value `1`.
+// --| src/test_files/check/duplicate_exprs.gdn:2:5
+//  1| // If/else with identical bodies: should warn.
+//  2| fun if_else_same(x: Bool): Int {
+//   |     ^^^^^^^^^^^^
+//  3|     if x { 1 } else { 1 }
+//  4| }
+// --| src/test_files/check/duplicate_exprs.gdn:3:12
+//  1| // If/else with identical bodies: should warn.
+//  2| fun if_else_same(x: Bool): Int {
+//  3|     if x { 1 } else { 1 }
+//  4| }          ^ Note: Same value here.
+// --| src/test_files/check/duplicate_exprs.gdn:3:23
+//  1| // If/else with identical bodies: should warn.
+//  2| fun if_else_same(x: Bool): Int {
+//  3|     if x { 1 } else { 1 }
+//  4| }                     ^ Note: Same value here.
+// 
+// Warning: All code paths in `match_all_same()` return the same value `0`.
+// --| src/test_files/check/duplicate_exprs.gdn:7:5
+//  6| // Match with all identical arms: should warn.
+//  7| fun match_all_same(x: Option<Int>): Int {
+//   |     ^^^^^^^^^^^^^^
+//  8|     match x {
+//  9|         None => { 0 }
+// --| src/test_files/check/duplicate_exprs.gdn:9:19
+//  7| fun match_all_same(x: Option<Int>): Int {
+//  8|     match x {
+//  9|         None => { 0 }
+//   |                   ^ Note: Same value here.
+// 10|         Some(_) => { 0 }
+// 11|     }
+// --| src/test_files/check/duplicate_exprs.gdn:10:22
+//  8|     match x {
+//  9|         None => { 0 }
+// 10|         Some(_) => { 0 }
+// 11|     }                ^ Note: Same value here.
+// 12| }
+// 
+// Warning: The if and else branches have identical expressions.
+// --| src/test_files/check/duplicate_exprs.gdn:3:5
+//  1| // If/else with identical bodies: should warn.
+//  2| fun if_else_same(x: Bool): Int {
+//  3|     if x { 1 } else { 1 }
+//  4| }   ^^^^^^^^^^^^^^^^^^^^^
+// 
+// Warning: All match arms have identical expressions.
+// --| src/test_files/check/duplicate_exprs.gdn:8:5
+//  6| // Match with all identical arms: should warn.
+//  7| fun match_all_same(x: Option<Int>): Int {
+//  8|     match x {
+//   |     ^^^^^^^^^
+//  9|         None => { 0 }
+//   | ^^^^^^^^^^^^^^^^^^^^^
+// 10|         Some(_) => { 0 }
+//   | ^^^^^^^^^^^^^^^^^^^^^^^^
+// 11|     }
+//   | ^^^^^
+// 12| }
+
+// expected stderr:
+// 4 issues can be fixed automatically (use `--fix`).
+

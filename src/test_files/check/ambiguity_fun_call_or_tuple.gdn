@@ -23,7 +23,13 @@ fun add_one(i: Int): Int {
 //  6|   (10, 11)
 //  7|   ^^^^^^^^
 //  8|   // Should be parsed as a call, not an if followed by a tuple (5).
+// 
+// Warning: The if and else branches have identical expressions.
+// --| src/test_files/check/ambiguity_fun_call_or_tuple.gdn:9:16
+//  8|   // Should be parsed as a call, not an if followed by a tuple (5).
+//  9|   let _: Int = if True { add_one } else { add_one }(5)
+// 10| }              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // expected stderr:
-// 1 issue can be fixed automatically (use `--fix`).
+// 3 issues can be fixed automatically (use `--fix`).
 

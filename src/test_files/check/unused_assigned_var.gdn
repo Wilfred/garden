@@ -1,0 +1,61 @@
+// A variable that is only written to (assigned) but never read
+// should be reported as unused.
+fun foo(): Int {
+    let x = 1
+    x = 2
+    0
+}
+
+// But a variable that is read after being assigned should not warn.
+fun bar(): Int {
+    let x = 1
+    x = 2
+    x
+}
+
+// Warning: `foo` is never called.
+// --| src/test_files/check/unused_assigned_var.gdn:3:5
+//  1| // A variable that is only written to (assigned) but never read
+//  2| // should be reported as unused.
+//  3| fun foo(): Int {
+//   |     ^^^
+//  4|     let x = 1
+//  5|     x = 2
+//
+// Warning: `bar` is never called.
+// --| src/test_files/check/unused_assigned_var.gdn:10:5
+//  9| // But a variable that is read after being assigned should not warn.
+// 10| fun bar(): Int {
+//   |     ^^^
+// 11|     let x = 1
+// 12|     x = 2
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `x` is unused.
+// --| src/test_files/check/unused_assigned_var.gdn:4:9
+//  2| // should be reported as unused.
+//  3| fun foo(): Int {
+//  4|     let x = 1
+//   |         ^
+//  5|     x = 2
+//  6|     0
+// 
+// Warning: `foo` is never called.
+// --| src/test_files/check/unused_assigned_var.gdn:3:5
+//  1| // A variable that is only written to (assigned) but never read
+//  2| // should be reported as unused.
+//  3| fun foo(): Int {
+//   |     ^^^
+//  4|     let x = 1
+//  5|     x = 2
+// 
+// Warning: `bar` is never called.
+// --| src/test_files/check/unused_assigned_var.gdn:10:5
+//  9| // But a variable that is read after being assigned should not warn.
+// 10| fun bar(): Int {
+//   |     ^^^
+// 11|     let x = 1
+// 12|     x = 2
+

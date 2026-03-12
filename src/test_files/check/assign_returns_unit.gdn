@@ -4,3 +4,13 @@ public fun foo(): Unit {
 }
 
 // args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `i` is unused.
+// -| src/test_files/check/assign_returns_unit.gdn:2:9
+// 1| public fun foo(): Unit {
+// 2|     let i = 0
+//  |         ^
+// 3|     i = 2
+// 4| }
+

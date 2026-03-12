@@ -1,4 +1,4 @@
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::parser::ast::{
@@ -49,8 +49,9 @@ struct UnusedLocalVar {
     name: SymbolName,
     /// Position of the variable name (for the warning).
     name_position: Position,
-    /// How to fix this unused variable.
-    fix: UnusedVarFix,
+    /// How to fix this unused variable. `None` when no safe autofix
+    /// is available (e.g. variable is assigned to after binding).
+    fix: Option<UnusedVarFix>,
 }
 
 /// The type of fix to apply for an unused variable.
@@ -85,6 +86,12 @@ struct UnusedVariableVisitor {
     /// Key is the interned symbol ID.
     let_removal_positions: FxHashMap<InternedSymbolId, Position>,
 
+    /// Variables that have been assigned to after their initial binding.
+    /// We can't safely offer autofixes for these (removing the `let`
+    /// would leave dangling assignments, and renaming would miss the
+    /// assignment targets).
+    assigned_variables: FxHashSet<InternedSymbolId>,
+
     method_this_type_hint: Option<TypeHint>,
 
     /// Type parameter tracking for the current function/method.
@@ -112,6 +119,7 @@ impl UnusedVariableVisitor {
             file_bindings: FxHashMap::default(),
             unused: vec![],
             let_removal_positions: FxHashMap::default(),
+            assigned_variables: FxHashSet::default(),
             method_this_type_hint: None,
             type_param_info: vec![],
             unused_type_params: vec![],
@@ -123,17 +131,18 @@ impl UnusedVariableVisitor {
 
         // Unused local variables
         for unused_var in &self.unused {
-            let fix = match &unused_var.fix {
-                UnusedVarFix::Rename => Autofix {
+            let fixes = match &unused_var.fix {
+                Some(UnusedVarFix::Rename) => vec![Autofix {
                     description: format!("Rename to `_{}`", unused_var.name),
                     position: unused_var.name_position.clone(),
                     new_text: format!("_{}", unused_var.name),
-                },
-                UnusedVarFix::RemoveLet { removal_position } => Autofix {
+                }],
+                Some(UnusedVarFix::RemoveLet { removal_position }) => vec![Autofix {
                     description: "Remove this let binding".to_owned(),
                     position: removal_position.clone(),
                     new_text: String::new(),
-                },
+                }],
+                None => vec![],
             };
 
             diagnostics.push(Diagnostic {
@@ -144,7 +153,7 @@ impl UnusedVariableVisitor {
                     msgtext!(" is unused."),
                 ]),
                 position: unused_var.name_position.clone(),
-                fixes: vec![fix],
+                fixes,
             });
         }
 
@@ -264,11 +273,16 @@ impl UnusedVariableVisitor {
             }
 
             if let UseState::NotUsed(position) = use_state {
-                // Check if this is a let binding with removal info
-                let fix = if let Some(removal_position) = self.let_removal_positions.remove(&id) {
-                    UnusedVarFix::RemoveLet { removal_position }
+                // If this variable has been assigned to, we can't
+                // safely offer autofixes (removing the let would
+                // leave dangling assignments, and renaming would miss
+                // the assignment targets).
+                let fix = if self.assigned_variables.contains(&id) {
+                    None
+                } else if let Some(removal_position) = self.let_removal_positions.remove(&id) {
+                    Some(UnusedVarFix::RemoveLet { removal_position })
                 } else {
-                    UnusedVarFix::Rename
+                    Some(UnusedVarFix::Rename)
                 };
 
                 self.unused.push(UnusedLocalVar {
@@ -570,7 +584,15 @@ impl Visitor for UnusedVariableVisitor {
     }
 
     fn visit_expr_assign(&mut self, var: &Symbol, expr: &Expression) {
-        self.check_symbol(var);
+        // An assignment is a write, not a read. Don't mark the
+        // variable as used, so we can detect write-only variables.
+        if self.is_locally_bound(var) {
+            self.assigned_variables.insert(var.interned_id);
+            // Can't safely remove the let binding when there are
+            // later assignments to the variable.
+            self.let_removal_positions.remove(&var.interned_id);
+        }
+
         self.visit_expr(expr);
     }
 

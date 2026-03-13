@@ -127,7 +127,7 @@ impl Visitor for HintVisitor<'_> {
                             }
                         }
 
-                        if matches!(b, BuiltInType::Fun) {
+                        if matches!(b, BuiltInType::Fun) && type_hint.args.len() == 2 {
                             let first_arg = &type_hint.args[0];
                             if first_arg.sym.name.text != "Tuple" {
                                 self.diagnostics.push(Diagnostic {

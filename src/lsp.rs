@@ -659,6 +659,185 @@ fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
     offset
 }
 
+/// Process an LSP message and return the response, if any.
+///
+/// Returns a tuple of (response_to_write, notification_to_write).
+fn process_message(
+    message: serde_json::Value,
+    documents: &mut DocumentStore,
+) -> (Option<serde_json::Value>, Option<serde_json::Value>) {
+    let parsed: Message = match serde_json::from_value(message.clone()) {
+        Ok(m) => m,
+        Err(_) => return (None, None),
+    };
+
+    match parsed.method.as_deref() {
+        Some(method) if method == Initialize::METHOD => {
+            if let Some(id) = parsed.id {
+                let params: InitializeParams = match message
+                    .get("params")
+                    .and_then(|p| serde_json::from_value(p.clone()).ok())
+                {
+                    Some(p) => p,
+                    None => return (None, None),
+                };
+                let response = handle_initialize(id, params);
+                return (Some(serde_json::to_value(response).unwrap()), None);
+            }
+        }
+        Some("initialized") => {
+            // This is a notification, no response needed
+        }
+        Some(method) if method == Completion::METHOD => {
+            if let Some(id) = parsed.id {
+                let params: CompletionParams = match message
+                    .get("params")
+                    .and_then(|p| serde_json::from_value(p.clone()).ok())
+                {
+                    Some(p) => p,
+                    None => return (None, None),
+                };
+                let response = handle_completion(id, params, documents);
+                return (Some(serde_json::to_value(response).unwrap()), None);
+            }
+        }
+        Some(method) if method == GotoDefinition::METHOD => {
+            if let Some(id) = parsed.id {
+                let params: GotoDefinitionParams = match message
+                    .get("params")
+                    .and_then(|p| serde_json::from_value(p.clone()).ok())
+                {
+                    Some(p) => p,
+                    None => return (None, None),
+                };
+                let response = handle_definition(id, params, documents);
+                return (Some(serde_json::to_value(response).unwrap()), None);
+            }
+        }
+        Some("textDocument/didOpen") => {
+            let params = message.get("params").unwrap_or(&serde_json::Value::Null);
+            if let Some((uri, diagnostics)) = handle_did_open_for_test(params, documents) {
+                let notification = JsonRpcNotification::new(
+                    "textDocument/publishDiagnostics",
+                    PublishDiagnosticsParams {
+                        uri,
+                        diagnostics,
+                        version: None,
+                    },
+                );
+                return (None, Some(serde_json::to_value(notification).unwrap()));
+            }
+        }
+        Some("textDocument/didChange") => {
+            let params = message.get("params").unwrap_or(&serde_json::Value::Null);
+            if let Some((uri, diagnostics)) = handle_did_change_for_test(params, documents) {
+                let notification = JsonRpcNotification::new(
+                    "textDocument/publishDiagnostics",
+                    PublishDiagnosticsParams {
+                        uri,
+                        diagnostics,
+                        version: None,
+                    },
+                );
+                return (None, Some(serde_json::to_value(notification).unwrap()));
+            }
+        }
+        Some(method) if method == Shutdown::METHOD => {
+            if let Some(id) = parsed.id {
+                let response = handle_shutdown(id);
+                return (Some(serde_json::to_value(response).unwrap()), None);
+            }
+        }
+        _ => {}
+    }
+
+    (None, None)
+}
+
+/// Handle textDocument/didOpen for testing (returns diagnostics instead of writing).
+fn handle_did_open_for_test(
+    params: &serde_json::Value,
+    documents: &mut DocumentStore,
+) -> Option<(Uri, Vec<Diagnostic>)> {
+    let uri = params
+        .get("textDocument")
+        .and_then(|doc| doc.get("uri"))
+        .and_then(|u| u.as_str())?;
+
+    let text = params
+        .get("textDocument")
+        .and_then(|doc| doc.get("text"))
+        .and_then(|t| t.as_str())?;
+
+    let url = Url::parse(uri).ok()?;
+    let path = url.to_file_path().ok()?;
+
+    documents.insert(path.clone(), text.to_owned());
+
+    let diagnostics = get_diagnostics(text, &path);
+    Some((url.as_str().parse().unwrap(), diagnostics))
+}
+
+/// Handle textDocument/didChange for testing (returns diagnostics instead of writing).
+fn handle_did_change_for_test(
+    params: &serde_json::Value,
+    documents: &mut DocumentStore,
+) -> Option<(Uri, Vec<Diagnostic>)> {
+    let uri = params
+        .get("textDocument")
+        .and_then(|doc| doc.get("uri"))
+        .and_then(|u| u.as_str())?;
+
+    let text = params
+        .get("contentChanges")
+        .and_then(|changes| changes.as_array())
+        .and_then(|arr| arr.first())
+        .and_then(|change| change.get("text"))
+        .and_then(|t| t.as_str())?;
+
+    let url = Url::parse(uri).ok()?;
+    let path = url.to_file_path().ok()?;
+
+    documents.insert(path.clone(), text.to_owned());
+
+    let diagnostics = get_diagnostics(text, &path);
+    Some((url.as_str().parse().unwrap(), diagnostics))
+}
+
+/// Run LSP test by processing JSONL input.
+///
+/// Each non-comment, non-empty line is treated as a JSON-RPC message.
+/// Lines starting with `//` are ignored.
+pub(crate) fn run_lsp_test(src: &str) {
+    let mut documents: DocumentStore = FxHashMap::default();
+
+    let json_lines = src
+        .lines()
+        .filter(|line| !line.starts_with("//") && !line.is_empty());
+
+    for line in json_lines {
+        let message: serde_json::Value = match serde_json::from_str(line) {
+            Ok(m) => m,
+            Err(e) => {
+                eprintln!("Error parsing JSON: {e}");
+                continue;
+            }
+        };
+
+        let (response, notification) = process_message(message, &mut documents);
+
+        // Print notification first (e.g., diagnostics from didOpen)
+        if let Some(notif) = notification {
+            println!("{}", serde_json::to_string(&notif).unwrap());
+        }
+
+        // Print response
+        if let Some(resp) = response {
+            println!("{}", serde_json::to_string(&resp).unwrap());
+        }
+    }
+}
+
 /// Run the LSP server.
 pub(crate) fn run_lsp() {
     let mut should_exit = false;

@@ -7,6 +7,9 @@
 Added a warning when all code paths in a function return the same
 literal value.
 
+Added a warning when if/else branches have identical expressions, or
+all match arms have identical expressions.
+
 ## Commands
 
 Added :load to evaluate all definitions in a file and switch to that

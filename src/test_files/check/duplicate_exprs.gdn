@@ -72,45 +72,6 @@ fun if_no_else(x: Bool): Unit {
 // 29|     if x { println("hi") }
 // 30| }
 // 
-// Warning: All code paths in `if_else_same()` return the same value `1`.
-// --| src/test_files/check/duplicate_exprs.gdn:2:5
-//  1| // If/else with identical bodies: should warn.
-//  2| fun if_else_same(x: Bool): Int {
-//   |     ^^^^^^^^^^^^
-//  3|     if x { 1 } else { 1 }
-//  4| }
-// --| src/test_files/check/duplicate_exprs.gdn:3:12
-//  1| // If/else with identical bodies: should warn.
-//  2| fun if_else_same(x: Bool): Int {
-//  3|     if x { 1 } else { 1 }
-//  4| }          ^ Note: Same value here.
-// --| src/test_files/check/duplicate_exprs.gdn:3:23
-//  1| // If/else with identical bodies: should warn.
-//  2| fun if_else_same(x: Bool): Int {
-//  3|     if x { 1 } else { 1 }
-//  4| }                     ^ Note: Same value here.
-// 
-// Warning: All code paths in `match_all_same()` return the same value `0`.
-// --| src/test_files/check/duplicate_exprs.gdn:7:5
-//  6| // Match with all identical arms: should warn.
-//  7| fun match_all_same(x: Option<Int>): Int {
-//   |     ^^^^^^^^^^^^^^
-//  8|     match x {
-//  9|         None => { 0 }
-// --| src/test_files/check/duplicate_exprs.gdn:9:19
-//  7| fun match_all_same(x: Option<Int>): Int {
-//  8|     match x {
-//  9|         None => { 0 }
-//   |                   ^ Note: Same value here.
-// 10|         Some(_) => { 0 }
-// 11|     }
-// --| src/test_files/check/duplicate_exprs.gdn:10:22
-//  8|     match x {
-//  9|         None => { 0 }
-// 10|         Some(_) => { 0 }
-// 11|     }                ^ Note: Same value here.
-// 12| }
-// 
 // Warning: The if and else branches have identical expressions.
 // --| src/test_files/check/duplicate_exprs.gdn:3:5
 //  1| // If/else with identical bodies: should warn.

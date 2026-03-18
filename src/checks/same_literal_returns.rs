@@ -187,16 +187,30 @@ fn collect_tail_literals_expr(
             // Already counted in explicit returns pass.
         }
         Expression_::If(_, then_block, Some(else_block)) => {
-            collect_tail_literals(then_block, literals, has_non_literal_exit);
-            collect_tail_literals(else_block, literals, has_non_literal_exit);
+            if then_block == else_block {
+                // Identical branches are already reported by
+                // check_duplicate_exprs, so only collect one copy to
+                // avoid a redundant "all paths return the same value"
+                // warning.
+                collect_tail_literals(then_block, literals, has_non_literal_exit);
+            } else {
+                collect_tail_literals(then_block, literals, has_non_literal_exit);
+                collect_tail_literals(else_block, literals, has_non_literal_exit);
+            }
         }
         Expression_::If(_, _, None) => {
             // if without else returns Unit implicitly on the else path.
             *has_non_literal_exit = true;
         }
         Expression_::Match(_, cases) => {
-            for (_, case_block) in cases {
-                collect_tail_literals(case_block, literals, has_non_literal_exit);
+            if cases.len() >= 2 && cases.windows(2).all(|pair| pair[0].1 == pair[1].1) {
+                // All arms identical — already reported by
+                // check_duplicate_exprs.
+                collect_tail_literals(&cases[0].1, literals, has_non_literal_exit);
+            } else {
+                for (_, case_block) in cases {
+                    collect_tail_literals(case_block, literals, has_non_literal_exit);
+                }
             }
         }
         _ => {

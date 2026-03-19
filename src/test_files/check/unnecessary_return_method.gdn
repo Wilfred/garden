@@ -1,0 +1,59 @@
+// Should warn: unnecessary return at the end of a method.
+struct Foo {
+  x: Int,
+}
+
+method get_x(this: Foo): Int {
+  return this.x
+}
+
+// Should not warn: return is not at the end.
+fun bar(b: Bool): Int {
+  if b {
+    return 1
+  }
+  2
+}
+
+// Should not warn: no return at the end.
+fun baz(): Int {
+  42
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `get_x` is never called.
+// --| src/test_files/check/unnecessary_return_method.gdn:6:8
+//  4| }
+//  5| 
+//  6| method get_x(this: Foo): Int {
+//   |        ^^^^^
+//  7|   return this.x
+//  8| }
+// 
+// Warning: `bar` is never called.
+// --| src/test_files/check/unnecessary_return_method.gdn:11:5
+// 10| // Should not warn: return is not at the end.
+// 11| fun bar(b: Bool): Int {
+//   |     ^^^
+// 12|   if b {
+// 13|     return 1
+// 
+// Warning: `baz` is never called.
+// --| src/test_files/check/unnecessary_return_method.gdn:19:5
+// 18| // Should not warn: no return at the end.
+// 19| fun baz(): Int {
+//   |     ^^^
+// 20|   42
+// 21| }
+// 
+// Warning: Unnecessary `return` at the end of a function body.
+// --| src/test_files/check/unnecessary_return_method.gdn:7:3
+//  6| method get_x(this: Foo): Int {
+//  7|   return this.x
+//  8| } ^^^^^^^^^^^^^
+
+// expected stderr:
+// 1 issue can be fixed automatically (use `--fix`).
+

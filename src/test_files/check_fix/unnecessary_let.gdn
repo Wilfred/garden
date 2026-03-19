@@ -1,0 +1,10 @@
+fun foo(): Int {
+  let x = 1
+  x
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// fun foo(): Int {
+//   1
+// }

@@ -7,6 +7,10 @@
 Added a warning when all code paths in a function return the same
 literal value.
 
+Added a warning for unnecessary `let` bindings where a variable is
+bound and immediately returned (e.g. `let x = foo() x` can be
+simplified to `foo()`), with an autofix.
+
 ## Commands
 
 Added :load to evaluate all definitions in a file and switch to that

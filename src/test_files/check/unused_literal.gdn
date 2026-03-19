@@ -43,7 +43,17 @@ public fun example() {
 //  5|   Dict[]
 //  6|   ^^^^^^
 //  7|   let x = 10
+// 
+// Warning: Unnecessary `let`: variable `x` is immediately returned.
+// --| src/test_files/check/unused_literal.gdn:7:3
+//  5|   Dict[]
+//  6| 
+//  7|   let x = 10
+//   |   ^^^^^^^^^^
+//  8|   x
+//   | ^^^
+//  9| }
 
 // expected stderr:
-// 4 issues can be fixed automatically (use `--fix`).
+// 6 issues can be fixed automatically (use `--fix`).
 

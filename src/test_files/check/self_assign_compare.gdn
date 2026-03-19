@@ -66,6 +66,16 @@ public fun compare_different(x: Int, y: Int): Bool {
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Warning: Unnecessary `let`: variable `y` is immediately returned.
+// --| src/test_files/check/self_assign_compare.gdn:29:5
+// 27| // Normal assignment: should not warn.
+// 28| public fun assign_different(x: Int): Int {
+// 29|     let y = x
+//   |     ^^^^^^^^^
+// 30|     y
+//   | ^^^^^
+// 31| }
+// 
 // Warning: `x` is assigned to itself.
 // --| src/test_files/check/self_assign_compare.gdn:3:5
 //  1| // Self-assignment: should warn.
@@ -102,4 +112,7 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 23| public fun compare_literals(): Bool {
 // 24|     1 == 1
 // 25| }   ^^^^^^
+
+// expected stderr:
+// 2 issues can be fixed automatically (use `--fix`).
 

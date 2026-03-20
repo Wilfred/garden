@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/blocks.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1>The Garden Programming Language</h1>
+<p>Garden is an experimental programming language focused on interactive
+tooling.</p>
+<div class="snippet"><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> greet(name: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:String.html">String</a> {
+  <span class="string">"Hello, " </span><a class="operator" href="/operator:^.html">^</a> name <a class="operator" href="/operator:^.html">^</a> <span class="string">"!"</span>
+}
+
+greet(<span class="string">"World"</span>)</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<h2>Taking REPLs Seriously</h2>
+<p>Common Lisp and Smalltalk have a superpower: you can modify running
+programs. You can redefine functions and modify class definitions
+without restarting your program.</p>
+<p>Garden aims to provide that superpower in a conventional language
+design.</p>
+<h2>Tooling First</h2>
+<p>Garden prioritises developer experience over language
+functionality. The syntax and semantics are deliberately small, so a
+small team (or just me!) can build a delightful, credible language
+experience.</p>
+<h2>Just Enough Typing</h2>
+<p>Most gradual type systems are intended for incremental adoption in a
+dynamically typed language. Garden is new, but requires a typing model that
+works with code of the form:</p>
+<div class="snippet"><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> get_value(): <a class="type" href="/type:String.html">String</a> {
+  <a class="keyword" href="/keyword:return.html">return</a> <span class="string">""</span>
+}
+
+<a class="keyword" href="/keyword:fun.html">fun</a> add_one(): <a class="type" href="/type:Int.html">Int</a> {
+  get_value() <a class="operator" href="/operator:+.html">+</a> 1
+}
+
+<a class="keyword" href="/keyword:fun.html">fun</a> get_value(): <a class="type" href="/type:Int.html">Int</a> {
+  <a class="keyword" href="/keyword:return.html">return</a> 2
+}
+
+add_one()</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<h2>Sandboxed Execution</h2>
+<p>Garden supports sandbox execution without third-party libraries. This
+is important for two workflows:</p>
+<p>(1) The IDE can speculatively evaluate snippets of code safely. This
+is convenient and enables 'mutation testing' for code completion.</p>
+<p><video controls>
+  <source src="./speculative_eval_tests.mp4" type="video/mp4" />
+</video></p>
+<p>(2) Libraries can declare what capabilities they need, such as network
+or disk. This makes third-party libraries safer to install. This will
+be coarse permissions, similar to OpenBSD's Pledge.</p>
+<h2>Tooling Oriented Dynamism</h2>
+<p>Garden splits its semantics into (1) simple evaluation that is
+amenable to static analysis, and (2) reflective, dynamic evaluation
+that is friendly to developer experience.</p>
+<p>This means that errors in userland are plain <code>Result</code> types, but
+unhandled errors can be fixed at runtime by a programmer.</p></div>
+
+    <footer>
+      <a href="/blog.html">Blog</a>
+      🪴
+      <a href="https://github.com/Wilfred/garden">GitHub</a>
+    </footer>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

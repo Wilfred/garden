@@ -1167,13 +1167,35 @@ impl TypeCheckVisitor<'_> {
 
                     Type::error("No struct field with this name")
                 } else {
+                    let methods = self
+                        .env
+                        .types
+                        .get(&recv_ty_name)
+                        .cloned()
+                        .map(|tdm| tdm.methods)
+                        .unwrap_or_default();
+
+                    let mut fixes = vec![];
+                    let suggest =
+                        if methods.contains_key(&field_sym.name) {
+                            fixes.push(Autofix {
+                                description: format!("Use `{}()` here.", field_sym.name),
+                                position: field_sym.position.clone(),
+                                new_text: format!("{}()", field_sym.name),
+                            });
+
+                            format!(" Did you mean `{}()`?", field_sym.name)
+                        } else {
+                            "".to_owned()
+                        };
+
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
-                        fixes: vec![],
+                        fixes,
                         severity: Severity::Error,
                         message: ErrorMessage(vec![
                             msgcode!("{}", recv_ty_name),
-                            msgtext!(" is not a struct."),
+                            msgtext!(" is not a struct.{}", suggest),
                         ]),
                         position: field_sym.position.clone(),
                     });
@@ -1182,13 +1204,35 @@ impl TypeCheckVisitor<'_> {
                 }
             }
             _ => {
+                let methods = self
+                    .env
+                    .types
+                    .get(&recv_ty_name)
+                    .cloned()
+                    .map(|tdm| tdm.methods)
+                    .unwrap_or_default();
+
+                let mut fixes = vec![];
+                let suggest =
+                    if methods.contains_key(&field_sym.name) {
+                        fixes.push(Autofix {
+                            description: format!("Use `{}()` here.", field_sym.name),
+                            position: field_sym.position.clone(),
+                            new_text: format!("{}()", field_sym.name),
+                        });
+
+                        format!(" Did you mean `{}()`?", field_sym.name)
+                    } else {
+                        "".to_owned()
+                    };
+
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
-                    fixes: vec![],
+                    fixes,
                     severity: Severity::Error,
                     message: ErrorMessage(vec![
                         msgcode!("{}", recv_ty_name),
-                        msgtext!(" is not a struct."),
+                        msgtext!(" is not a struct.{}", suggest),
                     ]),
                     position: field_sym.position.clone(),
                 });

@@ -1,0 +1,12 @@
+fun foo() {
+  let xs = [1, 2, 3]
+  //  ^^
+  let _ = xs
+}
+
+// args: add-type-annotation
+// expected stdout:
+// fun foo() {
+//   let xs: List<Int> = [1, 2, 3]
+//   let _ = xs
+// }

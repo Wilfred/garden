@@ -17,7 +17,7 @@ use lex::{lex, lex_between, Token, TokenStream, INTEGER_RE, SYMBOL_RE};
 use rustc_hash::FxHashMap;
 use vfs::VfsPathBuf;
 
-use crate::{msgcode, msgtext};
+use crate::{msgcode, msglink, msgtext};
 
 // TODO: implement precedence using Pratt parsing, as discussed in
 // <https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html>
@@ -2355,7 +2355,24 @@ fn parse_method(
     let mut params = parse_parameters(tokens, id_gen, diagnostics);
 
     let (receiver_sym, receiver_hint) = if params.params.is_empty() {
-        // Use placeholders
+        // Methods require a receiver parameter (the `this` parameter).
+        let paren_position = Position::merge(&params.open_paren, &params.close_paren);
+        diagnostics.push(ParseError::Invalid {
+            position: paren_position,
+            message: ErrorMessage(vec![
+                msgtext!("Methods require a receiver parameter, e.g. "),
+                msgcode!("this: SomeType"),
+                msgtext!(". This is the value that the method is called on. See "),
+                msglink!(
+                    "https://www.garden-lang.org/keyword:method.html",
+                    "the documentation"
+                ),
+                msgtext!("."),
+            ]),
+            notes: vec![],
+        });
+
+        // Use placeholders so we can continue parsing.
         let position = name_sym.position.clone();
         let receiver_sym = placeholder_symbol(position.clone(), id_gen);
 

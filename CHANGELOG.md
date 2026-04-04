@@ -2,6 +2,21 @@
 **Goal: Better REPL experience.**
 **Goal: Offer actions when runtime errors occur.**
 
+## Parser
+
+Fixed a panic in the lexer when the input contained non-ASCII
+whitespace or unrecognized non-ASCII characters.
+
+Fixed an assertion failure in the parser when a tuple literal
+contained a token that could not start an expression (e.g. `(,{`).
+
+## Testing
+
+Added property-based tests (using `proptest`) for the parser and type
+checker. These assert that the parser and type checker never panic on
+arbitrary input, and that well-formed programs drawn from a small
+grammar parse and type check cleanly.
+
 ## Checks
 
 Added a warning when all code paths in a function return the same

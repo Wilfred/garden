@@ -266,10 +266,13 @@ fn parse_tuple_literal_or_parentheses(
 
             let start_idx = tokens.idx;
             exprs.push(parse_expression(tokens, id_gen, diagnostics));
-            assert!(
-                tokens.idx > start_idx,
-                "The parser should always make forward progress."
-            );
+            if tokens.idx == start_idx {
+                // `parse_expression` did not consume any tokens. Bail
+                // out of the loop rather than spinning forever. A
+                // diagnostic has already been emitted by the inner
+                // parser.
+                break;
+            }
         }
 
         let close_paren = require_token(tokens, diagnostics, ")");
@@ -2910,5 +2913,126 @@ mod tests {
     fn test_repeated_param_underscore() {
         let (_, errors) = parse_toplevel_items("fun f(_, _) {} ");
         assert!(errors.is_empty())
+    }
+
+    // Property-based tests using `proptest`.
+    //
+    // These tests aim to catch parser panics and crashes on arbitrary
+    // inputs, and to check invariants like "a well-formed expression
+    // drawn from a grammar parses without errors".
+    mod proptests {
+        use super::*;
+        use proptest::prelude::*;
+
+        /// A strategy that generates a simple, valid identifier.
+        fn ident_strategy() -> impl Strategy<Value = String> {
+            // Avoid clashing with keywords by always prefixing with `v_`.
+            "v_[a-z][a-z0-9_]{0,4}".prop_map(|s| s.to_string())
+        }
+
+        /// A strategy that generates a simple, well-formed Garden
+        /// expression as a source string.
+        fn expr_strategy() -> impl Strategy<Value = String> {
+            let leaf = prop_oneof![
+                // Integer literals.
+                (-1000i64..1000).prop_map(|n| n.to_string()),
+                // String literals (with no escapes, no quotes inside).
+                "[a-zA-Z0-9 ]{0,10}".prop_map(|s| format!("\"{s}\"")),
+                // Boolean literals.
+                Just("True".to_owned()),
+                Just("False".to_owned()),
+                // Unit.
+                Just("Unit".to_owned()),
+                // Variable references.
+                ident_strategy(),
+            ];
+
+            leaf.prop_recursive(4, 32, 4, |inner| {
+                prop_oneof![
+                    // Parenthesized.
+                    inner.clone().prop_map(|e| format!("({e})")),
+                    // Binary arithmetic.
+                    (inner.clone(), inner.clone()).prop_map(|(a, b)| format!("({a} + {b})")),
+                    (inner.clone(), inner.clone()).prop_map(|(a, b)| format!("({a} - {b})")),
+                    (inner.clone(), inner.clone()).prop_map(|(a, b)| format!("({a} * {b})")),
+                    // Equality.
+                    (inner.clone(), inner.clone()).prop_map(|(a, b)| format!("({a} == {b})")),
+                    // If expression.
+                    (inner.clone(), inner.clone(), inner.clone())
+                        .prop_map(|(c, t, e)| format!("if {c} {{ {t} }} else {{ {e} }}")),
+                ]
+            })
+        }
+
+        /// A strategy for the body of a function: zero or more `let`
+        /// bindings followed by a final expression. Garden uses
+        /// newlines as statement separators.
+        fn fun_body_strategy() -> impl Strategy<Value = String> {
+            (
+                proptest::collection::vec((ident_strategy(), expr_strategy()), 0..4),
+                expr_strategy(),
+            )
+                .prop_map(|(bindings, tail)| {
+                    let mut out = String::new();
+                    for (name, val) in bindings {
+                        out.push_str(&format!("let {name} = {val}\n"));
+                    }
+                    out.push_str(&tail);
+                    out
+                })
+        }
+
+        /// A strategy for a well-formed toplevel function definition.
+        fn fun_strategy() -> impl Strategy<Value = String> {
+            (ident_strategy(), fun_body_strategy())
+                .prop_map(|(name, body)| format!("fun {name}() {{\n{body}\n}}"))
+        }
+
+        proptest! {
+            // Keep the number of cases low so the full test suite stays
+            // fast, but high enough to catch regressions.
+            #![proptest_config(ProptestConfig::with_cases(64))]
+
+            /// The parser must never panic on arbitrary input, even if
+            /// the input is syntactically invalid.
+            #[test]
+            fn parser_does_not_panic_on_arbitrary_input(src in ".{0,200}") {
+                let _ = parse_toplevel_items(&src);
+            }
+
+            /// The parser must never panic on arbitrary byte sequences
+            /// that happen to be valid UTF-8. This exercises the lexer
+            /// as well as the parser on unusual characters.
+            #[test]
+            fn parser_does_not_panic_on_unicode(src in "\\PC{0,100}") {
+                let _ = parse_toplevel_items(&src);
+            }
+
+            /// A well-formed expression drawn from our grammar should
+            /// parse cleanly as a toplevel item.
+            #[test]
+            fn wellformed_expr_parses_without_errors(src in expr_strategy()) {
+                let (_items, errors) = parse_toplevel_items(&src);
+                prop_assert!(
+                    errors.is_empty(),
+                    "unexpected parse errors for {:?}: {:?}",
+                    src,
+                    errors.iter().map(|e| format!("{:?}", e.message())).collect::<Vec<_>>(),
+                );
+            }
+
+            /// A well-formed function definition should parse cleanly.
+            #[test]
+            fn wellformed_fun_parses_without_errors(src in fun_strategy()) {
+                let (items, errors) = parse_toplevel_items(&src);
+                prop_assert!(
+                    errors.is_empty(),
+                    "unexpected parse errors for {:?}: {:?}",
+                    src,
+                    errors.iter().map(|e| format!("{:?}", e.message())).collect::<Vec<_>>(),
+                );
+                prop_assert_eq!(items.len(), 1);
+            }
+        }
     }
 }

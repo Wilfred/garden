@@ -47,6 +47,7 @@ assert_cmd = "2.0.14"
 escargot = "0.5"
 goldentests = "1.1.1"
 predicates = "3"
+proptest = "1.5"
 
 [profile.release]
 opt-level = "s"

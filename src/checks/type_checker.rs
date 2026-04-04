@@ -2758,3 +2758,134 @@ fn format_type_mismatch(expected_ty: &Type, actual_ty: &Type) -> ErrorMessage {
         msgtext!("."),
     ])
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::eval::load_toplevel_items;
+    use crate::parser::ast::IdGenerator;
+    use crate::parser::parse_toplevel_items;
+    use crate::parser::vfs::Vfs;
+    use proptest::prelude::*;
+
+    /// Type check a string, returning the summary. This walks the
+    /// same pipeline used by the CLI `check` command.
+    fn check_src(src: &str) -> TCSummary {
+        let mut vfs = Vfs::default();
+        let vfs_path = vfs.insert(Rc::new(PathBuf::from("__proptest.gdn")), src.to_owned());
+        let mut id_gen = IdGenerator::default();
+        let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+        let mut env = Env::new(id_gen, vfs);
+        let ns = env.get_or_create_namespace(&PathBuf::from("__proptest.gdn"));
+        load_toplevel_items(&items, &mut env, ns.clone());
+
+        check_types(&vfs_path, &items, &env, ns)
+    }
+
+    /// A strategy that generates a simple, valid identifier that
+    /// cannot clash with Garden keywords.
+    fn ident_strategy() -> impl Strategy<Value = String> {
+        "v_[a-z][a-z0-9_]{0,4}".prop_map(|s| s.to_string())
+    }
+
+    /// Generate a well-typed `Int` expression, referencing only
+    /// variables that are already bound in `scope`.
+    fn int_expr_strategy(scope: Vec<String>) -> impl Strategy<Value = String> {
+        let mut leaves: Vec<BoxedStrategy<String>> =
+            vec![(-1000i64..1000).prop_map(|n| n.to_string()).boxed()];
+        for name in scope {
+            leaves.push(Just(name).boxed());
+        }
+
+        let leaf = proptest::strategy::Union::new(leaves);
+
+        leaf.prop_recursive(4, 16, 3, |inner| {
+            prop_oneof![
+                inner.clone().prop_map(|e| format!("({e})")),
+                (inner.clone(), inner.clone()).prop_map(|(a, b)| format!("({a} + {b})")),
+                (inner.clone(), inner.clone()).prop_map(|(a, b)| format!("({a} - {b})")),
+                (inner.clone(), inner.clone()).prop_map(|(a, b)| format!("({a} * {b})")),
+                (inner.clone(), inner.clone(), inner.clone())
+                    .prop_map(|(c, t, e)| format!("if ({c} == 0) {{ {t} }} else {{ {e} }}")),
+            ]
+        })
+    }
+
+    /// Generate a well-typed `Int`-returning function body: a
+    /// sequence of `let` bindings whose values reference only
+    /// previously-bound variables, followed by a final `Int`
+    /// expression.
+    fn int_fun_body_strategy() -> impl Strategy<Value = String> {
+        (
+            proptest::collection::vec(ident_strategy(), 0..4),
+            any::<u64>(),
+        )
+            .prop_flat_map(|(names, seed)| {
+                // Use the seed to pick sub-expressions deterministically
+                // while still exercising the recursive generator.
+                let mut strategies: Vec<BoxedStrategy<String>> = vec![];
+                let mut scope: Vec<String> = vec![];
+                for name in &names {
+                    let s = int_expr_strategy(scope.clone())
+                        .prop_map({
+                            let name = name.clone();
+                            move |v| format!("let {name} = {v}\n")
+                        })
+                        .boxed();
+                    strategies.push(s);
+                    scope.push(name.clone());
+                }
+                strategies.push(int_expr_strategy(scope).boxed());
+                let _ = seed;
+                strategies
+                    .into_iter()
+                    .collect::<Vec<_>>()
+                    .prop_map(|parts| parts.concat())
+            })
+    }
+
+    /// Generate a well-typed `Int`-returning function definition.
+    fn int_fun_strategy() -> impl Strategy<Value = String> {
+        (ident_strategy(), int_fun_body_strategy())
+            .prop_map(|(name, body)| format!("fun {name}(): Int {{\n{body}\n}}"))
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(32))]
+
+        /// The type checker must never panic on arbitrary input,
+        /// even when the source does not parse cleanly.
+        #[test]
+        fn type_checker_does_not_panic_on_arbitrary_input(src in ".{0,200}") {
+            let _ = check_src(&src);
+        }
+
+        /// The type checker must never panic on arbitrary UTF-8
+        /// input. Non-ASCII characters exercise the lexer and
+        /// parser in unusual ways.
+        #[test]
+        fn type_checker_does_not_panic_on_unicode(src in "\\PC{0,80}") {
+            let _ = check_src(&src);
+        }
+
+        /// A well-typed `Int`-returning function, generated from a
+        /// constrained grammar, should type check without emitting
+        /// any error-severity diagnostics.
+        #[test]
+        fn wellformed_int_fun_type_checks(src in int_fun_strategy()) {
+            let summary = check_src(&src);
+            let errors: Vec<_> = summary
+                .diagnostics
+                .iter()
+                .filter(|d| matches!(d.severity, Severity::Error))
+                .collect();
+            prop_assert!(
+                errors.is_empty(),
+                "unexpected type errors for {:?}: {:?}",
+                src,
+                errors.iter().map(|d| format!("{:?}", d.message)).collect::<Vec<_>>(),
+            );
+        }
+    }
+}

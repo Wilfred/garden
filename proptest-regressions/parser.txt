@@ -1,0 +1,12 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 6e4163cef3b83d46ada9f7396d453a11a15d5db48b13c35acfcb81e705b195ca # shrinks to src = "({ let v_a = 0 0 } == 0)"
+cc 071174ad58463d80cc8a81f56ddc19058349221676b2affdfe5754af97271921 # shrinks to src = "fun v_a() { ({ let v_a = 0 0 } - 0) }"
+cc 66aae6bce59293271a3e28704a6cccba3dd46b4e2edf268d9e91189f0d999c19 # shrinks to src = "ල"
+cc 68d49a1eb4670e73cacec4ff1f8e80e43f6aaa08eb7763395d0a3f057d603d93 # shrinks to src = "0¡"
+cc 143c7d57c4fa73d032bc4a20b7eabe98c1be20f0f3e76df1cc3f9e4b9a8c1253 # shrinks to src = "\u{a0}"
+cc b1e6ee18e2705b42c49fdfa6e42c948a921eab25e9ef23682a6ac94079596205 # shrinks to src = "(,{"

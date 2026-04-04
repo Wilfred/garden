@@ -145,7 +145,7 @@ pub(crate) fn lex_between<'a>(
             break;
         };
         if first_char.is_whitespace() {
-            offset += 1;
+            offset += first_char.len_utf8();
             continue;
         }
 
@@ -320,25 +320,33 @@ pub(crate) fn lex_between<'a>(
         } else {
             let (line_number, column) = lp.from_offset(offset);
 
+            // Advance by one whole character, not one byte, so we
+            // don't panic on non-ASCII input.
+            let bad_char = s
+                .chars()
+                .next()
+                .expect("loop only runs when s is non-empty");
+            let char_len = bad_char.len_utf8();
+
             errors.push(ParseError::Invalid {
                 position: Position {
                     start_offset: offset,
-                    end_offset: offset + 1,
+                    end_offset: offset + char_len,
                     line_number: line_number.as_usize(),
                     end_line_number: line_number.as_usize(),
                     column,
-                    end_column: column + 1,
+                    end_column: column + char_len,
                     path: vfs_path.path.clone(),
                     vfs_path: vfs_path.clone(),
                 },
                 message: ErrorMessage(vec![
                     msgtext!("Unrecognized syntax "),
-                    msgcode!("{}", &s[0..1]),
+                    msgcode!("{}", bad_char),
                 ]),
                 notes: vec![],
             });
 
-            offset += 1;
+            offset += char_len;
         }
     }
 

@@ -266,10 +266,12 @@ fn parse_tuple_literal_or_parentheses(
 
             let start_idx = tokens.idx;
             exprs.push(parse_expression(tokens, id_gen, diagnostics));
-            assert!(
-                tokens.idx > start_idx,
-                "The parser should always make forward progress."
-            );
+            if tokens.idx == start_idx {
+                // `parse_expression` could not consume any tokens and
+                // has already emitted a diagnostic. Stop collecting
+                // tuple elements to avoid an infinite loop.
+                break;
+            }
         }
 
         let close_paren = require_token(tokens, diagnostics, ")");

@@ -11,6 +11,12 @@ Added a warning for unnecessary `let` bindings where a variable is
 bound and immediately returned (e.g. `let x = foo() x` can be
 simplified to `foo()`), with an autofix.
 
+## Parsing
+
+Fixed a parser panic on malformed tuple literals such as `(,{` where
+the parser failed to make forward progress after recovering from an
+invalid element.
+
 ## Commands
 
 Added :load to evaluate all definitions in a file and switch to that

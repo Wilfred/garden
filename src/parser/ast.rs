@@ -322,6 +322,7 @@ impl PartialEq for ExpressionWithComma {
 #[derive(Debug, Clone, Eq)]
 pub(crate) struct DictKeyValue {
     pub(crate) key: Rc<Expression>,
+    #[allow(dead_code)] // Not used yet.
     pub(crate) arrow_pos: Position,
     pub(crate) value: Rc<Expression>,
 }
@@ -340,8 +341,10 @@ impl PartialEq for DictKeyValue {
 
 #[derive(Debug, Clone, Eq)]
 pub(crate) struct ParenthesizedExpression {
+    #[allow(dead_code)] // Not used yet.
     pub(crate) open_paren: Position,
     pub(crate) expr: Rc<Expression>,
+    #[allow(dead_code)] // Not used yet.
     pub(crate) close_paren: Position,
 }
 
@@ -687,6 +690,7 @@ impl PartialEq for Block {
 
 #[derive(Debug, Clone, Eq)]
 pub(crate) enum Visibility {
+    #[allow(dead_code)] // Not used yet.
     Public(Position),
     CurrentFile,
 }

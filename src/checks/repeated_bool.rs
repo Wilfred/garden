@@ -85,8 +85,7 @@ impl Visitor for RepeatedBoolVisitor {
 
                 for operand in &operands {
                     if is_pure(operand) {
-                        let is_duplicate = seen.iter().any(|prev| *prev == *operand);
-                        if is_duplicate {
+                        if seen.contains(operand) {
                             // Build a fix that removes ` || operand` by
                             // deleting from the previous operand's end
                             // to this operand's end.

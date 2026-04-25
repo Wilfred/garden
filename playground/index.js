@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const pino = require('pino');
+const { LRUCache } = require('lru-cache');
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -22,6 +23,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 let gardenVersion = 'unknown';
+
+// Cache /run responses so common snippets from the website — hello
+// world and other landing-page examples — feel instant on repeat
+// visits without re-spawning the garden CLI each time.
+const runCache = new LRUCache({
+  max: parseInt(process.env.RUN_CACHE_CAPACITY, 10) || 1000,
+});
+
+// Skip the cache when the program imports a built-in whose output
+// can vary between runs (filesystem state, RNG). __reflect is
+// deterministic for a fixed source, so it's fine to cache.
+const NONDETERMINISTIC_IMPORT = /import\s+"(?:__fs|__random)\.gdn"/;
+
+function isCacheable(src) {
+  return !NONDETERMINISTIC_IMPORT.test(src);
+}
 
 // Get Garden version on startup
 exec('garden --version', (error, stdout, stderr) => {
@@ -70,6 +87,15 @@ app.post('/run', (req, res) => {
     codePreview
   }, 'Evaluating code');
 
+  const cacheable = isCacheable(src);
+  if (cacheable) {
+    const cached = runCache.get(src);
+    if (cached) {
+      logger.info({ codeLength: src.length }, 'Cache hit');
+      return res.json(cached);
+    }
+  }
+
   // Create a temporary file path with .gdn extension
   const tmpFile = path.join(os.tmpdir(), `garden-tmp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.gdn`);
 
@@ -103,10 +129,14 @@ app.post('/run', (req, res) => {
         const lines = stdout.trim().split('\n').filter(line => line.length > 0);
         const results = lines.map(line => JSON.parse(line));
 
-        res.json({
+        const response = {
           success: true,
           results: results
-        });
+        };
+        if (cacheable) {
+          runCache.set(src, response);
+        }
+        res.json(response);
       } catch (parseError) {
         return res.json({
           success: false,

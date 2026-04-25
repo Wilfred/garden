@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>fun - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/blocks.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1><code>fun</code> keyword</h1>
+<p><code>fun</code> defines named functions and anonymous functions.</p>
+<div class="snippet"><span class="code-title">Named Function</span><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> add_one(x: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
+  x <a class="operator" href="/operator:+.html">+</a> 1
+}
+
+<a class="keyword" href="/keyword:test.html">test</a> two_add_one {
+  <a class="keyword" href="/keyword:assert.html">assert</a>(add_one(2) <a class="operator" href="/operator:==.html">==</a> 3)
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<p>Type annotations are optional. A function without type annotations is
+assumed to take any type as an argument, and may return any type.</p>
+<div class="snippet"><span class="code-title">No Types Declared</span><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> add_one(x) {
+  x <a class="operator" href="/operator:+.html">+</a> 1
+}</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div>
+<p>You can also use <code>fun</code> to declare anonymous functions, sometimes
+called lambdas.</p>
+<div class="snippet"><span class="code-title">Anonymous Function</span><pre><code><a class="keyword" href="/keyword:let.html">let</a> f <a class="operator" href="/operator:=.html">=</a> <a class="keyword" href="/keyword:fun.html">fun</a>(x: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> { 
+  x <a class="operator" href="/operator:+.html">+</a> 1 
+}
+<a class="keyword" href="/keyword:assert.html">assert</a>(f(2) <a class="operator" href="/operator:==.html">==</a> 3)</code></pre><button class="run-snippet">Run</button><button class="edit-snippet">Edit</button><div class="snippet-output" hidden></div></div></div>
+
+    <footer>
+      <a href="/blog.html">Blog</a>
+      🪴
+      <a href="https://github.com/Wilfred/garden">GitHub</a>
+    </footer>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

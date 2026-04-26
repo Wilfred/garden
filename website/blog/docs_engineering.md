@@ -9,6 +9,6 @@ coverage and set up CI, just like software engineering.
 
 Set up `run-code-blocks`, caught a ton of issues.
 
-Still needs though on whether we want full-blown Python-style
+Still needs thought on whether we want full-blown Python-style
 docstrings: heavyweight syntax, brittle, hard to opt-out, not
 equivalent of `*exception*`.

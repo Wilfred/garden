@@ -6,7 +6,7 @@ title: Devlog 3: Indents and Indentability
 
 There are few engineering debates more heated and more shallow than
 code style debates. Unfortunately you have to pick something for a
-branch new language.
+brand new language.
 
 (c.f. the haskell bikeshedding scale.)
 

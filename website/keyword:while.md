@@ -1,16 +1,12 @@
 # `while` keyword
 
-`for` runs a block code repeatedly, while an expression evaluates to
-`True`.
+`while` runs a block of code repeatedly, as long as an expression
+evaluates to `True`.
 
 ```title:Example
-let nums = [1, 2, 3]
-
 let i = 0
-while i < nums.len() {
-  let num = nums.get(i)
-  dbg(num)
-  
+while i < 3 {
+  dbg(i)
   i += 1
 }
 ```

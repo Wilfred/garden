@@ -1,6 +1,6 @@
 # `for` keyword
 
-`for` runs a block code repeatedly, once for each occurrence in a list.
+`for` runs a block of code repeatedly, once for each occurrence in a list.
 
 ```title:"Example 1"
 let nums = [1, 2, 3]

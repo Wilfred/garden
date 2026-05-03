@@ -484,11 +484,19 @@ impl Display for BuiltInFunctionKind {
 }
 
 impl Value {
-    /// Pretty-print `self` in a human friendly way.
+    /// Pretty-print `self` in a human friendly way. Output must be a
+    /// legal Garden literal for values that have literal syntax.
     pub(crate) fn display(&self, env: &Env) -> String {
         match self.as_ref() {
             Value_::Integer(i) => format!("{i}"),
-            Value_::Float(f) => format!("{f}"),
+            Value_::Float(f) => {
+                let mut s = format!("{f}");
+                if !s.contains(".") {
+                    s.push_str(".0");
+                }
+
+                s
+            }
             Value_::Fun { name_sym, .. } => format!("{}", name_sym.name),
             Value_::Closure(..) => "(closure)".to_owned(),
             Value_::BuiltInFunction(kind, _, _) => format!("{kind}"),

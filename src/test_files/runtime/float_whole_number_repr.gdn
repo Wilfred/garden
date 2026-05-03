@@ -1,0 +1,10 @@
+{
+  dbg(1.0)
+  dbg(-1.010)
+}
+
+// args: run
+// expected stdout:
+// 1.0
+// -1.01
+

@@ -1,0 +1,13 @@
+{
+  let x: Float = 1.5
+  let y: Float = 2.5
+  dbg(x + y)
+}
+
+// args: run
+// expected stderr:
+// Exception: Cannot use `+` with `Float` values. Use `+.` for floating-point addition.
+// --| src/test_files/runtime/float_add_with_plus.gdn:4:8	 __toplevel__
+//  4|   dbg(x + y)
+//   |        ^^^
+

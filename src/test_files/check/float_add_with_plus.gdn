@@ -1,0 +1,18 @@
+public fun foo() {
+  1.5 + 2.5
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Cannot use `+` with `Float` values. In Garden, `+` is only for integers.
+// 
+// Use the `+.` operator for floating-point addition.
+// -| src/test_files/check/float_add_with_plus.gdn:2:3
+// 1| public fun foo() {
+// 2|   1.5 + 2.5
+// 3| } ^^^^^^^^^
+
+// expected stderr:
+// 1 issue can be fixed automatically (use `--fix`).
+

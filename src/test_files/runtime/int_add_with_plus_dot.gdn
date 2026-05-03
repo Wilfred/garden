@@ -1,0 +1,13 @@
+{
+  let x: Int = 1
+  let y: Int = 2
+  dbg(x +. y)
+}
+
+// args: run
+// expected stderr:
+// Exception: Cannot use `+.` with `Int` values. Use `+` for integer addition.
+// --| src/test_files/runtime/int_add_with_plus_dot.gdn:4:8	 __toplevel__
+//  4|   dbg(x +. y)
+//   |        ^^^^
+

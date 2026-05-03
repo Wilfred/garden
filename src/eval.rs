@@ -2177,6 +2177,19 @@ fn eval_equality_binop(env: &mut Env, expr_value_is_used: bool, op: BinaryOperat
     }
 }
 
+fn operator_position_between(lhs_position: &Position, rhs_position: &Position) -> Position {
+    Position {
+        start_offset: lhs_position.end_offset,
+        end_offset: rhs_position.start_offset,
+        line_number: lhs_position.end_line_number,
+        end_line_number: rhs_position.line_number,
+        column: lhs_position.end_column,
+        end_column: rhs_position.column,
+        path: lhs_position.path.clone(),
+        vfs_path: lhs_position.vfs_path.clone(),
+    }
+}
+
 fn eval_integer_binop(
     env: &mut Env,
     expr_value_is_used: bool,
@@ -2191,6 +2204,29 @@ fn eval_integer_binop(
     let lhs_value = env
         .pop_value()
         .expect("Popped an empty value stack for LHS of binary operator");
+
+    // If the user wrote `+` with two floats, suggest `+.` instead.
+    if matches!(op, BinaryOperatorKind::Add)
+        && matches!(lhs_value.as_ref(), Value_::Float(_))
+        && matches!(rhs_value.as_ref(), Value_::Float(_))
+    {
+        let op_position = operator_position_between(lhs_position, rhs_position);
+        return Err((
+            RestoreValues(vec![lhs_value, rhs_value]),
+            EvalError::Exception(ExceptionInfo {
+                position: op_position.clone(),
+                message: ErrorMessage(vec![
+                    msgtext!("Cannot use "),
+                    msgcode!("+"),
+                    msgtext!(" with "),
+                    msgcode!("Float"),
+                    msgtext!(" values. Use "),
+                    msgcode!("+."),
+                    msgtext!(" for floating-point addition."),
+                ]),
+            }),
+        ));
+    }
 
     let lhs_num = match lhs_value.as_ref() {
         Value_::Integer(i) => *i,
@@ -2328,6 +2364,29 @@ fn eval_float_binop(
     let lhs_value = env
         .pop_value()
         .expect("Popped an empty value stack for LHS of binary operator");
+
+    // If the user wrote `+.` with two ints, suggest `+` instead.
+    if matches!(op, BinaryOperatorKind::AddFloat)
+        && matches!(lhs_value.as_ref(), Value_::Integer(_))
+        && matches!(rhs_value.as_ref(), Value_::Integer(_))
+    {
+        let op_position = operator_position_between(lhs_position, rhs_position);
+        return Err((
+            RestoreValues(vec![lhs_value, rhs_value]),
+            EvalError::Exception(ExceptionInfo {
+                position: op_position.clone(),
+                message: ErrorMessage(vec![
+                    msgtext!("Cannot use "),
+                    msgcode!("+."),
+                    msgtext!(" with "),
+                    msgcode!("Int"),
+                    msgtext!(" values. Use "),
+                    msgcode!("+"),
+                    msgtext!(" for integer addition."),
+                ]),
+            }),
+        ));
+    }
 
     let lhs_float = match lhs_value.as_ref() {
         Value_::Float(f) => *f,
@@ -6107,7 +6166,7 @@ fn eval_expr(
         }
         Expression_::Invalid => {
             return Err((RestoreValues(vec![]),
-                        (EvalError::Exception(ExceptionInfo { position: expr_position, message: ErrorMessage(vec![msgtext!("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.")]) }))));
+                        EvalError::Exception(ExceptionInfo { position: expr_position, message: ErrorMessage(vec![msgtext!("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.")]) })));
         }
         Expression_::Assert(expr) => {
             match expr_state {

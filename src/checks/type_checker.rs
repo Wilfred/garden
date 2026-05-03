@@ -1578,6 +1578,18 @@ impl TypeCheckVisitor<'_> {
                 let lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
                 let rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
 
+                // Calculate operator position for the fix (between LHS and RHS).
+                let op_position = Position {
+                    start_offset: lhs.position.end_offset,
+                    end_offset: rhs.position.start_offset,
+                    line_number: lhs.position.end_line_number,
+                    end_line_number: rhs.position.line_number,
+                    column: lhs.position.end_column,
+                    end_column: rhs.position.column,
+                    path: lhs.position.path.clone(),
+                    vfs_path: lhs.position.vfs_path.clone(),
+                };
+
                 // Check if user is trying to concatenate strings with +
                 // (but not if either operand is an error type from a previous error)
                 if !lhs_ty.is_error()
@@ -1585,18 +1597,6 @@ impl TypeCheckVisitor<'_> {
                     && is_subtype(&lhs_ty, &Type::string())
                     && is_subtype(&rhs_ty, &Type::string())
                 {
-                    // Calculate operator position for the fix (between LHS and RHS)
-                    let op_position = Position {
-                        start_offset: lhs.position.end_offset,
-                        end_offset: rhs.position.start_offset,
-                        line_number: lhs.position.end_line_number,
-                        end_line_number: rhs.position.line_number,
-                        column: lhs.position.end_column,
-                        end_column: rhs.position.column,
-                        path: lhs.position.path.clone(),
-                        vfs_path: lhs.position.vfs_path.clone(),
-                    };
-
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
                         fixes: vec![Autofix {
@@ -1624,6 +1624,37 @@ impl TypeCheckVisitor<'_> {
                     return Type::string();
                 }
 
+                // Check if user is trying to add floats with +
+                if !lhs_ty.is_error()
+                    && !rhs_ty.is_error()
+                    && is_subtype(&lhs_ty, &Type::float())
+                    && is_subtype(&rhs_ty, &Type::float())
+                {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        fixes: vec![Autofix {
+                            description: "Replace `+` with `+.`".to_owned(),
+                            position: op_position,
+                            new_text: " +. ".to_owned(),
+                        }],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![
+                            msgtext!("Cannot use "),
+                            msgcode!("+"),
+                            msgtext!(" with "),
+                            msgcode!("Float"),
+                            msgtext!(" values. In Garden, "),
+                            msgcode!("+"),
+                            msgtext!(" is only for integers.\n\nUse the "),
+                            msgcode!("+."),
+                            msgtext!(" operator for floating-point addition."),
+                        ]),
+                        position: pos.clone(),
+                    });
+
+                    return Type::float();
+                }
+
                 // Normal integer addition - verify both operands are Int
                 if !is_subtype(&lhs_ty, &Type::int()) {
                     self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
@@ -1644,8 +1675,62 @@ impl TypeCheckVisitor<'_> {
 
                 Type::int()
             }
-            BinaryOperatorKind::AddFloat
-            | BinaryOperatorKind::SubtractFloat
+            BinaryOperatorKind::AddFloat => {
+                let lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
+                let rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
+
+                let op_position = Position {
+                    start_offset: lhs.position.end_offset,
+                    end_offset: rhs.position.start_offset,
+                    line_number: lhs.position.end_line_number,
+                    end_line_number: rhs.position.line_number,
+                    column: lhs.position.end_column,
+                    end_column: rhs.position.column,
+                    path: lhs.position.path.clone(),
+                    vfs_path: lhs.position.vfs_path.clone(),
+                };
+
+                // Check if user is trying to add ints with +.
+                if !lhs_ty.is_error()
+                    && !rhs_ty.is_error()
+                    && is_subtype(&lhs_ty, &Type::int())
+                    && is_subtype(&rhs_ty, &Type::int())
+                {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        fixes: vec![Autofix {
+                            description: "Replace `+.` with `+`".to_owned(),
+                            position: op_position,
+                            new_text: " + ".to_owned(),
+                        }],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![
+                            msgtext!("Cannot use "),
+                            msgcode!("+."),
+                            msgtext!(" with "),
+                            msgcode!("Int"),
+                            msgtext!(" values. In Garden, "),
+                            msgcode!("+."),
+                            msgtext!(" is only for floats.\n\nUse the "),
+                            msgcode!("+"),
+                            msgtext!(" operator for integer addition."),
+                        ]),
+                        position: pos.clone(),
+                    });
+
+                    return Type::int();
+                }
+
+                if !is_subtype(&lhs_ty, &Type::float()) {
+                    self.verify_expr(&Type::float(), lhs, type_bindings, expected_return_ty);
+                }
+                if !is_subtype(&rhs_ty, &Type::float()) {
+                    self.verify_expr(&Type::float(), rhs, type_bindings, expected_return_ty);
+                }
+
+                Type::float()
+            }
+            BinaryOperatorKind::SubtractFloat
             | BinaryOperatorKind::MultiplyFloat
             | BinaryOperatorKind::DivideFloat => {
                 self.verify_expr(&Type::float(), lhs, type_bindings, expected_return_ty);

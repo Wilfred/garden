@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
 
-use lsp_types::{CompletionItem, CompletionItemKind, InsertTextFormat};
+use gen_lsp_types::{CompletionItem, CompletionItemKind, InsertTextFormat};
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::checks::type_checker::check_types;
@@ -114,7 +114,7 @@ fn get_namespace_values(
         let ty = Type::from_value(value);
         items.push(CompletionItem {
             label: name.text.clone(),
-            kind: Some(CompletionItemKind::VARIABLE),
+            kind: Some(CompletionItemKind::Variable),
             detail: Some(format!(": {}", ty)),
             ..Default::default()
         });
@@ -133,7 +133,7 @@ fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<Com
 
         items.push(CompletionItem {
             label: name.text.clone(),
-            kind: Some(CompletionItemKind::VARIABLE),
+            kind: Some(CompletionItemKind::Variable),
             detail: Some(format!(": {}", ty)),
             ..Default::default()
         });
@@ -196,10 +196,10 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
 
         items.push(CompletionItem {
             label,
-            kind: Some(CompletionItemKind::METHOD),
+            kind: Some(CompletionItemKind::Method),
             detail: Some(detail),
             insert_text: Some(insert_text),
-            insert_text_format: Some(InsertTextFormat::SNIPPET),
+            insert_text_format: Some(InsertTextFormat::Snippet),
             ..Default::default()
         });
     }
@@ -212,7 +212,7 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
 
             items.push(CompletionItem {
                 label: field.sym.name.text.clone(),
-                kind: Some(CompletionItemKind::FIELD),
+                kind: Some(CompletionItemKind::Field),
                 detail: Some(format!(": {}", field.hint.as_src())),
                 ..Default::default()
             });
@@ -282,10 +282,10 @@ fn get_namespace_functions(
 
         items.push(CompletionItem {
             label,
-            kind: Some(CompletionItemKind::FUNCTION),
+            kind: Some(CompletionItemKind::Function),
             detail: Some(detail),
             insert_text: Some(insert_text),
-            insert_text_format: Some(InsertTextFormat::SNIPPET),
+            insert_text_format: Some(InsertTextFormat::Snippet),
             ..Default::default()
         });
     }

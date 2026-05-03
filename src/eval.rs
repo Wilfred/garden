@@ -2370,6 +2370,23 @@ fn eval_float_binop(
     let value = match op {
         BinaryOperatorKind::AddFloat => Value::new(Value_::Float(lhs_float + rhs_float)),
         BinaryOperatorKind::SubtractFloat => Value::new(Value_::Float(lhs_float - rhs_float)),
+        BinaryOperatorKind::MultiplyFloat => Value::new(Value_::Float(lhs_float * rhs_float)),
+        BinaryOperatorKind::DivideFloat => {
+            if rhs_float == 0.0 {
+                return Err((
+                    RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
+                    EvalError::Exception(ExceptionInfo {
+                        position: position.clone(),
+                        message: ErrorMessage(vec![Text(format!(
+                            "Tried to divide {} by zero.",
+                            lhs_value.display(env)
+                        ))]),
+                    }),
+                ));
+            }
+
+            Value::new(Value_::Float(lhs_float / rhs_float))
+        }
         _ => {
             unreachable!()
         }
@@ -5922,7 +5939,10 @@ fn eval_expr(
         }
         Expression_::BinaryOperator(
             lhs,
-            op @ (BinaryOperatorKind::AddFloat | BinaryOperatorKind::SubtractFloat),
+            op @ (BinaryOperatorKind::AddFloat
+            | BinaryOperatorKind::SubtractFloat
+            | BinaryOperatorKind::MultiplyFloat
+            | BinaryOperatorKind::DivideFloat),
             rhs,
         ) => {
             if expr_state.done_children() {

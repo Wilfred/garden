@@ -1644,7 +1644,10 @@ impl TypeCheckVisitor<'_> {
 
                 Type::int()
             }
-            BinaryOperatorKind::AddFloat | BinaryOperatorKind::SubtractFloat => {
+            BinaryOperatorKind::AddFloat
+            | BinaryOperatorKind::SubtractFloat
+            | BinaryOperatorKind::MultiplyFloat
+            | BinaryOperatorKind::DivideFloat => {
                 self.verify_expr(&Type::float(), lhs, type_bindings, expected_return_ty);
                 self.verify_expr(&Type::float(), rhs, type_bindings, expected_return_ty);
 

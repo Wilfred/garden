@@ -1,14 +1,12 @@
 //! LSP (Language Server Protocol) support for Garden.
 
-use lsp_types::request::{
-    CodeActionRequest, Completion, Formatting, GotoDefinition, Initialize, Request, Shutdown,
-};
-use lsp_types::{
-    CodeAction, CodeActionKind, CodeActionOptions, CodeActionParams, CodeActionProviderCapability,
-    CodeActionResponse, CompletionItem, CompletionOptions, CompletionParams, Diagnostic,
-    DiagnosticSeverity, DocumentFormattingParams, GotoDefinitionParams, InitializeParams,
-    InitializeResult, Location, Position, PublishDiagnosticsParams, Range, ServerCapabilities,
-    ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
+use gen_lsp_types::{
+    CodeAction, CodeActionKind, CodeActionOptions, CodeActionParams, CodeActionProvider,
+    CodeActionResponse, CompletionItem, CompletionOptions, CompletionParams, DefinitionParams,
+    DefinitionProvider, Diagnostic, DiagnosticSeverity, DocumentFormattingParams,
+    DocumentFormattingProvider, InitializeParams, InitializeResult, Location, Position,
+    PublishDiagnosticsParams, Range, ServerCapabilities, ServerInfo, TextDocumentSync,
+    TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
 };
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
@@ -139,11 +137,10 @@ fn write_message<T: Serialize>(message: &T) -> io::Result<()> {
 
 /// Convert a file path to an LSP URI.
 fn path_to_uri(path: &PathBuf) -> Uri {
-    let url = Url::from_file_path(path).unwrap_or_else(|_| {
+    Url::from_file_path(path).unwrap_or_else(|_| {
         // Fallback to file:// scheme with display
         Url::parse(&format!("file://{}", path.display())).unwrap()
-    });
-    url.as_str().parse().unwrap()
+    })
 }
 
 /// Convert a Garden position to an LSP range.
@@ -182,7 +179,7 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<Diagnostic> {
 
         diagnostics.push(Diagnostic {
             range: garden_pos_to_lsp_range(&position),
-            severity: Some(DiagnosticSeverity::ERROR),
+            severity: Some(DiagnosticSeverity::Error),
             message,
             ..Default::default()
         });
@@ -203,8 +200,8 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<Diagnostic> {
         } in raw_diagnostics
         {
             let lsp_severity = match severity {
-                Severity::Error => DiagnosticSeverity::ERROR,
-                Severity::Warning => DiagnosticSeverity::WARNING,
+                Severity::Error => DiagnosticSeverity::Error,
+                Severity::Warning => DiagnosticSeverity::Warning,
             };
 
             diagnostics.push(Diagnostic {
@@ -280,15 +277,15 @@ fn handle_initialize(
 ) -> JsonRpcResponse<InitializeResult> {
     let result = InitializeResult {
         capabilities: ServerCapabilities {
-            definition_provider: Some(lsp_types::OneOf::Left(true)),
+            definition_provider: Some(DefinitionProvider::Bool(true)),
             completion_provider: Some(CompletionOptions {
                 trigger_characters: Some(vec![".".to_owned(), "::".to_owned()]),
                 ..Default::default()
             }),
-            text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
-            document_formatting_provider: Some(lsp_types::OneOf::Left(true)),
-            code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
-                code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
+            text_document_sync: Some(TextDocumentSync::Kind(TextDocumentSyncKind::Full)),
+            document_formatting_provider: Some(DocumentFormattingProvider::Bool(true)),
+            code_action_provider: Some(CodeActionProvider::CodeActionOptions(CodeActionOptions {
+                code_action_kinds: Some(vec![CodeActionKind::QuickFix]),
                 ..Default::default()
             })),
             ..Default::default()
@@ -356,7 +353,7 @@ fn handle_did_open(params: &serde_json::Value, documents: &mut DocumentStore) ->
 
     // Get diagnostics and send them
     let diagnostics = get_diagnostics(text, &path);
-    send_diagnostics(url.as_str().parse().unwrap(), diagnostics)
+    send_diagnostics(url, diagnostics)
 }
 
 /// Handle textDocument/didChange notification.
@@ -398,7 +395,7 @@ fn handle_did_change(params: &serde_json::Value, documents: &mut DocumentStore) 
 
     // Get diagnostics and send them
     let diagnostics = get_diagnostics(text, &path);
-    send_diagnostics(url.as_str().parse().unwrap(), diagnostics)
+    send_diagnostics(url, diagnostics)
 }
 
 /// Handle a textDocument/completion request.
@@ -407,16 +404,11 @@ fn handle_completion(
     params: CompletionParams,
     documents: &DocumentStore,
 ) -> JsonRpcResponse<Vec<CompletionItem>> {
-    let uri = &params.text_document_position.text_document.uri;
-    let position = params.text_document_position.position;
+    let uri = &params.text_document_position_params.text_document.uri;
+    let position = params.text_document_position_params.position;
 
     // Convert file:// URI to path
-    let url = match Url::parse(uri.as_str()) {
-        Ok(u) => u,
-        Err(_) => return JsonRpcResponse::new(id, vec![]),
-    };
-
-    let path = match url.to_file_path() {
+    let path = match uri.to_file_path() {
         Ok(p) => p,
         Err(_) => return JsonRpcResponse::new(id, vec![]),
     };
@@ -442,19 +434,14 @@ fn handle_completion(
 /// Handle a textDocument/definition request.
 fn handle_definition(
     id: serde_json::Value,
-    params: GotoDefinitionParams,
+    params: DefinitionParams,
     documents: &DocumentStore,
 ) -> JsonRpcResponse<Option<Location>> {
     let uri = &params.text_document_position_params.text_document.uri;
     let position = params.text_document_position_params.position;
 
     // Convert file:// URI to path
-    let url = match Url::parse(uri.as_str()) {
-        Ok(u) => u,
-        Err(_) => return JsonRpcResponse::new(id, None),
-    };
-
-    let path = match url.to_file_path() {
+    let path = match uri.to_file_path() {
         Ok(p) => p,
         Err(_) => return JsonRpcResponse::new(id, None),
     };
@@ -495,12 +482,7 @@ fn handle_formatting(
     let uri = &params.text_document.uri;
 
     // Convert file:// URI to path
-    let url = match Url::parse(uri.as_str()) {
-        Ok(u) => u,
-        Err(_) => return JsonRpcResponse::new(id, vec![]),
-    };
-
-    let path = match url.to_file_path() {
+    let path = match uri.to_file_path() {
         Ok(p) => p,
         Err(_) => return JsonRpcResponse::new(id, vec![]),
     };
@@ -546,16 +528,11 @@ fn handle_code_action(
     id: serde_json::Value,
     params: CodeActionParams,
     documents: &DocumentStore,
-) -> JsonRpcResponse<CodeActionResponse> {
+) -> JsonRpcResponse<Vec<CodeActionResponse>> {
     let uri = &params.text_document.uri;
 
     // Convert file:// URI to path
-    let url = match Url::parse(uri.as_str()) {
-        Ok(u) => u,
-        Err(_) => return JsonRpcResponse::new(id, vec![]),
-    };
-
-    let path = match url.to_file_path() {
+    let path = match uri.to_file_path() {
         Ok(p) => p,
         Err(_) => return JsonRpcResponse::new(id, vec![]),
     };
@@ -572,7 +549,7 @@ fn handle_code_action(
     let fixes = get_fixes(&src, &path);
 
     // Convert fixes to code actions
-    let mut actions: CodeActionResponse = vec![];
+    let mut actions: Vec<CodeActionResponse> = vec![];
     for fix in fixes {
         let range = garden_pos_to_lsp_range(&fix.position);
 
@@ -586,9 +563,6 @@ fn handle_code_action(
             new_text: fix.new_text,
         };
 
-        // lsp_types::Uri has interior mutability, but this is the
-        // standard way to construct WorkspaceEdit.
-        #[allow(clippy::mutable_key_type)]
         let mut changes = std::collections::HashMap::new();
         changes.insert(uri.clone(), vec![text_edit]);
 
@@ -599,12 +573,12 @@ fn handle_code_action(
 
         let action = CodeAction {
             title: fix.description,
-            kind: Some(CodeActionKind::QUICKFIX),
+            kind: Some(CodeActionKind::QuickFix),
             edit: Some(workspace_edit),
             ..Default::default()
         };
 
-        actions.push(lsp_types::CodeActionOrCommand::CodeAction(action));
+        actions.push(CodeActionResponse::CodeAction(action));
     }
 
     JsonRpcResponse::new(id, actions)
@@ -687,7 +661,7 @@ pub(crate) fn run_lsp() {
         };
 
         match parsed.method.as_deref() {
-            Some(method) if method == Initialize::METHOD => {
+            Some("initialize") => {
                 if let Some(id) = parsed.id {
                     let params: InitializeParams = match message
                         .get("params")
@@ -708,7 +682,7 @@ pub(crate) fn run_lsp() {
             Some("initialized") => {
                 // This is a notification, no response needed
             }
-            Some(method) if method == Completion::METHOD => {
+            Some("textDocument/completion") => {
                 if let Some(id) = parsed.id {
                     let params: CompletionParams = match message
                         .get("params")
@@ -726,9 +700,9 @@ pub(crate) fn run_lsp() {
                     }
                 }
             }
-            Some(method) if method == GotoDefinition::METHOD => {
+            Some("textDocument/definition") => {
                 if let Some(id) = parsed.id {
-                    let params: GotoDefinitionParams = match message
+                    let params: DefinitionParams = match message
                         .get("params")
                         .and_then(|p| serde_json::from_value(p.clone()).ok())
                     {
@@ -744,7 +718,7 @@ pub(crate) fn run_lsp() {
                     }
                 }
             }
-            Some(method) if method == Formatting::METHOD => {
+            Some("textDocument/formatting") => {
                 if let Some(id) = parsed.id {
                     let params: DocumentFormattingParams = match message
                         .get("params")
@@ -762,7 +736,7 @@ pub(crate) fn run_lsp() {
                     }
                 }
             }
-            Some(method) if method == CodeActionRequest::METHOD => {
+            Some("textDocument/codeAction") => {
                 if let Some(id) = parsed.id {
                     let params: CodeActionParams = match message
                         .get("params")
@@ -792,7 +766,7 @@ pub(crate) fn run_lsp() {
                     eprintln!("Error handling didChange: {e}");
                 }
             }
-            Some(method) if method == Shutdown::METHOD => {
+            Some("shutdown") => {
                 if let Some(id) = parsed.id {
                     let response = handle_shutdown(id);
                     if let Err(e) = write_message(&response) {

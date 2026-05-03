@@ -700,9 +700,13 @@ With a prefix argument, also save the stringified result to the kill ring."
      . font-lock-keyword-face)
 
     (,(regexp-opt
-       '("assert" "throw" "print" "println"
-         "shell" "string_repr" "todo"
-         "source_directory" "get_env")
+       '("assert" "dbg" "get_env"
+         "max" "min"
+         "print" "println"
+         "range" "read_line"
+         "shell" "shell_arguments" "source_directory" "string_repr"
+         "throw" "todo"
+         )
        'symbols)
      . font-lock-builtin-face)
 

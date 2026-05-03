@@ -490,6 +490,11 @@ impl Value {
         match self.as_ref() {
             Value_::Integer(i) => format!("{i}"),
             Value_::Float(f) => {
+                // Ensure that the value `1.0` prints as `1.0`, not `1`.
+                //
+                // There are faster libraries that do this, namely
+                // dtoa and zmij, but this is sufficient for
+                // roundtripping correctly.
                 let mut s = format!("{f}");
                 if !s.contains(".") {
                     s.push_str(".0");

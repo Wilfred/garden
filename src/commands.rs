@@ -273,14 +273,8 @@ fn describe_type(type_: &TypeDef) -> String {
     match type_ {
         TypeDef::BuiltIn(built_in_type, _) => {
             let name = match built_in_type {
-                BuiltInType::Int => "Int",
-                BuiltInType::Float => "Float",
-                BuiltInType::String => "String",
                 BuiltInType::Fun => "Fun",
-                BuiltInType::List => "List",
-                BuiltInType::Dict => "Dict",
                 BuiltInType::Tuple => "Tuple",
-                BuiltInType::Namespace => "Namespace",
             };
             // TODO: Offer more comprehensive docs on built-in types.
             format!("{name} is a built-in type.")

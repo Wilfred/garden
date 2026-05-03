@@ -26,8 +26,8 @@ use crate::parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltInMethodKind, EnumInfo, Expression,
     ExpressionWithComma, Expression_, FunInfo, IdGenerator, ImportInfo, InternedSymbolId,
     LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, ParenthesizedParameters,
-    Pattern, StructInfo, Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem,
-    TypeHint, TypeName, TypeSymbol, Visibility,
+    Pattern, Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint,
+    TypeName, TypeSymbol, Visibility,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -35,7 +35,7 @@ use crate::parser::position::Position;
 use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
-use crate::types::{TypeDef, TypeDefAndMethods};
+use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltInFunctionKind, Value, Value_};
 use crate::{msgcode, msgtext};
 
@@ -416,21 +416,25 @@ fn load_toplevel_items_(
                 new_syms.push(name_as_sym);
             }
             ToplevelItem::Struct(struct_info) => {
-                if is_built_in_type(struct_info) {
-                    update_built_in_type_info(
-                        struct_info,
-                        env,
-                        &mut diagnostics,
-                        namespace.clone(),
-                    );
-                } else {
-                    // Add the struct definition to the type environment.
-                    env.add_type(
-                        struct_info.name_sym.name.clone(),
-                        TypeDef::Struct(struct_info.clone()),
-                        namespace.clone(),
-                    );
-                }
+                // For built-in types like `Fun` that have a prelude
+                // stub but require special type-checker handling,
+                // preserve the BuiltIn variant and attach the
+                // prelude's struct info (for doc comments etc).
+                let new_def = match env.types.get(&struct_info.name_sym.name) {
+                    Some(td) => match &td.def {
+                        TypeDef::BuiltIn(kind, _) => {
+                            TypeDef::BuiltIn(*kind, Some(struct_info.clone()))
+                        }
+                        _ => TypeDef::Struct(struct_info.clone()),
+                    },
+                    None => TypeDef::Struct(struct_info.clone()),
+                };
+
+                env.add_type(
+                    struct_info.name_sym.name.clone(),
+                    new_def,
+                    namespace.clone(),
+                );
 
                 let name_as_sym = SymbolName {
                     text: struct_info.name_sym.name.text.clone(),
@@ -1410,67 +1414,6 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         caller_uses_value: true,
     };
     env.stack.0.push(stack_frame);
-}
-
-fn update_built_in_type_info(
-    struct_info: &StructInfo,
-    env: &mut Env,
-    diagnostics: &mut Vec<Diagnostic>,
-    namespace: Rc<RefCell<NamespaceInfo>>,
-) {
-    let symbol = &struct_info.name_sym;
-
-    let Some(current_def) = env.types.get(&symbol.name) else {
-        diagnostics.push(Diagnostic {
-            notes: vec![],
-            fixes: vec![],
-            severity: Severity::Warning,
-            message: ErrorMessage(vec![Text(format!(
-                "Tried to update a built-in stub for a type `{}` that doesn't exist.",
-                symbol.name
-            ))]),
-            position: symbol.position.clone(),
-        });
-        return;
-    };
-
-    let TypeDef::BuiltIn(kind, _) = &current_def.def else {
-        diagnostics.push(Diagnostic {
-            notes: vec![],
-            fixes: vec![],
-            severity: Severity::Warning,
-            message: ErrorMessage(vec![Text(format!(
-                "Tried to update a built-in stub but {} isn't a built-in type.",
-                symbol.name,
-            ))]),
-            position: symbol.position.clone(),
-        });
-        return;
-    };
-
-    namespace.borrow_mut().types.insert(
-        symbol.name.clone(),
-        TypeDefAndMethods {
-            def: TypeDef::BuiltIn(*kind, Some(struct_info.clone())),
-            methods: current_def.methods.clone(),
-        },
-    );
-
-    env.types.insert(
-        symbol.name.clone(),
-        TypeDefAndMethods {
-            def: TypeDef::BuiltIn(*kind, Some(struct_info.clone())),
-            methods: current_def.methods.clone(),
-        },
-    );
-}
-
-fn is_built_in_type(struct_info: &StructInfo) -> bool {
-    let Some(field) = struct_info.fields.first() else {
-        return false;
-    };
-
-    field.sym.name.text == "__BUILT_IN_IMPLEMENTATION"
 }
 
 /// Update the built-in method described by `meth_info`, using

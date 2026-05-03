@@ -214,26 +214,6 @@ impl Type {
         match global_tys.get(name) {
             Some(type_) => match &type_.def {
                 TypeDef::BuiltIn(built_in_type, _) => match built_in_type {
-                    BuiltInType::Int => Ok(Type::int()),
-                    BuiltInType::Float => Ok(Type::float()),
-                    BuiltInType::String => Ok(Type::string()),
-                    BuiltInType::Namespace => Ok(Type::namespace()),
-                    BuiltInType::List => {
-                        let elem_type = match args.first() {
-                            Some(type_) => type_.clone(),
-                            None => Self::error("Missing type argument to List<>"),
-                        };
-
-                        Ok(Type::list(elem_type))
-                    }
-                    BuiltInType::Dict => {
-                        let elem_type = match args.first() {
-                            Some(type_) => type_.clone(),
-                            None => Self::error("Missing type argument to Dict<>"),
-                        };
-
-                        Ok(Type::dict(elem_type))
-                    }
                     BuiltInType::Tuple => Ok(Type::Tuple(args)),
                     BuiltInType::Fun => match &args[..] {
                         [input_ty, return_] => {

@@ -370,51 +370,6 @@ impl Env {
 
 fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
     let mut types = FxHashMap::default();
-    // TODO: String literals are duplicated with type_representation.
-    types.insert(
-        TypeName { text: "Int".into() },
-        TypeDefAndMethods {
-            def: TypeDef::BuiltIn(BuiltInType::Int, None),
-            methods: FxHashMap::default(),
-        },
-    );
-    types.insert(
-        TypeName {
-            text: "Float".into(),
-        },
-        TypeDefAndMethods {
-            def: TypeDef::BuiltIn(BuiltInType::Float, None),
-            methods: FxHashMap::default(),
-        },
-    );
-
-    types.insert(
-        TypeName {
-            text: "String".into(),
-        },
-        TypeDefAndMethods {
-            def: TypeDef::BuiltIn(BuiltInType::String, None),
-            methods: FxHashMap::default(),
-        },
-    );
-    types.insert(
-        TypeName {
-            text: "List".into(),
-        },
-        TypeDefAndMethods {
-            def: TypeDef::BuiltIn(BuiltInType::List, None),
-            methods: FxHashMap::default(),
-        },
-    );
-    types.insert(
-        TypeName {
-            text: "Dict".into(),
-        },
-        TypeDefAndMethods {
-            def: TypeDef::BuiltIn(BuiltInType::Dict, None),
-            methods: FxHashMap::default(),
-        },
-    );
     types.insert(
         TypeName {
             text: "Tuple".into(),
@@ -428,15 +383,6 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
         TypeName { text: "Fun".into() },
         TypeDefAndMethods {
             def: TypeDef::BuiltIn(BuiltInType::Fun, None),
-            methods: FxHashMap::default(),
-        },
-    );
-    types.insert(
-        TypeName {
-            text: "Namespace".into(),
-        },
-        TypeDefAndMethods {
-            def: TypeDef::BuiltIn(BuiltInType::Namespace, None),
             methods: FxHashMap::default(),
         },
     );

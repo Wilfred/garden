@@ -10,15 +10,8 @@ use crate::VfsPathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub(crate) enum BuiltInType {
-    // TODO: do we need to denote BuiltinType values for these, now we
-    // have stubs in __prelude.gdn?
-    Int,
-    Float,
-    String,
-    Namespace,
-    List,
-    Dict,
-
+    // TODO: Maybe this should be BuiltInVariadicTypes now, since
+    // other stubs are denoted by the prelude directly?
     Fun,
     Tuple,
 }
@@ -48,10 +41,6 @@ impl TypeDef {
 
         match self {
             TypeDef::BuiltIn(built_in_type, _) => match built_in_type {
-                BuiltInType::Int => vec![],
-                BuiltInType::Float => vec![],
-                BuiltInType::String => vec![],
-                BuiltInType::Namespace => vec![],
                 BuiltInType::Fun => vec![
                     TypeSymbol {
                         name: "Args".into(),
@@ -64,16 +53,6 @@ impl TypeDef {
                         id: SyntaxId(0),
                     },
                 ],
-                BuiltInType::List => vec![TypeSymbol {
-                    name: "T".into(),
-                    position: Position::todo(&dummy_vfs_path),
-                    id: SyntaxId(0),
-                }],
-                BuiltInType::Dict => vec![TypeSymbol {
-                    name: "T".into(),
-                    position: Position::todo(&dummy_vfs_path),
-                    id: SyntaxId(0),
-                }],
                 BuiltInType::Tuple => {
                     // TODO: tuple can actually take an arbitrary
                     // number of arguments.

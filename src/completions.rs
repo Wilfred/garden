@@ -206,6 +206,12 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
 
     if let Some(TypeDef::Struct(struct_info)) = env.get_type_def(&type_name) {
         for field in &struct_info.fields {
+            // Hide internal markers (e.g. `__BUILT_IN_IMPLEMENTATION`
+            // on prelude stubs for built-in types).
+            if field.sym.name.text.starts_with("__") {
+                continue;
+            }
+
             if !field.sym.name.text.starts_with(prefix) {
                 continue;
             }

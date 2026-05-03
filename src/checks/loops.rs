@@ -46,42 +46,38 @@ impl Visitor for LoopVisitor {
 
     fn visit_expr(&mut self, expr: &Expression) {
         match &expr.expr_ {
-            Expression_::Break => {
-                if !self.in_loop {
-                    self.diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![
-                            msgcode!("break"),
-                            msgtext!(" can only be used inside "),
-                            msgcode!("for"),
-                            msgtext!(" or "),
-                            msgcode!("while"),
-                            msgtext!(" loops."),
-                        ]),
-                        position: expr.position.clone(),
-                        notes: vec![],
-                        severity: Severity::Error,
-                        fixes: vec![],
-                    });
-                }
+            Expression_::Break if !self.in_loop => {
+                self.diagnostics.push(Diagnostic {
+                    message: ErrorMessage(vec![
+                        msgcode!("break"),
+                        msgtext!(" can only be used inside "),
+                        msgcode!("for"),
+                        msgtext!(" or "),
+                        msgcode!("while"),
+                        msgtext!(" loops."),
+                    ]),
+                    position: expr.position.clone(),
+                    notes: vec![],
+                    severity: Severity::Error,
+                    fixes: vec![],
+                });
             }
-            Expression_::Continue => {
-                if !self.in_loop {
-                    self.diagnostics.push(Diagnostic {
-                        // TODO: Add an example of valid usage.
-                        message: ErrorMessage(vec![
-                            msgcode!("continue"),
-                            msgtext!(" can only be used inside "),
-                            msgcode!("for"),
-                            msgtext!(" or "),
-                            msgcode!("while"),
-                            msgtext!(" loops."),
-                        ]),
-                        position: expr.position.clone(),
-                        notes: vec![],
-                        severity: Severity::Error,
-                        fixes: vec![],
-                    });
-                }
+            Expression_::Continue if !self.in_loop => {
+                self.diagnostics.push(Diagnostic {
+                    // TODO: Add an example of valid usage.
+                    message: ErrorMessage(vec![
+                        msgcode!("continue"),
+                        msgtext!(" can only be used inside "),
+                        msgcode!("for"),
+                        msgtext!(" or "),
+                        msgcode!("while"),
+                        msgtext!(" loops."),
+                    ]),
+                    position: expr.position.clone(),
+                    notes: vec![],
+                    severity: Severity::Error,
+                    fixes: vec![],
+                });
             }
             _ => {}
         }

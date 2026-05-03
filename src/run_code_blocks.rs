@@ -85,11 +85,9 @@ fn extract_code_blocks(markdown: &str) -> Vec<CodeBlock> {
                 current_content.push_str(text.as_ref());
                 content_end_offset = range.end;
             }
-            Event::SoftBreak | Event::HardBreak => {
-                if in_code_block {
-                    current_content.push('\n');
-                    content_end_offset += 1;
-                }
+            Event::SoftBreak | Event::HardBreak if in_code_block => {
+                current_content.push('\n');
+                content_end_offset += 1;
             }
             _ => {}
         }

@@ -45,11 +45,9 @@ impl Visitor for UnreachableVisitor {
             }
 
             match &expr.expr_ {
-                Expression_::While(_, _) => {
-                    if !self.known_terminating_loops.contains(&expr.id) {
-                        unreachable_reason =
-                            Some("Unreachable code after `while` loop which never terminates.");
-                    }
+                Expression_::While(_, _) if !self.known_terminating_loops.contains(&expr.id) => {
+                    unreachable_reason =
+                        Some("Unreachable code after `while` loop which never terminates.");
                 }
                 Expression_::Return(_) => {
                     unreachable_reason = Some("Unreachable code after `return`.");

@@ -53,22 +53,20 @@ impl Visitor for SelfAssignCompareVisitor {
                     }
                 }
             }
-            Expression_::BinaryOperator(lhs, op, rhs) => {
-                if is_comparison_op(op) {
-                    if let (Some(lhs_key), Some(rhs_key)) = (expr_key(lhs), expr_key(rhs)) {
-                        if lhs_key == rhs_key {
-                            self.diagnostics.push(Diagnostic {
-                                message: ErrorMessage(vec![
-                                    msgtext!("Both sides of "),
-                                    msgcode!("{}", op),
-                                    msgtext!(" are identical."),
-                                ]),
-                                position: expr.position.clone(),
-                                notes: vec![],
-                                severity: Severity::Warning,
-                                fixes: vec![],
-                            });
-                        }
+            Expression_::BinaryOperator(lhs, op, rhs) if is_comparison_op(op) => {
+                if let (Some(lhs_key), Some(rhs_key)) = (expr_key(lhs), expr_key(rhs)) {
+                    if lhs_key == rhs_key {
+                        self.diagnostics.push(Diagnostic {
+                            message: ErrorMessage(vec![
+                                msgtext!("Both sides of "),
+                                msgcode!("{}", op),
+                                msgtext!(" are identical."),
+                            ]),
+                            position: expr.position.clone(),
+                            notes: vec![],
+                            severity: Severity::Warning,
+                            fixes: vec![],
+                        });
                     }
                 }
             }

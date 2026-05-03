@@ -1889,7 +1889,11 @@ impl TypeCheckVisitor<'_> {
                 match values.get(&sym.name) {
                     Some(value) => {
                         if let Some(fun_info) = value.fun_info() {
-                            self.id_to_def_pos.insert(sym.id, fun_info.pos.clone());
+                            let pos = match &fun_info.name_sym {
+                                Some(name_sym) => name_sym.position.clone(),
+                                None => fun_info.pos.clone(),
+                            };
+                            self.id_to_def_pos.insert(sym.id, pos);
                         }
 
                         if !ns_info.exported_syms.contains(&sym.name) {

@@ -1,6 +1,7 @@
 # 0.24 (unreleased)
 **Goal: Better REPL experience.**
 **Goal: Offer actions when runtime errors occur.**
+**Goal: Fix precedence of `2 + 1 * 3.**
 
 ## Checks
 

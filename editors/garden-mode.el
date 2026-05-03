@@ -674,6 +674,10 @@ With a prefix argument, also save the stringified result to the kill ring."
   (garden--start)
   (switch-to-buffer (garden--buffer)))
 
+(defun run-garden ()
+  (interactive)
+  (garden-start-session))
+
 (defun garden-new-session ()
   (interactive)
   (garden-stop-session)

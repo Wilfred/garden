@@ -3,6 +3,11 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Fix precedence of `2 + 1 * 3.**
 
+## Syntax
+
+Float literals now support scientific notation, e.g. `1.5e3`, `2e5`,
+or `-2.5E+3`.
+
 ## Checks
 
 Added a warning when all code paths in a function return the same

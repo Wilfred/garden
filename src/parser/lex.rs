@@ -9,7 +9,10 @@ use crate::{msgcode, msgtext, ParseError};
 use super::vfs::VfsPathBuf;
 
 lazy_static! {
-    pub(crate) static ref FLOAT_RE: Regex = Regex::new(r"^-?[0-9][0-9_]*\.[0-9][0-9_]*").unwrap();
+    pub(crate) static ref FLOAT_RE: Regex = Regex::new(
+        r"^-?[0-9][0-9_]*(\.[0-9][0-9_]*([eE][+-]?[0-9][0-9_]*)?|[eE][+-]?[0-9][0-9_]*)"
+    )
+    .unwrap();
     pub(crate) static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9][0-9_]*").unwrap();
     pub(crate) static ref STRING_RE: Regex = Regex::new(r#"^"(\\"|[^"])*("|\z)"#).unwrap();
     pub(crate) static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();

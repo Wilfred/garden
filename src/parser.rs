@@ -217,6 +217,8 @@ fn parse_float(
                 msgcode!("{}", token.text),
                 msgtext!(" is not a valid float literal. Float literals look like "),
                 msgcode!("1.5"),
+                msgtext!(" or "),
+                msgcode!("1.5e3"),
                 msgtext!("."),
             ]),
             notes: vec![],

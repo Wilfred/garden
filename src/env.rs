@@ -378,6 +378,13 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
             methods: FxHashMap::default(),
         },
     );
+    types.insert(
+        TypeName { text: "Float".into() },
+        TypeDefAndMethods {
+            def: TypeDef::BuiltIn(BuiltInType::Float, None),
+            methods: FxHashMap::default(),
+        },
+    );
 
     types.insert(
         TypeName {

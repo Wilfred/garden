@@ -274,6 +274,7 @@ fn describe_type(type_: &TypeDef) -> String {
         TypeDef::BuiltIn(built_in_type, _) => {
             let name = match built_in_type {
                 BuiltInType::Int => "Int",
+                BuiltInType::Float => "Float",
                 BuiltInType::String => "String",
                 BuiltInType::Fun => "Fun",
                 BuiltInType::List => "List",

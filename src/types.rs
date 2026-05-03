@@ -13,6 +13,7 @@ pub(crate) enum BuiltInType {
     // TODO: do we need to denote BuiltinType values for these, now we
     // have stubs in __prelude.gdn?
     Int,
+    Float,
     String,
     Namespace,
     List,
@@ -48,6 +49,7 @@ impl TypeDef {
         match self {
             TypeDef::BuiltIn(built_in_type, _) => match built_in_type {
                 BuiltInType::Int => vec![],
+                BuiltInType::Float => vec![],
                 BuiltInType::String => vec![],
                 BuiltInType::Namespace => vec![],
                 BuiltInType::Fun => vec![

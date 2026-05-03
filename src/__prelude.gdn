@@ -813,6 +813,11 @@ struct Int {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
+/// A 64-bit floating point number, such as `1.5` or `-1_000.00`.
+struct Float {
+  __BUILT_IN_IMPLEMENTATION: NoValue,
+}
+
 /// Stop the program immediately, and report the error message given.
 ///
 /// ```garden nocheck

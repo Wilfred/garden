@@ -131,6 +131,16 @@ impl Type {
         }
     }
 
+    pub(crate) fn float() -> Self {
+        Self::UserDefined {
+            kind: TypeDefKind::Struct,
+            name: TypeName {
+                text: "Float".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
     pub(crate) fn string() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
@@ -205,6 +215,7 @@ impl Type {
             Some(type_) => match &type_.def {
                 TypeDef::BuiltIn(built_in_type, _) => match built_in_type {
                     BuiltInType::Int => Ok(Type::int()),
+                    BuiltInType::Float => Ok(Type::float()),
                     BuiltInType::String => Ok(Type::string()),
                     BuiltInType::Namespace => Ok(Type::namespace()),
                     BuiltInType::List => {

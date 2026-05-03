@@ -102,8 +102,10 @@ impl Visitor for HintVisitor<'_> {
 
                 match type_ {
                     TypeDef::BuiltIn(b, _) => {
+                        // Number of type arguments for these built-in types.
                         let num_expected = match b {
                             BuiltInType::Int => Some(0),
+                            BuiltInType::Float => Some(0),
                             BuiltInType::String => Some(0),
                             BuiltInType::Namespace => Some(0),
                             BuiltInType::Fun => Some(2),

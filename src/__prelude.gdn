@@ -854,8 +854,8 @@ public fun println(_: String): Unit {
 ///
 /// ```
 /// match read_line() {
-///   Ok(line) => println("You entered: " + line)
-///   Err(e) => println("Error: " + e)
+///   Ok(line) => println("You entered: " ^ line)
+///   Err(e) => println("Error: " ^ e)
 /// }
 /// ```
 public fun read_line(): Result<String, String> {

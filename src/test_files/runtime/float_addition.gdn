@@ -1,0 +1,7 @@
+{
+  dbg((0.25 +. 1.5) -. 1.0)
+}
+
+// args: run
+// expected stdout: 0.75
+

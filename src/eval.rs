@@ -2327,6 +2327,61 @@ fn eval_integer_binop(
     Ok(())
 }
 
+fn eval_float_binop(
+    env: &mut Env,
+    expr_value_is_used: bool,
+    position: &Position,
+    lhs_position: &Position,
+    rhs_position: &Position,
+    op: BinaryOperatorKind,
+) -> Result<(), (RestoreValues, EvalError)> {
+    let rhs_value = env
+        .pop_value()
+        .expect("Popped an empty value stack for RHS of binary operator");
+    let lhs_value = env
+        .pop_value()
+        .expect("Popped an empty value stack for LHS of binary operator");
+
+    let lhs_float = match lhs_value.as_ref() {
+        Value_::Float(f) => *f,
+        _ => {
+            return Err((
+                RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                EvalError::Exception(ExceptionInfo {
+                    position: lhs_position.clone(),
+                    message: format_type_error(&TypeName { text: "Int".into() }, &lhs_value, env),
+                }),
+            ));
+        }
+    };
+    let rhs_float = match rhs_value.as_ref() {
+        Value_::Float(f) => *f,
+        _ => {
+            return Err((
+                RestoreValues(vec![lhs_value, rhs_value.clone()]),
+                EvalError::Exception(ExceptionInfo {
+                    position: rhs_position.clone(),
+                    message: format_type_error(&TypeName { text: "Int".into() }, &rhs_value, env),
+                }),
+            ));
+        }
+    };
+
+    let value = match op {
+        BinaryOperatorKind::AddFloat => Value::new(Value_::Float(lhs_float + rhs_float)),
+        BinaryOperatorKind::SubtractFloat => Value::new(Value_::Float(lhs_float - rhs_float)),
+        _ => {
+            unreachable!()
+        }
+    };
+
+    if expr_value_is_used {
+        env.push_value(value);
+    }
+
+    Ok(())
+}
+
 fn eval_string_concat(
     env: &mut Env,
     expr_value_is_used: bool,
@@ -5849,6 +5904,29 @@ fn eval_expr(
         ) => {
             if expr_state.done_children() {
                 eval_integer_binop(
+                    env,
+                    expr_value_is_used,
+                    &expr_position,
+                    &lhs.position,
+                    &rhs.position,
+                    *op,
+                )?;
+            } else {
+                env.push_expr_to_eval(
+                    ExpressionState::EvaluatedAllSubexpressions,
+                    outer_expr.clone(),
+                );
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
+            }
+        }
+        Expression_::BinaryOperator(
+            lhs,
+            op @ (BinaryOperatorKind::AddFloat | BinaryOperatorKind::SubtractFloat),
+            rhs,
+        ) => {
+            if expr_state.done_children() {
+                eval_float_binop(
                     env,
                     expr_value_is_used,
                     &expr_position,

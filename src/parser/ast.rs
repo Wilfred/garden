@@ -236,7 +236,9 @@ pub(crate) struct SymbolWithHint {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum BinaryOperatorKind {
     Add,
+    AddFloat,
     Subtract,
+    SubtractFloat,
     Multiply,
     Divide,
     Modulo,
@@ -256,7 +258,9 @@ impl Display for BinaryOperatorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             BinaryOperatorKind::Add => "+",
+            BinaryOperatorKind::AddFloat => "+.",
             BinaryOperatorKind::Subtract => "-",
+            BinaryOperatorKind::SubtractFloat => "-.",
             BinaryOperatorKind::Multiply => "*",
             BinaryOperatorKind::Divide => "/",
             BinaryOperatorKind::Modulo => "%",

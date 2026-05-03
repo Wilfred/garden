@@ -1395,7 +1395,9 @@ fn parse_expression_no_trailing(
 fn token_as_binary_op(token: &Token<'_>) -> Option<BinaryOperatorKind> {
     match token.text {
         "+" => Some(BinaryOperatorKind::Add),
+        "+." => Some(BinaryOperatorKind::AddFloat),
         "-" => Some(BinaryOperatorKind::Subtract),
+        "-." => Some(BinaryOperatorKind::SubtractFloat),
         "*" => Some(BinaryOperatorKind::Multiply),
         "/" => Some(BinaryOperatorKind::Divide),
         "%" => Some(BinaryOperatorKind::Modulo),

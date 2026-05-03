@@ -2185,72 +2185,103 @@ fn eval_integer_binop(
     rhs_position: &Position,
     op: BinaryOperatorKind,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    {
-        let rhs_value = env
-            .pop_value()
-            .expect("Popped an empty value stack for RHS of binary operator");
-        let lhs_value = env
-            .pop_value()
-            .expect("Popped an empty value stack for LHS of binary operator");
+    let rhs_value = env
+        .pop_value()
+        .expect("Popped an empty value stack for RHS of binary operator");
+    let lhs_value = env
+        .pop_value()
+        .expect("Popped an empty value stack for LHS of binary operator");
 
-        let lhs_num = match lhs_value.as_ref() {
-            Value_::Integer(i) => *i,
-            _ => {
+    let lhs_num = match lhs_value.as_ref() {
+        Value_::Integer(i) => *i,
+        _ => {
+            return Err((
+                RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                EvalError::Exception(ExceptionInfo {
+                    position: lhs_position.clone(),
+                    message: format_type_error(&TypeName { text: "Int".into() }, &lhs_value, env),
+                }),
+            ));
+        }
+    };
+    let rhs_num = match rhs_value.as_ref() {
+        Value_::Integer(i) => *i,
+        _ => {
+            return Err((
+                RestoreValues(vec![lhs_value, rhs_value.clone()]),
+                EvalError::Exception(ExceptionInfo {
+                    position: rhs_position.clone(),
+                    message: format_type_error(&TypeName { text: "Int".into() }, &rhs_value, env),
+                }),
+            ));
+        }
+    };
+
+    let value = match op {
+        BinaryOperatorKind::Add => Value::new(Value_::Integer(lhs_num.wrapping_add(rhs_num))),
+        BinaryOperatorKind::Subtract => Value::new(Value_::Integer(lhs_num.wrapping_sub(rhs_num))),
+        BinaryOperatorKind::Multiply => Value::new(Value_::Integer(lhs_num.wrapping_mul(rhs_num))),
+        BinaryOperatorKind::Divide => {
+            if rhs_num == 0 {
                 return Err((
-                    RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                    RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
                     EvalError::Exception(ExceptionInfo {
-                        position: lhs_position.clone(),
-                        message: format_type_error(
-                            &TypeName { text: "Int".into() },
-                            &lhs_value,
-                            env,
-                        ),
+                        position: position.clone(),
+                        message: ErrorMessage(vec![Text(format!(
+                            "Tried to divide {} by zero.",
+                            lhs_value.display(env)
+                        ))]),
                     }),
                 ));
             }
-        };
-        let rhs_num = match rhs_value.as_ref() {
-            Value_::Integer(i) => *i,
-            _ => {
+
+            Value::new(Value_::Integer(lhs_num / rhs_num))
+        }
+        BinaryOperatorKind::Modulo => match lhs_num.checked_rem_euclid(rhs_num) {
+            Some(num) => Value::new(Value_::Integer(num)),
+            None => {
                 return Err((
-                    RestoreValues(vec![lhs_value, rhs_value.clone()]),
+                    RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
                     EvalError::Exception(ExceptionInfo {
-                        position: rhs_position.clone(),
-                        message: format_type_error(
-                            &TypeName { text: "Int".into() },
-                            &rhs_value,
-                            env,
-                        ),
+                        position: position.clone(),
+                        message: ErrorMessage(vec![Text(format!(
+                            "Tried to calculate the remainder of dividing {} by zero.",
+                            lhs_value.display(env),
+                        ))]),
                     }),
                 ));
             }
-        };
+        },
+        BinaryOperatorKind::Exponent => {
+            if rhs_num < 0 {
+                return Err((
+                    RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
+                    EvalError::Exception(ExceptionInfo {
+                        position: position.clone(),
+                        message: ErrorMessage(vec![Text(format!(
+                            "Cannot raise an integer to a negative power, got {}.^ {}",
+                            lhs_value.display(env),
+                            rhs_value.display(env),
+                        ))]),
+                    }),
+                ));
+            }
 
-        let value = match op {
-            BinaryOperatorKind::Add => Value::new(Value_::Integer(lhs_num.wrapping_add(rhs_num))),
-            BinaryOperatorKind::Subtract => {
-                Value::new(Value_::Integer(lhs_num.wrapping_sub(rhs_num)))
+            if rhs_num > u32::MAX as i64 {
+                return Err((
+                    RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
+                    EvalError::Exception(ExceptionInfo {
+                        position: position.clone(),
+                        message: ErrorMessage(vec![Text(format!(
+                            "Exponent is too large, got {}.^ {}",
+                            lhs_value.display(env),
+                            rhs_value.display(env),
+                        ))]),
+                    }),
+                ));
             }
-            BinaryOperatorKind::Multiply => {
-                Value::new(Value_::Integer(lhs_num.wrapping_mul(rhs_num)))
-            }
-            BinaryOperatorKind::Divide => {
-                if rhs_num == 0 {
-                    return Err((
-                        RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
-                        EvalError::Exception(ExceptionInfo {
-                            position: position.clone(),
-                            message: ErrorMessage(vec![Text(format!(
-                                "Tried to divide {} by zero.",
-                                lhs_value.display(env)
-                            ))]),
-                        }),
-                    ));
-                }
 
-                Value::new(Value_::Integer(lhs_num / rhs_num))
-            }
-            BinaryOperatorKind::Modulo => match lhs_num.checked_rem_euclid(rhs_num) {
+            match lhs_num.checked_pow(rhs_num as u32) {
                 Some(num) => Value::new(Value_::Integer(num)),
                 None => {
                     return Err((
@@ -2258,72 +2289,28 @@ fn eval_integer_binop(
                         EvalError::Exception(ExceptionInfo {
                             position: position.clone(),
                             message: ErrorMessage(vec![Text(format!(
-                                "Tried to calculate the remainder of dividing {} by zero.",
-                                lhs_value.display(env),
-                            ))]),
-                        }),
-                    ));
-                }
-            },
-            BinaryOperatorKind::Exponent => {
-                if rhs_num < 0 {
-                    return Err((
-                        RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
-                        EvalError::Exception(ExceptionInfo {
-                            position: position.clone(),
-                            message: ErrorMessage(vec![Text(format!(
-                                "Cannot raise an integer to a negative power, got {}.^ {}",
+                                "Integer overflow on raising to the power, got {}.^ {}",
                                 lhs_value.display(env),
                                 rhs_value.display(env),
                             ))]),
                         }),
                     ));
                 }
-
-                if rhs_num > u32::MAX as i64 {
-                    return Err((
-                        RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
-                        EvalError::Exception(ExceptionInfo {
-                            position: position.clone(),
-                            message: ErrorMessage(vec![Text(format!(
-                                "Exponent is too large, got {}.^ {}",
-                                lhs_value.display(env),
-                                rhs_value.display(env),
-                            ))]),
-                        }),
-                    ));
-                }
-
-                match lhs_num.checked_pow(rhs_num as u32) {
-                    Some(num) => Value::new(Value_::Integer(num)),
-                    None => {
-                        return Err((
-                            RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
-                            EvalError::Exception(ExceptionInfo {
-                                position: position.clone(),
-                                message: ErrorMessage(vec![Text(format!(
-                                    "Integer overflow on raising to the power, got {}.^ {}",
-                                    lhs_value.display(env),
-                                    rhs_value.display(env),
-                                ))]),
-                            }),
-                        ));
-                    }
-                }
             }
-            BinaryOperatorKind::LessThan => Value::bool(lhs_num < rhs_num),
-            BinaryOperatorKind::GreaterThan => Value::bool(lhs_num > rhs_num),
-            BinaryOperatorKind::LessThanOrEqual => Value::bool(lhs_num <= rhs_num),
-            BinaryOperatorKind::GreaterThanOrEqual => Value::bool(lhs_num >= rhs_num),
-            _ => {
-                unreachable!()
-            }
-        };
-
-        if expr_value_is_used {
-            env.push_value(value);
         }
+        BinaryOperatorKind::LessThan => Value::bool(lhs_num < rhs_num),
+        BinaryOperatorKind::GreaterThan => Value::bool(lhs_num > rhs_num),
+        BinaryOperatorKind::LessThanOrEqual => Value::bool(lhs_num <= rhs_num),
+        BinaryOperatorKind::GreaterThanOrEqual => Value::bool(lhs_num >= rhs_num),
+        _ => {
+            unreachable!()
+        }
+    };
+
+    if expr_value_is_used {
+        env.push_value(value);
     }
+
     Ok(())
 }
 

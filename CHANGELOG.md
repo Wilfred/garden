@@ -17,6 +17,11 @@ simplified to `foo()`), with an autofix.
 Added :load to evaluate all definitions in a file and switch to that
 namespace.
 
+`garden check` now accepts markdown files. When given a `.md` file, it
+extracts the Garden code blocks (the same way `run-code-blocks` does)
+and checks each one for syntax, type, and lint issues, reporting
+diagnostics with positions inside the markdown file.
+
 ## Standard Library
 
 Added `random::choose()`.

@@ -294,7 +294,12 @@ fn main() {
             let mut src = read_utf8_or_die(&abs_path);
             src = remove_testing_footer(&src);
             let src_path = to_abs_path(&override_path.unwrap_or(path.clone()));
-            syntax_check::check(&src_path, &src, json, fix, stdout, &abs_path)
+            let is_markdown = src_path.extension().is_some_and(|ext| ext == "md");
+            if is_markdown {
+                syntax_check::check_markdown(&src_path, &src, json, fix, stdout, &abs_path)
+            } else {
+                syntax_check::check(&src_path, &src, json, fix, stdout, &abs_path)
+            }
         }
         CliCommands::Test {
             paths,

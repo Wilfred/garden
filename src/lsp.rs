@@ -2,11 +2,12 @@
 
 use gen_lsp_types::{
     CodeAction, CodeActionKind, CodeActionOptions, CodeActionParams, CodeActionProvider,
-    CodeActionResponse, CompletionItem, CompletionOptions, CompletionParams, DefinitionParams,
-    DefinitionProvider, Diagnostic, DiagnosticSeverity, DocumentFormattingParams,
-    DocumentFormattingProvider, InitializeParams, InitializeResult, Location, Position,
-    PublishDiagnosticsParams, Range, ServerCapabilities, ServerInfo, TextDocumentSync,
-    TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
+    CodeActionResponse, CompletionItem, CompletionOptions, CompletionParams, Contents,
+    DefinitionParams, DefinitionProvider, Diagnostic, DiagnosticSeverity, DocumentFormattingParams,
+    DocumentFormattingProvider, Hover, HoverParams, HoverProvider, InitializeParams,
+    InitializeResult, Location, MarkupContent, MarkupKind, Position, PublishDiagnosticsParams,
+    Range, ServerCapabilities, ServerInfo, TextDocumentSync, TextDocumentSyncKind, TextEdit, Uri,
+    WorkspaceEdit,
 };
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
@@ -270,6 +271,65 @@ fn get_definition(src: &str, path: &PathBuf, offset: usize) -> Option<GardenPosi
     None
 }
 
+/// Get hover information for a symbol at the given offset.
+fn get_hover(src: &str, path: &PathBuf, offset: usize) -> Option<Hover> {
+    let mut id_gen = IdGenerator::default();
+    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+
+    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+    let mut env = Env::new(id_gen, vfs);
+    let ns = env.get_or_create_namespace(path);
+    load_toplevel_items(&items, &mut env, ns.clone());
+
+    let summary = check_types(&vfs_path, &items, &env, ns);
+
+    let hovered_ids = find_item_at(&items, offset, offset);
+
+    let mut ty_str: Option<String> = None;
+    for id in hovered_ids.iter().rev() {
+        if let Some(ty) = summary.id_to_ty.get(&id.id()) {
+            if !ty.is_error() {
+                ty_str = Some(ty.to_string());
+            }
+            break;
+        }
+    }
+
+    let mut doc_comment: Option<String> = None;
+    for id in hovered_ids.iter().rev() {
+        if let Some(doc) = summary.id_to_doc_comment.get(&id.id()) {
+            doc_comment = Some(doc.clone());
+            break;
+        }
+    }
+
+    if ty_str.is_none() && doc_comment.is_none() {
+        return None;
+    }
+
+    let mut value = String::new();
+    if let Some(ty) = ty_str {
+        value.push_str("```garden\n");
+        value.push_str(&ty);
+        value.push_str("\n```");
+    }
+    if let Some(doc) = doc_comment {
+        if !value.is_empty() {
+            value.push_str("\n\n");
+        }
+        value.push_str(&doc);
+    }
+
+    Some(Hover {
+        contents: Contents::MarkupContent(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value,
+        }),
+        range: None,
+    })
+}
+
 /// Handle an initialize request.
 fn handle_initialize(
     id: serde_json::Value,
@@ -278,6 +338,7 @@ fn handle_initialize(
     let result = InitializeResult {
         capabilities: ServerCapabilities {
             definition_provider: Some(DefinitionProvider::Bool(true)),
+            hover_provider: Some(HoverProvider::Bool(true)),
             completion_provider: Some(CompletionOptions {
                 trigger_characters: Some(vec![".".to_owned(), "::".to_owned()]),
                 ..Default::default()
@@ -471,6 +532,35 @@ fn handle_definition(
     };
 
     JsonRpcResponse::new(id, Some(location))
+}
+
+/// Handle a textDocument/hover request.
+fn handle_hover(
+    id: serde_json::Value,
+    params: HoverParams,
+    documents: &DocumentStore,
+) -> JsonRpcResponse<Option<Hover>> {
+    let uri = &params.text_document_position_params.text_document.uri;
+    let position = params.text_document_position_params.position;
+
+    let path = match uri.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return JsonRpcResponse::new(id, None),
+    };
+
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, None),
+        },
+    };
+
+    let offset = line_char_to_offset(&src, position.line as usize, position.character as usize);
+
+    let hover = get_hover(&src, &path, offset);
+
+    JsonRpcResponse::new(id, hover)
 }
 
 /// Handle a textDocument/formatting request.
@@ -713,6 +803,24 @@ pub(crate) fn run_lsp() {
                         }
                     };
                     let response = handle_definition(id, params, &documents);
+                    if let Err(e) = write_message(&response) {
+                        eprintln!("Error writing response: {e}");
+                    }
+                }
+            }
+            Some("textDocument/hover") => {
+                if let Some(id) = parsed.id {
+                    let params: HoverParams = match message
+                        .get("params")
+                        .and_then(|p| serde_json::from_value(p.clone()).ok())
+                    {
+                        Some(p) => p,
+                        None => {
+                            eprintln!("Error parsing hover params");
+                            continue;
+                        }
+                    };
+                    let response = handle_hover(id, params, &documents);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }

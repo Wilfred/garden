@@ -1134,6 +1134,96 @@ fun main() {
     }
 
     #[test]
+    fn test_lsp_hover() {
+        use std::io::Write;
+        use std::process::Stdio;
+
+        let test_content = r#"/// Add one to the given integer.
+fun add_one(x: Int): Int {
+  x + 1
+}
+
+fun main() {
+  add_one(5)
+}
+"#;
+        let test_file = std::env::temp_dir().join("garden_lsp_test_hover.gdn");
+        std::fs::write(&test_file, test_content).expect("Failed to write test file");
+
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut child = Command::new(path)
+            .arg("lsp")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn command");
+
+        let file_uri = format!("file://{}", test_file.display());
+
+        let init_request =
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#;
+        let initialized = r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#;
+
+        // Hover on "add_one" at the call site (line 6, character 2).
+        let hover_request = format!(
+            r#"{{"jsonrpc":"2.0","id":2,"method":"textDocument/hover","params":{{"textDocument":{{"uri":"{}"}},"position":{{"line":6,"character":2}}}}}}"#,
+            file_uri
+        );
+
+        let shutdown_request = r#"{"jsonrpc":"2.0","id":3,"method":"shutdown"}"#;
+        let exit = r#"{"jsonrpc":"2.0","method":"exit"}"#;
+
+        let input = format!(
+            "Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}",
+            init_request.len(), init_request,
+            initialized.len(), initialized,
+            hover_request.len(), hover_request,
+            shutdown_request.len(), shutdown_request,
+            exit.len(), exit
+        );
+
+        {
+            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+            stdin
+                .write_all(input.as_bytes())
+                .expect("Failed to write to stdin");
+        }
+
+        let output = child
+            .wait_with_output()
+            .expect("Failed to wait for command");
+
+        assert!(output.status.success());
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        assert!(
+            stdout.contains(r#""id":2"#),
+            "Should contain hover response"
+        );
+
+        // The response should include hover contents with the function type.
+        assert!(
+            stdout.contains(r#""contents""#),
+            "Should contain hover contents"
+        );
+
+        // The doc comment should be included in the hover.
+        assert!(
+            stdout.contains("Add one to the given integer."),
+            "Should contain doc comment in hover. Output: {stdout}"
+        );
+
+        // The capabilities response should advertise hover support.
+        assert!(
+            stdout.contains(r#""hoverProvider":true"#),
+            "Should advertise hover capability"
+        );
+
+        let _ = std::fs::remove_file(&test_file);
+    }
+
+    #[test]
     fn test_lsp_completion() {
         use std::io::Write;
         use std::process::Stdio;

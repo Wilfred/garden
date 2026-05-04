@@ -20,13 +20,13 @@ use crate::BAD_CLI_REQUEST_EXIT_CODE;
 
 /// A code block extracted from markdown.
 #[derive(Debug)]
-struct CodeBlock {
+pub(crate) struct CodeBlock {
     /// The byte offset where the code block content starts in the
     /// markdown source.
-    start_offset: usize,
+    pub(crate) start_offset: usize,
     /// The byte offset where the code block content ends in the
     /// markdown source.
-    end_offset: usize,
+    pub(crate) end_offset: usize,
 }
 
 /// Result of evaluating an expression in a code block.
@@ -47,7 +47,7 @@ enum CheckResult {
 }
 
 /// Extract code blocks from markdown source.
-fn extract_code_blocks(markdown: &str) -> Vec<CodeBlock> {
+pub(crate) fn extract_code_blocks(markdown: &str) -> Vec<CodeBlock> {
     let parser = Parser::new(markdown).into_offset_iter();
     let mut blocks = vec![];
     let mut in_code_block = false;

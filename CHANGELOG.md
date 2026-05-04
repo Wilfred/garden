@@ -17,6 +17,10 @@ simplified to `foo()`), with an autofix.
 Added :load to evaluate all definitions in a file and switch to that
 namespace.
 
+Added a `check-snippets` subcommand that checks every Garden code
+block in a markdown file for syntax and semantic errors, equivalent
+to calling `reflect::check_snippet` on each block.
+
 ## Standard Library
 
 Added `random::choose()`.

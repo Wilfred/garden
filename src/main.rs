@@ -818,7 +818,7 @@ mod tests {
             .to_path_buf();
 
         let test_path = format!("src/test_files/{}", subdir);
-        let mut config = TestConfig::new(bin_path, &test_path, "// ")?;
+        let mut config = TestConfig::new(bin_path, &test_path, "// ");
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();
         config.run_tests()
     }

@@ -193,6 +193,7 @@ enum CliCommands {
     /// Check the Garden program at the path specified for issues.
     Check {
         path: PathBuf,
+        /// Display results as machine-readable JSON.
         #[clap(long, action)]
         json: bool,
         /// Treat the file as if it was at this path.

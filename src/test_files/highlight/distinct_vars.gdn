@@ -1,0 +1,11 @@
+fun file_name() {
+    let foo = 1
+    let bar = 2
+    //  ^
+    foo + bar
+}
+
+// args: highlight
+// expected stdout:
+// {"start_offset":42,"end_offset":45,"line_number":2,"end_line_number":2,"column":8,"end_column":11,"path":"GDN_TEST_ROOT/src/test_files/highlight/distinct_vars.gdn"}
+// {"start_offset":70,"end_offset":73,"line_number":4,"end_line_number":4,"column":10,"end_column":13,"path":"GDN_TEST_ROOT/src/test_files/highlight/distinct_vars.gdn"}

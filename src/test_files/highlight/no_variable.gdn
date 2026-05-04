@@ -1,0 +1,7 @@
+fun foo() {
+  "abcdefgh"
+  // ^
+}
+
+// args: highlight
+// expected stdout:

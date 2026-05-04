@@ -4,7 +4,8 @@ use gen_lsp_types::{
     CodeAction, CodeActionKind, CodeActionOptions, CodeActionParams, CodeActionProvider,
     CodeActionResponse, CompletionItem, CompletionOptions, CompletionParams, Contents,
     DefinitionParams, DefinitionProvider, Diagnostic, DiagnosticSeverity, DocumentFormattingParams,
-    DocumentFormattingProvider, Hover, HoverParams, HoverProvider, InitializeParams,
+    DocumentFormattingProvider, DocumentHighlight, DocumentHighlightParams,
+    DocumentHighlightProvider, Hover, HoverParams, HoverProvider, InitializeParams,
     InitializeResult, Location, MarkupContent, MarkupKind, Position, PublishDiagnosticsParams,
     Range, ServerCapabilities, ServerInfo, TextDocumentSync, TextDocumentSyncKind, TextEdit, Uri,
     WorkspaceEdit,
@@ -24,6 +25,7 @@ use crate::completions;
 use crate::diagnostics::{Autofix, Diagnostic as GardenDiagnostic, Severity};
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
+use crate::highlight::highlight_occurrences;
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position as GardenPosition;
 use crate::parser::vfs::Vfs;
@@ -345,6 +347,7 @@ fn handle_initialize(
             }),
             text_document_sync: Some(TextDocumentSync::Kind(TextDocumentSyncKind::Full)),
             document_formatting_provider: Some(DocumentFormattingProvider::Bool(true)),
+            document_highlight_provider: Some(DocumentHighlightProvider::Bool(true)),
             code_action_provider: Some(CodeActionProvider::CodeActionOptions(CodeActionOptions {
                 code_action_kinds: Some(vec![CodeActionKind::QuickFix]),
                 ..Default::default()
@@ -561,6 +564,41 @@ fn handle_hover(
     let hover = get_hover(&src, &path, offset);
 
     JsonRpcResponse::new(id, hover)
+}
+
+/// Handle a textDocument/documentHighlight request.
+fn handle_document_highlight(
+    id: serde_json::Value,
+    params: DocumentHighlightParams,
+    documents: &DocumentStore,
+) -> JsonRpcResponse<Vec<DocumentHighlight>> {
+    let uri = &params.text_document_position_params.text_document.uri;
+    let position = params.text_document_position_params.position;
+
+    let path = match uri.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return JsonRpcResponse::new(id, vec![]),
+    };
+
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, vec![]),
+        },
+    };
+
+    let offset = line_char_to_offset(&src, position.line as usize, position.character as usize);
+
+    let highlights = highlight_occurrences(&src, &path, offset)
+        .into_iter()
+        .map(|pos| DocumentHighlight {
+            range: garden_pos_to_lsp_range(&pos),
+            kind: None,
+        })
+        .collect();
+
+    JsonRpcResponse::new(id, highlights)
 }
 
 /// Handle a textDocument/formatting request.
@@ -821,6 +859,24 @@ pub(crate) fn run_lsp() {
                         }
                     };
                     let response = handle_hover(id, params, &documents);
+                    if let Err(e) = write_message(&response) {
+                        eprintln!("Error writing response: {e}");
+                    }
+                }
+            }
+            Some("textDocument/documentHighlight") => {
+                if let Some(id) = parsed.id {
+                    let params: DocumentHighlightParams = match message
+                        .get("params")
+                        .and_then(|p| serde_json::from_value(p.clone()).ok())
+                    {
+                        Some(p) => p,
+                        None => {
+                            eprintln!("Error parsing documentHighlight params");
+                            continue;
+                        }
+                    };
+                    let response = handle_document_highlight(id, params, &documents);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }

@@ -52,6 +52,7 @@ mod extract_variable;
 mod format;
 mod garden_type;
 mod go_to_def;
+mod highlight;
 mod hover;
 mod json_session;
 mod lsp;
@@ -228,6 +229,9 @@ enum CliCommands {
         path: PathBuf,
         offset: Option<usize>,
     },
+    /// Print the positions of all occurrences of the local variable
+    /// at the position given. One JSON-encoded position per line.
+    Highlight { path: PathBuf },
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },
@@ -355,6 +359,23 @@ fn main() {
 
             let src_path = to_abs_path(&override_path.unwrap_or(path));
             print_pos(&src, &src_path, offset, has_caret)
+        }
+        CliCommands::Highlight { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+
+            let offset = caret_finder::find_caret_offset(&src)
+                .expect("Could not find comment containing `^` in source.");
+
+            let project_root = std::env::current_dir().unwrap_or(PathBuf::from("/"));
+
+            for pos in highlight::highlight_occurrences(&src, &abs_path, offset) {
+                let mut placeholder_pos = pos.clone();
+                let mut path = PathBuf::from("GDN_TEST_ROOT");
+                path.push(parser::vfs::to_project_relative(&pos.path, &project_root));
+                placeholder_pos.path = Rc::new(path);
+                println!("{}", serde_json::to_string(&placeholder_pos).unwrap());
+            }
         }
         CliCommands::Complete { offset, path } => {
             let abs_path = to_abs_path(&path);
@@ -866,6 +887,11 @@ mod tests {
     #[test]
     fn test_golden_go_to_def() -> TestResult<()> {
         run_golden_tests("go_to_def")
+    }
+
+    #[test]
+    fn test_golden_highlight() -> TestResult<()> {
+        run_golden_tests("highlight")
     }
 
     #[test]
@@ -1522,6 +1548,92 @@ fun main() {
         );
 
         // Clean up the temporary file
+        let _ = std::fs::remove_file(&test_file);
+    }
+
+    #[test]
+    fn test_lsp_document_highlight() {
+        use std::io::Write;
+        use std::process::Stdio;
+
+        let test_content = r#"fun file_name() {
+  let foo = 1
+  foo + foo
+}
+"#;
+        let test_file = std::env::temp_dir().join("garden_lsp_test_highlight.gdn");
+        std::fs::write(&test_file, test_content).expect("Failed to write test file");
+
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut child = Command::new(path)
+            .arg("lsp")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn command");
+
+        let file_uri = format!("file://{}", test_file.display());
+
+        let init_request =
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#;
+        let initialized = r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#;
+
+        // Place the cursor on `foo` in `let foo = 1` (line 1, character 6).
+        let highlight_request = format!(
+            r#"{{"jsonrpc":"2.0","id":2,"method":"textDocument/documentHighlight","params":{{"textDocument":{{"uri":"{}"}},"position":{{"line":1,"character":6}}}}}}"#,
+            file_uri
+        );
+
+        let shutdown_request = r#"{"jsonrpc":"2.0","id":3,"method":"shutdown"}"#;
+        let exit = r#"{"jsonrpc":"2.0","method":"exit"}"#;
+
+        let input = format!(
+            "Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}",
+            init_request.len(), init_request,
+            initialized.len(), initialized,
+            highlight_request.len(), highlight_request,
+            shutdown_request.len(), shutdown_request,
+            exit.len(), exit
+        );
+
+        {
+            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+            stdin
+                .write_all(input.as_bytes())
+                .expect("Failed to write to stdin");
+        }
+
+        let output = child
+            .wait_with_output()
+            .expect("Failed to wait for command");
+
+        assert!(output.status.success());
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        assert!(
+            stdout.contains(r#""id":1"#),
+            "Should contain initialize response"
+        );
+        assert!(
+            stdout.contains(r#""documentHighlightProvider":true"#),
+            "Should advertise documentHighlightProvider capability"
+        );
+        assert!(
+            stdout.contains(r#""id":2"#),
+            "Should contain documentHighlight response"
+        );
+        // Three occurrences (definition + two uses) means three ranges.
+        assert_eq!(
+            stdout.matches(r#""range""#).count(),
+            3,
+            "Should contain three highlight ranges, got: {stdout}"
+        );
+        assert!(
+            stdout.contains(r#""id":3"#),
+            "Should contain shutdown response"
+        );
+
         let _ = std::fs::remove_file(&test_file);
     }
 

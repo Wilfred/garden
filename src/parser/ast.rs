@@ -459,6 +459,10 @@ pub(crate) enum Expression_ {
     /// ```garden
     /// 1.5
     /// ```
+    ///
+    /// Since we want equality on Expression values, we use
+    /// OrderedFloat. This treats NaN as equal to NaN, but we don't
+    /// have a literal syntax for NaN so this is fine.
     FloatLiteral(OrderedFloat<f64>),
     /// ```garden
     /// "foo"

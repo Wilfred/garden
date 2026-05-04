@@ -2,13 +2,15 @@
 import "__prelude.gdn" as prelude
 import "__fs.gdn" as fs
 
-/// Check the syntax of `src`.
-public fun check_snippet(src: String): Result<Unit, List<String>> {
+/// Check the syntax of `src`. `path` is treated as the location of
+/// the file that the snippet represents, which is used to resolve
+/// relative imports.
+public fun check_snippet(src: String, path: Path): Result<Unit, List<String>> {
   __BUILT_IN_IMPLEMENTATION
 }
 
 test check_snippet_good {
-  match check_snippet("fun foo() {}") {
+  match check_snippet("fun foo() {}", Path{ p: "__snippet.gdn" }) {
     Ok(_) => {}
     Err(_) => {
       assert(False)
@@ -17,7 +19,7 @@ test check_snippet_good {
 }
 
 test check_snippet_bad_syntax {
-  match check_snippet("fun foo(") {
+  match check_snippet("fun foo(", Path{ p: "__snippet.gdn" }) {
     Ok(_) => {
       assert(False)
     }
@@ -26,7 +28,7 @@ test check_snippet_bad_syntax {
 }
 
 test check_snippet_bad_name {
-  match check_snippet("fun foo() { bar() }") {
+  match check_snippet("fun foo() { bar() }", Path{ p: "__snippet.gdn" }) {
     Ok(_) => {
       assert(False)
     }

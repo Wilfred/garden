@@ -3412,7 +3412,7 @@ fn eval_built_in_call(
                 },
                 receiver_value,
                 receiver_pos,
-                1,
+                2,
                 arg_positions,
                 arg_values,
             )?;
@@ -3422,9 +3422,23 @@ fn eval_built_in_call(
                 saved_values.push(value.clone());
             }
 
-            let snippet = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
+            let snippet =
+                check_string(&arg_values[0], &arg_positions[0], saved_values.clone(), env)?;
 
-            let v = check_snippet(snippet, env);
+            let path_s = match unwrap_path(&arg_values[1], env) {
+                Ok(s) => s,
+                Err(msg) => {
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[1].clone(),
+                            message: msg,
+                        }),
+                    ));
+                }
+            };
+
+            let v = check_snippet(snippet, PathBuf::from(path_s), env);
             if expr_value_is_used {
                 env.push_value(v);
             }
@@ -3873,9 +3887,7 @@ fn eval_built_in_call(
     Ok(())
 }
 
-fn check_snippet(src: &str, env: &Env) -> Value {
-    let path = PathBuf::from("__snippet.gdn");
-
+fn check_snippet(src: &str, path: PathBuf, env: &Env) -> Value {
     let mut check_env = env
         .initial_state
         .as_ref()

@@ -7,4 +7,3 @@ import "__fs.gdn" as fs
 
 // args: run
 // expected stdout: Path{ p: "/tmp" }
-

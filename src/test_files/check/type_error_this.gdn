@@ -10,4 +10,3 @@ public method bad(this: String): Bool {
 // 1| public method bad(this: String): Bool {
 // 2|   this.no_such_meth()
 // 3| }      ^^^^^^^^^^^^
-

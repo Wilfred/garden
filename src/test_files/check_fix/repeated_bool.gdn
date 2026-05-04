@@ -15,4 +15,3 @@ public fun repeated_and(x: Bool, y: Bool): Bool {
 // public fun repeated_and(x: Bool, y: Bool): Bool {
 //     x && y
 // }
-

@@ -13,4 +13,3 @@ fun return_tuple(): (Int, String) {
 // expected stdout:
 // (123, "foo")
 // 123
-

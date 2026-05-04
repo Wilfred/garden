@@ -22,4 +22,3 @@ public fun foo() {
 
 // expected stderr:
 // 1 issue can be fixed automatically (use `--fix`).
-

@@ -10,4 +10,3 @@ public fun foo(): Option<NoSuchType> {
 // 1| public fun foo(): Option<NoSuchType> {
 // 2|     None                 ^^^^^^^^^^
 // 3| }
-

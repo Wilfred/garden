@@ -24,4 +24,3 @@ public fun foo() {
 //  7|     let y = "abc"
 //  8|     y -= 2 // bad
 //  9| }   ^
-

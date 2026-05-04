@@ -6,4 +6,3 @@ x + 3
 // expected stdout:
 // {"printed":{"s":"hello world\n"}}
 // {"error":null,"value":"4"}
-

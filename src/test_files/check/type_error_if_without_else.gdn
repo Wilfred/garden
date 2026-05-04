@@ -36,4 +36,3 @@ public fun foo(b: Bool): Int {
 
 // expected stderr:
 // 1 issue can be fixed automatically (use `--fix`).
-

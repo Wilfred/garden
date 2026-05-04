@@ -10,4 +10,3 @@ fun example() {
 // expected stdout:
 // {"label":"foo","kind":6,"detail":": Int"}
 // {"label":"foobar","kind":6,"detail":": String"}
-

@@ -3,5 +3,3 @@ import "__random.gdn" as random
 random::int()
 
 // args: run
-
-

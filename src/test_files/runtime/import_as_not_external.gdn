@@ -10,4 +10,3 @@ import "./lib.gdn" as f
 // --| src/test_files/runtime/import_as_not_external.gdn:4:10	 __toplevel__
 //  4|   dbg(f::bar())
 //   |          ^^^
-

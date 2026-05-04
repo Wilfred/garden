@@ -10,4 +10,3 @@ import "./lib.gdn"
 // --| src/test_files/runtime/import_not_external.gdn:4:7	 __toplevel__
 //  4|   dbg(bar())
 //   |       ^^^
-

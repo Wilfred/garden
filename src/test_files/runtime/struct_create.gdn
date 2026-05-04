@@ -10,4 +10,3 @@ struct Foo {
 
 // args: run
 // expected stdout: Foo{ x: 3, y: "abc" }
-

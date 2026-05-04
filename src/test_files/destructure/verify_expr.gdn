@@ -19,4 +19,3 @@ method my_set_extension(this: Path): Path {
 //     None => {}
 //   }
 // }
-

@@ -72,4 +72,3 @@ public fun good2(): Int {
 //  7|   return 1
 //  8|   2
 //  9| } ^
-

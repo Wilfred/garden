@@ -6,4 +6,3 @@ import "./lib.gdn"
 
 // args: run
 // expected stdout: 42
-

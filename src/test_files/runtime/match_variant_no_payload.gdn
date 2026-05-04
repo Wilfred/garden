@@ -12,4 +12,3 @@ fun takes_opt(v: Option<Int>): Int {
 
 // args: run
 // expected stdout: 123
-

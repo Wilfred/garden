@@ -46,4 +46,3 @@ Dict["x" => 1, "y" => ""]
 // 17| // Bad: mixed value types.
 // 18| Dict["x" => 1, "y" => ""]
 // 19|                       ^^
-

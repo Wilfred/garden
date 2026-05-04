@@ -22,4 +22,3 @@ let foo: Int = 1
 //         id: SyntaxId(3),
 //     },
 // )
-

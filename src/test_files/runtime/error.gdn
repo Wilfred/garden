@@ -23,4 +23,3 @@ fun caller() {
 // --| src/test_files/runtime/error.gdn:10:3	 __toplevel__
 // 10|   caller()
 //   |   ^^^^^^^^
-

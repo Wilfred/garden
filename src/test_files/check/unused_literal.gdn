@@ -54,4 +54,3 @@ public fun example() {
 
 // expected stderr:
 // 6 issues can be fixed automatically (use `--fix`).
-

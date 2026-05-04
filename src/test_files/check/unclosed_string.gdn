@@ -10,4 +10,3 @@ test foo {
 // 1| test foo {
 // 2|   "bar
 // 3| } ^^^^
-

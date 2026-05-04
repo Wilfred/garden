@@ -15,4 +15,3 @@ test bar {
 //   Expected `2` but got `1`.
 // 
 // Ran 2 tests: 0 passed and 2 failed.
-

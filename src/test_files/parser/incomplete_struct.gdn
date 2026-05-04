@@ -49,4 +49,3 @@ fun bar() {}
 //  1| struct Foo
 //  2|        ^^^
 //  3| fun bar() {}
-

@@ -16,4 +16,3 @@ struct Foo {}
 // 1| struct Foo {}
 // 2|        ^^^ Note: `Foo` is defined here.
 // 3| {
-

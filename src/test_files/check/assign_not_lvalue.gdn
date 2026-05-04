@@ -34,4 +34,3 @@ public fun foo() {
 // 3|     // TODO: why does this produce duplicate errors?
 // 4|     x + 1 = 2
 // 5| }     ^
-

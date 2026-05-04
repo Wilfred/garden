@@ -22,4 +22,3 @@ public fun bar(): Int<String> {
 // 5| public fun bar(): Int<String> {
 // 6|   throw("")           ^^^^^^
 // 7| }
-

@@ -20,4 +20,3 @@ fun baz() {}
 // 2| fun bar() {
 // 3|           ^
 // 4| // This should be fully parsed.
-

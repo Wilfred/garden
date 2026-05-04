@@ -14,4 +14,3 @@ import "./lib.gdn"
 // 4|   foo()
 // 5|   bar()
 // 6| } ^^^
-

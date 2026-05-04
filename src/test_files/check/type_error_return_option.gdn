@@ -10,4 +10,3 @@ public fun foo(parts: List<String>): String {
 // 1| public fun foo(parts: List<String>): String {
 // 2|     parts.first()
 // 3| }   ^^^^^^^^^^^^^
-

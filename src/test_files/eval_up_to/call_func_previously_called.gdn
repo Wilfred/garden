@@ -10,4 +10,3 @@ fun foo(aa: Int) {
 
 // args: test-eval-up-to
 // expected stdout: src/test_files/eval_up_to/call_func_previously_called.gdn:3: 12
-

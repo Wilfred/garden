@@ -11,4 +11,3 @@ fun foo() {
 // ```garden nocheck
 // throw("Computer is melting!")
 // ```
-

@@ -8,4 +8,3 @@ println("toplevel expr")
 // expected stdout:
 // block
 // toplevel expr
-

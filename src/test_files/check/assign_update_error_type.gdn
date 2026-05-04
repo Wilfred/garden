@@ -22,4 +22,3 @@ public fun foo() {
 // 5|   let y = no_such_func()
 // 6|   y += 1  ^^^^^^^^^^^^
 // 7| }
-

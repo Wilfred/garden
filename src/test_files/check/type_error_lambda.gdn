@@ -19,4 +19,3 @@
 // 2|     let f = fun(x: Int): Int { x.no_such_meth() }
 // 3|     f()
 // 4| }     ^
-

@@ -43,4 +43,3 @@ fun foo(): Unit {} {}
 //         close_brace: Position { ... },
 //     },
 // )
-

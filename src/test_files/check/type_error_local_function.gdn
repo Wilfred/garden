@@ -12,4 +12,3 @@ public fun takes_int(_v: Int) {}
 // 3| {
 // 4|     takes_int("foo")
 // 5| }             ^^^^^
-

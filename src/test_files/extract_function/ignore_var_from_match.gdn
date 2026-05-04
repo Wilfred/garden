@@ -12,4 +12,3 @@ fun demo(opt_s: Option<String>) {
 // fun demo(opt_s: Option<String>) {
 //   extracted_fun(opt_s)
 // }
-

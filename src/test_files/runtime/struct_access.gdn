@@ -13,4 +13,3 @@ fun get_x(foo: Foo): Int {
 
 // args: run
 // expected stdout: 3
-

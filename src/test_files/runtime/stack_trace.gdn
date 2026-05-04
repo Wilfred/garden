@@ -26,4 +26,3 @@ fun call_it2() {
 // --| src/test_files/runtime/stack_trace.gdn:14:5	 __toplevel__
 // 14|     call_it2()
 //   |     ^^^^^^^^^^
-

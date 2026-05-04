@@ -45,4 +45,3 @@
 //  8|   // Too many arguments.
 //  9|   string_repr(1, 2, 3)
 // 10| }                ^^^^
-

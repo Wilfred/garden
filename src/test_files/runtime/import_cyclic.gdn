@@ -8,4 +8,3 @@ import "./import_cyclic.gdn"
 
 // args: run
 // expected stdout: hello world
-

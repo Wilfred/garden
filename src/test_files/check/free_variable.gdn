@@ -10,4 +10,3 @@ public fun foo(): Int {
 // 1| public fun foo(): Int {
 // 2|     x
 // 3| }   ^
-

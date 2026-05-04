@@ -50,4 +50,3 @@ public fun foo(x: Option<Int>) {
 // 22|         None => {}
 // 23|         None => {}
 // 24|     }   ^^^^
-

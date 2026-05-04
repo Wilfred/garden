@@ -175,4 +175,3 @@ public fun different_variants(b: Bool): Bool {
 
 // expected stderr:
 // 1 issue can be fixed automatically (use `--fix`).
-

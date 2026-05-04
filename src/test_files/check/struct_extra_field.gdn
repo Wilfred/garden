@@ -14,4 +14,3 @@ public fun bar(): Unit {
 // 5| public fun bar(): Unit {
 // 6|     let _f = Foo{ x: 1 + 2, y: 2 }
 // 7| }                           ^
-

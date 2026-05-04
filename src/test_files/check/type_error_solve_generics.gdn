@@ -19,4 +19,3 @@ public fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
 //  9| 
 // 10|     takes_options(Some("foo"), Some(123))
 // 11| }                 ^^^^^^^^^^^
-

@@ -26,4 +26,3 @@ public fun foo() {
 //  8|         // Bad
 //  9|         fun() { break }
 // 10|     }           ^^^^^
-

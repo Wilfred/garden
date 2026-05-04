@@ -5,4 +5,3 @@ fun do_stuff() {
 
 // args: show-type
 // expected stdout: Result<Int, NoValue>
-

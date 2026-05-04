@@ -51,4 +51,3 @@ public method foo<T>(this: List<T>) {}
 //         Position { ... },
 //     ),
 // )
-

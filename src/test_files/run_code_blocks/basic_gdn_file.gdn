@@ -41,4 +41,3 @@ fun bar() {
 
 // args: run-code-blocks
 // expected stderr: Checked 4 blocks in 1 file.
-

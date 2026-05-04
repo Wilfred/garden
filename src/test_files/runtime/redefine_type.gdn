@@ -18,4 +18,3 @@ struct Foo {
 
 // args: run
 // expected stdout: 123
-

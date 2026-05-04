@@ -10,4 +10,3 @@ public fun map_over_strings(value) {
 // 1| public fun map_over_strings(value) {
 // 2|     value.foo()
 // 3| }   ^^^^^
-

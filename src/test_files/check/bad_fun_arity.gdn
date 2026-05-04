@@ -7,4 +7,3 @@ public fun foo(_f: Fun<(Int, Int)>) {}
 // -| src/test_files/check/bad_fun_arity.gdn:1:24
 // 1| public fun foo(_f: Fun<(Int, Int)>) {}
 // 2|                        ^^^^^^^^^^
-

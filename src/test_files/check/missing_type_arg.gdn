@@ -10,4 +10,3 @@ public fun foo(): Option {
 // 1| public fun foo(): Option {
 // 2|     None          ^^^^^^
 // 3| }
-

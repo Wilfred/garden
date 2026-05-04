@@ -13,4 +13,3 @@ fun split_words(src: String): String {
 
 // args: test-eval-up-to
 // expected stdout: src/test_files/eval_up_to/for_body_expr.gdn:3: ["foo", "bar"]
-

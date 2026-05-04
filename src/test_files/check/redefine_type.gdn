@@ -27,4 +27,3 @@ struct Foo {
 //   |        ^^^
 // 10|   name: String,
 // 11| }
-

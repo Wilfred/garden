@@ -22,4 +22,3 @@ fun render_inline() {
 
 // args: run
 // expected stdout: done
-

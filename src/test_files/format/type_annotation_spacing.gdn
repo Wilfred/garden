@@ -41,4 +41,3 @@ fs::list_directory(path)
 // 
 // // Namespace separator should be preserved
 // fs::list_directory(path)
-

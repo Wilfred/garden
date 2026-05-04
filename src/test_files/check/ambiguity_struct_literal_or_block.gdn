@@ -35,4 +35,3 @@ public fun foo(): Unit {
 //  9|   // struct literal.
 // 10|   {}
 // 11| }  ^
-

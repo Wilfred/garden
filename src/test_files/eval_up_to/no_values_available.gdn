@@ -5,4 +5,3 @@ fun foo (abc: Int) {
 
 // args: test-eval-up-to
 // expected stderr: No previous value saved for this expression
-

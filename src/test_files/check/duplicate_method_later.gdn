@@ -22,4 +22,3 @@ public method foo(this: String) {}
 // 6| public method foo(this: String) {}
 // 7|               ^^^ Note: Previous definition was here.
 // 8| public method foo(this: String) {}
-

@@ -6,4 +6,3 @@ test arithmetic {
 // expected stdout:
 // {"error":null,"value":"Ran 1 test: it passed.\n"}
 // {"error":null,"value":"Unit"}
-

@@ -49,4 +49,3 @@ fun bar() {}
 //  1| enum Foo
 //  2|      ^^^
 //  3| fun bar() {}
-

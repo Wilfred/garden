@@ -15,4 +15,3 @@ public fun foo() {}
 // 1| public fun foo() {}
 // 2|            ^^^ Note: Previous definition was here.
 // 3| public fun foo() {}
-

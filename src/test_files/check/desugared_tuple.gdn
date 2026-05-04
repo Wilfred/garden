@@ -22,4 +22,3 @@ public fun bar(): Tuple<Int> {
 // 5| public fun bar(): Tuple<Int> {
 // 6|   throw("")       ^^^^^^^^^^
 // 7| }
-

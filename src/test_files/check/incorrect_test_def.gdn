@@ -27,4 +27,3 @@ test baz(x: Int) {}
 // 4| 
 // 5| test baz(x: Int) {}
 // 6|         ^^^^^^^^
-

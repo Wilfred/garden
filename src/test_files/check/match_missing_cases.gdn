@@ -14,4 +14,3 @@ public fun foo(v: Result<Int, Unit>) {
 // 3|   match v {
 // 4|   }     ^
 // 5| }
-

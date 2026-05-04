@@ -16,4 +16,3 @@ public method foo(this: List<NoSuchType>) {
 // 1| public method foo(this: List<NoSuchType>) {
 // 2|   None                       ^^^^^^^^^^
 // 3| }
-

@@ -54,4 +54,3 @@ public fun bar(): Int {
 //   |            ^^^^^^^^^^^
 // 21|     Three => {
 // 22|       // not wrong
-

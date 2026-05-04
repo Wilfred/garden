@@ -8,4 +8,3 @@ method foo(this: String, x: Int) {
 
 // args: test-eval-up-to
 // expected stdout: src/test_files/eval_up_to/meth_receiver.gdn:1: "abc"
-

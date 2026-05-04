@@ -4,4 +4,3 @@ fun foo(path: String) {
 
 // args: show-type
 // expected stdout: String
-

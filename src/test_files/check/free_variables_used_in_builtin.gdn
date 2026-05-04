@@ -12,4 +12,3 @@ public fun foo(x: Int) {
 //  |            ^^^
 // 2|     // We should not complain about unused variables in built-in signatures.
 // 3|     __BUILT_IN_IMPLEMENTATION
-

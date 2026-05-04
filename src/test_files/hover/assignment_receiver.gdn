@@ -6,4 +6,3 @@ fun foo() {
 
 // args: show-type
 // expected stdout: Int
-

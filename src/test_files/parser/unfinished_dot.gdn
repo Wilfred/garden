@@ -67,4 +67,3 @@ fun foo(s: String) {
 //  1| fun foo(s: String) {
 //  2|     s.
 //  3| }    ^
-

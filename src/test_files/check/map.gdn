@@ -14,4 +14,3 @@ public fun get_ints_inferred(items: List<String>): List<Int> {
 // 5| public fun get_ints_inferred(items: List<String>): List<Int> {
 // 6|     items.map(fun(item) { item.len() })
 // 7| }                         ^^^^
-

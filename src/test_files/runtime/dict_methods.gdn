@@ -26,4 +26,3 @@ print_dict(d.remove("x"))
 // Dict["x" => 1, "y" => 43]
 // [("x", 1), ("y", 43)]
 // Dict["y" => 43]
-

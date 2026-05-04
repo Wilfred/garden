@@ -29,4 +29,3 @@ foo()()
 //         close_paren: Position { ... },
 //     },
 // )
-

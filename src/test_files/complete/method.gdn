@@ -23,4 +23,3 @@ fun file_name(s: String) {
 // {"label":"trim()","kind":2,"detail":"(): String","insertText":"trim()","insertTextFormat":2}
 // {"label":"trim_left()","kind":2,"detail":"(): String","insertText":"trim_left()","insertTextFormat":2}
 // {"label":"trim_right()","kind":2,"detail":"(): String","insertText":"trim_right()","insertTextFormat":2}
-

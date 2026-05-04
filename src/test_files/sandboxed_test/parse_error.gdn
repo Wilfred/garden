@@ -10,4 +10,3 @@ fun foo() {
 
 // args: sandboxed-test
 // expected stdout: {"description":"Parse error","tests":{}}
-

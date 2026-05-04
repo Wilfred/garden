@@ -7,4 +7,3 @@ public method doStuff(this String) {}
 // -| src/test_files/check/missing_colon_method_receiver.gdn:1:28
 // 1| public method doStuff(this String) {}
 // 2|                            ^^^^^^
-

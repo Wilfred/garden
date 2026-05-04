@@ -14,4 +14,3 @@ public fun foo(): MyStruct {
 // 3| public fun foo(): MyStruct {
 // 4|   throw("")       ^^^^^^^^
 // 5| }
-

@@ -13,4 +13,3 @@ method get_x(this: Foo): Int {
 
 // args: run
 // expected stdout: 123
-

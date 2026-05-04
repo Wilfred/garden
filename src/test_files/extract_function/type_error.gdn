@@ -14,4 +14,3 @@ fun contains_expr() {
 //   let x = 1
 //   extracted_fun(x)
 // }
-

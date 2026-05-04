@@ -103,4 +103,3 @@ method used_meth(this: String): Unit {}
 //   |     ^^^^^^^^^^^^^^^^^^^
 // 22|   unreachable_cycle_1()
 // 23| }
-

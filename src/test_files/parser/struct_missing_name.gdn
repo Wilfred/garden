@@ -30,4 +30,3 @@ struct { x: Int }
 //   | ^^^^^^
 //  2| 
 //  3| // args: dump-ast
-

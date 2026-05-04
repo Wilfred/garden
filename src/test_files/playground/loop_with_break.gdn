@@ -9,4 +9,3 @@ for flavor in flavors {
 
 // args: playground-run
 // expected stdout: {"error":null,"value":"Unit"}
-

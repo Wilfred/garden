@@ -10,4 +10,3 @@ fun foo(arg: (A: B)) {
 // 1| // Parser previously crashed on this input
 // 2| fun foo(arg: (A: B)) {
 // 3| }              ^
-

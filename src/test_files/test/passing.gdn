@@ -4,4 +4,3 @@ test foo {
 
 // args: test
 // expected stdout: Ran 1 test: it passed.
-

@@ -13,4 +13,3 @@ public fun returns_fun(): Fun<(Int), String> {
 // 3|   // lambda.
 // 4|   fun(x) { x + 1 }
 // 5| }          ^^^^^
-

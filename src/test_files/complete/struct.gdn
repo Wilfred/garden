@@ -12,4 +12,3 @@ fun foo(p: Person) {
 // expected stdout:
 // {"label":"name","kind":5,"detail":": String"}
 // {"label":"num_pets","kind":5,"detail":": Int"}
-

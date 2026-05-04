@@ -8,4 +8,3 @@ fun file_name(path: String) {
 
 // args: show-type
 // expected stdout: String
-

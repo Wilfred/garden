@@ -19,4 +19,3 @@ fun foo() {
 // {"label":"len()","kind":2,"detail":"(): Int","insertText":"len()","insertTextFormat":2}
 // {"label":"map","kind":2,"detail":"(Fun<(T), U>): List<U>","insertText":"map($0)","insertTextFormat":2}
 // {"label":"slice","kind":2,"detail":"(Int, Int): List<T>","insertText":"slice($0)","insertTextFormat":2}
-

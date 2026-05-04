@@ -15,4 +15,3 @@ public fun bar() {
 //  |            ^^^
 // 2|   __BUILT_IN_IMPLEMENTATION
 // 3| }
-

@@ -10,4 +10,3 @@ public fun foo(): (Int, List) {
 // 1| public fun foo(): (Int, List) {
 // 2|   throw("")             ^^^^
 // 3| }
-

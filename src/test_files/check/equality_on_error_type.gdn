@@ -16,4 +16,3 @@ public fun foo() {
 //  |             ^^^^^^^^^^^^
 // 3|     // should not emit an equality warning
 // 4|     if v == "" {
-

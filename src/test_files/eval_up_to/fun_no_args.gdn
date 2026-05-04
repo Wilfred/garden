@@ -7,4 +7,3 @@ fun foo () {
 
 // args: test-eval-up-to
 // expected stdout: src/test_files/eval_up_to/fun_no_args.gdn:4: 3
-

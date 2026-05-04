@@ -8,4 +8,3 @@ fun option_identity<T>(value: Option<T>): Option<T> {
 
 // args: run
 // expected stdout: Some(1)
-

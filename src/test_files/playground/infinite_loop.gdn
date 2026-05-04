@@ -2,4 +2,3 @@ while True {}
 
 // args: playground-run
 // expected stdout: {"error":"Reached the tick limit","value":null}
-

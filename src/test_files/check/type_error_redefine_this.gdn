@@ -13,4 +13,3 @@ public method foo(this: String) {
 //  |          ^^^
 // 3|   this.index_of("a")
 // 4| }
-

@@ -26,4 +26,3 @@ public fun foo() {
 //  4|   y += 2
 //  5|   ^
 //  6|   // But later uses of these variables shouldn't have cascading
-

@@ -12,4 +12,3 @@
 // 2|     let value = Some("foo")
 // 3|     value.or_throw() + 1
 // 4| }   ^^^^^^^^^^^^^^^^
-

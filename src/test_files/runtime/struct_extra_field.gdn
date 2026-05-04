@@ -10,4 +10,3 @@ struct Foo {}
 // --| src/test_files/runtime/struct_extra_field.gdn:4:10	 __toplevel__
 //  4|     Foo{ x: 1 }
 //   |          ^
-

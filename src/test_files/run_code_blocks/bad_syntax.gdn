@@ -9,4 +9,3 @@ fun foo() {
 // Expected `}`, but got EOF.
 // Parsing failed.
 // Checked 1 block in 1 file.
-

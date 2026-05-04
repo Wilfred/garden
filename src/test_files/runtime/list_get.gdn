@@ -12,4 +12,3 @@ dbg(items.get("oh no wrong type"))
 // --| src/test_files/runtime/list_get.gdn:5:15	 __toplevel__
 //  5| dbg(items.get("oh no wrong type"))
 //   |               ^^^^^^^^^^^^^^^^^^
-

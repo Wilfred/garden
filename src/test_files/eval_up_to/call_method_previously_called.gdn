@@ -14,4 +14,3 @@ method increment(this: WrappedNum): Int {
 
 // args: test-eval-up-to
 // expected stdout: src/test_files/eval_up_to/call_method_previously_called.gdn:6: 10
-

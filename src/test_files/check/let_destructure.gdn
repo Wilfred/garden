@@ -46,4 +46,3 @@ public fun destructure() {
 // 14|     // not a tuple
 // 15|     let () = "foo"
 // 16| }            ^^^^^
-

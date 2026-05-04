@@ -13,4 +13,3 @@ import "__fs.gdn" as foo
 // 1| import "__fs.gdn" as
 //  |                   ^^
 // 2| import "__fs.gdn" as foo
-

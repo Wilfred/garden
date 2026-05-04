@@ -39,4 +39,3 @@ public method very_bad<T>(this: T) {}
 //  8| 
 //  9| public method very_bad<T>(this: T) {}
 // 10|                                 ^
-

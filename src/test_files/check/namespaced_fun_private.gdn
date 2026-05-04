@@ -19,4 +19,3 @@ import "./lib.gdn" as f
 //  |     ^^^ Note: `bar` is defined here.
 // 6|   41
 // 7| }
-

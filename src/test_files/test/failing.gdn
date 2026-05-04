@@ -9,4 +9,3 @@ test foo {
 //   Expected `2` but got `1`.
 // 
 // Ran 1 test: 0 passed and 1 failed.
-

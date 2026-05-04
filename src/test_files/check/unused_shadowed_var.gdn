@@ -29,4 +29,3 @@ public fun f(): Int {
 
 // expected stderr:
 // 2 issues can be fixed automatically (use `--fix`).
-

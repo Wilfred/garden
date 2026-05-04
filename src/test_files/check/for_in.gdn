@@ -24,4 +24,3 @@ public fun foo(items: List<Int>) {
 // 13|   for (x, y) in items {
 // 14|     x + y       ^^^^^
 // 15|   }
-

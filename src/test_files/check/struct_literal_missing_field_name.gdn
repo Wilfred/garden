@@ -7,4 +7,3 @@ let p = Person{ title: "Mr", "Hughes" }
 // -| src/test_files/check/struct_literal_missing_field_name.gdn:1:28
 // 1| let p = Person{ title: "Mr", "Hughes" }
 // 2|                            ^
-

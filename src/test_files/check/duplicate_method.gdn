@@ -15,4 +15,3 @@ public method foo(this: String) {}
 // 1| public method foo(this: String) {}
 // 2|               ^^^ Note: Previous definition was here.
 // 3| public method foo(this: String) {}
-

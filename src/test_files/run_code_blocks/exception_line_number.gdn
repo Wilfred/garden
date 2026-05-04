@@ -15,4 +15,3 @@ fun foo() {}
 //  4|  throw("oops")
 //   |  ^^^^^^^^^^^^^
 // Checked 1 block in 1 file.
-

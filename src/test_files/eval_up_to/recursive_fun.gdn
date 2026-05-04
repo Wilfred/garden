@@ -15,4 +15,3 @@ fun fib(i: Int): Int {
 
 // args: test-eval-up-to
 // expected stdout: src/test_files/eval_up_to/recursive_fun.gdn:2: 10
-

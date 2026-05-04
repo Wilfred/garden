@@ -16,4 +16,3 @@ public fun foo() {
 //  7| public fun foo() {
 //  8|     Color{}
 //  9| }   ^^^^^
-

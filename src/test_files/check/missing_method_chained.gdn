@@ -12,4 +12,3 @@
 // 2|   // Previously Path methods did not produce a type error here.
 // 3|   Path{ p: "/foo" }.read().foo()
 // 4| }                          ^^^
-

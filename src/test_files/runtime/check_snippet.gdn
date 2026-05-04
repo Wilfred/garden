@@ -1,7 +1,7 @@
 import "__reflect.gdn" as reflect
 
 {
-  dbg(reflect::check_snippet("True"))
+  dbg(reflect::check_snippet("True", Path{ p: "__snippet.gdn" }))
 }
 
 // args: run

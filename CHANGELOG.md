@@ -21,6 +21,10 @@ namespace.
 
 Added `random::choose()`.
 
+`reflect::check_snippet` now takes a `Path` argument, used as the
+location of the file that the snippet represents when resolving
+relative imports.
+
 Fixed an issue with `Dict::set()` where the output values had an
 incorrect type at runtime.
 

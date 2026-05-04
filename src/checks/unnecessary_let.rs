@@ -26,17 +26,6 @@ impl UnnecessaryLetVisitor {
         if let Expression_::Let(LetDestination::Symbol(let_sym), _, rhs) = &second_last.expr_ {
             if let Expression_::Variable(var_sym) = &last.expr_ {
                 if let_sym.name == var_sym.name {
-                    let combined_position = Position {
-                        start_offset: second_last.position.start_offset,
-                        end_offset: last.position.end_offset,
-                        line_number: second_last.position.line_number,
-                        end_line_number: last.position.end_line_number,
-                        column: second_last.position.column,
-                        end_column: last.position.end_column,
-                        path: second_last.position.path.clone(),
-                        vfs_path: second_last.position.vfs_path.clone(),
-                    };
-
                     // Fix: remove `let v = ` prefix and the trailing `v`.
                     // We use two separate fixes to preserve the RHS source text.
                     let prefix_position = Position {
@@ -65,11 +54,9 @@ impl UnnecessaryLetVisitor {
                         message: ErrorMessage(vec![
                             msgtext!("Unnecessary "),
                             msgcode!("let"),
-                            msgtext!(": variable "),
-                            msgcode!("{}", let_sym.name),
-                            msgtext!(" is immediately returned."),
+                            msgtext!(", this value is immediately returned."),
                         ]),
-                        position: combined_position,
+                        position: rhs.position.clone(),
                         notes: vec![],
                         severity: Severity::Warning,
                         fixes: vec![

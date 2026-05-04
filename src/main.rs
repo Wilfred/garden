@@ -211,6 +211,9 @@ enum CliCommands {
         /// Only valid with --fix.
         #[clap(long, action)]
         stdout: bool,
+        /// Only show errors, suppressing warnings.
+        #[clap(long, action)]
+        ignore_warnings: bool,
     },
     /// Run Garden code blocks in markdown and .gdn files.
     RunCodeBlocks { paths: Vec<PathBuf> },
@@ -289,12 +292,21 @@ fn main() {
             override_path,
             fix,
             stdout,
+            ignore_warnings,
         } => {
             let abs_path = to_abs_path(&path);
             let mut src = read_utf8_or_die(&abs_path);
             src = remove_testing_footer(&src);
             let src_path = to_abs_path(&override_path.unwrap_or(path.clone()));
-            syntax_check::check(&src_path, &src, json, fix, stdout, &abs_path)
+            syntax_check::check(
+                &src_path,
+                &src,
+                json,
+                fix,
+                stdout,
+                ignore_warnings,
+                &abs_path,
+            )
         }
         CliCommands::Test {
             paths,

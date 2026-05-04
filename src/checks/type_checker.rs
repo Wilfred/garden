@@ -429,6 +429,7 @@ impl TypeCheckVisitor<'_> {
 
         let ty_name: TypeName = match &hint_ty {
             Type::UserDefined { name: name_sym, .. } => name_sym.clone(),
+            Type::Fun { .. } => hint.sym.name.clone(),
             _ => {
                 return;
             }

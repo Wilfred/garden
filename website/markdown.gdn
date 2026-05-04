@@ -258,7 +258,11 @@ fun render_markdown_garden_code(snippet: Snippet): String {
     for line in snippet.content.lines() {
       match line.split_once("//->") {
         Some((_before, after)) => {
-          check_source(after, snippet.file)
+          // `*exception*` is a special marker indicating that the
+          // expression should throw an exception, not Garden source.
+          if after.trim() != "*exception*" {
+            check_source(after, snippet.file)
+          }
         }
         None => {}
       }

@@ -881,7 +881,7 @@ If called with a prefix, stop the previous session."
   (setq font-lock-defaults '(garden-mode-font-lock-keywords))
 
   ;; (add-hook 'completion-at-point-functions #'garden--completion-at-point nil t)
-  (add-hook 'eldoc-documentation-functions #'garden-mode-eldoc nil t))
+  )
 
 (defun garden--buf-as-tmp-file ()
   "Write the contents of the current buffer to a temporary file,
@@ -891,22 +891,6 @@ and return its path."
     (with-temp-file temp-file
       (insert src))
     temp-file))
-
-(defun garden--syntax-highlight (str)
-  "Apply font-lock properties to a string STR of Garden code."
-  (let (result)
-    ;; Load all of STR in a garden-mode buffer, and use its
-    ;; highlighting.
-    (save-match-data
-      (with-temp-buffer
-        (insert str)
-        (delay-mode-hooks (garden-mode))
-        (if (fboundp 'font-lock-ensure)
-            (font-lock-ensure)
-          (with-no-warnings
-            (font-lock-fontify-buffer)))
-        (setq result (buffer-string))))
-    result))
 
 (defun garden--async-command (command-name pos callback &optional extra-args)
   "Run CLI command COMMAND-NAME with position POS, and call CALLBACK with
@@ -948,15 +932,6 @@ the result."
                        (kill-buffer (current-buffer))
                        (delete-file tmp-file-of-src)
                        (funcall callback result)))))))))
-
-(defun garden-mode-eldoc (callback &rest _)
-  "Show information for the symbol at point."
-  (garden--async-command
-   "show-type"
-   (point)
-   (lambda (result)
-     ;; TODO: Only highlight the last line, not the doc comment.
-     (funcall callback (garden--syntax-highlight result)))))
 
 (defun garden--go-to-position (pos-json)
   "Parse POS-JSON as a buffer and position, and go to that location."

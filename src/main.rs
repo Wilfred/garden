@@ -214,10 +214,7 @@ enum CliCommands {
     /// Run Garden code blocks in markdown and .gdn files.
     RunCodeBlocks { paths: Vec<PathBuf> },
     /// Show the type of the expression at the position given.
-    ShowType {
-        path: PathBuf,
-        offset: Option<usize>,
-    },
+    ShowType { path: PathBuf },
     /// Show the definition position of the value at the position
     /// given.
     DefinitionPosition {
@@ -335,13 +332,11 @@ fn main() {
             let src = read_utf8_or_die(&abs_path);
             dump_ast(&src, &abs_path)
         }
-        CliCommands::ShowType { path, offset } => {
+        CliCommands::ShowType { path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
-            let offset = offset.unwrap_or_else(|| {
-                caret_finder::find_caret_offset(&src)
-                    .expect("Could not find comment containing `^` in source.")
-            });
+            let offset = caret_finder::find_caret_offset(&src)
+                .expect("Could not find comment containing `^` in source.");
             show_type(&src, &abs_path, offset)
         }
         CliCommands::DefinitionPosition {

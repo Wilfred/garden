@@ -1083,6 +1083,11 @@ the result."
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gdn\\'" . garden-mode))
 
+(defvar eglot-server-programs)
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '(garden-mode . ("garden" "lsp"))))
+
 (defun garden--jsonl-parse (str)
   "Parse lines of JSON from STR."
   (->> str

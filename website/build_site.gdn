@@ -309,7 +309,15 @@ fun build_site(): Unit {
   }
 
   for operator in reflect::operators() {
-    let page_name = if operator == "/" { "slash" } else { operator }
+    let page_name = if operator == "/" {
+      "slash"
+    } else if operator == "&&" {
+      "ampamp"
+    } else if operator == "||" {
+      "pipepipe"
+    } else {
+      operator
+    }
     if seen_operator_pages.contains(page_name).not() {
       log::warn("Expected a page documenting operator: " ^ operator)
     }

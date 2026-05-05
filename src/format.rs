@@ -82,7 +82,9 @@ struct IndentationVisitor {
     processed_lines: FxHashSet<usize>,
     span_edits: Vec<SpanEdit>,
     src: String,
-    /// Line numbers where toplevel items start (for blank line enforcement).
+    /// Line numbers where toplevel definitions start (for blank line
+    /// enforcement). Imports are excluded so that consecutive imports
+    /// can stay grouped together without blank lines.
     toplevel_start_lines: Vec<usize>,
 }
 
@@ -195,7 +197,9 @@ impl Visitor for IndentationVisitor {
             ToplevelItem::Test(test_info) => Some(test_info.name_sym.position.line_number),
             ToplevelItem::Enum(enum_info) => Some(enum_info.name_sym.position.line_number),
             ToplevelItem::Struct(struct_info) => Some(struct_info.name_sym.position.line_number),
-            ToplevelItem::Import(import_info) => Some(import_info.path_pos.line_number),
+            // Imports don't require a blank line before them, so consecutive
+            // imports stay grouped together.
+            ToplevelItem::Import(_) => None,
             // Toplevel expressions and blocks don't require blank lines between them
             ToplevelItem::Expr(_) | ToplevelItem::Block(_) => None,
         };
@@ -587,7 +591,7 @@ fn apply_span_edits(src: &str, span_edits: &mut [SpanEdit]) -> String {
 
 /// Normalize blank lines in the formatted source.
 ///
-/// - Between toplevel definitions: exactly one blank line
+/// - Before non-import toplevel definitions: exactly one blank line
 /// - Inside blocks: at most one blank line between lines
 fn normalize_blank_lines(src: &str, toplevel_start_lines: &[usize]) -> String {
     let lines: Vec<&str> = src.lines().collect();

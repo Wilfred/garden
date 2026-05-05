@@ -20,6 +20,17 @@ pub(crate) fn rename(
     offset: usize,
     new_name: &str,
 ) -> Result<String, String> {
+    let positions = rename_positions(src, path, offset)?;
+    Ok(apply_renames(src, new_name, &positions))
+}
+
+/// Find every occurrence of the symbol at `offset` (definition and
+/// use sites) and return their source positions.
+pub(crate) fn rename_positions(
+    src: &str,
+    path: &Path,
+    offset: usize,
+) -> Result<Vec<Position>, String> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -50,8 +61,7 @@ pub(crate) fn rename(
         visitor.visit_toplevel_item(&item);
     }
 
-    let new_src = apply_renames(src, new_name, &visitor.replace_positions);
-    Ok(new_src)
+    Ok(visitor.replace_positions)
 }
 
 struct RenameLocalVisitor {

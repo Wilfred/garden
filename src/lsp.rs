@@ -7,8 +7,8 @@ use gen_lsp_types::{
     DocumentFormattingProvider, DocumentHighlight, DocumentHighlightParams,
     DocumentHighlightProvider, Hover, HoverParams, HoverProvider, InitializeParams,
     InitializeResult, Location, MarkupContent, MarkupKind, Position, PublishDiagnosticsParams,
-    Range, ServerCapabilities, ServerInfo, TextDocumentSync, TextDocumentSyncKind, TextEdit, Uri,
-    WorkspaceEdit,
+    Range, RenameParams, RenameProvider, ServerCapabilities, ServerInfo, TextDocumentSync,
+    TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
 };
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
@@ -352,6 +352,7 @@ fn handle_initialize(
                 code_action_kinds: Some(vec![CodeActionKind::QuickFix]),
                 ..Default::default()
             })),
+            rename_provider: Some(RenameProvider::Bool(true)),
             ..Default::default()
         },
         server_info: Some(ServerInfo {
@@ -712,6 +713,59 @@ fn handle_code_action(
     JsonRpcResponse::new(id, actions)
 }
 
+/// Handle a textDocument/rename request.
+fn handle_rename(
+    id: serde_json::Value,
+    params: RenameParams,
+    documents: &DocumentStore,
+) -> JsonRpcResponse<Option<WorkspaceEdit>> {
+    let uri = &params.text_document_position_params.text_document.uri;
+    let position = params.text_document_position_params.position;
+    let new_name = params.new_name;
+
+    let path = match uri.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return JsonRpcResponse::new(id, None),
+    };
+
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, None),
+        },
+    };
+
+    let offset = line_char_to_offset(&src, position.line as usize, position.character as usize);
+
+    let positions = match crate::rename::rename_positions(&src, &path, offset) {
+        Ok(positions) => positions,
+        Err(_) => return JsonRpcResponse::new(id, None),
+    };
+
+    let edits: Vec<TextEdit> = positions
+        .into_iter()
+        .map(|pos| TextEdit {
+            range: garden_pos_to_lsp_range(&pos),
+            new_text: new_name.clone(),
+        })
+        .collect();
+
+    if edits.is_empty() {
+        return JsonRpcResponse::new(id, None);
+    }
+
+    let mut changes = std::collections::HashMap::new();
+    changes.insert(uri.clone(), edits);
+
+    let workspace_edit = WorkspaceEdit {
+        changes: Some(changes),
+        ..Default::default()
+    };
+
+    JsonRpcResponse::new(id, Some(workspace_edit))
+}
+
 /// Check if two ranges overlap.
 fn ranges_overlap(a: &Range, b: &Range) -> bool {
     // a starts after b ends
@@ -913,6 +967,24 @@ pub(crate) fn run_lsp() {
                         }
                     };
                     let response = handle_code_action(id, params, &documents);
+                    if let Err(e) = write_message(&response) {
+                        eprintln!("Error writing response: {e}");
+                    }
+                }
+            }
+            Some("textDocument/rename") => {
+                if let Some(id) = parsed.id {
+                    let params: RenameParams = match message
+                        .get("params")
+                        .and_then(|p| serde_json::from_value(p.clone()).ok())
+                    {
+                        Some(p) => p,
+                        None => {
+                            eprintln!("Error parsing rename params");
+                            continue;
+                        }
+                    };
+                    let response = handle_rename(id, params, &documents);
                     if let Err(e) = write_message(&response) {
                         eprintln!("Error writing response: {e}");
                     }

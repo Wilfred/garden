@@ -1511,23 +1511,46 @@ impl TypeCheckVisitor<'_> {
                 internal_reason: "Unbound variable".to_owned(),
                 inferred_type: None,
             };
+
+            if sym.name.text != "__BUILT_IN_IMPLEMENTATION" {
+                let local_names = self.bindings.all_bindings();
+                let ns = self
+                    .env
+                    .get_namespace(&self.path.path)
+                    .expect("Should have a namespace for this path");
+                let ns = ns.borrow();
+
+                let mut available_names: Vec<&SymbolName> =
+                    local_names.iter().map(|(name, _)| name).collect();
+                available_names.extend(ns.values.keys());
+
+                let mut fixes = vec![];
+                let mut message_parts =
+                    vec![msgtext!("Unbound symbol: "), msgcode!("{}", sym.name)];
+                if let Some(similar) = most_similar(&available_names, &sym.name) {
+                    fixes.push(Autofix {
+                        description: format!("Use `{}` here.", similar),
+                        position: sym.position.clone(),
+                        new_text: similar.text.clone(),
+                    });
+                    message_parts.push(msgtext!(". Did you mean "));
+                    message_parts.push(msgcode!("{}", similar));
+                    message_parts.push(msgtext!("?"));
+                }
+
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    fixes,
+                    severity: Severity::Error,
+                    message: ErrorMessage(message_parts),
+                    position: sym.position.clone(),
+                });
+            }
+
             // Treat this variable as locally bound in the
             // rest of the scope, to prevent cascading
             // errors.
             self.set_binding(sym, ty.clone());
-
-            if sym.name.text != "__BUILT_IN_IMPLEMENTATION" {
-                self.diagnostics.push(Diagnostic {
-                    notes: vec![],
-                    fixes: vec![],
-                    severity: Severity::Error,
-                    message: ErrorMessage(vec![
-                        msgtext!("Unbound symbol: "),
-                        msgcode!("{}", sym.name),
-                    ]),
-                    position: sym.position.clone(),
-                });
-            }
 
             return ty;
         };

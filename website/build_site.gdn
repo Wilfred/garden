@@ -260,14 +260,14 @@ fun build_blog(website_dir: Path, out_dir: Path, base_tmpl_src: String): Unit {
 // both valid and readable URLs
 fun operator_page_name(operator: String): String {
   if operator == "/" {
-      "slash"
-    } else if operator == "&&" {
-      "ampamp"
-    } else if operator == "||" {
-      "pipepipe"
-    } else {
-      operator
-    }
+    "slash"
+  } else if operator == "&&" {
+    "ampamp"
+  } else if operator == "||" {
+    "pipepipe"
+  } else {
+    operator
+  }
 }
 
 /// Build the entire garden website.

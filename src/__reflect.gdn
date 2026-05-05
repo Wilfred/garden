@@ -123,8 +123,10 @@ test keywords {
 
 /// All the operators in Garden.
 public fun operators(): List<String> {
-  ["+", "+=", "-", "-=", "*", "**", "==", "!=", "=", "^",
-    ">", "<", ">=", "<=", "%", "/"]
+  // See lex_between in lex.rs for all lexemes that can be operators.
+  ["==", "!=", ">=", "<=", "&&", "||", "+=", "-=", "**",
+    "+", "-", "*", "/", "%", "^", "=", "<", ">",
+  ]
 }
 
 /// Get the source code for the type definition of `name`.

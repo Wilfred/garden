@@ -1,0 +1,39 @@
+println(0123456789101112131415160123456789101112131415)
+
+// args: dump-ast
+// expected stdout:
+// Call(
+//     Expression {
+//         position: Position { ... },
+//         expr_: Variable(
+//             Symbol"println",
+//         ),
+//         value_is_used: true,
+//         id: SyntaxId(1),
+//     },
+//     ParenthesizedArguments {
+//         open_paren: Position { ... },
+//         arguments: [
+//             ExpressionWithComma {
+//                 expr: Expression {
+//                     position: Position { ... },
+//                     expr_: IntLiteral(
+//                         11223344,
+//                     ),
+//                     value_is_used: true,
+//                     id: SyntaxId(2),
+//                 },
+//                 comma: None,
+//             },
+//         ],
+//         close_paren: Position { ... },
+//     },
+// )
+
+// expected stderr:
+// Error: Parse error: `0123456789101112131415160123456789101112131415` is outside the range of valid integer values. Integers must be between `-9223372036854775808` and `9223372036854775807`.
+// --| src/test_files/parser/int_literal_overflow.gdn:1:9
+//  1| println(0123456789101112131415160123456789101112131415)
+//  2|         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//  3| // args: dump-ast
+

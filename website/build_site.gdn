@@ -256,6 +256,20 @@ fun build_blog(website_dir: Path, out_dir: Path, base_tmpl_src: String): Unit {
   }
 }
 
+// Convert "+" to "+" but "/" to "slash" so we have names that are
+// both valid and readable URLs
+fun operator_page_name(operator: String): String {
+  if operator == "/" {
+      "slash"
+    } else if operator == "&&" {
+      "ampamp"
+    } else if operator == "||" {
+      "pipepipe"
+    } else {
+      operator
+    }
+}
+
 /// Build the entire garden website.
 fun build_site(): Unit {
   let website_dir = source_dir_path().parent().or_throw().parent().or_throw().join("website")
@@ -309,15 +323,7 @@ fun build_site(): Unit {
   }
 
   for operator in reflect::operators() {
-    let page_name = if operator == "/" {
-      "slash"
-    } else if operator == "&&" {
-      "ampamp"
-    } else if operator == "||" {
-      "pipepipe"
-    } else {
-      operator
-    }
+    let page_name = operator_page_name(operator)
     if seen_operator_pages.contains(page_name).not() {
       log::warn("Expected a page documenting operator: " ^ operator)
     }
@@ -415,7 +421,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
   let keyword_links = join_with_commas_and(keyword_links)
 
   let operator_links = reflect::operators().map(fun(operator: String) {
-    let page_name = if operator == "/" { "slash" } else { operator }
+    let page_name = operator_page_name(operator)
     code_link(operator, "./operator:" ^ page_name ^ ".html")
   })
 

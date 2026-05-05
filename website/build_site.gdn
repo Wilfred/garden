@@ -86,7 +86,7 @@ fun write_method_page(type_name: String, method_name: String, out_dir: Path, bas
 fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>, file: Option<Path>): String {
   let src = match src {
     Some(src) => {
-      "```title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
+      "```garden nocheck title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
     }
     None => ""
   }
@@ -98,7 +98,7 @@ fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>
 }
 
 fun render_type_doc_comment(heading: String, doc_comment: String, src: String, methods: List<String>, type_name: String): String {
-  let src = "```title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
+  let src = "```garden nocheck title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
 
   let methods_section = if methods.is_empty() {
     ""

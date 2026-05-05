@@ -226,11 +226,28 @@ fn parse_float(
     if FLOAT_RE.is_match(token.text) {
         let text = token.text.replace('_', "");
         let f: f64 = text.parse().unwrap();
-        Expression::new(
-            token.position,
-            Expression_::FloatLiteral(f.into()),
-            id_gen.next(),
-        )
+        if f.is_infinite() {
+            diagnostics.push(ParseError::Invalid {
+                position: token.position.clone(),
+                message: ErrorMessage(vec![
+                    msgcode!("{}", token.text),
+                    msgtext!(" is outside the range of valid float values."),
+                ]),
+                notes: vec![],
+            });
+
+            Expression::new(
+                token.position,
+                Expression_::FloatLiteral(1122.3344.into()),
+                id_gen.next(),
+            )
+        } else {
+            Expression::new(
+                token.position,
+                Expression_::FloatLiteral(f.into()),
+                id_gen.next(),
+            )
+        }
     } else {
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),

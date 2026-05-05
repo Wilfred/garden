@@ -12,6 +12,9 @@ Added a warning for unnecessary `let` bindings where a variable is
 bound and immediately returned (e.g. `let x = foo() x` can be
 simplified to `foo()`), with an autofix.
 
+Unbound symbol errors now suggest the most similar name in scope
+("Did you mean ...?") and offer an autofix to replace the typo.
+
 ## Commands
 
 Added :load to evaluate all definitions in a file and switch to that

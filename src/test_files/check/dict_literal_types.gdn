@@ -27,7 +27,7 @@ Dict["x" => 1, "y" => ""]
 //  6|      ^^^^^^^
 //  7| // Bad: undefined value.
 // 
-// Error: Unbound symbol: `no_such2`
+// Error: Unbound symbol: `no_such2`. Did you mean `no_such`?
 // --| src/test_files/check/dict_literal_types.gdn:8:15
 //  7| // Bad: undefined value.
 //  8| Dict["foo" => no_such2]
@@ -46,3 +46,6 @@ Dict["x" => 1, "y" => ""]
 // 17| // Bad: mixed value types.
 // 18| Dict["x" => 1, "y" => ""]
 // 19|                       ^^
+
+// expected stderr:
+// 1 issue can be fixed automatically (use `--fix`).

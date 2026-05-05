@@ -17,6 +17,11 @@ simplified to `foo()`), with an autofix.
 Added :load to evaluate all definitions in a file and switch to that
 namespace.
 
+## Tooling
+
+The LSP server now offers an "Extract function" code action when a
+non-empty selection covers a Garden expression.
+
 ## Standard Library
 
 Added `random::choose()`.

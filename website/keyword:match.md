@@ -32,6 +32,8 @@ fun describe_flavor(f: Flavor) {
     }
   }
 }
+
+describe_flavor(Vanilla)
 ```
 
 `match` also supports destructuring of tuples.
@@ -47,4 +49,6 @@ fun describe_email(address: String) {
     }
   }
 }
+
+describe_email("person@example.com")
 ```

@@ -25,6 +25,7 @@ use crate::completions;
 use crate::diagnostics::{Autofix, Diagnostic as GardenDiagnostic, Severity};
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
+use crate::extract_function::extract_function;
 use crate::highlight::highlight_occurrences;
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position as GardenPosition;
@@ -349,7 +350,10 @@ fn handle_initialize(
             document_formatting_provider: Some(DocumentFormattingProvider::Bool(true)),
             document_highlight_provider: Some(DocumentHighlightProvider::Bool(true)),
             code_action_provider: Some(CodeActionProvider::CodeActionOptions(CodeActionOptions {
-                code_action_kinds: Some(vec![CodeActionKind::QuickFix]),
+                code_action_kinds: Some(vec![
+                    CodeActionKind::QuickFix,
+                    CodeActionKind::RefactorExtract,
+                ]),
                 ..Default::default()
             })),
             rename_provider: Some(RenameProvider::Bool(true)),
@@ -628,24 +632,9 @@ fn handle_formatting(
     // Format the document
     let formatted = crate::format::format(&src, &path);
 
-    // Calculate the range covering the entire document
-    let line_count = src.lines().count();
-    let last_line_length = src.lines().last().map_or(0, |l| l.len());
-
-    let range = Range {
-        start: Position {
-            line: 0,
-            character: 0,
-        },
-        end: Position {
-            line: line_count.saturating_sub(1) as u32,
-            character: last_line_length as u32,
-        },
-    };
-
     // Create a TextEdit that replaces the entire document
     let edit = TextEdit {
-        range,
+        range: whole_document_range(&src),
         new_text: formatted,
     };
 
@@ -710,6 +699,10 @@ fn handle_code_action(
         actions.push(CodeActionResponse::CodeAction(action));
     }
 
+    if let Some(action) = build_extract_function_action(&src, &path, uri, &params.range) {
+        actions.push(CodeActionResponse::CodeAction(action));
+    }
+
     JsonRpcResponse::new(id, actions)
 }
 
@@ -764,6 +757,68 @@ fn handle_rename(
     };
 
     JsonRpcResponse::new(id, Some(workspace_edit))
+}
+
+/// Build an "Extract function" code action for the selected range, if the
+/// selection covers a Garden expression.
+fn build_extract_function_action(
+    src: &str,
+    path: &Path,
+    uri: &Uri,
+    range: &Range,
+) -> Option<CodeAction> {
+    let start_offset = line_char_to_offset(
+        src,
+        range.start.line as usize,
+        range.start.character as usize,
+    );
+    let end_offset =
+        line_char_to_offset(src, range.end.line as usize, range.end.character as usize);
+
+    // Only offer extract function for non-empty selections.
+    if start_offset >= end_offset {
+        return None;
+    }
+
+    let new_src = extract_function(src, path, start_offset, end_offset, "extracted").ok()?;
+
+    let full_range = whole_document_range(src);
+    let text_edit = TextEdit {
+        range: full_range,
+        new_text: new_src,
+    };
+
+    let mut changes = std::collections::HashMap::new();
+    changes.insert(uri.clone(), vec![text_edit]);
+
+    let workspace_edit = WorkspaceEdit {
+        changes: Some(changes),
+        ..Default::default()
+    };
+
+    Some(CodeAction {
+        title: "Extract function".to_owned(),
+        kind: Some(CodeActionKind::RefactorExtract),
+        edit: Some(workspace_edit),
+        ..Default::default()
+    })
+}
+
+/// A range that covers the entire source document.
+fn whole_document_range(src: &str) -> Range {
+    let line_count = src.lines().count();
+    let last_line_length = src.lines().last().map_or(0, |l| l.len());
+
+    Range {
+        start: Position {
+            line: 0,
+            character: 0,
+        },
+        end: Position {
+            line: line_count.saturating_sub(1) as u32,
+            character: last_line_length as u32,
+        },
+    }
 }
 
 /// Check if two ranges overlap.

@@ -152,8 +152,9 @@ pub(crate) fn lex_between<'a>(
 
         // Two character binary operators.
         for token_str in [
-            "::", "==", "!=", ">=", "<=", "&&", "||", "=>", "+=", "-=", "**", "+.", "-.", "*.",
-            "/.",
+            "==", "!=", ">=", "<=", "&&", "||", "+=", "-=", "**", "+.", "-.", "*.", "/.",
+            // Binary operators above.
+            "=>", "::", // Other lexemes.
         ] {
             if s.starts_with(token_str) {
                 let (line_number, column) = lp.from_offset(offset);
@@ -229,10 +230,10 @@ pub(crate) fn lex_between<'a>(
             continue;
         }
 
-        // One character binary operators.
+        // One character operators and lexemes.
         for token_char in [
-            '+', '-', '*', '/', '%', '^', '(', ')', '{', '}', '=', ',', '<', '>', '[', ']', '.',
-            ':',
+            '+', '-', '*', '/', '%', '^', '=', '<', '>', // Binary operators.
+            '(', ')', '{', '}', ',', '[', ']', '.', ':', // Other lexemes.
         ] {
             if s.starts_with(token_char) {
                 let (line_number, column) = lp.from_offset(offset);

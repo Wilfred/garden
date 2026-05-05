@@ -218,20 +218,26 @@ fun render_code_block(snippet: Snippet, self_url: Option<String>): String {
     ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "")
   }
 
-  let buttons = if is_garden && (snippet.title != Some("Source Code")) {
-    "<button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button>"
+  let show_buttons = is_garden && (snippet.title != Some("Source Code"))
+
+  let buttons = if show_buttons {
+    "<div class=\"snippet-actions\"><button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button></div>"
   } else {
     ""
   }
 
-  let header = match snippet.title {
-    Some(title) => {
-      "<span class=\"code-title\">" ^ title ^ "</span>"
-    }
+  let title_html = match snippet.title {
+    Some(title) => "<span class=\"snippet-title\">" ^ title ^ "</span>"
     None => ""
   }
 
-  "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre>" ^ buttons ^ output_div ^ "</div>"
+  let header = if show_buttons || snippet.title.is_some() {
+    "<div class=\"snippet-header\">" ^ title_html ^ buttons ^ "</div>"
+  } else {
+    ""
+  }
+
+  "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre>" ^ output_div ^ "</div>"
 }
 
 fun check_source(src: String, path: Option<Path>): Unit {
@@ -796,11 +802,11 @@ test render_triple_backtick_blank_line {
 }
 
 test render_triple_backtick_keyword {
-  assert(render("```garden nocheck\nfun foo\n```", None, None) == "<div class=\"snippet\"><pre><code><a class=\"keyword\" href=\"/keyword:fun.html\">fun</a> foo</code></pre><button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button><div class=\"snippet-output\" hidden></div></div>")
+  assert(render("```garden nocheck\nfun foo\n```", None, None) == "<div class=\"snippet\"><div class=\"snippet-header\"><div class=\"snippet-actions\"><button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button></div></div><pre><code><a class=\"keyword\" href=\"/keyword:fun.html\">fun</a> foo</code></pre><div class=\"snippet-output\" hidden></div></div>")
 }
 
 test render_triple_backtick_comment {
-  assert(render("```garden nocheck\nfoo // bar\n```", None, None) == "<div class=\"snippet\"><pre><code>foo <span class=\"comment\">// bar</span></code></pre><button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button><div class=\"snippet-output\" hidden></div></div>")
+  assert(render("```garden nocheck\nfoo // bar\n```", None, None) == "<div class=\"snippet\"><div class=\"snippet-header\"><div class=\"snippet-actions\"><button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button></div></div><pre><code>foo <span class=\"comment\">// bar</span></code></pre><div class=\"snippet-output\" hidden></div></div>")
 }
 
 test render_asterisk_bullet {

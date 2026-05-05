@@ -234,10 +234,7 @@ fun render_markdown_code(snippet: Snippet): String {
 }
 
 fun check_source(src: String, path: Option<Path>): Unit {
-  let snippet_path = match path {
-    Some(p) => p
-    None => Path{ p: "__snippet.gdn" }
-  }
+  let snippet_path = path.or_value(Path{ p: "__snippet.gdn" })
 
   match reflect::check_snippet(src, snippet_path) {
     Ok(_) => {}

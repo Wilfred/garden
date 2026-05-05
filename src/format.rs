@@ -33,7 +33,6 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
         span_edits: vec![],
         src: src.to_owned(),
         toplevel_start_lines: vec![],
-        import_start_lines: vec![],
     };
 
     for item in &items {
@@ -55,11 +54,7 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
     let src_after_indent = apply_indentation_edits(&src_after_spans, &visitor.line_edits);
 
     // Phase 6: Normalize blank lines
-    let src_after_blanks = normalize_blank_lines(
-        &src_after_indent,
-        &visitor.toplevel_start_lines,
-        &visitor.import_start_lines,
-    );
+    let src_after_blanks = normalize_blank_lines(&src_after_indent, &visitor.toplevel_start_lines);
 
     // Phase 7: Fix type annotation spacing
     fix_type_annotation_spacing(&src_after_blanks, &vfs_path)
@@ -87,10 +82,10 @@ struct IndentationVisitor {
     processed_lines: FxHashSet<usize>,
     span_edits: Vec<SpanEdit>,
     src: String,
-    /// Line numbers where toplevel items start (for blank line enforcement).
+    /// Line numbers where toplevel definitions start (for blank line
+    /// enforcement). Imports are excluded so that consecutive imports
+    /// can stay grouped together without blank lines.
     toplevel_start_lines: Vec<usize>,
-    /// Line numbers where import statements start.
-    import_start_lines: Vec<usize>,
 }
 
 impl IndentationVisitor {
@@ -202,16 +197,14 @@ impl Visitor for IndentationVisitor {
             ToplevelItem::Test(test_info) => Some(test_info.name_sym.position.line_number),
             ToplevelItem::Enum(enum_info) => Some(enum_info.name_sym.position.line_number),
             ToplevelItem::Struct(struct_info) => Some(struct_info.name_sym.position.line_number),
-            ToplevelItem::Import(import_info) => Some(import_info.path_pos.line_number),
+            // Imports don't require a blank line before them, so consecutive
+            // imports stay grouped together.
+            ToplevelItem::Import(_) => None,
             // Toplevel expressions and blocks don't require blank lines between them
             ToplevelItem::Expr(_) | ToplevelItem::Block(_) => None,
         };
         if let Some(line) = start_line {
             self.toplevel_start_lines.push(line);
-        }
-        if let ToplevelItem::Import(import_info) = item {
-            self.import_start_lines
-                .push(import_info.path_pos.line_number);
         }
 
         // Continue with default visitor behavior
@@ -598,24 +591,17 @@ fn apply_span_edits(src: &str, span_edits: &mut [SpanEdit]) -> String {
 
 /// Normalize blank lines in the formatted source.
 ///
-/// - Between toplevel definitions: exactly one blank line
-/// - Between consecutive imports: no blank line
+/// - Before non-import toplevel definitions: exactly one blank line
 /// - Inside blocks: at most one blank line between lines
-fn normalize_blank_lines(
-    src: &str,
-    toplevel_start_lines: &[usize],
-    import_start_lines: &[usize],
-) -> String {
+fn normalize_blank_lines(src: &str, toplevel_start_lines: &[usize]) -> String {
     let lines: Vec<&str> = src.lines().collect();
     if lines.is_empty() {
         return src.to_owned();
     }
 
     let toplevel_lines: FxHashSet<usize> = toplevel_start_lines.iter().copied().collect();
-    let import_lines: FxHashSet<usize> = import_start_lines.iter().copied().collect();
     let mut result = String::with_capacity(src.len());
 
-    let mut last_non_blank: Option<usize> = None;
     let mut i = 0;
     while i < lines.len() {
         let line = lines[i];
@@ -627,17 +613,9 @@ fn normalize_blank_lines(
                 i += 1;
             }
 
-            // If there's a next line, emit at most one blank line.
-            // Skip the blank when both the previous and next non-blank lines
-            // are import statements.
+            // If there's a next line, emit at most one blank line
             if i < lines.len() {
-                let between_imports = match last_non_blank {
-                    Some(prev) => import_lines.contains(&prev) && import_lines.contains(&i),
-                    None => false,
-                };
-                if !between_imports {
-                    result.push('\n');
-                }
+                result.push('\n');
             }
             // If we're at the end, don't add trailing blank lines
             continue;
@@ -646,20 +624,14 @@ fn normalize_blank_lines(
         // This line is not blank - add it
         result.push_str(line);
         result.push('\n');
-        last_non_blank = Some(i);
         i += 1;
 
         // Check if the next line (after any blanks) starts a new toplevel definition
-        // If so, we need exactly one blank line between them - except between
-        // two consecutive imports, which stay grouped without a blank line.
+        // If so, we need exactly one blank line between them
         if i < lines.len() && !lines[i].trim().is_empty() && toplevel_lines.contains(&i) {
-            let prev_is_import = last_non_blank
-                .map(|prev| import_lines.contains(&prev))
-                .unwrap_or(false);
-            let next_is_import = import_lines.contains(&i);
-            if !(prev_is_import && next_is_import) {
-                result.push('\n');
-            }
+            // Next non-blank line is a toplevel definition, but there's no blank line
+            // Insert one blank line
+            result.push('\n');
         }
     }
 

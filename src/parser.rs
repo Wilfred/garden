@@ -171,8 +171,29 @@ fn parse_integer(
 
     if INTEGER_RE.is_match(token.text) {
         let text = token.text.replace('_', "");
-        let i: i64 = text.parse().unwrap();
-        Expression::new(token.position, Expression_::IntLiteral(i), id_gen.next())
+        match text.parse::<i64>() {
+            Ok(i) => Expression::new(token.position, Expression_::IntLiteral(i), id_gen.next()),
+            Err(_) => {
+                diagnostics.push(ParseError::Invalid {
+                    position: token.position.clone(),
+                    message: ErrorMessage(vec![
+                        msgcode!("{}", token.text),
+                        msgtext!(" is outside the range of valid integer values. Integers must be between "),
+                        msgcode!("{}", i64::MIN),
+                        msgtext!(" and "),
+                        msgcode!("{}", i64::MAX),
+                        msgtext!("."),
+                    ]),
+                    notes: vec![],
+                });
+
+                Expression::new(
+                    token.position,
+                    Expression_::IntLiteral(11223344),
+                    id_gen.next(),
+                )
+            }
+        }
     } else {
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),

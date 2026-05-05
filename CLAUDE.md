@@ -32,8 +32,7 @@ import "__fs.gdn" as fs
 fs::list_directory(Path{ p: "/"})
 ```
 
-When adding built-in functions, always update the CHANGELOG.md with a
-concise summary.
+Do not make changes to CHANGELOG.md.
 
 # Writing Error Messages
 

@@ -1,0 +1,17 @@
+import "__fs.gdn" as fs
+import "__random.gdn" as random
+import "__reflect.gdn" as reflect
+
+fun main(): Unit {
+  println("hello")
+}
+
+// args: format
+// expected stdout:
+// import "__fs.gdn" as fs
+// import "__random.gdn" as random
+// import "__reflect.gdn" as reflect
+// 
+// fun main(): Unit {
+//   println("hello")
+// }

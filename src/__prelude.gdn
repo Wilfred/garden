@@ -827,9 +827,7 @@ public fun throw(message: String): NoValue {
   __BUILT_IN_IMPLEMENTATION
 }
 
-/// Write a string to stdout.
-///
-/// See also `println`.
+/// Write a string to stdout. See also `println()`.
 ///
 /// ```
 /// print("hello world\n")
@@ -838,7 +836,7 @@ public fun print(_: String): Unit {
   __BUILT_IN_IMPLEMENTATION
 }
 
-/// Write a string to stdout, with a newline appended.
+/// Write a string to stdout, with a newline appended. See also `print()`.
 ///
 /// ```
 /// println("hello world")
@@ -1106,7 +1104,7 @@ public method remove<T>(this: Dict<T>, key: String): Dict<T> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-/// Return the larger value of these two integers.
+/// Return the larger value of these two integers. See also `min()`.
 ///
 /// ```
 /// max(1, 2) //-> 2
@@ -1123,7 +1121,7 @@ test max {
   assert(max(1, 2) == 2)
 }
 
-/// Return the smaller value of these two integers.
+/// Return the smaller value of these two integers. See also `max()`
 ///
 /// ```
 /// min(1, 2) //-> 1

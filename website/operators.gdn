@@ -1,22 +1,21 @@
-// Convert "+" to "+" but "/" to "slash" so we have names that are
-// both valid and readable URLs
-public fun operator_page_name(operator: String): String {
-  if operator == "/" {
-    "slash"
-  } else if operator == "&&" {
-    "ampamp"
-  } else if operator == "||" {
-    "pipepipe"
-  } else if operator == "+." {
-    "plusdot"
-  } else if operator == "-." {
-    "minusdot"
-  } else if operator == "*." {
-    "stardot"
-  } else if operator == "/." {
-    "slashdot"
-  } else {
-    operator
-  }
+fun url_safe_mapping(): Dict<String> {
+  // TODO: add support for constants so we don't need a function here.
+  Dict[
+    "/" => "slash",
+    "&&" => "ampamp",
+    "||" => "pipepipe",
+    "+." => "plusdot",
+    "-." => "minusdot",
+    "*." => "stardot",
+    "/." => "slashdot",
+  ]
 }
 
+// Convert "+" to "+" but "/" to "slash" so we have names that are
+// both valid and readable URLs
+public fun url_safe_name(operator: String): String {
+  let mappings = url_safe_mapping()
+  mappings.get(operator).or_value(operator)
+}
+
+// public fun from_url_safe_name(name: String): String {} 

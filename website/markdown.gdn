@@ -303,7 +303,7 @@ fun render_markdown_garden_code(snippet: Snippet): String {
         "<a class=\"keyword\" href=\"/keyword:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if operators.contains(tok) {
         if prev_had_trailing_ws && has_trailing_ws {
-          let name = ops::operator_page_name(tok)
+          let name = ops::url_safe_name(tok)
           let url = "/operator:" ^ name ^ ".html"
 
           // We want to distinguish `List<Int>`, where there isn't an

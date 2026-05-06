@@ -628,13 +628,32 @@ fun render_inline_code(src: String, self_url: Option<String>): String {
   let inner = src.strip_prefix("`").strip_suffix("`")
 
   let rendered = "<code>" ^ escape_angle_brackets(inner) ^ "</code>"
+  let url: Option<String> = None
+
   if reflect::operators().contains(inner) {
-    let url = "/operator:" ^ ops::url_safe_name(inner) ^ ".html"
-    if self_url != Some(url) && (inner.ends_with("=") && (inner.len() > 1)).not() {
+    let operator_url = "/operator:" ^ ops::url_safe_name(inner) ^ ".html"
+    if (inner.ends_with("=") && (inner.len() > 1)).not() {
       // Don't linkify += or !=, as they redirect to + and == respectively.
       // TODO: track redirects properly.
-      rendered = "<a href=\"" ^ url ^ "\"><code>" ^ inner ^ "</code></a>"
+      url = Some(operator_url)
     }
+  }
+
+  if inner.ends_with("()") {
+    let fun_name = inner.strip_suffix("()")
+    let prelude_funs = reflect::namespace_functions(prelude)
+    if prelude_funs.contains(fun_name) {
+      url = Some("/fun:__prelude.gdn::" ^ fun_name ^ ".html")
+    }
+  }
+
+  match url {
+    Some(url) => {
+      if self_url != Some(url)  {
+        rendered = "<a href=\"" ^ url ^ "\"><code>" ^ inner ^ "</code></a>"
+      }
+    }
+    None => {}
   }
 
   rendered

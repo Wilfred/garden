@@ -57,7 +57,17 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
     let src_after_blanks = normalize_blank_lines(&src_after_indent, &visitor.toplevel_start_lines);
 
     // Phase 7: Fix type annotation spacing
-    fix_type_annotation_spacing(&src_after_blanks, &vfs_path)
+    let mut result = fix_type_annotation_spacing(&src_after_blanks, &vfs_path);
+
+    // Phase 8: Ensure non-empty output ends with exactly one newline.
+    while result.ends_with("\n\n") {
+        result.pop();
+    }
+    if !result.is_empty() && !result.ends_with('\n') {
+        result.push('\n');
+    }
+
+    result
 }
 
 /// Represents an indentation edit for a specific line.

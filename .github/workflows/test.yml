@@ -84,7 +84,7 @@ jobs:
               echo "$out"
             fi
             echo "::endgroup::"
-          done < <(find . -name '*.md' -not -path './target/*' -not -path './node_modules/*' -not -path './src/test_files/*' -not -path './CHANGELOG.md' -not -path './sample_programs/ambiguities.md' -print0)
+          done < <(find . -name node_modules -prune -o -path './target' -prune -o -path './src/test_files' -prune -o -name '*.md' -not -path './CHANGELOG.md' -not -path './sample_programs/ambiguities.md' -print0)
           if [ "$failed" -ne 0 ]; then
             {
               echo "## run-code-blocks failures"

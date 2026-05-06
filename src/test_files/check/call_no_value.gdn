@@ -1,0 +1,5 @@
+{
+  throw("")(123)
+}
+
+// args: check

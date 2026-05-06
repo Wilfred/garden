@@ -1481,6 +1481,16 @@ impl TypeCheckVisitor<'_> {
                     inferred_type: None,
                 }
             }
+            _ if recv_ty.is_no_value() => {
+                for arg in &paren_args.arguments {
+                    // We still want to check arguments as far as possible.
+                    self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+                }
+
+                // NoValue is a bottom type, so it's a subtype of any
+                // function type. Calling it produces NoValue.
+                Type::no_value()
+            }
             _ => {
                 for arg in &paren_args.arguments {
                     // We still want to check arguments as far as possible.

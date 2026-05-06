@@ -83,7 +83,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
                 } else {
                     &meth_sym.name.text
                 };
-                return get_methods(&env, recv_ty, prefix);
+                return get_methods(&env, recv_ty, prefix, has_trailing_paren);
             }
             Expression_::NamespaceAccess(recv, sym) => {
                 let prefix = if sym.name.is_placeholder() {

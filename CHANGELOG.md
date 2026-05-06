@@ -1,16 +1,23 @@
-# 0.24 (unreleased)
+# 0.25 (unreleased)
 **Goal: Better REPL experience.**
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Fix precedence of `2 + 1 * 3.**
 
+# 0.24 (unreleased)
+**Goal: Better LSP.**
+**Goal: Floating point.**
+
+## Language
+
+Added floating point numbers, with basic arithmetic operators `+.`,
+`-.`, `*.` and `/.`.
+
 ## Checks
 
-Added a warning when all code paths in a function return the same
-literal value.
+Added warnings for:
 
-Added a warning for unnecessary `let` bindings where a variable is
-bound and immediately returned (e.g. `let x = foo() x` can be
-simplified to `foo()`), with an autofix.
+* All code paths in a function return the same value
+* Unnecessary `let` that's immediately returned
 
 ## Commands
 
@@ -27,6 +34,13 @@ relative imports.
 
 Fixed an issue with `Dict::set()` where the output values had an
 incorrect type at runtime.
+
+## Tooling
+
+Added hover, rename, extract function and semantic highlighting
+support to LSP.
+
+Improved autoformatter.
 
 # 0.23 (released 9 February 2026)
 **Goal: LSP.**

@@ -346,6 +346,7 @@ fun escape_angle_brackets(s: String): String {
   s.replace("<", "&lt;").replace(">", "&gt;")
 }
 
+/// Render a markdown string inside e.g. a paragraph or bullet.
 fun render_inline(src: String): String {
   let parts: List<String> = []
 
@@ -370,7 +371,8 @@ fun render_inline(src: String): String {
   "".join(parts)
 }
 
-fun render_inline_backticks(src: String): String {
+/// Render backticks inside a link.
+fun render_link_backticks(src: String): String {
   let parts: List<String> = []
 
   let s = src
@@ -598,7 +600,7 @@ fun render_link(src: String): String {
     Some(i) => {
       let link_text = src.substring(1, i)
       let link_url = src.substring(i + 2, src.len() - 1)
-      "<a href=\"" ^ link_url ^ "\">" ^ render_inline_backticks(link_text) ^ "</a>"
+      "<a href=\"" ^ link_url ^ "\">" ^ render_link_backticks(link_text) ^ "</a>"
     }
     None => src
   }

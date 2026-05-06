@@ -3,7 +3,7 @@ import "__random.gdn" as random
 import "__reflect.gdn" as reflect
 import "__time.gdn" as time
 import "__prelude.gdn" as prelude
-import "./markdown.gdn"
+import "./markdown.gdn" as markdown
 import "./log.gdn" as log
 import "./operators.gdn" as ops
 
@@ -95,7 +95,7 @@ fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>
   doc_comment = doc_comment.replace("\n\n```\n", "\n\n```title:Example\n")
 
   let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src])
-  render_markdown(md_src, file)
+  markdown::render_markdown(md_src, file)
 }
 
 fun render_type_doc_comment(heading: String, doc_comment: String, src: String, methods: List<String>, type_name: String): String {
@@ -111,7 +111,7 @@ fun render_type_doc_comment(heading: String, doc_comment: String, src: String, m
   }
 
   let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src, methods_section])
-  render_markdown(md_src, None)
+  markdown::render_markdown(md_src, None)
 }
 
 /// Look up the doc comment for `type_name`, render it to HTML and
@@ -152,7 +152,7 @@ fun write_markdown_page(
   let out_path = out_dir.join(page_file_name).set_extension("html")
 
   let page_src_md = md_path.read().or_throw()
-  let page_src = render_markdown(substitute_shorthand(website_dir, page_src_md), Some(md_path))
+  let page_src = markdown::render_markdown(substitute_shorthand(website_dir, page_src_md), Some(md_path))
   write_website_page(base_tmpl_string, page_src, out_path, title)
 }
 
@@ -252,7 +252,7 @@ fun build_blog(website_dir: Path, out_dir: Path, base_tmpl_src: String): Unit {
     let post_file_name = post.path.file_name().or_throw()
     let out_path = out_dir.join("blog").join(post_file_name).set_extension("html")
 
-    let html = render_markdown(substitute_shorthand(website_dir, src), Some(post.path))
+    let html = markdown::render_markdown(substitute_shorthand(website_dir, src), Some(post.path))
     write_website_page(base_tmpl_src, html, out_path, post.title)
   }
 }

@@ -1,0 +1,11 @@
+fun foo() {
+  let x = 1
+}
+
+
+
+// args: format
+// expected stdout:
+// fun foo() {
+//   let x = 1
+// }

@@ -57,6 +57,7 @@ mod hover;
 mod json_session;
 mod lsp;
 mod namespaces;
+mod nrepl;
 mod parser;
 mod pos_to_id;
 mod prompt;
@@ -240,6 +241,16 @@ enum CliCommands {
     PlaygroundRun { path: PathBuf },
     /// Start the Language Server Protocol (LSP) server.
     Lsp,
+    /// Start an nREPL server, listening for clients over TCP.
+    Nrepl {
+        /// Port to listen on. Use 0 to let the operating system pick
+        /// a free port.
+        #[clap(long, default_value_t = 7888)]
+        port: u16,
+        /// Host to bind to.
+        #[clap(long, default_value = "127.0.0.1")]
+        host: String,
+    },
 }
 
 fn main() {
@@ -554,6 +565,9 @@ fn main() {
         }
         CliCommands::Lsp => {
             lsp::run_lsp();
+        }
+        CliCommands::Nrepl { port, host } => {
+            nrepl::run_nrepl(&host, port, interrupted);
         }
     }
 }

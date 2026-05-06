@@ -1,6 +1,6 @@
 # `*` Operator
 
-`*` multiplies two integers together. For float values, see `*.`.
+`*` multiplies two `Int` values together. For `Float` values, see `*.`.
 
 ```
 3 * 4 //-> 12

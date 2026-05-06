@@ -1,6 +1,6 @@
 # `&&` Operator
 
-`&&` performs logical AND of two booleans. See also `||`.
+`&&` performs logical AND of two `Bool` values. See also `||`.
 
 ```
 True && True   //-> True

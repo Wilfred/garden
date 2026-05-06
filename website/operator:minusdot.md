@@ -1,6 +1,6 @@
 # `-.` Operator
 
-`-.` performs subtraction of floating point values. For integers, use `-`.
+`-.` performs subtraction of `Float` values. For `Int` values, see `-`.
 
 ```
 3.5 -. 1.0 //-> 2.5

@@ -1,6 +1,6 @@
 # `||` Operator
 
-`||` performs logical OR of two booleans.  See also `&&`.
+`||` performs logical OR of two `Bool` values.  See also `&&`.
 
 ```
 True || True   //-> True

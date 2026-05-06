@@ -1,6 +1,6 @@
 # `*.` Operator
 
-`*.` performs multiplication of floating point values. For integers, use `*`.
+`*.` performs multiplication of `Float` values. For `Int` values, use `*`.
 
 ```
 0.5 *. 12.0 //-> 6.0

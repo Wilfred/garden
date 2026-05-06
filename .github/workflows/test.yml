@@ -61,6 +61,9 @@ jobs:
       - name: Build website
         run: just site-build
 
+      - name: Run code blocks in markdown files
+        run: find . -name '*.md' -not -path './target/*' -not -path './node_modules/*' -print0 | xargs -0 garden run-code-blocks
+
   # dry_run_publish:
   #   runs-on: ubuntu-24.04
   #   steps:

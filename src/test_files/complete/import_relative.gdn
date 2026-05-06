@@ -1,0 +1,6 @@
+import "./prelude"
+//               ^
+
+// args: complete
+// expected stdout:
+// {"label":"prelude_fun.gdn","kind":17}

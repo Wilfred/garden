@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::fs;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -10,7 +11,7 @@ use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::garden_type::Type;
 use crate::namespaces::NamespaceInfo;
-use crate::parser::ast::{AstId, Expression_, IdGenerator, SymbolName};
+use crate::parser::ast::{AstId, Expression_, IdGenerator, ImportInfo, SymbolName, ToplevelItem};
 use crate::parser::parse_toplevel_items;
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
@@ -43,6 +44,16 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
 
     let mut seen_expr_ids = FxHashSet::default();
     for id in ids_at_pos.iter().rev() {
+        if let AstId::Import(import_id) = id {
+            for item in &items {
+                if let ToplevelItem::Import(info) = item {
+                    if info.id == *import_id {
+                        return get_import_completions(info, path);
+                    }
+                }
+            }
+            continue;
+        }
         let AstId::Expr(expr_id) = id else {
             continue;
         };
@@ -124,6 +135,51 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
         }
     }
     vec![]
+}
+
+/// Files in the directory of `src_path` that could be imported with
+/// the relative path the user has started typing.
+fn get_import_completions(import_info: &ImportInfo, src_path: &Path) -> Vec<CompletionItem> {
+    let Some(path_str) = import_info.path.to_str() else {
+        return vec![];
+    };
+
+    let Some(prefix) = path_str.strip_prefix("./") else {
+        return vec![];
+    };
+
+    let Some(parent_dir) = src_path.parent() else {
+        return vec![];
+    };
+
+    let Ok(entries) = fs::read_dir(parent_dir) else {
+        return vec![];
+    };
+
+    let mut items: Vec<CompletionItem> = vec![];
+    for entry in entries.flatten() {
+        let file_name = entry.file_name();
+        let Some(name) = file_name.to_str() else {
+            continue;
+        };
+
+        if !name.ends_with(".gdn") {
+            continue;
+        }
+
+        if !name.starts_with(prefix) {
+            continue;
+        }
+
+        items.push(CompletionItem {
+            label: name.to_owned(),
+            kind: Some(CompletionItemKind::File),
+            ..Default::default()
+        });
+    }
+
+    items.sort_by(|a, b| a.label.cmp(&b.label));
+    items
 }
 
 /// Values that are available in the toplevel of this namespace.

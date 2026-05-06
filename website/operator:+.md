@@ -1,6 +1,6 @@
 # `+` and `+=` Operators
 
-`+` adds two integers together.
+`+` adds two integers together. For float values, see `+.`.
 
 ```
 1 + 2 //-> 3

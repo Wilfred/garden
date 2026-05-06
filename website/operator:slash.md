@@ -1,6 +1,6 @@
 # `/` Operator
 
-`/` performs integer division.
+`/` performs integer division. For float values, see `/.`.
 
 ```
 30 / 10 //-> 3

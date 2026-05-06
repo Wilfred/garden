@@ -167,7 +167,7 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
 }
 
 /// Render a "# Foo" heading.
-fun render_heading(src: String): String {
+fun render_heading(src: String, self_url: Option<String>): String {
   let h_count = 0
 
   let content = src
@@ -183,7 +183,7 @@ fun render_heading(src: String): String {
   let open_tag = "<h" ^ string_repr(h_count) ^ ">"
   let close_tag = "</h" ^ string_repr(h_count) ^ ">"
 
-  open_tag ^ render_inline(content.trim()) ^ close_tag
+  open_tag ^ render_inline(content.trim(), self_url) ^ close_tag
 }
 
 /// We want to find " < ", which requires trailing whitespace on the
@@ -352,7 +352,7 @@ fun escape_angle_brackets(s: String): String {
 }
 
 /// Render a markdown string inside e.g. a paragraph or bullet.
-fun render_inline(src: String): String {
+fun render_inline(src: String, self_url: Option<String>): String {
   let parts: List<String> = []
 
   for piece in split_inline_parts(src) {
@@ -367,7 +367,7 @@ fun render_inline(src: String): String {
     } else if piece.starts_with("*") && piece.ends_with("*") {
       parts = parts.append(render_emphasis(piece))
     } else if piece.starts_with("`") {
-      parts = parts.append(render_inline_code(piece))
+      parts = parts.append(render_inline_code(piece, self_url))
     } else {
       parts = parts.append(escape_angle_brackets(piece))
     }
@@ -624,9 +624,20 @@ fun render_image(src: String): String {
   }
 }
 
-fun render_inline_code(src: String): String {
+fun render_inline_code(src: String, self_url: Option<String>): String {
   let inner = src.strip_prefix("`").strip_suffix("`")
-  "<code>" ^ escape_angle_brackets(inner) ^ "</code>"
+
+  let rendered = "<code>" ^ escape_angle_brackets(inner) ^ "</code>"
+  if reflect::operators().contains(inner) {
+    let url = "/operator:" ^ ops::url_safe_name(inner) ^ ".html"
+    if self_url != Some(url) && (inner.ends_with("=") && (inner.len() > 1)).not() {
+      // Don't linkify += or !=, as they redirect to + and == respectively.
+      // TODO: track redirects properly.
+      rendered = "<a href=\"" ^ url ^ "\"><code>" ^ inner ^ "</code></a>"
+    }
+  }
+
+  rendered
 }
 
 fun render_strong(src: String): String {
@@ -639,13 +650,13 @@ fun render_emphasis(src: String): String {
   "<em>" ^ escape_angle_brackets(inner) ^ "</em>"
 }
 
-fun render_paragraph(src: String): String {
-  "<p>" ^ render_inline(src) ^ "</p>"
+fun render_paragraph(src: String, self_url: Option<String>): String {
+  "<p>" ^ render_inline(src, self_url) ^ "</p>"
 }
 
-fun render_bullets(items: List<String>): String {
+fun render_bullets(items: List<String>, self_url: Option<String>): String {
   let rendered_items = items.map(fun(item: String) {
-    let rendered_item = render_inline(item.strip_prefix("*").trim_left())
+    let rendered_item = render_inline(item.strip_prefix("*").trim_left(), self_url)
     "<li>" ^ rendered_item ^ "</li>"
   })
 
@@ -668,16 +679,16 @@ public fun render(src: String, file: Option<Path>): String {
   for part in parse_markdown(src, file) {
     match part {
       Heading(heading) => {
-        html_parts = html_parts.append(render_heading(heading))
+        html_parts = html_parts.append(render_heading(heading, self_url))
       }
       Paragraph(paragraph) => {
-        html_parts = html_parts.append(render_paragraph(paragraph))
+        html_parts = html_parts.append(render_paragraph(paragraph, self_url))
       }
       CodeBlock(code) => {
         html_parts = html_parts.append(render_code_block(code, self_url))
       }
       Bullets(items) => {
-        html_parts = html_parts.append(render_bullets(items))
+        html_parts = html_parts.append(render_bullets(items, self_url))
       }
       ThematicBreak => {
         html_parts = html_parts.append("<hr />")

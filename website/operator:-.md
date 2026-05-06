@@ -1,6 +1,6 @@
 # `-` and `-=` Operators
 
-`-` subtracts the second integer from the first.
+`-` subtracts the second integer from the first. For float values, see `-.`.
 
 ```
 3 - 1 //-> 2

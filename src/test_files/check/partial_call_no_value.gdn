@@ -1,0 +1,15 @@
+// A function called with too few arguments has return type
+// `NoValue`, so applying further arguments to it does not
+// produce a cascading "expected a function" error.
+let y = max(1)(2)
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `max` requires an additional `Int` argument.
+// -| src/test_files/check/partial_call_no_value.gdn:4:14
+// 2| // `NoValue`, so applying further arguments to it does not
+// 3| // produce a cascading "expected a function" error.
+// 4| let y = max(1)(2)
+// 5|              ^
+

@@ -1444,12 +1444,18 @@ impl TypeCheckVisitor<'_> {
                             });
                         }
                     }
+
+                    substitute_ty_vars(&return_, &ty_var_env)
                 } else {
                     let name = name_sym.map(|sym| sym.name.text.clone());
                     self.arity_diagnostics(name.as_ref(), &params, &arg_tys, paren_args);
-                }
 
-                substitute_ty_vars(&return_, &ty_var_env)
+                    // The call had the wrong number of arguments, so we
+                    // don't know what the return value will be. Use
+                    // NoValue to suppress cascading errors when the
+                    // result is used (e.g. `max(1)(2)`).
+                    Type::no_value()
+                }
             }
             Type::Error {
                 internal_reason,
@@ -1472,6 +1478,13 @@ impl TypeCheckVisitor<'_> {
                 for arg in &paren_args.arguments {
                     // We still want to check arguments as far as possible.
                     self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+                }
+
+                if recv_ty.is_no_value() {
+                    // The receiver is the result of a partial call (or
+                    // similar) that already produced an error. Don't
+                    // report a cascading "expected a function" error.
+                    return Type::no_value();
                 }
 
                 self.diagnostics.push(Diagnostic {

@@ -209,11 +209,11 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
   items
 }
 
-fun render_code_block(snippet: Snippet, file: Option<Path>): String {
+fun render_code_block(snippet: Snippet, self_url: Option<String>): String {
   let is_garden = snippet.labels.is_empty() || snippet.labels.contains("garden")
 
   let (inner, output_div) = if is_garden {
-    (render_garden_code(snippet, file), "<div class=\"snippet-output\" hidden></div>")
+    (render_garden_code(snippet, self_url), "<div class=\"snippet-output\" hidden></div>")
   } else {
     ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "")
   }
@@ -256,7 +256,7 @@ fun check_source(src: String, path: Option<Path>): Unit {
   }
 }
 
-fun render_garden_code(snippet: Snippet, file: Option<Path>): String {
+fun render_garden_code(snippet: Snippet, self_url: Option<String>): String {
   if snippet.labels.contains("nocheck").not() {
     check_source(snippet.content, snippet.file)
 
@@ -273,13 +273,6 @@ fun render_garden_code(snippet: Snippet, file: Option<Path>): String {
         None => {}
       }
     }
-  }
-
-  let self_url = match file {
-    Some(file) => {
-      "/" ^ file.file_name().or_value("").replace(".md", ".html")
-    }
-    None => ""
   }
 
   let keywords = reflect::keywords()
@@ -321,7 +314,7 @@ fun render_garden_code(snippet: Snippet, file: Option<Path>): String {
           // to userland Garden code.
           let after_tok = part.substring(tok.len(), part.len())
 
-          if url == self_url {
+          if Some(url) == self_url {
             "<span class=\"operator\">" ^ escape_angle_brackets(tok) ^ "</span>" ^ after_tok
           } else {
             "<a class=\"operator\" href=\"" ^ url ^ "\">" ^ escape_angle_brackets(tok) ^ "</a>" ^ after_tok
@@ -662,6 +655,16 @@ fun render_bullets(items: List<String>): String {
 public fun render(src: String, file: Option<Path>): String {
   let html_parts: List<String> = []
 
+  let self_url = match file {
+    Some(file) => {
+      match file.file_name() {
+        Some(file_name) => Some("/" ^ file_name.replace(".md", ".html"))
+        None => None
+      }
+    }
+    None => None
+  }
+
   for part in parse_markdown(src, file) {
     match part {
       Heading(heading) => {
@@ -671,7 +674,7 @@ public fun render(src: String, file: Option<Path>): String {
         html_parts = html_parts.append(render_paragraph(paragraph))
       }
       CodeBlock(code) => {
-        html_parts = html_parts.append(render_code_block(code, file))
+        html_parts = html_parts.append(render_code_block(code, self_url))
       }
       Bullets(items) => {
         html_parts = html_parts.append(render_bullets(items))

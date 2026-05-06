@@ -299,6 +299,11 @@ impl TypeCheckVisitor<'_> {
             self.current_item = Some(def_id);
         }
 
+        if let Some(name_sym) = &fun_info.name_sym {
+            self.id_to_def_pos
+                .insert(name_sym.id, name_sym.position.clone());
+        }
+
         let mut type_bindings = FxHashMap::default();
         for type_param in &fun_info.type_params {
             type_bindings.insert(type_param.name.clone(), None);

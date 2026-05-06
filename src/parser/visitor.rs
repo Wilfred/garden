@@ -84,6 +84,10 @@ pub(crate) trait Visitor {
     // a separate method because Rust does not have a notion of
     // calling a 'super method'.
     fn visit_fun_info_default(&mut self, fun_info: &FunInfo) {
+        if let Some(name_sym) = &fun_info.name_sym {
+            self.visit_symbol(name_sym);
+        }
+
         for type_param in &fun_info.type_params {
             self.visit_type_symbol(type_param);
         }

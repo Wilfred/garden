@@ -166,7 +166,8 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
   parts
 }
 
-fun render_markdown_header(src: String): String {
+/// Render a "# Foo" heading.
+fun render_heading(src: String): String {
   let h_count = 0
 
   let content = src
@@ -208,12 +209,11 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
   items
 }
 
-fun render_markdown_code(snippet: Snippet): String {
+fun render_code_block(snippet: Snippet): String {
   let is_garden = snippet.labels.is_empty() || snippet.labels.contains("garden")
 
   let (inner, output_div) = if is_garden {
-    (render_markdown_garden_code(snippet),
-     "<div class=\"snippet-output\" hidden></div>")
+    (render_garden_code(snippet), "<div class=\"snippet-output\" hidden></div>")
   } else {
     ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "")
   }
@@ -256,7 +256,7 @@ fun check_source(src: String, path: Option<Path>): Unit {
   }
 }
 
-fun render_markdown_garden_code(snippet: Snippet): String {
+fun render_garden_code(snippet: Snippet): String {
   if snippet.labels.contains("nocheck").not() {
     check_source(snippet.content, snippet.file)
 
@@ -634,11 +634,11 @@ fun render_emphasis(src: String): String {
   "<em>" ^ escape_angle_brackets(inner) ^ "</em>"
 }
 
-fun render_markdown_paragraph(src: String): String {
+fun render_paragraph(src: String): String {
   "<p>" ^ render_inline(src) ^ "</p>"
 }
 
-fun render_markdown_bullets(items: List<String>): String {
+fun render_bullets(items: List<String>): String {
   let rendered_items = items.map(fun(item: String) {
     let rendered_item = render_inline(item.strip_prefix("*").trim_left())
     "<li>" ^ rendered_item ^ "</li>"
@@ -653,16 +653,16 @@ public fun render_markdown(src: String, file: Option<Path>): String {
   for part in parse_markdown(src, file) {
     match part {
       Heading(heading) => {
-        html_parts = html_parts.append(render_markdown_header(heading))
+        html_parts = html_parts.append(render_heading(heading))
       }
       Paragraph(paragraph) => {
-        html_parts = html_parts.append(render_markdown_paragraph(paragraph))
+        html_parts = html_parts.append(render_paragraph(paragraph))
       }
       CodeBlock(code) => {
-        html_parts = html_parts.append(render_markdown_code(code))
+        html_parts = html_parts.append(render_code_block(code))
       }
       Bullets(items) => {
-        html_parts = html_parts.append(render_markdown_bullets(items))
+        html_parts = html_parts.append(render_bullets(items))
       }
       ThematicBreak => {
         html_parts = html_parts.append("<hr />")
@@ -673,11 +673,11 @@ public fun render_markdown(src: String, file: Option<Path>): String {
   "\n".join(html_parts)
 }
 
-test render_markdown_paragraph_newlines {
+test render_paragraph_newlines {
   assert(render_markdown("foo\nbar", None) == "<p>foo\nbar</p>")
 }
 
-test render_headers {
+test render_headings {
   assert(render_markdown("# foo", None) == "<h1>foo</h1>")
   assert(render_markdown("#  foo ", None) == "<h1>foo</h1>")
 
@@ -688,15 +688,15 @@ test render_headers {
   assert(render_markdown("####### foo", None) == "<p>####### foo</p>")
 }
 
-test render_markdown_paragraph {
+test render_paragraph {
   assert(render_markdown("foo bar", None) == "<p>foo bar</p>")
 }
 
-test render_markdown_paragraph_escape_angle_brackets {
+test render_paragraph_escape_angle_brackets {
   assert(render_markdown("foo bar<", None) == "<p>foo bar&lt;</p>")
 }
 
-test render_markdown_paragraph_after_heading {
+test render_paragraph_after_heading {
   assert(render_markdown("# foo\n\nbar", None) == "<h1>foo</h1>\n<p>bar</p>")
 }
 

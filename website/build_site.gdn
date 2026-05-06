@@ -107,7 +107,7 @@ fun render_doc_comment(
   markdown::render(md_src, file, self_url)
 }
 
-fun render_type_doc_comment(heading: String, doc_comment: String, src: String, methods: List<String>, type_name: String): String {
+fun render_type_doc_comment(heading: String, doc_comment: String, src: String, methods: List<String>, type_name: String, self_url: Option<String>): String {
   let src = "```garden nocheck title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
 
   let methods_section = if methods.is_empty() {
@@ -120,7 +120,7 @@ fun render_type_doc_comment(heading: String, doc_comment: String, src: String, m
   }
 
   let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src, methods_section])
-  markdown::render(md_src, None, None)
+  markdown::render(md_src, None, self_url)
 }
 
 /// Look up the doc comment for `type_name`, render it to HTML and
@@ -139,9 +139,11 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Un
         }
       }
 
-      let page_src = render_type_doc_comment(heading, doc_comment, type_src, methods, type_name)
-
       let dest_path = out_dir.join("type:" ^ type_name ^ ".html")
+      let self_url = Some("/type:" ^ type_name ^ ".html")
+
+      let page_src = render_type_doc_comment(heading, doc_comment, type_src, methods, type_name, self_url)
+
       write_website_page(base_tmpl_src, page_src, dest_path, Some(type_name))
     }
     None => {

@@ -265,6 +265,14 @@ fun operator_page_name(operator: String): String {
     "ampamp"
   } else if operator == "||" {
     "pipepipe"
+  } else if operator == "+." {
+    "plusdot"
+  } else if operator == "-." {
+    "minusdot"
+  } else if operator == "*." {
+    "stardot"
+  } else if operator == "/." {
+    "slashdot"
   } else {
     operator
   }

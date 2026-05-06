@@ -64,14 +64,34 @@ jobs:
       - name: Run code blocks in markdown files
         run: |
           failed=0
+          : > /tmp/run-code-blocks-failures.md
           while IFS= read -r -d '' f; do
             echo "::group::$f"
-            if ! garden run-code-blocks "$f"; then
+            if ! out=$(garden run-code-blocks "$f" 2>&1); then
+              echo "$out"
               echo "FAIL: $f"
+              {
+                echo "### $f"
+                echo ''
+                echo '```'
+                echo "$out"
+                echo '```'
+                echo ''
+              } >> /tmp/run-code-blocks-failures.md
+              echo "::error file=$f::run-code-blocks failed for $f"
               failed=1
+            else
+              echo "$out"
             fi
             echo "::endgroup::"
           done < <(find . -name '*.md' -not -path './target/*' -not -path './node_modules/*' -not -path './src/test_files/*' -not -path './CHANGELOG.md' -not -path './sample_programs/ambiguities.md' -print0)
+          if [ "$failed" -ne 0 ]; then
+            {
+              echo "## run-code-blocks failures"
+              echo ''
+              cat /tmp/run-code-blocks-failures.md
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
           exit "$failed"
 
   # dry_run_publish:

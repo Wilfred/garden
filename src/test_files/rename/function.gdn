@@ -1,0 +1,18 @@
+fun increment(foo: Int): Int {
+    //    ^
+    foo + 1
+}
+
+public fun do_stuff() {
+  increment(123)
+}
+
+// args: rename --new-name increment_new
+// expected stdout:
+// fun increment_new(foo: Int): Int {
+//     foo + 1
+// }
+// 
+// public fun do_stuff() {
+//   increment_new(123)
+// }

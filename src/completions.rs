@@ -61,6 +61,25 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
                 };
                 return get_methods(&env, recv_ty, prefix);
             }
+            Expression_::MethodCall(recv, meth_sym, _) => {
+                // Only complete the method name itself, not when the
+                // cursor is inside the argument list.
+                let on_method_sym = meth_sym.position.contains_offset(offset)
+                    || (offset > 0 && meth_sym.position.contains_offset(offset - 1));
+                if !on_method_sym {
+                    continue;
+                }
+
+                let recv_id = recv.id;
+                let recv_ty = &summary.id_to_ty[&recv_id];
+
+                let prefix = if meth_sym.name.is_placeholder() {
+                    ""
+                } else {
+                    &meth_sym.name.text
+                };
+                return get_methods(&env, recv_ty, prefix);
+            }
             Expression_::NamespaceAccess(recv, sym) => {
                 let prefix = if sym.name.is_placeholder() {
                     ""

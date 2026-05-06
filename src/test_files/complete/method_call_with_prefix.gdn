@@ -1,0 +1,8 @@
+fun foo(o: Option<String>) {
+    o.or_v("")
+    //   ^
+}
+
+// args: complete
+// expected stdout:
+// {"label":"or_value","kind":2,"detail":"(T): T","insertText":"or_value($0)","insertTextFormat":2}

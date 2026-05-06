@@ -31,6 +31,7 @@ rand = "0.9.1"
 regex = "1.7.1"
 rustyline = "17.0.1"
 serde = { version = "1.0.104", features = ["derive", "rc"] }
+serde_bencode = "0.2.4"
 serde_json = "1.0.48"
 strsim = "0.10.0"
 strum = "0.24.1"

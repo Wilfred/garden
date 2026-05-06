@@ -209,11 +209,11 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
   items
 }
 
-fun render_code_block(snippet: Snippet): String {
+fun render_code_block(snippet: Snippet, file: Option<Path>): String {
   let is_garden = snippet.labels.is_empty() || snippet.labels.contains("garden")
 
   let (inner, output_div) = if is_garden {
-    (render_garden_code(snippet), "<div class=\"snippet-output\" hidden></div>")
+    (render_garden_code(snippet, file), "<div class=\"snippet-output\" hidden></div>")
   } else {
     ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "")
   }
@@ -256,7 +256,7 @@ fun check_source(src: String, path: Option<Path>): Unit {
   }
 }
 
-fun render_garden_code(snippet: Snippet): String {
+fun render_garden_code(snippet: Snippet, file: Option<Path>): String {
   if snippet.labels.contains("nocheck").not() {
     check_source(snippet.content, snippet.file)
 
@@ -273,6 +273,13 @@ fun render_garden_code(snippet: Snippet): String {
         None => {}
       }
     }
+  }
+
+  let self_url = match file {
+    Some(file) => {
+      "/" ^ file.file_name().or_value("").replace(".md", ".html")
+    }
+    None => ""
   }
 
   let keywords = reflect::keywords()
@@ -313,7 +320,12 @@ fun render_garden_code(snippet: Snippet): String {
           // the lexer. It would be better to expose the full parser
           // to userland Garden code.
           let after_tok = part.substring(tok.len(), part.len())
-          "<a class=\"operator\" href=\"" ^ url ^ "\">" ^ escape_angle_brackets(tok) ^ "</a>" ^ after_tok
+
+          if url == self_url {
+            "<span class=\"operator\">" ^ escape_angle_brackets(tok) ^ "</span>" ^ after_tok
+          } else {
+            "<a class=\"operator\" href=\"" ^ url ^ "\">" ^ escape_angle_brackets(tok) ^ "</a>" ^ after_tok
+          }
         } else {
           escape_angle_brackets(part)
         }
@@ -659,7 +671,7 @@ public fun render_markdown(src: String, file: Option<Path>): String {
         html_parts = html_parts.append(render_paragraph(paragraph))
       }
       CodeBlock(code) => {
-        html_parts = html_parts.append(render_code_block(code))
+        html_parts = html_parts.append(render_code_block(code, file))
       }
       Bullets(items) => {
         html_parts = html_parts.append(render_bullets(items))

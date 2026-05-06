@@ -39,6 +39,9 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
 
   match reflect::doc_comment(ns, fun_name) {
     Some(doc_comment) => {
+      let dest_path = out_dir.join("fun:" ^ qualified_name ^ ".html")
+      let self_url = "/" ^ dest_path.file_name().or_throw()
+
       let heading = if ns_name == "__prelude.gdn" {
         "".join(["# `", fun_name, "()`"])
       } else {
@@ -46,9 +49,8 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
       }
 
       let src = reflect::source_for_fun(ns, fun_name)
-      let page_src = render_doc_comment(heading, doc_comment, src, None)
+      let page_src = render_doc_comment(heading, doc_comment, src, None, Some(self_url))
 
-      let dest_path = out_dir.join("fun:" ^ qualified_name ^ ".html")
       write_website_page(base_tmpl_src, page_src, dest_path, Some(fun_name))
     }
     None => {
@@ -72,6 +74,7 @@ fun write_method_page(type_name: String, method_name: String, out_dir: Path, bas
         heading,
         doc_comment,
         reflect::source_for_method(type_name, method_name),
+        None,
         None)
 
       let dest_path = out_dir.join("method:" ^ qualified_name ^ ".html")
@@ -84,7 +87,13 @@ fun write_method_page(type_name: String, method_name: String, out_dir: Path, bas
 }
 
 /// Render `doc_comment` as HTML.
-fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>, file: Option<Path>): String {
+fun render_doc_comment(
+  heading: String,
+  doc_comment: String,
+  src: Option<String>,
+  file: Option<Path>,
+  self_url: Option<String>,
+): String {
   let src = match src {
     Some(src) => {
       "```garden nocheck title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
@@ -95,7 +104,7 @@ fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>
   doc_comment = doc_comment.replace("\n\n```\n", "\n\n```title:Example\n")
 
   let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src])
-  markdown::render(md_src, file)
+  markdown::render(md_src, file, self_url)
 }
 
 fun render_type_doc_comment(heading: String, doc_comment: String, src: String, methods: List<String>, type_name: String): String {
@@ -111,7 +120,7 @@ fun render_type_doc_comment(heading: String, doc_comment: String, src: String, m
   }
 
   let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src, methods_section])
-  markdown::render(md_src, None)
+  markdown::render(md_src, None, None)
 }
 
 /// Look up the doc comment for `type_name`, render it to HTML and
@@ -148,11 +157,18 @@ fun write_markdown_page(
   md_path: Path,
   title: Option<String>
 ): Unit {
-  let page_file_name = md_path.file_name().or_throw()
-  let out_path = out_dir.join(page_file_name).set_extension("html")
+  let md_file_name = md_path.file_name().or_throw()
+  let out_path = out_dir.join(md_file_name).set_extension("html")
+
+  let html_file_name = out_path.file_name().or_throw()
+  let self_url = "/" ^ html_file_name
 
   let page_src_md = md_path.read().or_throw()
-  let page_src = markdown::render(substitute_shorthand(website_dir, page_src_md), Some(md_path))
+  let page_src = markdown::render(
+    substitute_shorthand(website_dir, page_src_md),
+    Some(md_path),
+    Some(self_url))
+  
   write_website_page(base_tmpl_string, page_src, out_path, title)
 }
 
@@ -252,7 +268,7 @@ fun build_blog(website_dir: Path, out_dir: Path, base_tmpl_src: String): Unit {
     let post_file_name = post.path.file_name().or_throw()
     let out_path = out_dir.join("blog").join(post_file_name).set_extension("html")
 
-    let html = markdown::render(substitute_shorthand(website_dir, src), Some(post.path))
+    let html = markdown::render(substitute_shorthand(website_dir, src), Some(post.path), None)
     write_website_page(base_tmpl_src, html, out_path, post.title)
   }
 }

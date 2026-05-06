@@ -18,4 +18,18 @@ public fun url_safe_name(operator: String): String {
   mappings.get(operator).or_value(operator)
 }
 
-// public fun from_url_safe_name(name: String): String {} 
+fun invert_dict(d: Dict<String>): Dict<String> {
+  let res: Dict<String> = Dict[]
+
+  for (k, v) in d.items() {
+    res = res.set(v, k)
+  }
+
+  res
+}
+
+public fun from_url_safe_name(name: String): String {
+  let mappings = url_safe_mapping()
+  let inv_mappings = invert_dict(mappings)
+  inv_mappings.get(name).or_value(name)
+}

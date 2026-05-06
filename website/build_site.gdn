@@ -292,9 +292,9 @@ fun build_site(): Unit {
           seen_keyword_pages = seen_keyword_pages.append(keyword)
           title = Some(keyword)
         } else if before == "operator" {
-          let keyword = after.strip_suffix(".md")
-          seen_operator_pages = seen_operator_pages.append(keyword)
-          title = Some(keyword)
+          let op_name = after.strip_suffix(".md")
+          seen_operator_pages = seen_operator_pages.append(op_name)
+          title = Some(ops::from_url_safe_name(op_name))
         }
       }
       None => {}

@@ -62,7 +62,17 @@ jobs:
         run: just site-build
 
       - name: Run code blocks in markdown files
-        run: find . -name '*.md' -not -path './target/*' -not -path './node_modules/*' -not -path './src/test_files/*' -not -path './CHANGELOG.md' -not -path './sample_programs/ambiguities.md' -print0 | xargs -0 garden run-code-blocks
+        run: |
+          failed=0
+          while IFS= read -r -d '' f; do
+            echo "::group::$f"
+            if ! garden run-code-blocks "$f"; then
+              echo "FAIL: $f"
+              failed=1
+            fi
+            echo "::endgroup::"
+          done < <(find . -name '*.md' -not -path './target/*' -not -path './node_modules/*' -not -path './src/test_files/*' -not -path './CHANGELOG.md' -not -path './sample_programs/ambiguities.md' -print0)
+          exit "$failed"
 
   # dry_run_publish:
   #   runs-on: ubuntu-24.04

@@ -77,13 +77,13 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 
 // Warning: `x` is assigned to itself.
 // 
-// --| src/test_files/check/self_assign_compare.gdn:3:5
-//  1| // Self-assignment: should warn.
-//  2| public fun assign_self(x: Int): Int {
-//  3|     x = x
-//   |     ^^^^^
-//  4|     x
-//  5| }
+// -| src/test_files/check/self_assign_compare.gdn:3:5
+// 1| // Self-assignment: should warn.
+// 2| public fun assign_self(x: Int): Int {
+// 3|     x = x
+//  |     ^^^^^
+// 4|     x
+// 5| }
 // 
 // Warning: Both sides of `==` are identical.
 // 
@@ -119,3 +119,4 @@ public fun compare_different(x: Int, y: Int): Bool {
 
 // expected stderr: 
 // 2 issues can be fixed automatically (use `--fix`).
+

@@ -54,13 +54,13 @@ method used_meth(this: String): Unit {}
 // expected stdout:
 // Warning: `not_called` is never called.
 // 
-// --| src/test_files/check/unused_func.gdn:5:5
-//  3| fun called_from_uncalled() {}
-//  4| 
-//  5| fun not_called() {
-//   |     ^^^^^^^^^^
-//  6|   called_from_uncalled()
-//  7| }
+// -| src/test_files/check/unused_func.gdn:5:5
+// 3| fun called_from_uncalled() {}
+// 4| 
+// 5| fun not_called() {
+//  |     ^^^^^^^^^^
+// 6|   called_from_uncalled()
+// 7| }
 // 
 // Warning: `unreachable_cycle` is never called.
 // 
@@ -109,3 +109,4 @@ method used_meth(this: String): Unit {}
 //   |     ^^^^^^^^^^^^^^^^^^^
 // 22|   unreachable_cycle_1()
 // 23| }
+

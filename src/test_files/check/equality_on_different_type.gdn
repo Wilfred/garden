@@ -17,13 +17,13 @@ public fun bar(s: Option<String>, i: Option<Int>) {
 // expected stdout:
 // Warning: You should compare values of the same type, but got `String` and `Int`.
 // 
-// --| src/test_files/check/equality_on_different_type.gdn:3:8
-//  1| public fun foo(s: String, i: Int) {
-//  2|     // Always False.
-//  3|     if s == i {
-//   |        ^^^^^^
-//  4|         print("hello world")
-//  5|     }
+// -| src/test_files/check/equality_on_different_type.gdn:3:8
+// 1| public fun foo(s: String, i: Int) {
+// 2|     // Always False.
+// 3|     if s == i {
+//  |        ^^^^^^
+// 4|         print("hello world")
+// 5|     }
 // 
 // Warning: You should compare values of the same type, but got `Option<String>` and `Option<Int>`.
 // 
@@ -34,3 +34,4 @@ public fun bar(s: Option<String>, i: Option<Int>) {
 //   |        ^^^^^^
 // 11|         print("hello world")
 // 12|     }
+

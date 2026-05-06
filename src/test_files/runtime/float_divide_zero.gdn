@@ -5,6 +5,7 @@
 // args: run
 // expected stderr:
 // Exception: Tried to divide 1.0 by zero.
-// --| src/test_files/runtime/float_divide_zero.gdn:2:7	 __toplevel__
-//  2|   dbg(1.0 /. 0.0)
-//   |       ^^^^^^^^^^
+// -| src/test_files/runtime/float_divide_zero.gdn:2:7	 __toplevel__
+// 2|   dbg(1.0 /. 0.0)
+//  |       ^^^^^^^^^^
+

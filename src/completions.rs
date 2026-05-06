@@ -27,6 +27,11 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
     let ns = env.get_or_create_namespace(path);
     load_toplevel_items(&items, &mut env, ns.clone());
 
+    // If a `(` already follows the cursor, the user has already
+    // typed the call parentheses, so completion should not insert
+    // them again.
+    let has_trailing_paren = src[offset..].starts_with('(');
+
     // Check both offset and offset-1 to handle cursor positions at
     // the end of expressions (e.g., right after a dot in "foo.").
     let mut ids_at_pos = vec![];
@@ -59,7 +64,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
                 } else {
                     &meth_sym.name.text
                 };
-                return get_methods(&env, recv_ty, prefix);
+                return get_methods(&env, recv_ty, prefix, has_trailing_paren);
             }
             Expression_::MethodCall(recv, meth_sym, _) => {
                 // Only complete the method name itself, not when the
@@ -91,7 +96,12 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
                 // to be a variable we can statically identify, so we
                 // can just assume variable here.
                 if let Expression_::Variable(recv_symbol) = &recv.expr_ {
-                    return get_namespace_functions(ns, &recv_symbol.name, prefix);
+                    return get_namespace_functions(
+                        ns,
+                        &recv_symbol.name,
+                        prefix,
+                        has_trailing_paren,
+                    );
                 }
                 return vec![];
             }
@@ -162,7 +172,12 @@ fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<Com
     items
 }
 
-fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
+fn get_methods(
+    env: &Env,
+    recv_ty: &Type,
+    prefix: &str,
+    has_trailing_paren: bool,
+) -> Vec<CompletionItem> {
     let Some(type_name) = recv_ty.type_name() else {
         return vec![];
     };
@@ -200,7 +215,11 @@ fn get_methods(env: &Env, recv_ty: &Type, prefix: &str) -> Vec<CompletionItem> {
             None => "".to_owned(),
         };
 
-        let (label, insert_text) = if params.is_empty() {
+        let (label, insert_text) = if has_trailing_paren {
+            // The user has already typed `(`, so don't insert
+            // parentheses again.
+            (method_name.text.clone(), method_name.text.clone())
+        } else if params.is_empty() {
             // Complete parentheses too if there are zero parameters.
             let name = format!("{}()", method_name.text);
             (name.clone(), name)
@@ -252,6 +271,7 @@ fn get_namespace_functions(
     current_ns: Rc<RefCell<NamespaceInfo>>,
     ns_name: &SymbolName,
     prefix: &str,
+    has_trailing_paren: bool,
 ) -> Vec<CompletionItem> {
     let current_ns = current_ns.borrow();
     let Some(value) = current_ns.values.get(ns_name) else {
@@ -296,7 +316,11 @@ fn get_namespace_functions(
             None => "".to_owned(),
         };
 
-        let (label, insert_text) = if params.is_empty() {
+        let (label, insert_text) = if has_trailing_paren {
+            // The user has already typed `(`, so don't insert
+            // parentheses again.
+            (value_name.text.clone(), value_name.text.clone())
+        } else if params.is_empty() {
             let name = format!("{}()", value_name.text);
             (name.clone(), name)
         } else {

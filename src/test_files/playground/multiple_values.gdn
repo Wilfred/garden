@@ -1,0 +1,7 @@
+1 + 1
+2 + 2
+
+// args: playground-run
+// expected stdout:
+// {"error":null,"value":"2"}
+// {"error":null,"value":"4"}

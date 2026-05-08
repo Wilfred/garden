@@ -473,6 +473,14 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
             ],
         ),
         (
+            "Int",
+            vec![
+                ("abs", BuiltInMethodKind::IntAbs),
+                ("max", BuiltInMethodKind::IntMax),
+                ("min", BuiltInMethodKind::IntMin),
+            ],
+        ),
+        (
             "List",
             vec![
                 ("append", BuiltInMethodKind::ListAppend),

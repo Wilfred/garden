@@ -4797,6 +4797,171 @@ fn eval_built_in_method_call(
                 }
             }
         }
+        BuiltInMethodKind::IntAbs => {
+            check_arity(
+                &SymbolName {
+                    text: "Int::abs".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            match receiver_value.as_ref() {
+                Value_::Integer(i) => {
+                    if expr_value_is_used {
+                        env.push_value(Value::new(Value_::Integer(i.wrapping_abs())));
+                    }
+                }
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: format_type_error(
+                                &TypeName { text: "Int".into() },
+                                receiver_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            }
+        }
+        BuiltInMethodKind::IntMax => {
+            check_arity(
+                &SymbolName {
+                    text: "Int::max".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let receiver_i = match receiver_value.as_ref() {
+                Value_::Integer(i) => *i,
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: format_type_error(
+                                &TypeName { text: "Int".into() },
+                                receiver_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            };
+            let arg_i = match arg_values[0].as_ref() {
+                Value_::Integer(i) => *i,
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[0].clone(),
+                            message: format_type_error(
+                                &TypeName { text: "Int".into() },
+                                &arg_values[0],
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            };
+
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::Integer(std::cmp::max(
+                    receiver_i, arg_i,
+                ))));
+            }
+        }
+        BuiltInMethodKind::IntMin => {
+            check_arity(
+                &SymbolName {
+                    text: "Int::min".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let receiver_i = match receiver_value.as_ref() {
+                Value_::Integer(i) => *i,
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: format_type_error(
+                                &TypeName { text: "Int".into() },
+                                receiver_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            };
+            let arg_i = match arg_values[0].as_ref() {
+                Value_::Integer(i) => *i,
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[0].clone(),
+                            message: format_type_error(
+                                &TypeName { text: "Int".into() },
+                                &arg_values[0],
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            };
+
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::Integer(std::cmp::min(
+                    receiver_i, arg_i,
+                ))));
+            }
+        }
         BuiltInMethodKind::ListAppend => {
             check_arity(
                 &SymbolName {

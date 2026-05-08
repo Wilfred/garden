@@ -813,6 +813,51 @@ struct Int {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
+/// Return the absolute value of this integer.
+///
+/// ```
+/// (-5).abs() //-> 5
+/// ```
+public method abs(this: Int): Int {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test int_abs {
+  assert((-5).abs() == 5)
+  assert((5).abs() == 5)
+  assert((0).abs() == 0)
+}
+
+/// Return the smaller of this integer and `other`.
+///
+/// ```
+/// (3).min(7) //-> 3
+/// ```
+public method min(this: Int, other: Int): Int {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test int_min {
+  assert((3).min(7) == 3)
+  assert((7).min(3) == 3)
+  assert((-2).min(2) == -2)
+}
+
+/// Return the larger of this integer and `other`.
+///
+/// ```
+/// (3).max(7) //-> 7
+/// ```
+public method max(this: Int, other: Int): Int {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test int_max {
+  assert((3).max(7) == 7)
+  assert((7).max(3) == 7)
+  assert((-2).max(2) == 2)
+}
+
 /// A 64-bit floating point number, such as `1.5` or `-1_000.00`.
 struct Float {
   __BUILT_IN_IMPLEMENTATION: NoValue,

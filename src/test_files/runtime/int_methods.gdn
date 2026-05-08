@@ -1,0 +1,19 @@
+dbg((-5).abs())
+dbg((5).abs())
+dbg((0).abs())
+
+dbg((3).min(7))
+dbg((7).min(3))
+
+dbg((3).max(7))
+dbg((7).max(3))
+
+// args: run
+// expected stdout:
+// 5
+// 5
+// 0
+// 3
+// 3
+// 7
+// 7

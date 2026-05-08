@@ -408,7 +408,7 @@ fn looks_like_type_name(text: &str) -> bool {
     }
 }
 
-pub(crate) fn with_syntax_highlighting(line: &str, make_bold: bool) -> String {
+pub(crate) fn with_syntax_highlighting(line: &str, normal_text_as_bold: bool) -> String {
     let vfs_path = VfsPathBuf {
         path: Rc::new(PathBuf::from("irrelevant")),
         id: VfsId(0),
@@ -428,7 +428,7 @@ pub(crate) fn with_syntax_highlighting(line: &str, make_bold: bool) -> String {
         } else if looks_like_type_name(token.text) {
             s.push_str(&token.text.bright_purple().bold().to_string());
         } else {
-            s.push_str(&if make_bold {
+            s.push_str(&if normal_text_as_bold {
                 token.text.bold().to_string()
             } else {
                 token.text.to_owned()
@@ -440,7 +440,7 @@ pub(crate) fn with_syntax_highlighting(line: &str, make_bold: bool) -> String {
 
     // Anything after the last token is whitespace or a comment.
     let after_text = &line[offset..];
-    if make_bold {
+    if normal_text_as_bold {
         s.push_str(&after_text.bold().to_string());
     } else {
         s.push_str(&after_text.dimmed().to_string());

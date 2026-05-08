@@ -15,6 +15,22 @@ lazy_static! {
     pub(crate) static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
 }
 
+/// Two character binary operators.
+const TWO_CHAR_OPERATORS: &[&str] = &[
+    "==", "!=", ">=", "<=", "&&", "||", "+=", "-=", "**", "+.", "-.", "*.", "/.",
+];
+
+/// Lexemes that aren't infix operators.
+const TWO_CHAR_TOKENS: &[&str] = &["=>", "::"];
+
+/// Single character binary operators. Note that some of these
+/// operators can occur in other syntactic positions, specifically `<`
+/// and `>` can be used in type annotations.
+const ONE_CHAR_OPERATORS: &[char] = &['+', '-', '*', '/', '%', '^', '=', '<', '>'];
+
+// Lexemes that aren't infix operators.
+const ONE_CHAR_TOKENS: &[char] = &['(', ')', '{', '}', ',', '[', ']', '.', ':'];
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Token<'a> {
     pub(crate) position: Position,
@@ -151,11 +167,7 @@ pub(crate) fn lex_between<'a>(
         }
 
         // Two character binary operators.
-        for token_str in [
-            "==", "!=", ">=", "<=", "&&", "||", "+=", "-=", "**", "+.", "-.", "*.", "/.",
-            // Binary operators above.
-            "=>", "::", // Other lexemes.
-        ] {
+        for token_str in TWO_CHAR_OPERATORS.iter().chain(TWO_CHAR_TOKENS.iter()) {
             if s.starts_with(token_str) {
                 let (line_number, column) = lp.from_offset(offset);
 
@@ -231,11 +243,8 @@ pub(crate) fn lex_between<'a>(
         }
 
         // One character operators and lexemes.
-        for token_char in [
-            '+', '-', '*', '/', '%', '^', '=', '<', '>', // Binary operators.
-            '(', ')', '{', '}', ',', '[', ']', '.', ':', // Other lexemes.
-        ] {
-            if s.starts_with(token_char) {
+        for token_char in ONE_CHAR_OPERATORS.iter().chain(ONE_CHAR_TOKENS.iter()) {
+            if s.starts_with(*token_char) {
                 let (line_number, column) = lp.from_offset(offset);
 
                 tokens.push(Token {

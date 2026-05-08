@@ -96,7 +96,7 @@ impl Highlighter for GardenHighlighter {
                     && token_text.to_uppercase() != token_text
                 {
                     // CamelCase, looks like a type.
-                    token_text.purple().bold().to_string()
+                    token_text.bright_purple().bold().to_string()
                 } else {
                     token_text.to_owned()
                 }

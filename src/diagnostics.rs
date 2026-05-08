@@ -426,11 +426,7 @@ pub(crate) fn with_syntax_highlighting(line: &str, make_bold: bool) -> String {
         } else if STRING_RE.is_match(token.text) {
             s.push_str(&token.text.bright_blue().to_string());
         } else if looks_like_type_name(token.text) {
-            s.push_str(&if make_bold {
-                token.text.bright_purple().bold().to_string()
-            } else {
-                token.text.bright_purple().to_string()
-            });
+            s.push_str(&token.text.bright_purple().bold().to_string());
         } else {
             s.push_str(&if make_bold {
                 token.text.bold().to_string()

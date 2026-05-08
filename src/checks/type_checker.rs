@@ -1645,19 +1645,13 @@ impl TypeCheckVisitor<'_> {
             | BinaryOperatorKind::Divide
             | BinaryOperatorKind::Modulo
             | BinaryOperatorKind::Exponent => {
-                self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
-                self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
-
-                Type::int()
+                self.infer_int_binop(lhs, rhs, op, type_bindings, expected_return_ty)
             }
             BinaryOperatorKind::AddFloat
             | BinaryOperatorKind::SubtractFloat
             | BinaryOperatorKind::MultiplyFloat
             | BinaryOperatorKind::DivideFloat => {
-                self.verify_expr(&Type::float(), lhs, type_bindings, expected_return_ty);
-                self.verify_expr(&Type::float(), rhs, type_bindings, expected_return_ty);
-
-                Type::float()
+                self.infer_float_binop(lhs, rhs, op, type_bindings, expected_return_ty)
             }
             BinaryOperatorKind::LessThan
             | BinaryOperatorKind::LessThanOrEqual
@@ -1703,6 +1697,113 @@ impl TypeCheckVisitor<'_> {
                 Type::string()
             }
         }
+    }
+
+    fn infer_float_binop(
+        &mut self,
+        lhs: &Expression,
+        rhs: &Expression,
+        op: &BinaryOperatorKind,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+    ) -> Type {
+        let inferred_lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
+        let inferred_rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
+
+        // Add a special case for users confusing the int and float operators.
+        //
+        // TODO: this is technically checking the lhs/rhs twice, so if lhs or rhs
+        // are e.g. complex match blocks that violate expected_return_ty, we'll
+        // emit duplicate diagnostics for it.
+        if is_subtype(&inferred_lhs_ty, &Type::int()) && is_subtype(&inferred_rhs_ty, &Type::int())
+        {
+            let (int_op, float_op) = match op {
+                BinaryOperatorKind::AddFloat => ("+", "+."),
+                BinaryOperatorKind::SubtractFloat => ("-", "-."),
+                BinaryOperatorKind::MultiplyFloat => ("*", "*."),
+                BinaryOperatorKind::DivideFloat => ("/", "/."),
+                _ => unreachable!(),
+            };
+
+            self.diagnostics.push(Diagnostic {
+                notes: vec![],
+                fixes: vec![],
+                severity: Severity::Error,
+                message: ErrorMessage(vec![
+                    msgtext!("You can only use "),
+                    msgcode!("{}", float_op),
+                    msgtext!(" for "),
+                    msgcode!("{}", "Float"),
+                    msgtext!(" values. For "),
+                    msgcode!("{}", "Int"),
+                    msgtext!(" values, use "),
+                    msgcode!("{}", int_op),
+                    msgtext!(" instead."),
+                ]),
+                position: lhs.position.clone(),
+            });
+        } else {
+            self.verify_expr(&Type::float(), lhs, type_bindings, expected_return_ty);
+            self.verify_expr(&Type::float(), rhs, type_bindings, expected_return_ty);
+        }
+
+        Type::float()
+    }
+
+    fn infer_int_binop(
+        &mut self,
+        lhs: &Expression,
+        rhs: &Expression,
+        op: &BinaryOperatorKind,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+    ) -> Type {
+        let op_pairs = match op {
+            BinaryOperatorKind::Add => Some(("+", "+.")),
+            BinaryOperatorKind::Subtract => Some(("-", "-.")),
+            BinaryOperatorKind::Multiply => Some(("*", "*.")),
+            BinaryOperatorKind::Divide => Some(("/", "/.")),
+            _ => None,
+        };
+
+        if let Some((int_op, float_op)) = op_pairs {
+            let inferred_lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
+            let inferred_rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
+
+            // Add a special case for users confusing the int and float operators.
+            //
+            // TODO: this is technically checking the lhs/rhs twice, so if lhs or rhs
+            // are e.g. complex match blocks that violate expected_return_ty, we'll
+            // emit duplicate diagnostics for it.
+            if is_subtype(&inferred_lhs_ty, &Type::float())
+                && is_subtype(&inferred_rhs_ty, &Type::float())
+            {
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    fixes: vec![],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgtext!("You can only use "),
+                        msgcode!("{}", int_op),
+                        msgtext!(" for "),
+                        msgcode!("{}", "Int"),
+                        msgtext!(" values. For "),
+                        msgcode!("{}", "Float"),
+                        msgtext!(" values, use "),
+                        msgcode!("{}", float_op),
+                        msgtext!(" instead."),
+                    ]),
+                    position: lhs.position.clone(),
+                });
+
+                return Type::int();
+            }
+        }
+
+        self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
+        self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
+
+        Type::int()
     }
 
     fn infer_struct_literal(

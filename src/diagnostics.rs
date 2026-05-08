@@ -265,7 +265,7 @@ fn format_pos_in_fun(
         let relevant_line = s_lines[0].to_owned();
 
         res.push_str(&format_margin_num("?", margin_width, use_color));
-        res.push_str(&format_src_line(&relevant_line, use_color));
+        res.push_str(&format_src_line(&relevant_line, use_color, None));
     } else {
         let mut is_first = true;
 
@@ -293,7 +293,7 @@ fn format_pos_in_fun(
                     margin_width,
                     use_color,
                 ));
-                res.push_str(&format_src_line(relevant_line, use_color));
+                res.push_str(&format_src_line(relevant_line, use_color, None));
             }
         }
 
@@ -317,7 +317,16 @@ fn format_pos_in_fun(
                 margin_width,
                 use_color,
             ));
-            res.push_str(&format_src_line(relevant_line, use_color));
+            res.push_str(&format_src_line(
+                relevant_line,
+                use_color,
+                Some((
+                    span.start_col as usize,
+                    span.end_col as usize,
+                    is_error,
+                    is_note,
+                )),
+            ));
 
             if underline {
                 res.push('\n');
@@ -391,7 +400,7 @@ fn format_pos_in_fun(
                     margin_width,
                     use_color,
                 ));
-                res.push_str(&format_src_line(relevant_line, use_color));
+                res.push_str(&format_src_line(relevant_line, use_color, None));
             }
         }
     }
@@ -458,7 +467,11 @@ pub(crate) fn with_syntax_highlighting(line: &str, normal_text_as_bold: bool) ->
     s
 }
 
-fn format_src_line(line: &str, use_color: bool) -> String {
+fn format_src_line(
+    line: &str,
+    use_color: bool,
+    highlight: Option<(usize, usize, bool, bool)>,
+) -> String {
     if !use_color {
         return line.to_owned();
     }
@@ -466,5 +479,44 @@ fn format_src_line(line: &str, use_color: bool) -> String {
     // TODO: this naively assumes that there are no multiline string literals
     // that start on the previous line.
 
-    with_syntax_highlighting(line, false)
+    let Some((start_col, end_col, is_error, is_note)) = highlight else {
+        return with_syntax_highlighting(line, false);
+    };
+
+    let start = clamp_to_char_boundary(line, start_col);
+    let end = clamp_to_char_boundary(line, end_col.max(start_col));
+
+    let before = &line[..start];
+    let bad = &line[start..end];
+    let after = &line[end..];
+
+    let mut s = String::new();
+    if !before.is_empty() {
+        s.push_str(&with_syntax_highlighting(before, false));
+    }
+
+    let bad_styled = if is_note {
+        bad.bold().dimmed().to_string()
+    } else if is_error {
+        bad.bold().red().to_string()
+    } else {
+        bad.bold().yellow().to_string()
+    };
+    s.push_str(&bad_styled);
+
+    if !after.is_empty() {
+        s.push_str(&with_syntax_highlighting(after, false));
+    }
+
+    s
+}
+
+fn clamp_to_char_boundary(s: &str, mut idx: usize) -> usize {
+    if idx >= s.len() {
+        return s.len();
+    }
+    while !s.is_char_boundary(idx) {
+        idx += 1;
+    }
+    idx
 }

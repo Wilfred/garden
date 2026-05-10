@@ -3,7 +3,7 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Fix precedence of `2 + 1 * 3.**
 
-# 0.24 (unreleased)
+# 0.24 (released 10 May 2026)
 **Goal: Better LSP.**
 **Goal: Floating point.**
 

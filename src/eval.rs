@@ -2020,17 +2020,19 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
         vec![
             msgtext!("Expected "),
             msgcode!("{}", expected.to_string()),
-            msgtext!(", but got "),
+            msgtext!(" but got "),
             msgcode!("Unit"),
+            msgtext!("."),
         ]
     } else {
         vec![
             msgtext!("Expected "),
             msgcode!("{}", expected.to_string()),
-            msgtext!(", but got "),
-            msgcode!("{}", Type::from_value(value)),
-            msgtext!(": "),
+            msgtext!(" but "),
             msgcode!("{}", value.display(env)),
+            msgtext!(" has type "),
+            msgcode!("{}", actual_ty),
+            msgtext!("."),
         ]
     };
 

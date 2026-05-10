@@ -13,5 +13,4 @@ public method w_is_unused<T, U, V, W, _X>(this: List<T>, _x: U, _y: Int) {
 // 3| }
 
 // expected stderr: 
-1 issue can be fixed automatically (use `--fix`).
-
+// 1 issue can be fixed automatically (use `--fix`).

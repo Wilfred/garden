@@ -47,5 +47,4 @@ public fun using_int_add_op() {
 // 11| }     ^
 
 // expected stderr: 
-3 issues can be fixed automatically (use `--fix`).
-
+// 3 issues can be fixed automatically (use `--fix`).

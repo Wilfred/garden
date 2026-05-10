@@ -255,7 +255,7 @@ impl Type {
 
     pub(crate) fn from_value(value: &Value) -> Self {
         match value.as_ref() {
-            Value_::Integer(_) => Type::int(),
+            Value_::Int(_) => Type::int(),
             Value_::Float(_) => Type::float(),
             Value_::Fun { runtime_type, .. } => runtime_type.clone(),
             Value_::Closure(_, _, runtime_type) => runtime_type.clone(),

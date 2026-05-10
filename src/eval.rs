@@ -1722,7 +1722,7 @@ fn eval_for_in(
         .expect("Popped an empty value stack for `for` loop index");
 
     let iteree_idx = match iteree_idx.as_ref() {
-        Value_::Integer(i) => *i,
+        Value_::Int(i) => *i,
         _ => {
             unreachable!(
                 "`for` loop index should always be an `Int`, got `{}`: {}",
@@ -1760,7 +1760,7 @@ fn eval_for_in(
 
     // Push the iterated value and the index for the next time we call
     // this function.
-    env.push_value(Value::new(Value_::Integer(iteree_idx + 1)));
+    env.push_value(Value::new(Value_::Int(iteree_idx + 1)));
     env.push_value(iteree_value.clone());
 
     let mut bindings: Vec<(Symbol, Value)> = vec![];
@@ -1841,7 +1841,7 @@ fn eval_assign_update(
             }),
         ));
     };
-    let Value_::Integer(var_value_num) = var_value.as_ref() else {
+    let Value_::Int(var_value_num) = var_value.as_ref() else {
         return Err((
             RestoreValues(vec![]),
             EvalError::Exception(ExceptionInfo {
@@ -1855,7 +1855,7 @@ fn eval_assign_update(
         "Popped an empty value stack for `{}`",
         op.as_src()
     ));
-    let Value_::Integer(rhs_num) = rhs_value.as_ref() else {
+    let Value_::Int(rhs_num) = rhs_value.as_ref() else {
         return Err((
             RestoreValues(vec![rhs_value.clone()]),
             EvalError::Exception(ExceptionInfo {
@@ -1871,7 +1871,7 @@ fn eval_assign_update(
     };
     env.current_frame_mut()
         .bindings
-        .set_existing(variable, Value::new(Value_::Integer(new_value_num)));
+        .set_existing(variable, Value::new(Value_::Int(new_value_num)));
 
     if expr_value_is_used {
         env.push_value(Value::unit());
@@ -2136,7 +2136,7 @@ fn eval_integer_binop(
         .expect("Popped an empty value stack for LHS of binary operator");
 
     let lhs_num = match lhs_value.as_ref() {
-        Value_::Integer(i) => *i,
+        Value_::Int(i) => *i,
         _ => {
             return Err((
                 RestoreValues(vec![lhs_value.clone(), rhs_value]),
@@ -2148,7 +2148,7 @@ fn eval_integer_binop(
         }
     };
     let rhs_num = match rhs_value.as_ref() {
-        Value_::Integer(i) => *i,
+        Value_::Int(i) => *i,
         _ => {
             return Err((
                 RestoreValues(vec![lhs_value, rhs_value.clone()]),
@@ -2161,9 +2161,9 @@ fn eval_integer_binop(
     };
 
     let value = match op.kind {
-        BinaryOperatorKind::Add => Value::new(Value_::Integer(lhs_num.wrapping_add(rhs_num))),
-        BinaryOperatorKind::Subtract => Value::new(Value_::Integer(lhs_num.wrapping_sub(rhs_num))),
-        BinaryOperatorKind::Multiply => Value::new(Value_::Integer(lhs_num.wrapping_mul(rhs_num))),
+        BinaryOperatorKind::Add => Value::new(Value_::Int(lhs_num.wrapping_add(rhs_num))),
+        BinaryOperatorKind::Subtract => Value::new(Value_::Int(lhs_num.wrapping_sub(rhs_num))),
+        BinaryOperatorKind::Multiply => Value::new(Value_::Int(lhs_num.wrapping_mul(rhs_num))),
         BinaryOperatorKind::Divide => {
             if rhs_num == 0 {
                 return Err((
@@ -2178,10 +2178,10 @@ fn eval_integer_binop(
                 ));
             }
 
-            Value::new(Value_::Integer(lhs_num / rhs_num))
+            Value::new(Value_::Int(lhs_num / rhs_num))
         }
         BinaryOperatorKind::Modulo => match lhs_num.checked_rem_euclid(rhs_num) {
-            Some(num) => Value::new(Value_::Integer(num)),
+            Some(num) => Value::new(Value_::Int(num)),
             None => {
                 return Err((
                     RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
@@ -2225,7 +2225,7 @@ fn eval_integer_binop(
             }
 
             match lhs_num.checked_pow(rhs_num as u32) {
-                Some(num) => Value::new(Value_::Integer(num)),
+                Some(num) => Value::new(Value_::Int(num)),
                 None => {
                     return Err((
                         RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
@@ -2452,7 +2452,7 @@ fn check_string<'a>(
 
 fn as_int_str_tuple(i: i64, s: &str) -> Value {
     let items = vec![
-        Value::new(Value_::Integer(i)),
+        Value::new(Value_::Int(i)),
         Value::new(Value_::String(s.to_owned())),
     ];
 
@@ -3834,7 +3834,7 @@ fn eval_built_in_call(
             let random_value: i64 = rng.random();
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::Integer(random_value)));
+                env.push_value(Value::new(Value_::Int(random_value)));
             }
         }
         BuiltInFunctionKind::TimeUnixtime => {
@@ -3855,7 +3855,7 @@ fn eval_built_in_call(
                 .as_secs() as i64;
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::Integer(timestamp)));
+                env.push_value(Value::new(Value_::Int(timestamp)));
             }
         }
         BuiltInFunctionKind::ReflectBuiltInFiles => {
@@ -4811,7 +4811,7 @@ fn eval_built_in_method_call(
             match receiver_value.as_ref() {
                 Value_::Float(f) => {
                     if expr_value_is_used {
-                        env.push_value(Value::new(Value_::Integer(f.ceil() as i64)));
+                        env.push_value(Value::new(Value_::Int(f.ceil() as i64)));
                     }
                 }
                 _ => {
@@ -4852,7 +4852,7 @@ fn eval_built_in_method_call(
             match receiver_value.as_ref() {
                 Value_::Float(f) => {
                     if expr_value_is_used {
-                        env.push_value(Value::new(Value_::Integer(f.floor() as i64)));
+                        env.push_value(Value::new(Value_::Int(f.floor() as i64)));
                     }
                 }
                 _ => {
@@ -4992,7 +4992,7 @@ fn eval_built_in_method_call(
             )?;
 
             match (receiver_value.as_ref(), arg_values[0].as_ref()) {
-                (Value_::List { items, .. }, Value_::Integer(i)) => {
+                (Value_::List { items, .. }, Value_::Int(i)) => {
                     let v = if *i >= items.len() as i64 || *i < 0 {
                         Value::none()
                     } else {
@@ -5003,7 +5003,7 @@ fn eval_built_in_method_call(
                         env.push_value(v);
                     }
                 }
-                (_, Value_::Integer(_)) => {
+                (_, Value_::Int(_)) => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -5060,7 +5060,7 @@ fn eval_built_in_method_call(
             match receiver_value.as_ref() {
                 Value_::List { items, .. } => {
                     if expr_value_is_used {
-                        env.push_value(Value::new(Value_::Integer(items.len() as i64)));
+                        env.push_value(Value::new(Value_::Int(items.len() as i64)));
                     }
                 }
                 _ => {
@@ -5220,7 +5220,7 @@ fn eval_built_in_method_call(
 
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
             let value = match s.parse::<i64>() {
-                Ok(parsed_int) => Value::some(Value::new(Value_::Integer(parsed_int))),
+                Ok(parsed_int) => Value::some(Value::new(Value_::Int(parsed_int))),
                 Err(_) => Value::none(),
             };
 
@@ -5285,7 +5285,7 @@ fn eval_built_in_method_call(
             if let Some(needle_byte_offset) = receiver_s.find(arg_s) {
                 for (i, (byte_offset, _)) in receiver_s.char_indices().enumerate() {
                     if byte_offset == needle_byte_offset {
-                        value = Value::some(Value::new(Value_::Integer(i as i64)));
+                        value = Value::some(Value::new(Value_::Int(i as i64)));
                         break;
                     }
                 }
@@ -5428,7 +5428,7 @@ fn eval_built_in_method_call(
 
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::Integer(s.chars().count() as i64)));
+                env.push_value(Value::new(Value_::Int(s.chars().count() as i64)));
             }
         }
         BuiltInMethodKind::StringLines => {
@@ -5489,7 +5489,7 @@ fn eval_built_in_method_call(
 
             let s_arg = check_string(receiver_value, receiver_pos, saved_values.clone(), env)?;
             let from_arg = match arg_values[0].as_ref() {
-                Value_::Integer(i) => i,
+                Value_::Int(i) => i,
                 _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
@@ -5511,7 +5511,7 @@ fn eval_built_in_method_call(
                 }
             };
             let to_arg = match arg_values[1].as_ref() {
-                Value_::Integer(i) => i,
+                Value_::Int(i) => i,
                 _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
@@ -5679,7 +5679,7 @@ fn eval_expr(
             match expr_state {
                 ExpressionState::NotEvaluated => {
                     // The initial value of the loop index.
-                    env.push_value(Value::new(Value_::Integer(0)));
+                    env.push_value(Value::new(Value_::Int(0)));
 
                     env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
@@ -5756,7 +5756,7 @@ fn eval_expr(
         Expression_::IntLiteral(i) => {
             *expr_state = ExpressionState::EvaluatedAllSubexpressions;
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::Integer(*i)));
+                env.push_value(Value::new(Value_::Int(*i)));
             }
         }
         Expression_::FloatLiteral(f) => {
@@ -7077,7 +7077,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(3)));
+        assert_eq!(value, Value::new(Value_::Int(3)));
     }
 
     #[test]
@@ -7113,10 +7113,7 @@ mod tests {
         assert_eq!(
             value,
             Value::new(Value_::List {
-                items: vec![
-                    Value::new(Value_::Integer(3)),
-                    Value::new(Value_::Integer(12))
-                ],
+                items: vec![Value::new(Value_::Int(3)), Value::new(Value_::Int(12))],
                 elem_type: Type::int()
             })
         );
@@ -7130,7 +7127,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(2)));
+        assert_eq!(value, Value::new(Value_::Int(2)));
     }
 
     #[test]
@@ -7156,7 +7153,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(1)));
+        assert_eq!(value, Value::new(Value_::Int(1)));
     }
 
     #[test]
@@ -7190,9 +7187,9 @@ mod tests {
             value,
             Value::new(Value_::List {
                 items: vec![
-                    Value::new(Value_::Integer(1)),
-                    Value::new(Value_::Integer(2)),
-                    Value::new(Value_::Integer(3))
+                    Value::new(Value_::Int(1)),
+                    Value::new(Value_::Int(2)),
+                    Value::new(Value_::Int(3))
                 ],
                 elem_type: Type::int()
             })
@@ -7207,7 +7204,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(2)));
+        assert_eq!(value, Value::new(Value_::Int(2)));
     }
 
     #[test]
@@ -7218,7 +7215,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(3)));
+        assert_eq!(value, Value::new(Value_::Int(3)));
     }
 
     #[test]
@@ -7257,7 +7254,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f(123)", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(123)));
+        assert_eq!(value, Value::new(Value_::Int(123)));
     }
 
     #[test]
@@ -7271,7 +7268,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f(1, 2)", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(2)));
+        assert_eq!(value, Value::new(Value_::Int(2)));
     }
 
     #[test]
@@ -7289,7 +7286,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f()", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(1)));
+        assert_eq!(value, Value::new(Value_::Int(1)));
     }
 
     #[test]
@@ -7320,7 +7317,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("let y = f() y()", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(1)));
+        assert_eq!(value, Value::new(Value_::Int(1)));
     }
 
     #[test]
@@ -7395,7 +7392,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("let i = 0 id(i) i", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(0)));
+        assert_eq!(value, Value::new(Value_::Int(0)));
     }
 
     #[test]
@@ -7409,7 +7406,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f()", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(1)));
+        assert_eq!(value, Value::new(Value_::Int(1)));
     }
 
     #[test]
@@ -7523,7 +7520,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(2)));
+        assert_eq!(value, Value::new(Value_::Int(2)));
     }
 
     #[test]

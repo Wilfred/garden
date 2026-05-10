@@ -619,7 +619,7 @@ pub(crate) fn run_command<T: Write>(
                     Value_::Fun { .. }
                     | Value_::Closure(_, _, _)
                     | Value_::BuiltInFunction(_, _, _) => true,
-                    Value_::Integer(_) => false,
+                    Value_::Int(_) => false,
                     Value_::Float(_) => false,
                     Value_::String(_) => false,
                     Value_::List { .. } => false,

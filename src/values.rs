@@ -46,7 +46,7 @@ impl Value {
 #[derive(Debug, Clone)]
 pub(crate) enum Value_ {
     /// An integer value.
-    Integer(i64),
+    Int(i64),
     /// A floating-point value.
     Float(f64),
     /// A reference to a user-defined function, along with its return
@@ -110,7 +110,7 @@ pub(crate) enum Value_ {
 impl PartialEq for Value_ {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Value_::Integer(i1), Value_::Integer(i2)) => i1 == i2,
+            (Value_::Int(i1), Value_::Int(i2)) => i1 == i2,
             (
                 Value_::Fun { name_sym, .. },
                 Value_::Fun {
@@ -345,7 +345,7 @@ impl Value {
 pub(crate) fn type_representation(value: &Value) -> TypeName {
     TypeName {
         text: match value.as_ref() {
-            Value_::Integer(_) => "Int",
+            Value_::Int(_) => "Int",
             Value_::Float(_) => "Float",
             Value_::Fun { .. } => "Fun",
             Value_::Closure(_, _, _) => "Fun",
@@ -488,7 +488,7 @@ impl Value {
     /// legal Garden literal for values that have literal syntax.
     pub(crate) fn display(&self, env: &Env) -> String {
         match self.as_ref() {
-            Value_::Integer(i) => format!("{i}"),
+            Value_::Int(i) => format!("{i}"),
             Value_::Float(f) => {
                 // Ensure that the value `1.0` prints as `1.0`, not `1`.
                 //

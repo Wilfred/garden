@@ -2164,9 +2164,7 @@ fn eval_int_binop(
         Value_::Int(i) => *i,
         Value_::Float(_) => {
             let message = format_type_error_with_suggestion(
-                &TypeName {
-                    text: "Int".into(),
-                },
+                &TypeName { text: "Int".into() },
                 &lhs_value,
                 env,
                 vec![

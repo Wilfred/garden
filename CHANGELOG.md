@@ -10,7 +10,7 @@
 ## Language
 
 Added floating point numbers, with basic arithmetic operators `+.`,
-`-.`, `*.` and `/.`.
+`-.`, `*.` and `/.` and methods `.floor()` and `.ceil()`.
 
 ## Checks
 

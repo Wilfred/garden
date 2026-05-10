@@ -473,6 +473,13 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
             ],
         ),
         (
+            "Float",
+            vec![
+                ("ceil", BuiltInMethodKind::FloatCeil),
+                ("floor", BuiltInMethodKind::FloatFloor),
+            ],
+        ),
+        (
             "List",
             vec![
                 ("append", BuiltInMethodKind::ListAppend),

@@ -818,6 +818,28 @@ struct Float {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
+/// Round this floating point value down to the nearest integer.
+///
+/// ```
+/// 1.1.floor() //-> 1
+/// 1.9.floor() //-> 1
+/// -1.1.floor() //-> -2
+/// ```
+public method floor(this: Float): Int {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+/// Round this floating point value up to the nearest integer.
+///
+/// ```
+/// 1.1.ceil() //-> 2
+/// 1.9.ceil() //-> 2
+/// -1.1.ceil() //-> -1
+/// ```
+public method ceil(this: Float): Int {
+  __BUILT_IN_IMPLEMENTATION
+}
+
 /// Stop the program immediately, and report the error message given.
 ///
 /// ```garden nocheck

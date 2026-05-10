@@ -233,6 +233,19 @@ pub(crate) struct SymbolWithHint {
     pub(crate) hint: Option<TypeHint>,
 }
 
+#[derive(Debug, Clone, Eq)]
+pub(crate) struct BinaryOperatorSymbol {
+    pub(crate) position: Position,
+    pub(crate) kind: BinaryOperatorKind,
+}
+
+/// Structural equality: ignore position.
+impl PartialEq for BinaryOperatorSymbol {
+    fn eq(&self, other: &Self) -> bool {
+        self.kind == other.kind
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum BinaryOperatorKind {
     Add,
@@ -494,7 +507,7 @@ pub(crate) enum Expression_ {
     /// x < y
     /// x && y
     /// ```
-    BinaryOperator(Rc<Expression>, BinaryOperatorKind, Rc<Expression>),
+    BinaryOperator(Rc<Expression>, BinaryOperatorSymbol, Rc<Expression>),
     /// ```garden
     /// x
     /// ```

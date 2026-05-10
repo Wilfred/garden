@@ -1,7 +1,9 @@
 //! Check for self-assignment (`x = x`) and self-comparison (`x == x`).
 
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::parser::ast::{BinaryOperatorKind, Expression, Expression_, ToplevelItem};
+use crate::parser::ast::{
+    BinaryOperatorKind, BinaryOperatorSymbol, Expression, Expression_, ToplevelItem,
+};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
@@ -22,9 +24,9 @@ fn expr_key(expr: &Expression) -> Option<String> {
     }
 }
 
-fn is_comparison_op(op: &BinaryOperatorKind) -> bool {
+fn is_comparison_op(op: &BinaryOperatorSymbol) -> bool {
     matches!(
-        op,
+        op.kind,
         BinaryOperatorKind::Equal
             | BinaryOperatorKind::NotEqual
             | BinaryOperatorKind::LessThan
@@ -59,7 +61,7 @@ impl Visitor for SelfAssignCompareVisitor {
                         self.diagnostics.push(Diagnostic {
                             message: ErrorMessage(vec![
                                 msgtext!("Both sides of "),
-                                msgcode!("{}", op),
+                                msgcode!("{}", op.kind),
                                 msgtext!(" are identical."),
                             ]),
                             position: expr.position.clone(),

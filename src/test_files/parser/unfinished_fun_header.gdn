@@ -51,7 +51,10 @@ f{
 //                                 value_is_used: true,
 //                                 id: SyntaxId(9),
 //                             },
-//                             Add,
+//                             BinaryOperatorSymbol {
+//                                 position: Position { ... },
+//                                 kind: Add,
+//                             },
 //                             Expression {
 //                                 position: Position { ... },
 //                                 expr_: IntLiteral(
@@ -80,7 +83,10 @@ f{
 //                         value_is_used: true,
 //                         id: SyntaxId(14),
 //                     },
-//                     Add,
+//                     BinaryOperatorSymbol {
+//                         position: Position { ... },
+//                         kind: Add,
+//                     },
 //                     Expression {
 //                         position: Position { ... },
 //                         expr_: IntLiteral(
@@ -123,3 +129,4 @@ f{
 //   3|     let yy = xx + 1
 //   4|     yy + 10
 //   5| }   ^^
+

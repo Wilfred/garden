@@ -1413,8 +1413,8 @@ fn parse_expression_no_trailing(
     parse_simple_expression(tokens, id_gen, diagnostics)
 }
 
-fn token_as_binary_op(token: &Token<'_>) -> Option<BinaryOperatorKind> {
-    match token.text {
+fn token_as_binary_op(token: &Token<'_>) -> Option<BinaryOperatorSymbol> {
+    let kind = match token.text {
         "+" => Some(BinaryOperatorKind::Add),
         "+." => Some(BinaryOperatorKind::AddFloat),
         "-" => Some(BinaryOperatorKind::Subtract),
@@ -1435,7 +1435,12 @@ fn token_as_binary_op(token: &Token<'_>) -> Option<BinaryOperatorKind> {
         ">=" => Some(BinaryOperatorKind::GreaterThanOrEqual),
         "^" => Some(BinaryOperatorKind::StringConcat),
         _ => None,
-    }
+    };
+
+    kind.map(|kind| BinaryOperatorSymbol {
+        kind,
+        position: token.position.clone(),
+    })
 }
 
 fn parse_definition(

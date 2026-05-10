@@ -23,11 +23,11 @@ use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrT
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
-    AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltInMethodKind, EnumInfo, Expression,
-    ExpressionWithComma, Expression_, FunInfo, IdGenerator, ImportInfo, InternedSymbolId,
-    LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, ParenthesizedParameters,
-    Pattern, Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint,
-    TypeName, TypeSymbol, Visibility,
+    AssignUpdateKind, AstId, BinaryOperatorKind, BinaryOperatorSymbol, Block, BuiltInMethodKind,
+    EnumInfo, Expression, ExpressionWithComma, Expression_, FunInfo, IdGenerator, ImportInfo,
+    InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments,
+    ParenthesizedParameters, Pattern, Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo,
+    ToplevelItem, TypeHint, TypeName, TypeSymbol, Visibility,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -2042,7 +2042,7 @@ fn eval_boolean_binop(
     expr_value_is_used: bool,
     lhs_position: &Position,
     rhs_position: &Position,
-    op: BinaryOperatorKind,
+    op: &BinaryOperatorSymbol,
 ) -> Result<(), (RestoreValues, EvalError)> {
     {
         let rhs_value = env
@@ -2085,7 +2085,7 @@ fn eval_boolean_binop(
         };
 
         if expr_value_is_used {
-            match op {
+            match op.kind {
                 BinaryOperatorKind::And => {
                     env.push_value(Value::bool(lhs_bool && rhs_bool));
                 }
@@ -2099,7 +2099,7 @@ fn eval_boolean_binop(
     Ok(())
 }
 
-fn eval_equality_binop(env: &mut Env, expr_value_is_used: bool, op: BinaryOperatorKind) {
+fn eval_equality_binop(env: &mut Env, expr_value_is_used: bool, op: &BinaryOperatorSymbol) {
     let rhs_value = env
         .pop_value()
         .expect("Popped an empty value stack for RHS of binary operator");
@@ -2108,7 +2108,7 @@ fn eval_equality_binop(env: &mut Env, expr_value_is_used: bool, op: BinaryOperat
         .expect("Popped an empty value stack for LHS of binary operator");
 
     if expr_value_is_used {
-        match op {
+        match op.kind {
             BinaryOperatorKind::Equal => {
                 env.push_value(Value::bool(lhs_value == rhs_value));
             }
@@ -2126,7 +2126,7 @@ fn eval_integer_binop(
     position: &Position,
     lhs_position: &Position,
     rhs_position: &Position,
-    op: BinaryOperatorKind,
+    op: &BinaryOperatorSymbol,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let rhs_value = env
         .pop_value()
@@ -2160,7 +2160,7 @@ fn eval_integer_binop(
         }
     };
 
-    let value = match op {
+    let value = match op.kind {
         BinaryOperatorKind::Add => Value::new(Value_::Integer(lhs_num.wrapping_add(rhs_num))),
         BinaryOperatorKind::Subtract => Value::new(Value_::Integer(lhs_num.wrapping_sub(rhs_num))),
         BinaryOperatorKind::Multiply => Value::new(Value_::Integer(lhs_num.wrapping_mul(rhs_num))),
@@ -2263,7 +2263,7 @@ fn eval_float_binop(
     position: &Position,
     lhs_position: &Position,
     rhs_position: &Position,
-    op: BinaryOperatorKind,
+    op: &BinaryOperatorSymbol,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let rhs_value = env
         .pop_value()
@@ -2297,7 +2297,7 @@ fn eval_float_binop(
         }
     };
 
-    let value = match op {
+    let value = match op.kind {
         BinaryOperatorKind::AddFloat => Value::new(Value_::Float(lhs_float + rhs_float)),
         BinaryOperatorKind::SubtractFloat => Value::new(Value_::Float(lhs_float - rhs_float)),
         BinaryOperatorKind::MultiplyFloat => Value::new(Value_::Float(lhs_float * rhs_float)),
@@ -5849,16 +5849,20 @@ fn eval_expr(
         }
         Expression_::BinaryOperator(
             lhs,
-            op @ (BinaryOperatorKind::Add
-            | BinaryOperatorKind::Subtract
-            | BinaryOperatorKind::Multiply
-            | BinaryOperatorKind::Divide
-            | BinaryOperatorKind::Modulo
-            | BinaryOperatorKind::Exponent
-            | BinaryOperatorKind::LessThan
-            | BinaryOperatorKind::LessThanOrEqual
-            | BinaryOperatorKind::GreaterThan
-            | BinaryOperatorKind::GreaterThanOrEqual),
+            op @ BinaryOperatorSymbol {
+                kind:
+                    BinaryOperatorKind::Add
+                    | BinaryOperatorKind::Subtract
+                    | BinaryOperatorKind::Multiply
+                    | BinaryOperatorKind::Divide
+                    | BinaryOperatorKind::Modulo
+                    | BinaryOperatorKind::Exponent
+                    | BinaryOperatorKind::LessThan
+                    | BinaryOperatorKind::LessThanOrEqual
+                    | BinaryOperatorKind::GreaterThan
+                    | BinaryOperatorKind::GreaterThanOrEqual,
+                ..
+            },
             rhs,
         ) => {
             if expr_state.done_children() {
@@ -5868,7 +5872,7 @@ fn eval_expr(
                     &expr_position,
                     &lhs.position,
                     &rhs.position,
-                    *op,
+                    op,
                 )?;
             } else {
                 env.push_expr_to_eval(
@@ -5881,10 +5885,14 @@ fn eval_expr(
         }
         Expression_::BinaryOperator(
             lhs,
-            op @ (BinaryOperatorKind::AddFloat
-            | BinaryOperatorKind::SubtractFloat
-            | BinaryOperatorKind::MultiplyFloat
-            | BinaryOperatorKind::DivideFloat),
+            op @ BinaryOperatorSymbol {
+                kind:
+                    BinaryOperatorKind::AddFloat
+                    | BinaryOperatorKind::SubtractFloat
+                    | BinaryOperatorKind::MultiplyFloat
+                    | BinaryOperatorKind::DivideFloat,
+                ..
+            },
             rhs,
         ) => {
             if expr_state.done_children() {
@@ -5894,7 +5902,7 @@ fn eval_expr(
                     &expr_position,
                     &lhs.position,
                     &rhs.position,
-                    *op,
+                    op,
                 )?;
             } else {
                 env.push_expr_to_eval(
@@ -5907,11 +5915,14 @@ fn eval_expr(
         }
         Expression_::BinaryOperator(
             lhs,
-            op @ (BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual),
+            op @ BinaryOperatorSymbol {
+                kind: BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual,
+                ..
+            },
             rhs,
         ) => {
             if expr_state.done_children() {
-                eval_equality_binop(env, expr_value_is_used, *op)
+                eval_equality_binop(env, expr_value_is_used, op)
             } else {
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedAllSubexpressions,
@@ -5923,11 +5934,14 @@ fn eval_expr(
         }
         Expression_::BinaryOperator(
             lhs,
-            op @ (BinaryOperatorKind::And | BinaryOperatorKind::Or),
+            op @ BinaryOperatorSymbol {
+                kind: BinaryOperatorKind::And | BinaryOperatorKind::Or,
+                ..
+            },
             rhs,
         ) => {
             if expr_state.done_children() {
-                eval_boolean_binop(env, expr_value_is_used, &lhs.position, &rhs.position, *op)?;
+                eval_boolean_binop(env, expr_value_is_used, &lhs.position, &rhs.position, op)?;
             } else {
                 // TODO: do short-circuit evaluation of && and ||.
                 env.push_expr_to_eval(
@@ -5938,7 +5952,14 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
             }
         }
-        Expression_::BinaryOperator(lhs, BinaryOperatorKind::StringConcat, rhs) => {
+        Expression_::BinaryOperator(
+            lhs,
+            BinaryOperatorSymbol {
+                kind: BinaryOperatorKind::StringConcat,
+                ..
+            },
+            rhs,
+        ) => {
             if expr_state.done_children() {
                 eval_string_concat(env, expr_value_is_used, &lhs.position, &rhs.position)?;
             } else {
@@ -6128,8 +6149,8 @@ fn binop_for_assert(
     expr: &Rc<Expression>,
 ) -> Option<(Rc<Expression>, BinaryOperatorKind, Rc<Expression>)> {
     match &expr.expr_ {
-        Expression_::BinaryOperator(lhs, op_kind, rhs) => {
-            Some((lhs.clone(), *op_kind, rhs.clone()))
+        Expression_::BinaryOperator(lhs, op_sym, rhs) => {
+            Some((lhs.clone(), op_sym.kind, rhs.clone()))
         }
         _ => None,
     }

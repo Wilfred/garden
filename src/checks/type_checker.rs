@@ -11,9 +11,7 @@ use crate::eval::most_similar;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
-    BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId,
-    TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName, VariantInfo,
+    BinaryOperatorKind, BinaryOperatorSymbol, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination, MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName, VariantInfo
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -1574,12 +1572,12 @@ impl TypeCheckVisitor<'_> {
         &mut self,
         pos: &Position,
         lhs: &Expression,
-        op: &BinaryOperatorKind,
+        op: &BinaryOperatorSymbol,
         rhs: &Expression,
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
-        match op {
+        match op.kind {
             BinaryOperatorKind::Add => {
                 let lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
                 let rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
@@ -1703,7 +1701,7 @@ impl TypeCheckVisitor<'_> {
         &mut self,
         lhs: &Expression,
         rhs: &Expression,
-        op: &BinaryOperatorKind,
+        op: &BinaryOperatorSymbol,
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
@@ -1717,7 +1715,7 @@ impl TypeCheckVisitor<'_> {
         // emit duplicate diagnostics for it.
         if is_subtype(&inferred_lhs_ty, &Type::int()) && is_subtype(&inferred_rhs_ty, &Type::int())
         {
-            let (int_op, float_op) = match op {
+            let (int_op, float_op) = match op.kind {
                 BinaryOperatorKind::AddFloat => ("+", "+."),
                 BinaryOperatorKind::SubtractFloat => ("-", "-."),
                 BinaryOperatorKind::MultiplyFloat => ("*", "*."),
@@ -1754,11 +1752,11 @@ impl TypeCheckVisitor<'_> {
         &mut self,
         lhs: &Expression,
         rhs: &Expression,
-        op: &BinaryOperatorKind,
+        op: &BinaryOperatorSymbol,
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
-        let op_pairs = match op {
+        let op_pairs = match op.kind {
             BinaryOperatorKind::Add => Some(("+", "+.")),
             BinaryOperatorKind::Subtract => Some(("-", "-.")),
             BinaryOperatorKind::Multiply => Some(("*", "*.")),

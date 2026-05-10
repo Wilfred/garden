@@ -4,7 +4,9 @@
 //! subexpression `x == 1`.
 
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
-use crate::parser::ast::{BinaryOperatorKind, Expression, Expression_, ToplevelItem};
+use crate::parser::ast::{
+    BinaryOperatorKind, BinaryOperatorSymbol, Expression, Expression_, ToplevelItem,
+};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
@@ -35,24 +37,27 @@ fn is_pure_inner(expr: &Expression_) -> bool {
 
 /// Collect operands from a boolean chain, returning them as references
 /// to the inner expressions. For `a || b || c`, this returns `[a, b, c]`.
-fn collect_operands<'a>(expr: &'a Expression, op_kind: &BinaryOperatorKind) -> Vec<&'a Expression> {
+fn collect_operands<'a>(
+    expr: &'a Expression,
+    op_sym: &BinaryOperatorSymbol,
+) -> Vec<&'a Expression> {
     let mut result = Vec::new();
-    collect_operands_inner(expr, op_kind, &mut result);
+    collect_operands_inner(expr, op_sym, &mut result);
     result
 }
 
 fn collect_operands_inner<'a>(
     expr: &'a Expression,
-    op_kind: &BinaryOperatorKind,
+    op_sym: &BinaryOperatorSymbol,
     result: &mut Vec<&'a Expression>,
 ) {
     match &expr.expr_ {
-        Expression_::BinaryOperator(lhs, op, rhs) if op == op_kind => {
-            collect_operands_inner(lhs, op_kind, result);
-            collect_operands_inner(rhs, op_kind, result);
+        Expression_::BinaryOperator(lhs, op, rhs) if op == op_sym => {
+            collect_operands_inner(lhs, op_sym, result);
+            collect_operands_inner(rhs, op_sym, result);
         }
         Expression_::Parentheses(paren) => {
-            collect_operands_inner(&paren.expr, op_kind, result);
+            collect_operands_inner(&paren.expr, op_sym, result);
         }
         _ => {
             result.push(expr);
@@ -64,10 +69,10 @@ fn collect_operands_inner<'a>(
 /// `||` or `&&` but its parent is not the same operator). We detect
 /// this by checking if the expression is a `||`/`&&` and handling it
 /// only at the top level in `visit_expr`.
-fn is_boolean_chain_root(expr: &Expression) -> Option<BinaryOperatorKind> {
+fn is_boolean_chain_root(expr: &Expression) -> Option<&BinaryOperatorSymbol> {
     if let Expression_::BinaryOperator(_, op, _) = &expr.expr_ {
-        if matches!(op, BinaryOperatorKind::And | BinaryOperatorKind::Or) {
-            return Some(*op);
+        if matches!(op.kind, BinaryOperatorKind::And | BinaryOperatorKind::Or) {
+            return Some(op);
         }
     }
     None
@@ -75,8 +80,8 @@ fn is_boolean_chain_root(expr: &Expression) -> Option<BinaryOperatorKind> {
 
 impl Visitor for RepeatedBoolVisitor {
     fn visit_expr(&mut self, expr: &Expression) {
-        if let Some(op_kind) = is_boolean_chain_root(expr) {
-            let operands = collect_operands(expr, &op_kind);
+        if let Some(op_sym) = is_boolean_chain_root(expr) {
+            let operands = collect_operands(expr, op_sym);
 
             if operands.len() >= 2 {
                 // Compare pure operands by structural equality.
@@ -104,7 +109,7 @@ impl Visitor for RepeatedBoolVisitor {
                             self.diagnostics.push(Diagnostic {
                                 message: ErrorMessage(vec![
                                     msgtext!("This expression has already appeared in this "),
-                                    msgcode!("{}", op_kind),
+                                    msgcode!("{}", op_sym.kind),
                                     msgtext!(" chain."),
                                 ]),
                                 position: operand.position.clone(),

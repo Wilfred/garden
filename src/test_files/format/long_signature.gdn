@@ -1,0 +1,45 @@
+struct MyType {
+  field: Int,
+}
+
+fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>, file: Option<Path>, self_url: Option<String>): String {
+  "result"
+}
+
+fun short(a: Int, b: Int): Int {
+  a + b
+}
+
+method long_method(self: MyType, a: List<(Int, String)>, b: Dict<Int>, c: (Int, String, Bool), d: Option<Path>): String {
+  "result"
+}
+
+// args: format
+// expected stdout:
+// struct MyType {
+//   field: Int,
+// }
+// 
+// fun render_doc_comment(
+//   heading: String,
+//   doc_comment: String,
+//   src: Option<String>,
+//   file: Option<Path>,
+//   self_url: Option<String>,
+// ): String {
+//   "result"
+// }
+// 
+// fun short(a: Int, b: Int): Int {
+//   a + b
+// }
+// 
+// method long_method(
+//   self: MyType,
+//   a: List<(Int, String)>,
+//   b: Dict<Int>,
+//   c: (Int, String, Bool),
+//   d: Option<Path>,
+// ): String {
+//   "result"
+// }

@@ -3,7 +3,8 @@ use std::path::Path;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::parser::ast::{
-    Block, Expression, Expression_, IdGenerator, ParenthesizedArguments, ToplevelItem,
+    Block, Expression, Expression_, FunInfo, IdGenerator, MethodInfo, ParenthesizedArguments,
+    ToplevelItem,
 };
 use crate::parser::lex::lex_between;
 use crate::parser::parse_toplevel_items;
@@ -19,7 +20,19 @@ use crate::parser::visitor::Visitor;
 ///
 /// It also ensures there's always a space after `:` in type annotations,
 /// e.g. `x:Int` becomes `x: Int`.
+///
+/// Function and method signatures longer than
+/// `MAX_SIGNATURE_LINE_LEN` characters are wrapped onto multiple
+/// lines, with one parameter per line.
+const MAX_SIGNATURE_LINE_LEN: usize = 100;
+
 pub(crate) fn format(src: &str, path: &Path) -> String {
+    // Phase 0: Wrap long single-line function/method signatures onto
+    // multiple lines before any other formatting. This requires
+    // re-parsing afterwards because line numbers and offsets shift.
+    let src_owned = wrap_long_signatures(src, path);
+    let src = src_owned.as_str();
+
     let mut id_gen = IdGenerator::default();
     let (_vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -731,6 +744,133 @@ fn fix_type_annotation_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPath
     }
 
     result
+}
+
+/// Wrap function and method signatures that fit on a single line
+/// but exceed `MAX_SIGNATURE_LINE_LEN` characters onto multiple lines,
+/// with one parameter per line and the closing `)` on its own line.
+fn wrap_long_signatures(src: &str, path: &Path) -> String {
+    let mut id_gen = IdGenerator::default();
+    let (_vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+    let mut signatures: Vec<SignatureInfo> = vec![];
+    collect_signatures(&items, &mut signatures);
+
+    let lines: Vec<&str> = src.lines().collect();
+    let mut edits: Vec<(usize, usize, String)> = vec![];
+
+    for sig in &signatures {
+        // Only wrap signatures that are currently on a single line.
+        if sig.open_paren.line_number != sig.close_paren.line_number {
+            continue;
+        }
+
+        let line_idx = sig.open_paren.line_number;
+        let Some(line) = lines.get(line_idx) else {
+            continue;
+        };
+
+        if line.chars().count() <= MAX_SIGNATURE_LINE_LEN {
+            continue;
+        }
+
+        // Skip signatures with no parameters: there's nothing useful
+        // to wrap.
+        if sig.params.is_empty() {
+            continue;
+        }
+
+        let leading_ws_len = line.len() - line.trim_start().len();
+        let outer_indent = " ".repeat(leading_ws_len);
+        let inner_indent = " ".repeat(leading_ws_len + 2);
+
+        let mut replacement = String::from("(\n");
+        for param in &sig.params {
+            replacement.push_str(&inner_indent);
+            replacement.push_str(param);
+            replacement.push_str(",\n");
+        }
+        replacement.push_str(&outer_indent);
+        replacement.push(')');
+
+        edits.push((
+            sig.open_paren.start_offset,
+            sig.close_paren.end_offset,
+            replacement,
+        ));
+    }
+
+    if edits.is_empty() {
+        return src.to_owned();
+    }
+
+    edits.sort_by_key(|e| std::cmp::Reverse(e.0));
+    let mut result = src.to_owned();
+    for (start, end, replacement) in edits {
+        result.replace_range(start..end, &replacement);
+    }
+    result
+}
+
+/// A function or method signature's parenthesised parameter list,
+/// extracted from the AST so we can reconstruct it on multiple lines.
+struct SignatureInfo<'a> {
+    open_paren: &'a crate::parser::position::Position,
+    close_paren: &'a crate::parser::position::Position,
+    /// Each parameter rendered as it should appear in the wrapped
+    /// signature (e.g. `"foo: Int"`).
+    params: Vec<String>,
+}
+
+fn collect_signatures<'a>(items: &'a [ToplevelItem], out: &mut Vec<SignatureInfo<'a>>) {
+    for item in items {
+        match item {
+            ToplevelItem::Fun(_, fun_info, _) => {
+                out.push(signature_from_fun(fun_info, None));
+            }
+            ToplevelItem::Method(method_info, _) => {
+                if let Some(fi) = method_info.fun_info() {
+                    // Methods strip the receiver from `params.params`
+                    // during parsing, so we need to put it back when
+                    // rebuilding the signature.
+                    out.push(signature_from_fun(fi, Some(method_info)));
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn signature_from_fun<'a>(
+    fun_info: &'a FunInfo,
+    method_info: Option<&'a MethodInfo>,
+) -> SignatureInfo<'a> {
+    let mut params: Vec<String> = vec![];
+
+    if let Some(mi) = method_info {
+        let mut s = mi.receiver_sym.name.text.clone();
+        if !mi.receiver_hint.sym.is_placeholder() {
+            s.push_str(": ");
+            s.push_str(&mi.receiver_hint.as_src());
+        }
+        params.push(s);
+    }
+
+    for param in &fun_info.params.params {
+        let mut s = param.symbol.name.text.clone();
+        if let Some(hint) = &param.hint {
+            s.push_str(": ");
+            s.push_str(&hint.as_src());
+        }
+        params.push(s);
+    }
+
+    SignatureInfo {
+        open_paren: &fun_info.params.open_paren,
+        close_paren: &fun_info.params.close_paren,
+        params,
+    }
 }
 
 /// Check if a token text looks like a type name.

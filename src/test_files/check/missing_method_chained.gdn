@@ -7,6 +7,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: `Result` has no method `foo`.
+// 
 // -| src/test_files/check/missing_method_chained.gdn:3:28
 // 1| {
 // 2|   // Previously Path methods did not produce a type error here.

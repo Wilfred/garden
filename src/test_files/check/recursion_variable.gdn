@@ -31,6 +31,7 @@ public fun qux(x: Int, _y: Int): Int {
 // expected exit status: 1
 // expected stdout:
 // Warning: `y` is only used in recursion, so is effectively unused.
+// 
 // --| src/test_files/check/recursion_variable.gdn:2:24
 //  1| // Should warn: y is only used in the recursive call.
 //  2| public fun foo(x: Int, y: Int): Int {

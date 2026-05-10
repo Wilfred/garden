@@ -72,6 +72,7 @@ public fun different_variants(b: Bool): Bool {
 // expected exit status: 1
 // expected stdout:
 // Warning: All code paths in `early_return_int()` return the same value `1`.
+// 
 // --| src/test_files/check/same_literal_returns.gdn:2:12
 //  1| // Should warn: early return and final expression are the same literal.
 //  2| public fun early_return_int(b: Bool): Int {
@@ -90,6 +91,7 @@ public fun different_variants(b: Bool): Bool {
 //  7| }   ^ Note: Same value here.
 // 
 // Warning: All code paths in `all_explicit_returns()` return the same value `1`.
+// 
 // --| src/test_files/check/same_literal_returns.gdn:10:12
 //  9| // Should warn: all explicit returns are the same literal.
 // 10| public fun all_explicit_returns(b: Bool): Int {
@@ -108,6 +110,7 @@ public fun different_variants(b: Bool): Bool {
 // 15| }          ^ Note: Same value here.
 // 
 // Warning: All code paths in `if_else_same()` return the same value `1`.
+// 
 // --| src/test_files/check/same_literal_returns.gdn:18:12
 // 17| // Should warn: if/else branches return the same literal.
 // 18| public fun if_else_same(b: Bool): Int {
@@ -128,6 +131,7 @@ public fun different_variants(b: Bool): Bool {
 // 24| }
 // 
 // Warning: All code paths in `match_same()` return the same value `"yes"`.
+// 
 // --| src/test_files/check/same_literal_returns.gdn:27:12
 // 26| // Should warn: match arms return the same literal.
 // 27| public fun match_same(x: Option<Int>): String {
@@ -149,6 +153,7 @@ public fun different_variants(b: Bool): Bool {
 // 32| }
 // 
 // Warning: All code paths in `always_true()` return the same value `True`.
+// 
 // --| src/test_files/check/same_literal_returns.gdn:35:12
 // 34| // Should warn: all paths return the same enum variant.
 // 35| public fun always_true(b: Bool): Bool {
@@ -167,11 +172,12 @@ public fun different_variants(b: Bool): Bool {
 // 40| }   ^^^^ Note: Same value here.
 // 
 // Warning: Unnecessary `return` at the end of a function body.
+// 
 // --| src/test_files/check/same_literal_returns.gdn:14:5
 // 12|         return 1
 // 13|     }
 // 14|     return 1
 // 15| }   ^^^^^^^^
 
-// expected stderr:
+// expected stderr: 
 // 1 issue can be fixed automatically (use `--fix`).

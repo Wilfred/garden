@@ -8,6 +8,7 @@ fun foo() {}
 // args: run-code-blocks
 // expected stderr:
 // Error: No such file `./no_such_file.gdn`.
+// 
 // --| src/test_files/run_code_blocks/bad_definition.gdn:1:8
 //  1| import "./no_such_file.gdn"
 //  2|        ^^^^^^^^^^^^^^^^^^^^

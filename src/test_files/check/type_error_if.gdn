@@ -24,6 +24,7 @@ public fun stuff(): String {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a `Bool` but got an `Int`.
+// 
 // --| src/test_files/check/type_error_if.gdn:2:6
 //  1| {
 //  2|   if 1 {
@@ -32,6 +33,7 @@ public fun stuff(): String {
 //  4|   } else {
 // 
 // Error: `if` and `else` have incompatible types: `String` and `Int`.
+// 
 // --| src/test_files/check/type_error_if.gdn:9:5
 //  8|   if True {
 //  9|     "foo"
@@ -40,6 +42,7 @@ public fun stuff(): String {
 // 11|     123
 // 
 // Error: Expected a `String` but got an `Int`.
+// 
 // --| src/test_files/check/type_error_if.gdn:19:5
 // 17|     "foo"
 // 18|   } else {

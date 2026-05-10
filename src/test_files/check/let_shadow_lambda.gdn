@@ -15,6 +15,7 @@
 // expected exit status: 1
 // expected stdout:
 // Warning: `x` is unused.
+// 
 // --| src/test_files/check/let_shadow_lambda.gdn:3:9
 //  1| {
 //  2|     // This is unused.
@@ -22,5 +23,5 @@
 //  4|         ^
 //  5|     let f = fun() {
 
-// expected stderr:
+// expected stderr: 
 // 1 issue can be fixed automatically (use `--fix`).

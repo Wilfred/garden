@@ -12,6 +12,7 @@ public fun example() {
 // expected exit status: 1
 // expected stdout:
 // Warning: Unused value.
+// 
 // --| src/test_files/check/unused_literal.gdn:2:3
 //  1| public fun example() {
 //  2|   42
@@ -20,6 +21,7 @@ public fun example() {
 //  4|   [1, 2, 3]
 // 
 // Warning: Unused value.
+// 
 // --| src/test_files/check/unused_literal.gdn:3:3
 //  1| public fun example() {
 //  2|   42
@@ -29,6 +31,7 @@ public fun example() {
 //  5|   Dict[]
 // 
 // Warning: Unused value.
+// 
 // --| src/test_files/check/unused_literal.gdn:4:3
 //  2|   42
 //  3|   "hello"
@@ -37,6 +40,7 @@ public fun example() {
 //  5|   Dict[]
 // 
 // Warning: Unused value.
+// 
 // --| src/test_files/check/unused_literal.gdn:5:3
 //  3|   "hello"
 //  4|   [1, 2, 3]
@@ -45,6 +49,7 @@ public fun example() {
 //  7|   let x = 10
 // 
 // Warning: Unnecessary `let`, this value is immediately returned.
+// 
 // --| src/test_files/check/unused_literal.gdn:7:11
 //  5|   Dict[]
 //  6| 
@@ -52,5 +57,5 @@ public fun example() {
 //  8|   x       ^^
 //  9| }
 
-// expected stderr:
+// expected stderr: 
 // 6 issues can be fixed automatically (use `--fix`).

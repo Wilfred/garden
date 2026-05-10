@@ -10,6 +10,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected an `Int` but got a `String`.
+// 
 // -| src/test_files/check/type_error_option_match.gdn:4:16
 // 2|   let value = Some("foo")
 // 3|   match value {

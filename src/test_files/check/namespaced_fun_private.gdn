@@ -8,6 +8,7 @@ import "./lib.gdn" as f
 // expected exit status: 1
 // expected stdout:
 // Error: `bar` is not marked as `external` so it cannot be used outside the file that contains it.
+// 
 // -| src/test_files/check/namespaced_fun_private.gdn:4:6
 // 3| {
 // 4|   f::bar()

@@ -26,6 +26,7 @@ public fun no_repeats(x: Bool, y: Bool, z: Bool): Bool {
 // expected exit status: 1
 // expected stdout:
 // Warning: This expression has already appeared in this `||` chain.
+// 
 // --| src/test_files/check/repeated_bool.gdn:3:15
 //  1| // Repeated operand in ||: should warn.
 //  2| public fun repeated_or(x: Bool, y: Bool): Bool {
@@ -33,11 +34,12 @@ public fun no_repeats(x: Bool, y: Bool, z: Bool): Bool {
 //  4| }             ^
 // 
 // Warning: This expression has already appeared in this `&&` chain.
+// 
 // --| src/test_files/check/repeated_bool.gdn:8:15
 //  6| // Repeated operand in &&: should warn.
 //  7| public fun repeated_and(x: Bool, y: Bool): Bool {
 //  8|     x && y && x
 //  9| }             ^
 
-// expected stderr:
+// expected stderr: 
 // 2 issues can be fixed automatically (use `--fix`).

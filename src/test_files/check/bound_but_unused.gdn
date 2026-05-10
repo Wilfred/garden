@@ -4,9 +4,10 @@ public fun foo(x: Int) {}
 // expected exit status: 1
 // expected stdout:
 // Warning: `x` is unused.
+// 
 // -| src/test_files/check/bound_but_unused.gdn:1:16
 // 1| public fun foo(x: Int) {}
 // 2|                ^
 
-// expected stderr:
+// expected stderr: 
 // 1 issue can be fixed automatically (use `--fix`).

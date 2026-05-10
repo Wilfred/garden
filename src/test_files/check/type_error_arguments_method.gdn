@@ -7,6 +7,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected an `Int` but got a `String`.
+// 
 // -| src/test_files/check/type_error_arguments_method.gdn:3:17
 // 1| {
 // 2|     let s = ""
@@ -14,6 +15,7 @@
 // 4| }               ^^
 // 
 // Error: Expected an `Int` but got a `String`.
+// 
 // -| src/test_files/check/type_error_arguments_method.gdn:3:21
 // 1| {
 // 2|     let s = ""

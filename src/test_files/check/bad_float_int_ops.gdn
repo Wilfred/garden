@@ -26,18 +26,21 @@ public fun using_int_add_op() {
 // expected exit status: 1
 // expected stdout:
 // Error: You can only use `/.` for `Float` values. For `Int` values, use `/` instead.
+// 
 // --| src/test_files/check/bad_float_int_ops.gdn:2:5
 //  1| public fun using_float_op() {
 //  2|   1 /. 2
 //  3| }   ^^
 // 
 // Error: You can only use `*` for `Int` values. For `Float` values, use `*.` instead.
+// 
 // --| src/test_files/check/bad_float_int_ops.gdn:6:7
 //  5| public fun using_int_op() {
 //  6|   1.0 * 2.0
 //  7| }     ^
 // 
 // Error: You can only use `+` for `Int` values. For `Float` values, use `+.` instead.
+// 
 // --| src/test_files/check/bad_float_int_ops.gdn:10:7
 //  9| public fun using_int_add_op() {
 // 10|   1.0 + 2.0

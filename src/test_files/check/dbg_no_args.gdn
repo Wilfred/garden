@@ -4,6 +4,7 @@ dbg()
 // expected exit status: 1
 // expected stdout:
 // Error: `dbg` requires an additional argument.
+// 
 // -| src/test_files/check/dbg_no_args.gdn:1:5
 // 1| dbg()
 // 2|     ^

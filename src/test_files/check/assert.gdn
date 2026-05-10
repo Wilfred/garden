@@ -6,6 +6,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a `Bool` but got an `Int`.
+// 
 // -| src/test_files/check/assert.gdn:2:10
 // 1| {
 // 2|   assert(1)

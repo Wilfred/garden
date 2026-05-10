@@ -6,6 +6,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected an `Int` but got a `Bool`.
+// 
 // -| src/test_files/check/type_error_comparison_nested.gdn:2:9
 // 1| {
 // 2|     1 < (2 < 3)

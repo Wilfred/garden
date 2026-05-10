@@ -67,6 +67,7 @@ public fun compare_different(x: Int, y: Int): Bool {
 // expected exit status: 1
 // expected stdout:
 // Warning: Unnecessary `let`, this value is immediately returned.
+// 
 // --| src/test_files/check/self_assign_compare.gdn:29:13
 // 27| // Normal assignment: should not warn.
 // 28| public fun assign_different(x: Int): Int {
@@ -75,6 +76,7 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 31| }
 // 
 // Warning: `x` is assigned to itself.
+// 
 // --| src/test_files/check/self_assign_compare.gdn:3:5
 //  1| // Self-assignment: should warn.
 //  2| public fun assign_self(x: Int): Int {
@@ -84,6 +86,7 @@ public fun compare_different(x: Int, y: Int): Bool {
 //  5| }
 // 
 // Warning: Both sides of `==` are identical.
+// 
 // --| src/test_files/check/self_assign_compare.gdn:9:5
 //  7| // Self-comparison with ==: should warn.
 //  8| public fun compare_equal(x: Int): Bool {
@@ -91,6 +94,7 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 10| }   ^^^^^^
 // 
 // Warning: Both sides of `!=` are identical.
+// 
 // --| src/test_files/check/self_assign_compare.gdn:14:5
 // 12| // Self-comparison with !=: should warn.
 // 13| public fun compare_not_equal(x: Int): Bool {
@@ -98,6 +102,7 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 15| }   ^^^^^^
 // 
 // Warning: Both sides of `<` are identical.
+// 
 // --| src/test_files/check/self_assign_compare.gdn:19:5
 // 17| // Self-comparison with <: should warn.
 // 18| public fun compare_less(x: Int): Bool {
@@ -105,11 +110,12 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 20| }   ^^^^^
 // 
 // Warning: Both sides of `==` are identical.
+// 
 // --| src/test_files/check/self_assign_compare.gdn:24:5
 // 22| // Self-comparison with integer literals: should warn.
 // 23| public fun compare_literals(): Bool {
 // 24|     1 == 1
 // 25| }   ^^^^^^
 
-// expected stderr:
+// expected stderr: 
 // 2 issues can be fixed automatically (use `--fix`).

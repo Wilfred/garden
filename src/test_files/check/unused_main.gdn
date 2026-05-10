@@ -6,6 +6,7 @@ fun main() {
 // expected exit status: 1
 // expected stdout:
 // Warning: `main` is never called. Garden does not treat `main` functions specially. To run code, write expressions directly in the file (e.g., `println("Hello")`), or call `main()` from a top-level block.
+// 
 // -| src/test_files/check/unused_main.gdn:1:5
 // 1| fun main() {
 //  |     ^^^^

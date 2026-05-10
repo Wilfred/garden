@@ -119,7 +119,7 @@ pub(crate) fn format_diagnostic(
     let severity_s = format_severity(severity, use_color);
 
     let mut s = format!(
-        "{}: {}\n",
+        "{}: {}\n\n",
         severity_s,
         if use_color {
             message.as_styled_string()

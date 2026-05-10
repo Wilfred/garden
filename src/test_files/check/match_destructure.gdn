@@ -19,6 +19,7 @@ public fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a tuple but got a `String`.
+// 
 // --| src/test_files/check/match_destructure.gdn:13:5
 // 12|   match Some("") {
 // 13|     Some((x, y)) => { let _ = x + y }

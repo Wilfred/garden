@@ -17,6 +17,7 @@ fun add_one(i: Int): Int {
 // expected exit status: 1
 // expected stdout:
 // Warning: Unused value.
+// 
 // --| src/test_files/check/ambiguity_fun_call_or_tuple.gdn:6:3
 //  4|   // Definitely a tuple, because there's whitespace before it.
 //  5|   let _y = x
@@ -24,5 +25,5 @@ fun add_one(i: Int): Int {
 //  7|   ^^^^^^^^
 //  8|   // Should be parsed as a call, not an if followed by a tuple (5).
 
-// expected stderr:
+// expected stderr: 
 // 1 issue can be fixed automatically (use `--fix`).

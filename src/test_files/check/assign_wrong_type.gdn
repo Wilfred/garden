@@ -7,6 +7,7 @@ public fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected an `Int` but got a `String`.
+// 
 // -| src/test_files/check/assign_wrong_type.gdn:3:9
 // 1| public fun foo() {
 // 2|     let x = 1

@@ -18,10 +18,10 @@ struct RepeatedBoolVisitor {
 /// Return true if the expression is pure (no side effects), meaning
 /// it's safe to flag as a duplicate when structurally equal.
 fn is_pure(expr: &Expression) -> bool {
-    is_pure_inner(&expr.expr_)
+    is_pure_(&expr.expr_)
 }
 
-fn is_pure_inner(expr: &Expression_) -> bool {
+fn is_pure_(expr: &Expression_) -> bool {
     match expr {
         Expression_::Variable(_) | Expression_::IntLiteral(_) | Expression_::StringLiteral(_) => {
             true
@@ -42,22 +42,22 @@ fn collect_operands<'a>(
     op_sym: &BinaryOperatorSymbol,
 ) -> Vec<&'a Expression> {
     let mut result = Vec::new();
-    collect_operands_inner(expr, op_sym, &mut result);
+    collect_operands_(expr, op_sym, &mut result);
     result
 }
 
-fn collect_operands_inner<'a>(
+fn collect_operands_<'a>(
     expr: &'a Expression,
     op_sym: &BinaryOperatorSymbol,
     result: &mut Vec<&'a Expression>,
 ) {
     match &expr.expr_ {
         Expression_::BinaryOperator(lhs, op, rhs) if op == op_sym => {
-            collect_operands_inner(lhs, op_sym, result);
-            collect_operands_inner(rhs, op_sym, result);
+            collect_operands_(lhs, op_sym, result);
+            collect_operands_(rhs, op_sym, result);
         }
         Expression_::Parentheses(paren) => {
-            collect_operands_inner(&paren.expr, op_sym, result);
+            collect_operands_(&paren.expr, op_sym, result);
         }
         _ => {
             result.push(expr);

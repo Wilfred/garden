@@ -29,8 +29,8 @@ use crate::parser::ast::{
     ParenthesizedParameters, Pattern, Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo,
     ToplevelItem, TypeHint, TypeName, TypeSymbol, Visibility,
 };
-use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::diagnostics::{ErrorMessage, MessagePart};
 use crate::parser::position::Position;
 use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
@@ -2013,6 +2013,29 @@ fn eval_let(
     Ok(())
 }
 
+fn format_type_error_with_suggestion<T: ToString + ?Sized>(
+    expected: &T,
+    value: &Value,
+    env: &Env,
+    mut suggestion: Vec<MessagePart>,
+) -> ErrorMessage {
+    let actual_ty = Type::from_value(value);
+
+    let mut parts = vec![
+        msgtext!("Expected "),
+        msgcode!("{}", expected.to_string()),
+        msgtext!(" but "),
+        msgcode!("{}", value.display(env)),
+        msgtext!(" has type "),
+        msgcode!("{}", actual_ty),
+        msgtext!("."),
+    ];
+    parts.append(&mut suggestion);
+
+    ErrorMessage(parts)
+}
+
+/// Format a runtime type error: show the value, its actual type, and the expected type.
 fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &Env) -> ErrorMessage {
     let actual_ty = Type::from_value(value);
 
@@ -2139,6 +2162,32 @@ fn eval_int_binop(
 
     let lhs_num = match lhs_value.as_ref() {
         Value_::Int(i) => *i,
+        Value_::Float(_) => {
+            let message = format_type_error_with_suggestion(
+                &TypeName {
+                    text: "Int".into(),
+                },
+                &lhs_value,
+                env,
+                vec![
+                    msgtext!(" Consider using a float operator (such as "),
+                    msgcode!("+."),
+                    msgtext!(" instead of "),
+                    msgcode!("+"),
+                    msgtext!(") or using rounding methods like "),
+                    msgcode!(".floor()"),
+                    msgtext!("."),
+                ],
+            );
+
+            return Err((
+                RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                EvalError::Exception(ExceptionInfo {
+                    position: lhs_position.clone(),
+                    message,
+                }),
+            ));
+        }
         _ => {
             return Err((
                 RestoreValues(vec![lhs_value.clone(), rhs_value]),
@@ -2276,24 +2325,84 @@ fn eval_float_binop(
 
     let lhs_float = match lhs_value.as_ref() {
         Value_::Float(f) => *f,
+        Value_::Int(_) => {
+            let message = format_type_error_with_suggestion(
+                &TypeName {
+                    text: "Float".into(),
+                },
+                &lhs_value,
+                env,
+                vec![
+                    msgtext!(" Consider using an int operator (such as "),
+                    msgcode!("+"),
+                    msgtext!(" instead of "),
+                    msgcode!("+."),
+                    msgtext!(")."),
+                ],
+            );
+
+            return Err((
+                RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                EvalError::Exception(ExceptionInfo {
+                    position: lhs_position.clone(),
+                    message,
+                }),
+            ));
+        }
         _ => {
             return Err((
                 RestoreValues(vec![lhs_value.clone(), rhs_value]),
                 EvalError::Exception(ExceptionInfo {
                     position: lhs_position.clone(),
-                    message: format_type_error(&TypeName { text: "Int".into() }, &lhs_value, env),
+                    message: format_type_error(
+                        &TypeName {
+                            text: "Float".into(),
+                        },
+                        &lhs_value,
+                        env,
+                    ),
                 }),
             ));
         }
     };
     let rhs_float = match rhs_value.as_ref() {
         Value_::Float(f) => *f,
+        Value_::Int(_) => {
+            let message = format_type_error_with_suggestion(
+                &TypeName {
+                    text: "Float".into(),
+                },
+                &lhs_value,
+                env,
+                vec![
+                    msgtext!(" Consider using an int operator (such as "),
+                    msgcode!("+"),
+                    msgtext!(" instead of  "),
+                    msgcode!("+."),
+                    msgtext!(")."),
+                ],
+            );
+
+            return Err((
+                RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                EvalError::Exception(ExceptionInfo {
+                    position: lhs_position.clone(),
+                    message,
+                }),
+            ));
+        }
         _ => {
             return Err((
                 RestoreValues(vec![lhs_value, rhs_value.clone()]),
                 EvalError::Exception(ExceptionInfo {
                     position: rhs_position.clone(),
-                    message: format_type_error(&TypeName { text: "Int".into() }, &rhs_value, env),
+                    message: format_type_error(
+                        &TypeName {
+                            text: "Float".into(),
+                        },
+                        &rhs_value,
+                        env,
+                    ),
                 }),
             ));
         }

@@ -1,0 +1,9 @@
+1.0 + 2.0
+
+// args: run
+// expected stderr:
+// Exception: Expected `Int` but `1.0` has type `Float`. Consider using a float operator (such as `+.` instead of `+`) or using rounding methods like `.floor()`.
+// -| src/test_files/runtime/float_wrong_operator.gdn:1:1	 __toplevel__
+// 1| 1.0 + 2.0
+//  | ^^^
+

@@ -1,0 +1,9 @@
+1 +. 2
+
+// args: run
+// expected stderr:
+// Exception: Expected `Float` but `1` has type `Int`. Consider using an int operator (such as `+` instead of `+.`).
+// -| src/test_files/runtime/int_wrong_operator.gdn:1:1	 __toplevel__
+// 1| 1 +. 2
+//  | ^
+

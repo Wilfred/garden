@@ -5,7 +5,7 @@
 
 // args: run
 // expected stderr:
-// Exception: There is no method named `stuff` on values of type `Path`. This value is `Path{ p: "/" }`.
+// Exception: `Path{ p: "/" }` has type `Path` which has no method named `stuff`.
 // --| src/test_files/runtime/method_missing.gdn:3:5	 __toplevel__
 //  3|   p.stuff()
 //   |     ^^^^^

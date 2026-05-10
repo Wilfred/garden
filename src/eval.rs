@@ -4452,12 +4452,11 @@ fn eval_method_call(
             EvalError::Exception(ExceptionInfo {
                 position: meth_name.position.clone(),
                 message: ErrorMessage(vec![
-                    msgtext!("There is no method named "),
-                    msgcode!("{}", meth_name.name),
-                    msgtext!(" on values of type "),
-                    msgcode!("{}", receiver_type_name),
-                    msgtext!(". This value is "),
                     msgcode!("{}", receiver_value.display(env)),
+                    msgtext!(" has type "),
+                    msgcode!("{}", receiver_type_name),
+                    msgtext!(" which has no method named "),
+                    msgcode!("{}", meth_name.name),
                     msgtext!("."),
                 ]),
             }),

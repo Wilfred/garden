@@ -1,0 +1,15 @@
+{
+  dbg(1.2.floor())
+  dbg(1.2.ceil())
+
+  dbg(-1.2.ceil())
+  dbg(-1.2.floor())
+}
+
+// args: run
+// expected stdout:
+// 1
+// 2
+// -1
+// -2
+

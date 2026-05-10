@@ -2122,7 +2122,7 @@ fn eval_equality_binop(env: &mut Env, expr_value_is_used: bool, op: &BinaryOpera
     }
 }
 
-fn eval_integer_binop(
+fn eval_int_binop(
     env: &mut Env,
     expr_value_is_used: bool,
     position: &Position,
@@ -5949,7 +5949,7 @@ fn eval_expr(
             rhs,
         ) => {
             if expr_state.done_children() {
-                eval_integer_binop(
+                eval_int_binop(
                     env,
                     expr_value_is_used,
                     &expr_position,

@@ -10,6 +10,18 @@ public fun using_int_add_op() {
   1.0 + 2.0
 }
 
+// Error: You can only use `*` for `Int` values. For `Float` values, use `*.` instead.
+// --| src/test_files/check/bad_float_int_ops.gdn:6:7
+//  5| public fun using_int_op() {
+//  6|   1.0 * 2.0
+//  7| }     ^
+//
+// Error: You can only use `+` for `Int` values. For `Float` values, use `+.` instead.
+// --| src/test_files/check/bad_float_int_ops.gdn:10:7
+//  9| public fun using_int_add_op() {
+// 10|   1.0 + 2.0
+// 11| }     ^
+
 // args: check
 // expected exit status: 1
 // expected stdout:
@@ -25,15 +37,12 @@ public fun using_int_add_op() {
 //  6|   1.0 * 2.0
 //  7| }     ^
 // 
-// Error: Expected `Int`, but got `Float`.
-// --| src/test_files/check/bad_float_int_ops.gdn:10:3
+// Error: You can only use `+` for `Int` values. For `Float` values, use `+.` instead.
+// --| src/test_files/check/bad_float_int_ops.gdn:10:7
 //  9| public fun using_int_add_op() {
 // 10|   1.0 + 2.0
-// 11| } ^^^
-// 
-// Error: Expected `Int`, but got `Float`.
-// --| src/test_files/check/bad_float_int_ops.gdn:10:9
-//  9| public fun using_int_add_op() {
-// 10|   1.0 + 2.0
-// 11| }       ^^^
+// 11| }     ^
+
+// expected stderr: 
+3 issues can be fixed automatically (use `--fix`).
 

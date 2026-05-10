@@ -420,6 +420,15 @@ impl Display for Type {
     }
 }
 
+/// Is `lhs` a subtype of `rhs`? Returns false if `lhs` is an error
+/// type.
+///
+/// This is useful when doing checks on code with type errors, where
+/// we exclude error types to avoid cascading errors.
+pub(crate) fn is_subtype_not_error(lhs: &Type, rhs: &Type) -> bool {
+    !lhs.is_error() && is_subtype(lhs, rhs)
+}
+
 /// Is `lhs` a subtype of `rhs`, i.e. is `lhs <: rhs` in type system
 /// notation?
 pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {

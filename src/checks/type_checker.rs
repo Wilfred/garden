@@ -8,10 +8,15 @@ use rustc_hash::FxHashMap;
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::env::Env;
 use crate::eval::most_similar;
-use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
+use crate::garden_type::{
+    is_subtype, is_subtype_not_error, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _,
+};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
-    BinaryOperatorKind, BinaryOperatorSymbol, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination, MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName, VariantInfo
+    BinaryOperatorKind, BinaryOperatorSymbol, Block, EnumInfo, Expression, Expression_, FunInfo,
+    LetDestination, MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName,
+    SyntaxId, TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName,
+    VariantInfo,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -19,7 +24,7 @@ use crate::parser::position::Position;
 use crate::parser::vfs::{VfsId, VfsPathBuf};
 use crate::types::TypeDef;
 use crate::values::{Value, Value_};
-use crate::{msgcode, msglink, msgtext};
+use crate::{msgcode, msgtext};
 
 #[derive(Debug)]
 pub(crate) struct TCSummary {
@@ -1578,67 +1583,8 @@ impl TypeCheckVisitor<'_> {
         expected_return_ty: &Type,
     ) -> Type {
         match op.kind {
-            BinaryOperatorKind::Add => {
-                let lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
-                let rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
-
-                // Check if user is trying to concatenate strings with +
-                // (but not if either operand is an error type from a previous error)
-                if !lhs_ty.is_error()
-                    && !rhs_ty.is_error()
-                    && is_subtype(&lhs_ty, &Type::string())
-                    && is_subtype(&rhs_ty, &Type::string())
-                {
-                    // Calculate operator position for the fix (between LHS and RHS)
-                    let op_position = Position {
-                        start_offset: lhs.position.end_offset,
-                        end_offset: rhs.position.start_offset,
-                        line_number: lhs.position.end_line_number,
-                        end_line_number: rhs.position.line_number,
-                        column: lhs.position.end_column,
-                        end_column: rhs.position.column,
-                        path: lhs.position.path.clone(),
-                        vfs_path: lhs.position.vfs_path.clone(),
-                    };
-
-                    self.diagnostics.push(Diagnostic {
-                        notes: vec![],
-                        fixes: vec![Autofix {
-                            description: "Replace `+` with `^`".to_owned(),
-                            position: op_position,
-                            new_text: " ^ ".to_owned(),
-                        }],
-                        severity: Severity::Error,
-                        message: ErrorMessage(vec![
-                            msgtext!("Cannot use "),
-                            msgcode!("+"),
-                            msgtext!(" to concatenate strings. In Garden, "),
-                            msgcode!("+"),
-                            msgtext!(" is only for integers.\n\nUse the "),
-                            msgcode!("^"),
-                            msgtext!(" operator for string concatenation. See: "),
-                            msglink!(
-                                "https://www.garden-lang.org/operator:%5E.html",
-                                "operator:^"
-                            ),
-                        ]),
-                        position: pos.clone(),
-                    });
-
-                    return Type::string();
-                }
-
-                // Normal integer addition - verify both operands are Int
-                if !is_subtype(&lhs_ty, &Type::int()) {
-                    self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
-                }
-                if !is_subtype(&rhs_ty, &Type::int()) {
-                    self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
-                }
-
-                Type::int()
-            }
-            BinaryOperatorKind::Subtract
+            BinaryOperatorKind::Add
+            | BinaryOperatorKind::Subtract
             | BinaryOperatorKind::Multiply
             | BinaryOperatorKind::Divide
             | BinaryOperatorKind::Modulo
@@ -1725,7 +1671,11 @@ impl TypeCheckVisitor<'_> {
 
             self.diagnostics.push(Diagnostic {
                 notes: vec![],
-                fixes: vec![],
+                fixes: vec![Autofix {
+                    description: format!("Replace `{}` with `{}`", float_op, int_op),
+                    position: op.position.clone(),
+                    new_text: int_op.to_owned(),
+                }],
                 severity: Severity::Error,
                 message: ErrorMessage(vec![
                     msgtext!("You can only use "),
@@ -1773,12 +1723,16 @@ impl TypeCheckVisitor<'_> {
             // TODO: this is technically checking the lhs/rhs twice, so if lhs or rhs
             // are e.g. complex match blocks that violate expected_return_ty, we'll
             // emit duplicate diagnostics for it.
-            if is_subtype(&inferred_lhs_ty, &Type::float())
-                && is_subtype(&inferred_rhs_ty, &Type::float())
+            if is_subtype_not_error(&inferred_lhs_ty, &Type::float())
+                && is_subtype_not_error(&inferred_rhs_ty, &Type::float())
             {
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
-                    fixes: vec![],
+                    fixes: vec![Autofix {
+                        description: format!("Replace `{}` with `{}`", int_op, float_op),
+                        position: op.position.clone(),
+                        new_text: float_op.to_owned(),
+                    }],
                     severity: Severity::Error,
                     message: ErrorMessage(vec![
                         msgtext!("You can only use "),
@@ -1794,7 +1748,37 @@ impl TypeCheckVisitor<'_> {
                     position: op.position.clone(),
                 });
 
-                return Type::int();
+                return Type::error("Used integer operation on floats");
+            }
+
+            // Check if user is trying to concatenate strings with +.
+            if op.kind == BinaryOperatorKind::Add
+                && is_subtype_not_error(&inferred_lhs_ty, &Type::string())
+                && is_subtype_not_error(&inferred_rhs_ty, &Type::string())
+            {
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    fixes: vec![Autofix {
+                        description: "Replace `+` with `^`".to_owned(),
+                        position: op.position.clone(),
+                        new_text: "^".to_owned(),
+                    }],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgtext!("You can only use "),
+                        msgcode!("+"),
+                        msgtext!(" for "),
+                        msgcode!("Int"),
+                        msgtext!(" values. For "),
+                        msgcode!("String"),
+                        msgtext!(" values, use "),
+                        msgcode!("^"),
+                        msgtext!(" instead."),
+                    ]),
+                    position: op.position.clone(),
+                });
+
+                return Type::error("Used + on strings");
             }
         }
 

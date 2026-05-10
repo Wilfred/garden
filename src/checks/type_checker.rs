@@ -1738,7 +1738,7 @@ impl TypeCheckVisitor<'_> {
                     msgcode!("{}", int_op),
                     msgtext!(" instead."),
                 ]),
-                position: lhs.position.clone(),
+                position: op.position.clone(),
             });
         } else {
             self.verify_expr(&Type::float(), lhs, type_bindings, expected_return_ty);
@@ -1791,7 +1791,7 @@ impl TypeCheckVisitor<'_> {
                         msgcode!("{}", float_op),
                         msgtext!(" instead."),
                     ]),
-                    position: lhs.position.clone(),
+                    position: op.position.clone(),
                 });
 
                 return Type::int();

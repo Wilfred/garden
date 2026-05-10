@@ -1,0 +1,10 @@
+fun hello() {
+  1.0 + 2.0
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// fun hello() {
+//   1.0 +. 2.0
+// }
+

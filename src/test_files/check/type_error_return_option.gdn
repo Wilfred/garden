@@ -5,7 +5,7 @@ public fun foo(parts: List<String>): String {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `String`, but got `Option<String>`.
+// Error: Expected a `String` but got an `Option<String>`.
 // -| src/test_files/check/type_error_return_option.gdn:2:5
 // 1| public fun foo(parts: List<String>): String {
 // 2|     parts.first()

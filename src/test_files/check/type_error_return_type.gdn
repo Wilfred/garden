@@ -7,14 +7,14 @@ public fun bad(): Bool {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `Int`, but got `Bool`.
+// Error: Expected an `Int` but got a `Bool`.
 // -| src/test_files/check/type_error_return_type.gdn:2:27
 // 1| public fun bad(): Bool {
 // 2|     let _f = fun(): Int { True }
 // 3|                           ^^^^
 // 4|     "abc"
 // 
-// Error: Expected `Bool`, but got `String`.
+// Error: Expected a `Bool` but got a `String`.
 // -| src/test_files/check/type_error_return_type.gdn:4:5
 // 2|     let _f = fun(): Int { True }
 // 3|     

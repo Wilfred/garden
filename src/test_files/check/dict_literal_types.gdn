@@ -34,7 +34,7 @@ Dict["x" => 1, "y" => ""]
 //  9|               ^^^^^^^^
 // 10| // Bad: key isn't a string.
 // 
-// Error: Expected `String`, but got `Int`.
+// Error: Expected a `String` but got an `Int`.
 // --| src/test_files/check/dict_literal_types.gdn:11:6
 // 10| // Bad: key isn't a string.
 // 11| Dict[1 => 2]

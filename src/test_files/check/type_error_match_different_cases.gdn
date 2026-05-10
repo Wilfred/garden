@@ -37,7 +37,7 @@ public fun bar(): Int {
 // 13|     },
 // 14|   }
 // 
-// Error: Expected `Int`, but got `String`.
+// Error: Expected an `Int` but got a `String`.
 // --| src/test_files/check/type_error_match_different_cases.gdn:19:12
 // 17| public fun bar(): Int {
 // 18|   match One {
@@ -46,7 +46,7 @@ public fun bar(): Int {
 // 20|     Two => "wrong too",
 // 21|     Three => {
 // 
-// Error: Expected `Int`, but got `String`.
+// Error: Expected an `Int` but got a `String`.
 // --| src/test_files/check/type_error_match_different_cases.gdn:20:12
 // 18|   match One {
 // 19|     One => "wrong",

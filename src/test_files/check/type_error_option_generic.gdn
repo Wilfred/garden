@@ -6,7 +6,7 @@
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `Int`, but got `String`.
+// Error: Expected an `Int` but got a `String`.
 // -| src/test_files/check/type_error_option_generic.gdn:3:5
 // 1| {
 // 2|     let value = Some("foo")

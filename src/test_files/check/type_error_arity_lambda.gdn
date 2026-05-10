@@ -5,7 +5,7 @@
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `Fun<(Int), Bool>`, but got `Fun<(), Bool>`.
+// Error: Expected a `Fun<(Int), Bool>` but got a `Fun<(), Bool>`.
 // -| src/test_files/check/type_error_arity_lambda.gdn:2:19
 // 1| {
 // 2|     [1, 2].filter(fun() { True })

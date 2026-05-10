@@ -3,7 +3,7 @@ let x = 1 + True
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `Int`, but got `Bool`.
+// Error: Expected an `Int` but got a `Bool`.
 // -| src/test_files/check/type_error_toplevel.gdn:1:13
 // 1| let x = 1 + True
 // 2|             ^^^^

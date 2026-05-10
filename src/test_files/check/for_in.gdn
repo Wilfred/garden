@@ -18,7 +18,7 @@ public fun foo(items: List<Int>) {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected a tuple, but got `Int`.
+// Error: Expected a tuple but got an `Int`.
 // --| src/test_files/check/for_in.gdn:13:17
 // 12|   // Bad
 // 13|   for (x, y) in items {

@@ -6,7 +6,7 @@ public method foo(this: String) {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `String`, but got `Int`.
+// Error: Expected a `String` but got an `Int`.
 // -| src/test_files/check/type_error_redefine_this.gdn:2:10
 // 1| public method foo(this: String) {
 // 2|   this = 123

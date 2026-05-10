@@ -15,7 +15,7 @@ public fun foo(b: Bool): Int {
 // 4|     }   ^^^
 // 5| }
 // 
-// Error: Expected `Unit`, but got `Int`.
+// Error: Expected `Unit` but got an `Int`.
 // -| src/test_files/check/type_error_if_without_else.gdn:3:9
 // 1| public fun foo(b: Bool): Int {
 // 2|     if b {
@@ -23,7 +23,7 @@ public fun foo(b: Bool): Int {
 // 4|     }   ^^^
 // 5| }
 // 
-// Error: Expected `Int`, but got `Unit`.
+// Error: Expected an `Int` but got `Unit`.
 // -| src/test_files/check/type_error_if_without_else.gdn:2:5
 // 1| public fun foo(b: Bool): Int {
 // 2|     if b {
@@ -34,5 +34,5 @@ public fun foo(b: Bool): Int {
 //  | ^^^^^
 // 5| }
 
-// expected stderr:
+// expected stderr: 
 // 1 issue can be fixed automatically (use `--fix`).

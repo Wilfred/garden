@@ -18,7 +18,7 @@ public fun destructure() {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `Int`, but got `String`.
+// Error: Expected an `Int` but got a `String`.
 // --| src/test_files/check/let_destructure.gdn:8:17
 //  6|     // good destructure, bad usage
 //  7|     let (x, y) = get_tuple()
@@ -41,7 +41,7 @@ public fun destructure() {
 // 13|                ^^^^^^^^^^^
 // 14|     // not a tuple
 // 
-// Error: Expected a tuple, but got `String`.
+// Error: Expected a tuple but got a `String`.
 // --| src/test_files/check/let_destructure.gdn:15:14
 // 14|     // not a tuple
 // 15|     let () = "foo"

@@ -6,9 +6,11 @@ use rustc_hash::FxHashMap;
 
 use crate::env::Env;
 use crate::parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
+use crate::parser::diagnostics::MessagePart;
 use crate::parser::position::Position;
 use crate::types::{BuiltInType, TypeDef, TypeDefAndMethods};
 use crate::values::{Value, Value_};
+use crate::{msgcode, msgtext};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum TypeDefKind {
@@ -368,6 +370,34 @@ impl Type {
                 // TODO: type parameters should store positions too.
                 None
             }
+        }
+    }
+
+    /// Return message parts "an `Int`", "a `List`" and so on.
+    ///
+    /// For ambiguous cases (e.g. user-defined types), just return
+    /// "`MyType`".
+    pub(crate) fn as_message_parts(&self) -> Vec<MessagePart> {
+        match self {
+            Type::Any => vec![msgtext!("an "), msgcode!("{}", self)],
+            Type::Tuple(_) | Type::Fun { .. } => vec![msgtext!("a "), msgcode!("{}", self)],
+            Type::UserDefined { name, .. } => {
+                // Match types defined in the prelude.
+                match name.text.as_str() {
+                    "Bool" | "Dict" | "Float" | "List" | "Namespace" | "Path" | "Result"
+                    | "String" => vec![msgtext!("a "), msgcode!("{}", self)],
+                    "Int" | "Option" => vec![msgtext!("an "), msgcode!("{}", self)],
+                    "Unit" | "NoValue" => {
+                        // "a Unit" or "a NoValue" both sound funny.
+                        vec![msgcode!("{}", self)]
+                    }
+                    _ => {
+                        // Don't assume anything about types that aren't in the prelude.
+                        vec![msgcode!("{}", self)]
+                    }
+                }
+            }
+            Type::TypeParameter(_) | Type::Error { .. } => vec![msgcode!("{}", self)],
         }
     }
 }

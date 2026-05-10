@@ -919,18 +919,20 @@ impl TypeCheckVisitor<'_> {
 
                 let sym_ty = self.get_var_for_assignment(sym);
                 if !is_subtype(&sym_ty, &Type::int()) {
+                    let mut message_parts = vec![
+                        msgcode!("{}", op.as_src()),
+                        msgtext!(" can only be used with "),
+                        msgcode!("Int"),
+                        msgtext!(" variables, but got "),
+                    ];
+                    message_parts.extend_from_slice(&sym_ty.as_message_parts());
+                    message_parts.push(msgtext!("."));
+
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
                         fixes: vec![],
                         severity: Severity::Error,
-                        message: ErrorMessage(vec![
-                            msgcode!("{}", op.as_src()),
-                            msgtext!(" can only be used with "),
-                            msgcode!("Int"),
-                            msgtext!(" variables, but got "),
-                            msgcode!("{}", sym_ty),
-                            msgtext!("."),
-                        ]),
+                        message: ErrorMessage(message_parts),
                         position: sym.position.clone(),
                     });
                 }
@@ -963,6 +965,7 @@ impl TypeCheckVisitor<'_> {
                     }
                     None => {
                         if !is_subtype(&Type::unit(), expr_ty) {
+                            // here
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
                                 fixes: vec![],
@@ -1486,11 +1489,7 @@ impl TypeCheckVisitor<'_> {
                     notes: vec![],
                     fixes: vec![],
                     severity: Severity::Error,
-                    message: ErrorMessage(vec![
-                        msgtext!("Expected a function, but got "),
-                        msgcode!("{}", recv_ty),
-                        msgtext!("."),
-                    ]),
+                    message: format_mismatch_text("a function", &recv_ty),
                     position: recv.position.clone(),
                 });
 
@@ -1828,17 +1827,17 @@ impl TypeCheckVisitor<'_> {
                 self.id_to_def_pos.insert(sym.id, field_pos.clone());
 
                 if !is_subtype(&ty, field_ty) {
+                    let mut message_parts = vec![msgtext!("Expected ")];
+                    message_parts.extend_from_slice(&field_ty.as_message_parts());
+                    message_parts.push(msgtext!(" for this field but got "));
+                    message_parts.extend_from_slice(&ty.as_message_parts());
+                    message_parts.push(msgtext!("."));
+
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
                         fixes: vec![],
                         severity: Severity::Error,
-                        message: ErrorMessage(vec![
-                            msgtext!("Expected "),
-                            msgcode!("{}", field_ty),
-                            msgtext!(" for this field but got "),
-                            msgcode!("{}", ty),
-                            msgtext!("."),
-                        ]),
+                        message: ErrorMessage(message_parts),
                         position: expr_pos,
                     });
                 }
@@ -2161,11 +2160,7 @@ impl TypeCheckVisitor<'_> {
                         notes: vec![],
                         fixes: vec![],
                         severity: Severity::Error,
-                        message: ErrorMessage(vec![
-                            msgtext!("Expected a tuple, but got "),
-                            msgcode!("{}", ty),
-                            msgtext!("."),
-                        ]),
+                        message: format_mismatch_text("a tuple", &ty),
                         position: expr_pos.clone(),
                     });
 
@@ -2852,12 +2847,25 @@ fn check_match_exhaustive(
     }
 }
 
-fn format_type_mismatch(expected_ty: &Type, actual_ty: &Type) -> ErrorMessage {
-    ErrorMessage(vec![
+fn format_mismatch_text(expected_desc: &str, actual_ty: &Type) -> ErrorMessage {
+    let mut parts = vec![
         msgtext!("Expected "),
-        msgcode!("{}", expected_ty),
-        msgtext!(", but got "),
-        msgcode!("{}", actual_ty),
-        msgtext!("."),
-    ])
+        msgtext!("{}", expected_desc),
+        msgtext!(" but got "),
+    ];
+    parts.extend_from_slice(&actual_ty.as_message_parts());
+    parts.push(msgtext!("."));
+
+    ErrorMessage(parts)
+}
+
+fn format_type_mismatch(expected_ty: &Type, actual_ty: &Type) -> ErrorMessage {
+    let mut parts = vec![msgtext!("Expected ")];
+
+    parts.extend_from_slice(&expected_ty.as_message_parts());
+    parts.push(msgtext!(" but got "));
+    parts.extend_from_slice(&actual_ty.as_message_parts());
+    parts.push(msgtext!("."));
+
+    ErrorMessage(parts)
 }

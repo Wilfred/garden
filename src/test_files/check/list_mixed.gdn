@@ -20,14 +20,14 @@ public fun returns_bools(): List<Bool> {
 //  5|     takes_bools(x)
 //  6| }
 // 
-// Error: Expected `List<Bool>`, but got `List<Any>`.
+// Error: Expected a `List<Bool>` but got a `List<Any>`.
 // --| src/test_files/check/list_mixed.gdn:5:17
 //  3| {
 //  4|     let x = [1, True]
 //  5|     takes_bools(x)
 //  6| }               ^
 // 
-// Error: Expected `Bool`, but got `Int`.
+// Error: Expected a `Bool` but got an `Int`.
 // --| src/test_files/check/list_mixed.gdn:9:4
 //  8| public fun returns_bools(): List<Bool> {
 //  9|   [1, True]

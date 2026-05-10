@@ -9,7 +9,7 @@ public fun takes_int(b: Bool): Int {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected this function to return `Int`, but got `Unit`.
+// Error: Expected this function to return an `Int` but got `Unit`.
 // -| src/test_files/check/type_error_early_return_unit.gdn:3:9
 // 1| public fun takes_int(b: Bool): Int {
 // 2|     if b {

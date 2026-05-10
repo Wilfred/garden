@@ -965,18 +965,20 @@ impl TypeCheckVisitor<'_> {
                     }
                     None => {
                         if !is_subtype(&Type::unit(), expr_ty) {
-                            // here
+                            let mut message_parts =
+                                vec![msgtext!("Expected this function to return ")];
+                            message_parts.extend_from_slice(&expr_ty.as_message_parts());
+                            message_parts.extend_from_slice(&[
+                                msgtext!(" but got "),
+                                msgcode!("Unit"),
+                                msgtext!("."),
+                            ]);
+
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
                                 fixes: vec![],
                                 severity: Severity::Error,
-                                message: ErrorMessage(vec![
-                                    msgtext!("Expected this function to return "),
-                                    msgcode!("{}", expr_ty),
-                                    msgtext!(", but got "),
-                                    msgcode!("Unit"),
-                                    msgtext!("."),
-                                ]),
+                                message: ErrorMessage(message_parts),
                                 position: pos.clone(),
                             });
                         }

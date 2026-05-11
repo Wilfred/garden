@@ -92,7 +92,7 @@ pub(crate) fn destructure(
                 result.push_str(&format!(
                     "{}  {}{} => {{}}\n",
                     indent_str,
-                    &variant.name_sym.name,
+                    variant.name_sym.name,
                     if variant.payload_hint.is_some() {
                         "(_)"
                     } else {

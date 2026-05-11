@@ -107,7 +107,7 @@ impl Visitor for DuplicatesVisitor {
                     self.diagnostics.push(Diagnostic {
                         message: ErrorMessage(vec![Text(format!(
                             "The type `{}` is already defined in this file.",
-                            &name_sym.name
+                            name_sym.name
                         ))]),
                         position: name_sym.position.clone(),
                         notes: vec![],
@@ -124,7 +124,7 @@ impl Visitor for DuplicatesVisitor {
                     self.diagnostics.push(Diagnostic {
                         message: ErrorMessage(vec![Text(format!(
                             "The type `{}` is already defined in this file.",
-                            &name_sym.name
+                            name_sym.name
                         ))]),
                         position: name_sym.position.clone(),
                         notes: vec![],

@@ -210,7 +210,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 let _ = last_src; // should use this.
                 println!(
                     "{}",
-                    &format_exception_with_stack(
+                    format_exception_with_stack(
                         &message,
                         &position,
                         &env.stack.0,
@@ -223,7 +223,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
             Err(EvalError::AssertionFailed(position, msg)) => {
                 println!(
                     "{}",
-                    &format_exception_with_stack(
+                    format_exception_with_stack(
                         &msg,
                         &position,
                         &env.stack.0,

@@ -689,7 +689,7 @@ fn dump_ast(src: &str, path: &Path) {
             } => {
                 eprintln!(
                     "{}",
-                    &format_diagnostic(
+                    format_diagnostic(
                         &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
                         &project_root,
@@ -736,7 +736,7 @@ fn parse_toplevel_items_or_die(
                     notes,
                 } => eprintln!(
                     "{}",
-                    &format_diagnostic(
+                    format_diagnostic(
                         &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
                         &project_root,
@@ -785,7 +785,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         Err(EvalError::Exception(ExceptionInfo { position, message })) => {
             eprintln!(
                 "{}",
-                &format_exception_with_stack(
+                format_exception_with_stack(
                     &message,
                     &position,
                     &env.stack.0,
@@ -797,7 +797,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         Err(EvalError::AssertionFailed(position, msg)) => {
             eprintln!(
                 "{}",
-                &format_exception_with_stack(
+                format_exception_with_stack(
                     &msg,
                     &position,
                     &env.stack.0,

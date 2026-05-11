@@ -288,7 +288,7 @@ fn describe_type(type_: &TypeDef) -> String {
             }
 
             let enum_name = &enum_info.name_sym;
-            description.push_str(&format!("enum {}", &enum_name));
+            description.push_str(&format!("enum {}", enum_name));
 
             if !enum_info.type_params.is_empty() {
                 description.push_str(&format!(
@@ -320,7 +320,7 @@ fn describe_type(type_: &TypeDef) -> String {
             }
 
             let struct_name = &struct_info.name_sym;
-            description.push_str(&format!("struct {} {{\n", &struct_name));
+            description.push_str(&format!("struct {} {{\n", struct_name));
 
             for field in &struct_info.fields {
                 description.push_str(&format!(
@@ -410,7 +410,7 @@ fn format_signature(
             res.push_str(", ");
         }
 
-        res.push_str(&format!("{}", &param.symbol.name));
+        res.push_str(&format!("{}", param.symbol.name));
 
         if let Some(param_hint) = &param.hint {
             res.push_str(&format!(": {}", param_hint.as_src()));
@@ -466,7 +466,7 @@ pub(crate) fn run_command<T: Write>(
                 method_names.sort_by_key(|meth| &meth.name_sym.name.text);
 
                 for meth_info in method_names {
-                    let name = format!("{}::{}", type_name, &meth_info.name_sym.name);
+                    let name = format!("{}::{}", type_name, meth_info.name_sym.name);
 
                     let signature = match meth_info.fun_info() {
                         Some(fun_info) => {
@@ -575,7 +575,7 @@ pub(crate) fn run_command<T: Write>(
 
             // TODO: search doc comments too.
             let mut matching_defs = vec![];
-            for (global_def, _) in ns.values.iter() {
+            for global_def in ns.values.keys() {
                 if global_def.text.contains(&text) {
                     matching_defs.push(global_def);
                 }

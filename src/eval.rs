@@ -6346,6 +6346,7 @@ fn binop_for_assert(
     }
 }
 
+/// Start evaluation of the expressions in the current stack frame.
 pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError> {
     if env.stack.0.len() == 1 && env.current_frame().exprs_to_eval.is_empty() {
         // We expect to evaluate a non-zero number of expressions, so

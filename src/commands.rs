@@ -25,7 +25,7 @@ fn path_with_home(path: &Path) -> String {
     }
     path.display().to_string()
 }
-use crate::eval::{eval_exprs, load_toplevel_items_with_stubs, Session};
+use crate::eval::{eval_toplevel_exprs, load_toplevel_items_with_stubs, Session};
 use crate::garden_type::Type;
 use crate::json_session::switch_toplevel_namespace;
 use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
@@ -863,7 +863,7 @@ pub(crate) fn run_command<T: Write>(
                         first_err.message().as_string()
                     )?;
                 } else {
-                    match eval_exprs(&[expr], env, session) {
+                    match eval_toplevel_exprs(&[expr], env, session) {
                         Ok(mut values) => {
                             let value = values.pop().unwrap_or(Value::unit());
                             write!(buf, "{}", Type::from_value(&value))?;

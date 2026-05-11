@@ -817,7 +817,7 @@ pub(crate) fn eval_toplevel_items(
     summary.new_syms.extend(new_syms);
 
     if !exprs.is_empty() {
-        let values = eval_exprs(&exprs, env, session)?;
+        let values = eval_toplevel_exprs(&exprs, env, session)?;
         summary.values = values;
     }
 
@@ -7040,14 +7040,14 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
     let old_stop_at_expr_id = env.stop_at_expr_id;
     env.stop_at_expr_id = Some(last_expr.id);
 
-    let eval_result = eval_exprs(&exprs, env, session);
+    let eval_result = eval_toplevel_exprs(&exprs, env, session);
     env.stop_at_expr_id = old_stop_at_expr_id;
 
     let mut values = eval_result?;
     Ok(values.pop())
 }
 
-pub(crate) fn eval_exprs(
+pub(crate) fn eval_toplevel_exprs(
     exprs: &[Expression],
     env: &mut Env,
     session: &Session,
@@ -7138,7 +7138,7 @@ mod tests {
             pretty_print_json: true,
         };
 
-        let mut values = super::eval_exprs(exprs, env, &session)?;
+        let mut values = super::eval_toplevel_exprs(exprs, env, &session)?;
         Ok(values.pop().unwrap_or(Value::unit()))
     }
 

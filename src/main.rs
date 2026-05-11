@@ -101,6 +101,10 @@ pub(crate) const BAD_CLI_REQUEST_EXIT_CODE: i32 = 10;
 #[derive(Debug, Parser)]
 #[command(author, version=version::VERSION.as_str(), name="Garden", about = "A programming language for growing programs", long_about = None)]
 struct Cli {
+    /// Print each expression before evaluating it.
+    #[clap(long, global = true)]
+    trace: bool,
+
     #[command(subcommand)]
     command: CliCommands,
 }
@@ -263,8 +267,9 @@ fn main() {
     .expect("Error setting Ctrl-C handler");
 
     let args = Cli::parse();
+    let trace_exprs = args.trace;
     match args.command {
-        CliCommands::Repl => cli_session::repl(interrupted),
+        CliCommands::Repl => cli_session::repl(interrupted, trace_exprs),
         CliCommands::Json => json_session::json_session(interrupted),
         CliCommands::Run { c, path, arguments } => {
             let (src, abs_path) = match (c, path) {
@@ -286,7 +291,7 @@ fn main() {
                     std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
                 }
             };
-            run_file(&src, &abs_path, &arguments, interrupted)
+            run_file(&src, &abs_path, &arguments, interrupted, trace_exprs)
         }
         CliCommands::RunCodeBlocks { paths } => {
             run_code_blocks::run_code_blocks(&paths, interrupted);
@@ -340,7 +345,7 @@ fn main() {
             let src = read_utf8_or_die(&abs_path);
             let offset = caret_finder::find_caret_offset(&src)
                 .expect("Could not find comment containing `^` in source.");
-            test_eval_up_to(&src, &abs_path, offset, interrupted);
+            test_eval_up_to(&src, &abs_path, offset, interrupted, trace_exprs);
         }
         CliCommands::DumpAst { path } => {
             let abs_path = to_abs_path(&path);
@@ -408,7 +413,7 @@ fn main() {
                 interrupted: Arc::clone(&interrupted),
                 stdout_mode: StdoutMode::WriteJson(StdoutJsonFormat::ReplSession),
                 start_time: Instant::now(),
-                trace_exprs: false,
+                trace_exprs,
                 pretty_print_json: true,
             };
 
@@ -573,7 +578,13 @@ fn main() {
 }
 
 /// Evaluate a garden file, then run eval-up-to and print the result.
-fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<AtomicBool>) {
+fn test_eval_up_to(
+    src: &str,
+    path: &Path,
+    offset: usize,
+    interrupted: Arc<AtomicBool>,
+    trace_exprs: bool,
+) {
     let mut id_gen = IdGenerator::default();
     let mut vfs = Vfs::default();
     let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
@@ -591,7 +602,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         interrupted,
         stdout_mode: StdoutMode::WriteDirectly,
         start_time: Instant::now(),
-        trace_exprs: false,
+        trace_exprs,
         pretty_print_json: true,
     };
 
@@ -757,7 +768,13 @@ fn parse_toplevel_items_or_die(
     items
 }
 
-fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {
+fn run_file(
+    src: &str,
+    path: &Path,
+    arguments: &[String],
+    interrupted: Arc<AtomicBool>,
+    trace_exprs: bool,
+) {
     let mut id_gen = IdGenerator::default();
     let mut vfs = Vfs::default();
     let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
@@ -776,7 +793,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         interrupted,
         stdout_mode: StdoutMode::WriteDirectly,
         start_time: Instant::now(),
-        trace_exprs: false,
+        trace_exprs,
         pretty_print_json: false,
     };
 

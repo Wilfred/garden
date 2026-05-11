@@ -90,7 +90,7 @@ fn read_expr(
     }
 }
 
-pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
+pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
     print_repl_header();
 
     let id_gen = IdGenerator::default();
@@ -101,7 +101,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
         interrupted,
         stdout_mode: StdoutMode::WriteDirectly,
         start_time: Instant::now(),
-        trace_exprs: false,
+        trace_exprs,
         pretty_print_json: false,
     };
 

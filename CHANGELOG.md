@@ -3,6 +3,11 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Fix precedence of `2 + 1 * 3.**
 
+## Tooling
+
+Added a `--trace` CLI flag that enables expression tracing when
+evaluating code. This behaves the same as `:trace` in the REPL.
+
 # 0.24 (released 10 May 2026)
 **Goal: Better LSP.**
 **Goal: Floating point.**

@@ -28,7 +28,12 @@ struct PlaygroundResponse {
 /// Evaluates all toplevel items in order, stopping on the first error.
 /// Prints JSON with an `error` field that is null on success or contains
 /// an error message on failure.
-pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
+pub(crate) fn run_sandboxed_playground(
+    src: &str,
+    path: &Path,
+    interrupted: Arc<AtomicBool>,
+    trace_exprs: bool,
+) {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
     let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
@@ -49,7 +54,7 @@ pub(crate) fn run_sandboxed_playground(src: &str, path: &Path, interrupted: Arc<
         interrupted,
         stdout_mode: StdoutMode::WriteJson(StdoutJsonFormat::Playground),
         start_time: Instant::now(),
-        trace_exprs: false,
+        trace_exprs,
         pretty_print_json: false,
     };
 

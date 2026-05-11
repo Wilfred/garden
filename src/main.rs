@@ -566,7 +566,12 @@ fn main() {
         CliCommands::PlaygroundRun { path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
-            sandboxed_playground::run_sandboxed_playground(&src, &abs_path, interrupted);
+            sandboxed_playground::run_sandboxed_playground(
+                &src,
+                &abs_path,
+                interrupted,
+                trace_exprs,
+            );
         }
         CliCommands::Lsp => {
             lsp::run_lsp();

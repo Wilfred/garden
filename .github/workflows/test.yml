@@ -61,6 +61,39 @@ jobs:
       - name: Build website
         run: just site-build
 
+      - name: Run code blocks in markdown files
+        run: |
+          failed=0
+          : > /tmp/run-code-blocks-failures.md
+          while IFS= read -r -d '' f; do
+            echo "::group::$f"
+            if ! out=$(garden run-code-blocks "$f" 2>&1); then
+              echo "$out"
+              echo "FAIL: $f"
+              {
+                echo "### $f"
+                echo ''
+                echo '```'
+                echo "$out"
+                echo '```'
+                echo ''
+              } >> /tmp/run-code-blocks-failures.md
+              echo "::error file=$f::run-code-blocks failed for $f"
+              failed=1
+            else
+              echo "$out"
+            fi
+            echo "::endgroup::"
+          done < <(find . -name node_modules -prune -o -path './target' -prune -o -path './src/test_files' -prune -o -name '*.md' -not -path './CHANGELOG.md' -not -path './sample_programs/ambiguities.md' -print0)
+          if [ "$failed" -ne 0 ]; then
+            {
+              echo "## run-code-blocks failures"
+              echo ''
+              cat /tmp/run-code-blocks-failures.md
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$failed"
+
   # dry_run_publish:
   #   runs-on: ubuntu-24.04
   #   steps:

@@ -24,11 +24,11 @@ Since we're allowing arbitrary code, the user might write something
 more problematic (accidentally or otherwise). The sandbox ensures we
 can run this safely.
 
-```
+```nocheck
 while True {}
 ```
 
-```
+```nocheck
 Path{ p: "/etc/passwd" }.read()
 ```
 

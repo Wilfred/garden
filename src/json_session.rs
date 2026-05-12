@@ -735,13 +735,7 @@ fn handle_run_eval_request(
 
             let value_summary = if let Some(last_value) = value {
                 Some(if summary.is_empty() {
-                    let mut s = last_value.display(env);
-
-                    if let Some(doc_comment) = last_value.doc_comment() {
-                        s = format!("{s}\n\n{doc_comment}");
-                    }
-
-                    s
+                    last_value.display(env)
                 } else {
                     format!(
                         "{summary}, and the expression evaluated to {}.",

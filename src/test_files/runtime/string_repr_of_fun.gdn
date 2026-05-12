@@ -1,9 +1,13 @@
+fun do_stuff() {}
+
 {
+  println(string_repr(do_stuff))
   println(string_repr(println))
   println(string_repr(fun() {}))
 }
 
 // args: run
 // expected stdout:
-// println
-// (closure)
+// <function do_stuff string_repr_of_fun.gdn:0>
+// <function println __prelude.gdn:860>
+// <closure string_repr_of_fun.gdn:5>

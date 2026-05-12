@@ -502,9 +502,41 @@ impl Value {
 
                 s
             }
-            Value_::Fun { name_sym, .. } => format!("{}", name_sym.name),
-            Value_::Closure(..) => "(closure)".to_owned(),
-            Value_::BuiltInFunction(kind, _, _) => format!("{kind}"),
+            Value_::Fun {
+                name_sym, fun_info, ..
+            } => {
+                let pos_path = fun_info.pos.path.to_path_buf();
+                let file_name: String = match pos_path.file_name() {
+                    Some(file_name) => file_name.to_string_lossy().to_string(),
+                    None => format!("{}", pos_path.display()),
+                };
+
+                format!(
+                    "<function {} {}:{}>",
+                    name_sym.name, file_name, fun_info.pos.line_number
+                )
+            }
+            Value_::Closure(_, info, _) => {
+                let pos_path = info.pos.path.to_path_buf();
+                let file_name: String = match pos_path.file_name() {
+                    Some(file_name) => file_name.to_string_lossy().to_string(),
+                    None => format!("{}", pos_path.display()),
+                };
+
+                format!("<closure {}:{}>", file_name, info.pos.line_number)
+            }
+            Value_::BuiltInFunction(kind, info, _) => match info {
+                Some(info) => {
+                    let pos_path = info.pos.path.to_path_buf();
+                    let file_name: String = match pos_path.file_name() {
+                        Some(file_name) => file_name.to_string_lossy().to_string(),
+                        None => format!("{}", pos_path.display()),
+                    };
+
+                    format!("<function {} {}:{}>", kind, file_name, info.pos.line_number)
+                }
+                None => format!("{kind}"),
+            },
             Value_::String(s) => escape_string_literal(s),
             Value_::List { items, .. } => {
                 let mut s = String::new();

@@ -250,6 +250,10 @@ pub(crate) enum StdoutMode {
     /// consume stdout in a REPL session or the playground backend
     /// without getting confused.
     WriteJson(StdoutJsonFormat),
+    /// Append the string to the given buffer instead of writing it to
+    /// stdout. Used by the nREPL server to capture output and send it
+    /// back to the connected client.
+    WriteToBuffer(Arc<std::sync::Mutex<String>>),
     /// Don't write anything to stdout when print() is called, treat
     /// it as a no-op. This is used when running tests in a sandbox.
     DoNotWrite,
@@ -2646,6 +2650,9 @@ fn eval_built_in_call(
                     // needs a test
                     print_as_json(&response, session.pretty_print_json);
                 }
+                StdoutMode::WriteToBuffer(buf) => {
+                    buf.lock().expect("stdout buffer poisoned").push_str(s);
+                }
                 StdoutMode::DoNotWrite => {}
             }
 
@@ -2672,7 +2679,7 @@ fn eval_built_in_call(
             saved_values.push(receiver_value.clone());
 
             let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
-            match session.stdout_mode {
+            match &session.stdout_mode {
                 StdoutMode::WriteDirectly => {
                     println!("{s}");
                 }
@@ -2691,6 +2698,11 @@ fn eval_built_in_call(
                         s: format!("{s}\n"),
                     };
                     print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteToBuffer(buf) => {
+                    let mut b = buf.lock().expect("stdout buffer poisoned");
+                    b.push_str(s);
+                    b.push('\n');
                 }
                 StdoutMode::DoNotWrite => {}
             }

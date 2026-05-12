@@ -13,7 +13,7 @@ use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use serde_bencode::value::Value;
@@ -122,6 +122,7 @@ fn handle_eval(
     code: &str,
     env: &mut Env,
     session: &Session,
+    stdout_buf: &Arc<Mutex<String>>,
     base_msg: &HashMap<Vec<u8>, Value>,
 ) -> Vec<Value> {
     let path = PathBuf::from("__nrepl.gdn");
@@ -169,7 +170,16 @@ fn handle_eval(
         responses.push(Value::Dict(warn_msg));
     }
 
-    match eval_toplevel_exprs_then_stop(&items, env, session, ns.clone()) {
+    let eval_result = eval_toplevel_exprs_then_stop(&items, env, session, ns.clone());
+
+    let captured = std::mem::take(&mut *stdout_buf.lock().expect("stdout buffer poisoned"));
+    if !captured.is_empty() {
+        let mut out_msg = base_msg.clone();
+        out_msg.insert(b"out".to_vec(), bstr(captured));
+        responses.push(Value::Dict(out_msg));
+    }
+
+    match eval_result {
         Ok(value) => {
             let value_str = match value {
                 Some(v) => v.display(env),
@@ -366,15 +376,16 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
 
             let env = conn.sessions.get_mut(&session_id).unwrap();
 
+            let stdout_buf = Arc::new(Mutex::new(String::new()));
             let session = Session {
                 interrupted: Arc::clone(&conn.interrupted),
-                stdout_mode: StdoutMode::WriteDirectly,
+                stdout_mode: StdoutMode::WriteToBuffer(Arc::clone(&stdout_buf)),
                 start_time: Instant::now(),
                 trace_exprs: false,
                 pretty_print_json: false,
             };
 
-            handle_eval(&code, env, &session, &base)
+            handle_eval(&code, env, &session, &stdout_buf, &base)
         }
         "" => {
             let mut msg = base;

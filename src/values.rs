@@ -512,8 +512,8 @@ impl Value {
                 };
 
                 format!(
-                    "<function {} {}:{}>",
-                    name_sym.name, file_name, fun_info.pos.line_number
+                    "<fun {}() {}:{}>",
+                    name_sym.name, file_name, fun_info.pos.line_number + 1
                 )
             }
             Value_::Closure(_, info, _) => {
@@ -523,7 +523,7 @@ impl Value {
                     None => format!("{}", pos_path.display()),
                 };
 
-                format!("<closure {}:{}>", file_name, info.pos.line_number)
+                format!("<closure {}:{}>", file_name, info.pos.line_number + 1)
             }
             Value_::BuiltInFunction(kind, info, _) => match info {
                 Some(info) => {
@@ -533,7 +533,7 @@ impl Value {
                         None => format!("{}", pos_path.display()),
                     };
 
-                    format!("<function {} {}:{}>", kind, file_name, info.pos.line_number)
+                    format!("<fun {}() {}:{}>", kind, file_name, info.pos.line_number + 1)
                 }
                 None => format!("{kind}"),
             },

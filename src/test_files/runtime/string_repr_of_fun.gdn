@@ -8,6 +8,6 @@ fun do_stuff() {}
 
 // args: run
 // expected stdout:
-// <function do_stuff string_repr_of_fun.gdn:0>
-// <function println __prelude.gdn:860>
-// <closure string_repr_of_fun.gdn:5>
+// <fun do_stuff() string_repr_of_fun.gdn:1>
+// <fun println() __prelude.gdn:861>
+// <closure string_repr_of_fun.gdn:6>

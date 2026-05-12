@@ -1,0 +1,6 @@
+import "__ra"
+//           ^
+
+// args: complete
+// expected stdout:
+// {"label":"__random.gdn","kind":17}

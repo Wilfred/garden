@@ -177,10 +177,6 @@ fn get_import_completions(import_info: &ImportInfo, src_path: &Path) -> Vec<Comp
         }
     } else {
         for (name, _) in BUILT_IN_FILES {
-            if *name == "__prelude.gdn" {
-                continue;
-            }
-
             if !name.starts_with(path_str) {
                 continue;
             }

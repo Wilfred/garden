@@ -14,6 +14,7 @@ use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::io::{self, BufRead, Read, Write};
 use std::path::{Path, PathBuf};
+use tracing::error;
 use url::Url;
 
 /// Storage for open document contents, keyed by file path.
@@ -883,7 +884,7 @@ pub(crate) fn run_lsp() {
                 break;
             }
             Err(e) => {
-                eprintln!("Error reading message: {e}");
+                error!("Error reading message: {e}");
                 continue;
             }
         };
@@ -892,7 +893,7 @@ pub(crate) fn run_lsp() {
         let parsed: Message = match serde_json::from_value(message.clone()) {
             Ok(m) => m,
             Err(e) => {
-                eprintln!("Error parsing message: {e}");
+                error!("Error parsing message: {e}");
                 continue;
             }
         };
@@ -906,13 +907,13 @@ pub(crate) fn run_lsp() {
                     {
                         Some(p) => p,
                         None => {
-                            eprintln!("Error parsing initialize params");
+                            error!("Error parsing initialize params");
                             continue;
                         }
                     };
                     let response = handle_initialize(id, params);
                     if let Err(e) = write_message(&response) {
-                        eprintln!("Error writing response: {e}");
+                        error!("Error writing response: {e}");
                     }
                 }
             }
@@ -927,13 +928,13 @@ pub(crate) fn run_lsp() {
                     {
                         Some(p) => p,
                         None => {
-                            eprintln!("Error parsing completion params");
+                            error!("Error parsing completion params");
                             continue;
                         }
                     };
                     let response = handle_completion(id, params, &documents);
                     if let Err(e) = write_message(&response) {
-                        eprintln!("Error writing response: {e}");
+                        error!("Error writing response: {e}");
                     }
                 }
             }
@@ -945,13 +946,13 @@ pub(crate) fn run_lsp() {
                     {
                         Some(p) => p,
                         None => {
-                            eprintln!("Error parsing definition params");
+                            error!("Error parsing definition params");
                             continue;
                         }
                     };
                     let response = handle_definition(id, params, &documents);
                     if let Err(e) = write_message(&response) {
-                        eprintln!("Error writing response: {e}");
+                        error!("Error writing response: {e}");
                     }
                 }
             }
@@ -963,13 +964,13 @@ pub(crate) fn run_lsp() {
                     {
                         Some(p) => p,
                         None => {
-                            eprintln!("Error parsing hover params");
+                            error!("Error parsing hover params");
                             continue;
                         }
                     };
                     let response = handle_hover(id, params, &documents);
                     if let Err(e) = write_message(&response) {
-                        eprintln!("Error writing response: {e}");
+                        error!("Error writing response: {e}");
                     }
                 }
             }
@@ -981,13 +982,13 @@ pub(crate) fn run_lsp() {
                     {
                         Some(p) => p,
                         None => {
-                            eprintln!("Error parsing documentHighlight params");
+                            error!("Error parsing documentHighlight params");
                             continue;
                         }
                     };
                     let response = handle_document_highlight(id, params, &documents);
                     if let Err(e) = write_message(&response) {
-                        eprintln!("Error writing response: {e}");
+                        error!("Error writing response: {e}");
                     }
                 }
             }
@@ -999,13 +1000,13 @@ pub(crate) fn run_lsp() {
                     {
                         Some(p) => p,
                         None => {
-                            eprintln!("Error parsing formatting params");
+                            error!("Error parsing formatting params");
                             continue;
                         }
                     };
                     let response = handle_formatting(id, params, &documents);
                     if let Err(e) = write_message(&response) {
-                        eprintln!("Error writing response: {e}");
+                        error!("Error writing response: {e}");
                     }
                 }
             }
@@ -1017,13 +1018,13 @@ pub(crate) fn run_lsp() {
                     {
                         Some(p) => p,
                         None => {
-                            eprintln!("Error parsing code action params");
+                            error!("Error parsing code action params");
                             continue;
                         }
                     };
                     let response = handle_code_action(id, params, &documents);
                     if let Err(e) = write_message(&response) {
-                        eprintln!("Error writing response: {e}");
+                        error!("Error writing response: {e}");
                     }
                 }
             }
@@ -1035,33 +1036,33 @@ pub(crate) fn run_lsp() {
                     {
                         Some(p) => p,
                         None => {
-                            eprintln!("Error parsing rename params");
+                            error!("Error parsing rename params");
                             continue;
                         }
                     };
                     let response = handle_rename(id, params, &documents);
                     if let Err(e) = write_message(&response) {
-                        eprintln!("Error writing response: {e}");
+                        error!("Error writing response: {e}");
                     }
                 }
             }
             Some("textDocument/didOpen") => {
                 let params = message.get("params").unwrap_or(&serde_json::Value::Null);
                 if let Err(e) = handle_did_open(params, &mut documents) {
-                    eprintln!("Error handling didOpen: {e}");
+                    error!("Error handling didOpen: {e}");
                 }
             }
             Some("textDocument/didChange") => {
                 let params = message.get("params").unwrap_or(&serde_json::Value::Null);
                 if let Err(e) = handle_did_change(params, &mut documents) {
-                    eprintln!("Error handling didChange: {e}");
+                    error!("Error handling didChange: {e}");
                 }
             }
             Some("shutdown") => {
                 if let Some(id) = parsed.id {
                     let response = handle_shutdown(id);
                     if let Err(e) = write_message(&response) {
-                        eprintln!("Error writing response: {e}");
+                        error!("Error writing response: {e}");
                     }
                 }
                 should_exit = true;

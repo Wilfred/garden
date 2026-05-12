@@ -17,7 +17,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use serde_bencode::value::Value;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 use crate::diagnostics::format_exception_with_stack;
 use crate::env::Env;
@@ -286,6 +286,9 @@ fn base_response(request: &HashMap<Vec<u8>, Value>) -> HashMap<Vec<u8>, Value> {
 /// Handle a single request message from the client.
 fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> Vec<Value> {
     let op = dict_get(request, "op").and_then(as_str).unwrap_or("");
+    let id = dict_get(request, "id").and_then(as_str).unwrap_or("");
+    let session = dict_get(request, "session").and_then(as_str).unwrap_or("");
+    debug!(op, id, session, "nREPL: received request");
 
     let base = base_response(request);
 

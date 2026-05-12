@@ -38,6 +38,7 @@
 #![allow(clippy::cmp_owned)]
 
 mod caret_finder;
+mod check_snippets;
 mod checks;
 mod cli_session;
 mod colors;
@@ -219,6 +220,10 @@ enum CliCommands {
     },
     /// Run Garden code blocks in markdown and .gdn files.
     RunCodeBlocks { paths: Vec<PathBuf> },
+    /// Check all Garden code blocks in a markdown file for syntax
+    /// and semantic errors, as if `reflect::check_snippet` had been
+    /// called on each block.
+    CheckSnippets { path: PathBuf },
     /// Show the type of the expression at the position given.
     ShowType { path: PathBuf },
     /// Show the definition position of the value at the position
@@ -295,6 +300,11 @@ fn main() {
         }
         CliCommands::RunCodeBlocks { paths } => {
             run_code_blocks::run_code_blocks(&paths, interrupted);
+        }
+        CliCommands::CheckSnippets { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            check_snippets::check_snippets(&abs_path, &src);
         }
         CliCommands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
@@ -888,6 +898,11 @@ mod tests {
     #[test]
     fn test_golden_run_code_blocks() -> TestResult<()> {
         run_golden_tests("run_code_blocks")
+    }
+
+    #[test]
+    fn test_golden_check_snippets() -> TestResult<()> {
+        run_golden_tests("check_snippets")
     }
 
     #[test]

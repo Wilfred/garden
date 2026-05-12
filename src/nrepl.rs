@@ -13,6 +13,7 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::fs;
 use std::io::{self, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
@@ -1259,6 +1260,34 @@ pub(crate) fn reftest_nrepl(src: &str) {
     }
 }
 
+/// Removes a `.nrepl-port` file when dropped.
+///
+/// Following the nREPL convention, the server writes its bound port
+/// to `.nrepl-port` in the current working directory so that editor
+/// tooling (CIDER, Calva, etc.) can auto-discover the server. The
+/// file must be removed when the server exits.
+struct PortFile {
+    path: PathBuf,
+}
+
+impl PortFile {
+    fn write(port: u16) -> io::Result<Self> {
+        let path = PathBuf::from(".nrepl-port");
+        fs::write(&path, port.to_string())?;
+        Ok(Self { path })
+    }
+}
+
+impl Drop for PortFile {
+    fn drop(&mut self) {
+        if let Err(e) = fs::remove_file(&self.path) {
+            if e.kind() != io::ErrorKind::NotFound {
+                warn!("nREPL: could not remove {}: {e}", self.path.display());
+            }
+        }
+    }
+}
+
 /// Run an nREPL server, listening on `host:port`.
 pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
     let addr = format!("{host}:{port}");
@@ -1270,11 +1299,20 @@ pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
         }
     };
 
-    let local = listener
-        .local_addr()
+    let local_addr = listener.local_addr().ok();
+    let bound_port = local_addr.map(|a| a.port()).unwrap_or(port);
+    let local = local_addr
         .map(|a| a.to_string())
-        .unwrap_or_else(|_| addr.clone());
+        .unwrap_or_else(|| addr.clone());
     info!("nREPL server started on {local}");
+
+    let _port_file = match PortFile::write(bound_port) {
+        Ok(pf) => Some(pf),
+        Err(e) => {
+            warn!("nREPL: could not write .nrepl-port: {e}");
+            None
+        }
+    };
 
     // Use a non-blocking listener so the accept loop can periodically
     // check the interrupted flag and shut down on Ctrl-C.

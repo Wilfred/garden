@@ -17,6 +17,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use serde_bencode::value::Value;
+use tracing::{error, info, warn};
 
 use crate::diagnostics::format_exception_with_stack;
 use crate::env::Env;
@@ -396,7 +397,7 @@ fn serve_connection(stream: TcpStream, interrupted: Arc<AtomicBool>) {
         .peer_addr()
         .map(|a| a.to_string())
         .unwrap_or_else(|_| "<unknown>".to_owned());
-    eprintln!("nREPL: client connected from {peer}");
+    info!("nREPL: client connected from {peer}");
 
     let mut writer = stream.try_clone().expect("Could not clone TCP stream");
     let mut reader = BufReader::new(stream);
@@ -407,12 +408,12 @@ fn serve_connection(stream: TcpStream, interrupted: Arc<AtomicBool>) {
         let request = match read_message(&mut reader) {
             Ok(Some(Value::Dict(d))) => d,
             Ok(Some(_)) => {
-                eprintln!("nREPL: ignoring non-dict request");
+                warn!("nREPL: ignoring non-dict request");
                 continue;
             }
             Ok(None) => break,
             Err(e) => {
-                eprintln!("nREPL: error reading request: {e}");
+                error!("nREPL: error reading request: {e}");
                 break;
             }
         };
@@ -420,17 +421,17 @@ fn serve_connection(stream: TcpStream, interrupted: Arc<AtomicBool>) {
         let responses = handle_message(&mut conn, &request);
         for response in responses {
             if let Err(e) = write_message(&mut writer, &response) {
-                eprintln!("nREPL: error writing response: {e}");
+                error!("nREPL: error writing response: {e}");
                 return;
             }
         }
         if let Err(e) = writer.flush() {
-            eprintln!("nREPL: error flushing writer: {e}");
+            error!("nREPL: error flushing writer: {e}");
             return;
         }
     }
 
-    eprintln!("nREPL: client {peer} disconnected");
+    info!("nREPL: client {peer} disconnected");
 }
 
 /// Run an nREPL server, listening on `host:port`.
@@ -439,7 +440,7 @@ pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
     let listener = match TcpListener::bind(&addr) {
         Ok(l) => l,
         Err(e) => {
-            eprintln!("nREPL: could not bind to {addr}: {e}");
+            error!("nREPL: could not bind to {addr}: {e}");
             std::process::exit(1);
         }
     };
@@ -448,7 +449,7 @@ pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
         .local_addr()
         .map(|a| a.to_string())
         .unwrap_or_else(|_| addr.clone());
-    eprintln!("nREPL server started on {local}");
+    info!("nREPL server started on {local}");
 
     for stream in listener.incoming() {
         match stream {
@@ -460,7 +461,7 @@ pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
                     .expect("Could not spawn nREPL client thread");
             }
             Err(e) => {
-                eprintln!("nREPL: error accepting connection: {e}");
+                error!("nREPL: error accepting connection: {e}");
             }
         }
     }

@@ -574,12 +574,29 @@ fn main() {
             );
         }
         CliCommands::Lsp => {
+            init_tracing();
             lsp::run_lsp();
         }
         CliCommands::Nrepl { port, host } => {
+            init_tracing();
             nrepl::run_nrepl(&host, port, interrupted);
         }
     }
+}
+
+/// Initialize the tracing subscriber, writing logs to stderr.
+///
+/// Honours the `GARDEN_LOG` environment variable for filtering; defaults
+/// to `info` if unset.
+fn init_tracing() {
+    use tracing_subscriber::EnvFilter;
+
+    let filter = EnvFilter::try_from_env("GARDEN_LOG").unwrap_or_else(|_| EnvFilter::new("info"));
+
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(std::io::stderr)
+        .try_init();
 }
 
 /// Evaluate a garden file, then run eval-up-to and print the result.

@@ -659,7 +659,7 @@ fn insert_imported_namespace(
     }
 }
 
-const BUILT_IN_FILES: &[(&str, &str)] = &[
+pub(crate) const BUILT_IN_FILES: &[(&str, &str)] = &[
     ("__prelude.gdn", include_str!("__prelude.gdn")),
     ("__fs.gdn", include_str!("__fs.gdn")),
     ("__random.gdn", include_str!("__random.gdn")),

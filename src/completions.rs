@@ -8,7 +8,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::checks::type_checker::check_types;
 use crate::env::Env;
-use crate::eval::load_toplevel_items;
+use crate::eval::{load_toplevel_items, BUILT_IN_FILES};
 use crate::garden_type::Type;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{AstId, Expression_, IdGenerator, ImportInfo, SymbolName, ToplevelItem};
@@ -144,38 +144,49 @@ fn get_import_completions(import_info: &ImportInfo, src_path: &Path) -> Vec<Comp
         return vec![];
     };
 
-    let Some(prefix) = path_str.strip_prefix("./") else {
-        return vec![];
-    };
-
-    let Some(parent_dir) = src_path.parent() else {
-        return vec![];
-    };
-
-    let Ok(entries) = fs::read_dir(parent_dir) else {
-        return vec![];
-    };
-
     let mut items: Vec<CompletionItem> = vec![];
-    for entry in entries.flatten() {
-        let file_name = entry.file_name();
-        let Some(name) = file_name.to_str() else {
-            continue;
+
+    if let Some(prefix) = path_str.strip_prefix("./") {
+        let Some(parent_dir) = src_path.parent() else {
+            return vec![];
         };
 
-        if !name.ends_with(".gdn") {
-            continue;
-        }
+        let Ok(entries) = fs::read_dir(parent_dir) else {
+            return vec![];
+        };
 
-        if !name.starts_with(prefix) {
-            continue;
-        }
+        for entry in entries.flatten() {
+            let file_name = entry.file_name();
+            let Some(name) = file_name.to_str() else {
+                continue;
+            };
 
-        items.push(CompletionItem {
-            label: name.to_owned(),
-            kind: Some(CompletionItemKind::File),
-            ..Default::default()
-        });
+            if !name.ends_with(".gdn") {
+                continue;
+            }
+
+            if !name.starts_with(prefix) {
+                continue;
+            }
+
+            items.push(CompletionItem {
+                label: name.to_owned(),
+                kind: Some(CompletionItemKind::File),
+                ..Default::default()
+            });
+        }
+    } else {
+        for (name, _) in BUILT_IN_FILES {
+            if !name.starts_with(path_str) {
+                continue;
+            }
+
+            items.push(CompletionItem {
+                label: (*name).to_owned(),
+                kind: Some(CompletionItemKind::File),
+                ..Default::default()
+            });
+        }
     }
 
     items.sort_by(|a, b| a.label.cmp(&b.label));

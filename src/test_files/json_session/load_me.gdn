@@ -6,6 +6,6 @@ fun add_one(x: Int): Int {
 // expected stderr:
 // error: unrecognized subcommand 'src/test_files/json_session/load_me.gdn'
 // 
-// Usage: garden <COMMAND>
+// Usage: garden [OPTIONS] <COMMAND>
 // 
 // For more information, try '--help'.

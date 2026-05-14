@@ -333,9 +333,11 @@ button:hover {
   flex-direction: row;
   align-items: center;
   gap: 10px;
+  box-sizing: border-box;
+  min-height: 42px;
 
-  padding: 4px 10px;
-  background: #00000018;
+  padding: 4px 12px;
+  background: #d8dccb;
   border-bottom: 3px solid #00000030;
 
   font-family: "Lora", serif;
@@ -358,20 +360,6 @@ button:hover {
   margin: 0;
   padding: 4px 12px;
   min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.snippet-actions .run-snippet::before {
-  content: "▶";
-  font-size: 0.85em;
-  color: var(--green-primary);
-}
-
-.snippet-actions .edit-snippet::before {
-  content: "✎";
-  font-size: 1em;
 }
 
 hr {

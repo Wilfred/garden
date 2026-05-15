@@ -309,8 +309,17 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
                 ops_dict.insert(op.as_bytes().to_vec(), Value::Dict(HashMap::new()));
             }
 
+            let garden_major: i64 = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap_or(0);
+            let garden_minor: i64 = env!("CARGO_PKG_VERSION_MINOR").parse().unwrap_or(0);
+
             let versions = bencode_dict(vec![
-                (b"garden".to_vec(), bstr(env!("CARGO_PKG_VERSION"))),
+                (
+                    b"garden".to_vec(),
+                    bencode_dict(vec![
+                        (b"major".to_vec(), Value::Int(garden_major)),
+                        (b"minor".to_vec(), Value::Int(garden_minor)),
+                    ]),
+                ),
                 (
                     b"nrepl".to_vec(),
                     bencode_dict(vec![

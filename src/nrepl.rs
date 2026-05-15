@@ -10,7 +10,6 @@
 use std::collections::HashMap;
 use std::io::{self, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
-use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
@@ -126,8 +125,9 @@ fn handle_eval(
     stdout_buf: &Arc<Mutex<String>>,
     base_msg: &HashMap<Vec<u8>, Value>,
 ) -> Vec<Value> {
-    let path = PathBuf::from("__nrepl.gdn");
-    let vfs_path = env.vfs.insert(Rc::new(path.clone()), code.to_owned());
+    let ns = env.current_namespace();
+    let path = (*ns.borrow().abs_path).clone();
+    let vfs_path = env.vfs.insert(Rc::new(path), code.to_owned());
 
     let (items, errors) = parse_toplevel_items(&vfs_path, code, &mut env.id_gen);
 
@@ -156,7 +156,6 @@ fn handle_eval(
         return responses;
     }
 
-    let ns = env.get_or_create_namespace(&path);
     let (diagnostics, _) = load_toplevel_items_with_stubs(&items, env, ns.clone());
 
     if !diagnostics.is_empty() {
@@ -187,9 +186,16 @@ fn handle_eval(
                 None => "()".to_owned(),
             };
 
+            let ns_name = ns
+                .borrow()
+                .abs_path
+                .file_stem()
+                .map(|s| s.to_string_lossy().into_owned())
+                .unwrap_or_else(|| ns.borrow().abs_path.display().to_string());
+
             let mut value_msg = base_msg.clone();
             value_msg.insert(b"value".to_vec(), bstr(value_str));
-            value_msg.insert(b"ns".to_vec(), bstr("__nrepl"));
+            value_msg.insert(b"ns".to_vec(), bstr(ns_name));
             responses.push(Value::Dict(value_msg));
 
             let mut done_msg = base_msg.clone();
@@ -657,8 +663,8 @@ mod tests {
         let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
         let session_id = conn.new_session();
 
-        // Eval switches the session's toplevel namespace to __nrepl
-        // and defines a new function there.
+        // Eval defines a new function in the session's current
+        // namespace (__user for a fresh session).
         let eval_request = bencode_dict_map(vec![
             (b"op".to_vec(), bstr("eval")),
             (b"session".to_vec(), bstr(session_id.clone())),
@@ -694,9 +700,9 @@ mod tests {
             })
             .expect("expected my_unique_helper among completions");
 
-        // The candidate's ns should reflect the namespace the session
-        // is currently in, which switched to __nrepl during the eval.
-        assert_eq!(dict_get(&candidate, "ns").and_then(as_str), Some("__nrepl"));
+        // The candidate's ns should reflect the session's current
+        // namespace, which is __user for a fresh session.
+        assert_eq!(dict_get(&candidate, "ns").and_then(as_str), Some("__user"));
     }
 
     #[test]

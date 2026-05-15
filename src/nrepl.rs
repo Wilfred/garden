@@ -2,7 +2,7 @@
 //!
 //! Speaks the bencode wire format (via `serde_bencode`) and supports
 //! a small subset of the standard nREPL operations: `clone`,
-//! `describe`, `eval`, `close` and `ls-sessions`.
+//! `describe`, `eval`, `completions`, `close` and `ls-sessions`.
 //!
 //! See <https://nrepl.org/nrepl/index.html> for the protocol
 //! specification.
@@ -28,6 +28,7 @@ use crate::eval::{
 use crate::parser::ast::IdGenerator;
 use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
+use crate::values::Value_;
 
 /// Refuse to buffer a single message larger than this. Prevents a
 /// malformed client from making us allocate without bound.
@@ -216,6 +217,56 @@ fn handle_eval(
     responses
 }
 
+/// Build the `completions` response for a given prefix. Looks at
+/// every value in scope in the session's current namespace (which
+/// includes the prelude) and returns the ones whose name starts with
+/// `prefix`.
+fn handle_completions(env: &Env, prefix: &str, base_msg: &HashMap<Vec<u8>, Value>) -> Vec<Value> {
+    let ns = env.current_namespace();
+    let ns_borrow = ns.borrow();
+    let ns_name = ns_borrow
+        .abs_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_owned();
+
+    let mut matches: Vec<(String, &'static str)> = ns_borrow
+        .values
+        .iter()
+        .filter(|(name, _)| name.text.starts_with(prefix))
+        .map(|(name, value)| {
+            let kind = match value.as_ref() {
+                Value_::Fun { .. }
+                | Value_::Closure(..)
+                | Value_::BuiltInFunction(..)
+                | Value_::EnumConstructor { .. } => "function",
+                Value_::Namespace { .. } => "namespace",
+                _ => "var",
+            };
+            (name.text.clone(), kind)
+        })
+        .collect();
+    matches.sort_by(|a, b| a.0.cmp(&b.0));
+
+    let completions: Vec<Value> = matches
+        .into_iter()
+        .map(|(name, kind)| {
+            bencode_dict(vec![
+                (b"candidate".to_vec(), bstr(name)),
+                (b"ns".to_vec(), bstr(ns_name.clone())),
+                (b"priority".to_vec(), Value::Int(0)),
+                (b"type".to_vec(), bstr(kind)),
+            ])
+        })
+        .collect();
+
+    let mut msg = base_msg.clone();
+    msg.insert(b"completions".to_vec(), Value::List(completions));
+    msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
+    vec![Value::Dict(msg)]
+}
+
 fn format_eval_error(e: &EvalError, env: &Env) -> (String, Option<&'static str>) {
     match e {
         EvalError::Exception(ExceptionInfo { position, message }) => (
@@ -305,7 +356,14 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
     match op {
         "describe" => {
             let mut ops_dict: HashMap<Vec<u8>, Value> = HashMap::new();
-            for op in &["describe", "clone", "close", "eval", "ls-sessions"] {
+            for op in &[
+                "describe",
+                "clone",
+                "close",
+                "eval",
+                "completions",
+                "ls-sessions",
+            ] {
                 ops_dict.insert(op.as_bytes().to_vec(), Value::Dict(HashMap::new()));
             }
 
@@ -395,6 +453,31 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
             };
 
             handle_eval(&code, env, &session, &stdout_buf, &base)
+        }
+        "completions" => {
+            let session_id = dict_get(request, "session")
+                .and_then(as_str)
+                .map(|s| s.to_owned());
+
+            let prefix = dict_get(request, "prefix")
+                .and_then(as_str)
+                .unwrap_or("")
+                .to_owned();
+
+            let session_id = match session_id {
+                Some(s) if conn.sessions.contains_key(&s) => s,
+                _ => {
+                    let mut msg = base;
+                    msg.insert(
+                        b"status".to_vec(),
+                        Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
+                    );
+                    return vec![Value::Dict(msg)];
+                }
+            };
+
+            let env = conn.sessions.get(&session_id).unwrap();
+            handle_completions(env, &prefix, &base)
         }
         "" => {
             let mut msg = base;
@@ -538,6 +621,111 @@ mod tests {
             }
             _ => panic!("expected dict"),
         }
+    }
+
+    #[test]
+    fn completions_returns_prelude_matches() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("completions")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (b"prefix".to_vec(), bstr("printl")),
+        ]);
+
+        let responses = handle_message(&mut conn, &request);
+        assert_eq!(responses.len(), 1);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+
+        let Some(Value::List(items)) = d.get(b"completions".as_slice()) else {
+            panic!("expected completions list");
+        };
+        assert!(
+            items.iter().any(|item| {
+                let Value::Dict(c) = item else { return false };
+                dict_get(c, "candidate").and_then(as_str) == Some("println")
+            }),
+            "expected to find println among completions"
+        );
+    }
+
+    #[test]
+    fn completions_follow_current_namespace() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        // Eval switches the session's toplevel namespace to __nrepl
+        // and defines a new function there.
+        let eval_request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("eval")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (
+                b"code".to_vec(),
+                bstr("fun my_unique_helper(): Int { 42 } my_unique_helper()"),
+            ),
+        ]);
+        handle_message(&mut conn, &eval_request);
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("completions")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (b"prefix".to_vec(), bstr("my_unique")),
+        ]);
+        let responses = handle_message(&mut conn, &request);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+        let Some(Value::List(items)) = d.get(b"completions".as_slice()) else {
+            panic!("expected completions list");
+        };
+        let candidate = items
+            .iter()
+            .find_map(|item| {
+                let Value::Dict(c) = item else { return None };
+                let name = dict_get(c, "candidate").and_then(as_str)?;
+                if name == "my_unique_helper" {
+                    Some(c.clone())
+                } else {
+                    None
+                }
+            })
+            .expect("expected my_unique_helper among completions");
+
+        // The candidate's ns should reflect the namespace the session
+        // is currently in, which switched to __nrepl during the eval.
+        assert_eq!(dict_get(&candidate, "ns").and_then(as_str), Some("__nrepl"));
+    }
+
+    #[test]
+    fn completions_unknown_session() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("completions")),
+            (b"session".to_vec(), bstr("does-not-exist")),
+            (b"prefix".to_vec(), bstr("p")),
+        ]);
+
+        let responses = handle_message(&mut conn, &request);
+        assert_eq!(responses.len(), 1);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
+            panic!("expected status list");
+        };
+        assert!(status.iter().any(|s| as_str(s) == Some("unknown-session")));
+    }
+
+    fn bencode_dict_map(pairs: Vec<(Vec<u8>, Value)>) -> HashMap<Vec<u8>, Value> {
+        let mut m = HashMap::new();
+        for (k, v) in pairs {
+            m.insert(k, v);
+        }
+        m
     }
 
     #[test]

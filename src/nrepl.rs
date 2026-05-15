@@ -218,16 +218,18 @@ fn handle_eval(
 }
 
 /// Build the `completions` response for a given prefix. Looks at
-/// every value in scope in the session's namespace (which includes
-/// the prelude) and returns the ones whose name starts with `prefix`.
-fn handle_completions(
-    env: &mut Env,
-    prefix: &str,
-    base_msg: &HashMap<Vec<u8>, Value>,
-) -> Vec<Value> {
-    let path = PathBuf::from("__nrepl.gdn");
-    let ns = env.get_or_create_namespace(&path);
+/// every value in scope in the session's current namespace (which
+/// includes the prelude) and returns the ones whose name starts with
+/// `prefix`.
+fn handle_completions(env: &Env, prefix: &str, base_msg: &HashMap<Vec<u8>, Value>) -> Vec<Value> {
+    let ns = env.current_namespace();
     let ns_borrow = ns.borrow();
+    let ns_name = ns_borrow
+        .abs_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_owned();
 
     let mut matches: Vec<(String, &'static str)> = ns_borrow
         .values
@@ -252,7 +254,7 @@ fn handle_completions(
         .map(|(name, kind)| {
             bencode_dict(vec![
                 (b"candidate".to_vec(), bstr(name)),
-                (b"ns".to_vec(), bstr("__nrepl")),
+                (b"ns".to_vec(), bstr(ns_name.clone())),
                 (b"priority".to_vec(), Value::Int(0)),
                 (b"type".to_vec(), bstr(kind)),
             ])
@@ -465,7 +467,7 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
                 }
             };
 
-            let env = conn.sessions.get_mut(&session_id).unwrap();
+            let env = conn.sessions.get(&session_id).unwrap();
             handle_completions(env, &prefix, &base)
         }
         "" => {
@@ -639,6 +641,53 @@ mod tests {
             }),
             "expected to find println among completions"
         );
+    }
+
+    #[test]
+    fn completions_follow_current_namespace() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        // Eval switches the session's toplevel namespace to __nrepl
+        // and defines a new function there.
+        let eval_request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("eval")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (
+                b"code".to_vec(),
+                bstr("fun my_unique_helper(): Int { 42 } my_unique_helper()"),
+            ),
+        ]);
+        handle_message(&mut conn, &eval_request);
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("completions")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (b"prefix".to_vec(), bstr("my_unique")),
+        ]);
+        let responses = handle_message(&mut conn, &request);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+        let Some(Value::List(items)) = d.get(b"completions".as_slice()) else {
+            panic!("expected completions list");
+        };
+        let candidate = items
+            .iter()
+            .find_map(|item| {
+                let Value::Dict(c) = item else { return None };
+                let name = dict_get(c, "candidate").and_then(as_str)?;
+                if name == "my_unique_helper" {
+                    Some(c.clone())
+                } else {
+                    None
+                }
+            })
+            .expect("expected my_unique_helper among completions");
+
+        // The candidate's ns should reflect the namespace the session
+        // is currently in, which switched to __nrepl during the eval.
+        assert_eq!(dict_get(&candidate, "ns").and_then(as_str), Some("__nrepl"));
     }
 
     #[test]

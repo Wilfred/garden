@@ -1657,6 +1657,71 @@ fun main() {
     }
 
     #[test]
+    fn test_lsp_code_action_extract_function_multi_line() {
+        use std::io::Write;
+        use std::process::Stdio;
+
+        let test_content = "fun foo() {\n  let x = 1\n  let y = 2\n  println(x + y)\n}\n";
+        let test_file = std::env::temp_dir()
+            .join("garden_lsp_test_code_action_extract_function_multi_line.gdn");
+        std::fs::write(&test_file, test_content).expect("Failed to write test file");
+
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut child = Command::new(path)
+            .arg("lsp")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn command");
+
+        let file_uri = format!("file://{}", test_file.display());
+
+        let init_request =
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#;
+        let initialized = r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#;
+
+        // Selection covers lines 2-3: `let y = 2` and `println(x + y)`.
+        let code_action_request = format!(
+            r#"{{"jsonrpc":"2.0","id":2,"method":"textDocument/codeAction","params":{{"textDocument":{{"uri":"{}"}},"range":{{"start":{{"line":2,"character":2}},"end":{{"line":3,"character":16}}}},"context":{{"diagnostics":[]}}}}}}"#,
+            file_uri
+        );
+
+        let shutdown_request = r#"{"jsonrpc":"2.0","id":3,"method":"shutdown"}"#;
+        let exit = r#"{"jsonrpc":"2.0","method":"exit"}"#;
+
+        let input = format!(
+            "Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}",
+            init_request.len(), init_request,
+            initialized.len(), initialized,
+            code_action_request.len(), code_action_request,
+            shutdown_request.len(), shutdown_request,
+            exit.len(), exit
+        );
+
+        {
+            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+            stdin
+                .write_all(input.as_bytes())
+                .expect("Failed to write to stdin");
+        }
+
+        let output = child
+            .wait_with_output()
+            .expect("Failed to wait for command");
+
+        assert!(output.status.success());
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        assert!(
+            stdout.contains("Extract function"),
+            "Should offer 'Extract function' for a multi-line selection, got: {stdout}"
+        );
+
+        let _ = std::fs::remove_file(&test_file);
+    }
+
+    #[test]
     fn test_lsp_document_highlight() {
         use std::io::Write;
         use std::process::Stdio;

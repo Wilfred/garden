@@ -682,6 +682,7 @@ fn handle_code_action(
             new_text: fix.new_text,
         };
 
+        #[allow(clippy::disallowed_types)]
         let mut changes = std::collections::HashMap::new();
         changes.insert(uri.clone(), vec![text_edit]);
 
@@ -749,6 +750,7 @@ fn handle_rename(
         return JsonRpcResponse::new(id, None);
     }
 
+    #[allow(clippy::disallowed_types)]
     let mut changes = std::collections::HashMap::new();
     changes.insert(uri.clone(), edits);
 
@@ -789,6 +791,7 @@ fn build_extract_function_action(
         new_text: new_src,
     };
 
+    #[allow(clippy::disallowed_types)]
     let mut changes = std::collections::HashMap::new();
     changes.insert(uri.clone(), vec![text_edit]);
 

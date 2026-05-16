@@ -8,6 +8,11 @@
 //! See <https://nrepl.org/nrepl/index.html> for the protocol
 //! specification.
 
+// `serde_bencode::value::Value::Dict` is defined as `HashMap<Vec<u8>,
+// Value>`, so this module is forced to use `std::collections::HashMap`
+// rather than `FxHashMap` to match the third-party API.
+#![allow(clippy::disallowed_types)]
+
 use std::collections::HashMap;
 use std::io::{self, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};

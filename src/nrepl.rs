@@ -2,15 +2,17 @@
 //!
 //! Speaks the bencode wire format (via `serde_bencode`) and supports
 //! a small subset of the standard nREPL operations: `clone`,
-//! `describe`, `eval`, `completions`, `lookup`, `close` and
-//! `ls-sessions`.
+//! `describe`, `eval`, `load-file`, `completions`, `lookup`, `close`
+//! and `ls-sessions`.
 //!
 //! See <https://nrepl.org/nrepl/index.html> for the protocol
 //! specification.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io::{self, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
@@ -25,8 +27,9 @@ use crate::eval::{
     eval_toplevel_exprs_then_stop, load_toplevel_items_with_stubs, EvalError, ExceptionInfo,
     Session, StdoutMode,
 };
+use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{IdGenerator, SymbolName};
-use crate::parser::vfs::{to_project_relative, Vfs};
+use crate::parser::vfs::{to_abs_path, to_project_relative, Vfs};
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::values::Value_;
 
@@ -128,7 +131,42 @@ fn handle_eval(
 ) -> Vec<Value> {
     let ns = env.current_namespace();
     let path = (*ns.borrow().abs_path).clone();
-    let vfs_path = env.vfs.insert(Rc::new(path), code.to_owned());
+    eval_code_in_namespace(code, path, ns, env, session, stdout_buf, base_msg)
+}
+
+/// Perform a single `load-file` request, returning the response
+/// messages to send back to the client. The file's contents are
+/// loaded into a namespace identified by `file_path` (when provided),
+/// becoming the session's current namespace afterwards. Subsequent
+/// `eval` requests in the session will run in that namespace.
+fn handle_load_file(
+    code: &str,
+    file_path: Option<&str>,
+    env: &mut Env,
+    session: &Session,
+    stdout_buf: &Arc<Mutex<String>>,
+    base_msg: &HashMap<Vec<u8>, Value>,
+) -> Vec<Value> {
+    let path: PathBuf = match file_path {
+        Some(p) => to_abs_path(Path::new(p)),
+        None => (*env.current_namespace().borrow().abs_path).clone(),
+    };
+    let ns = env.get_or_create_namespace(&path);
+    eval_code_in_namespace(code, path, ns, env, session, stdout_buf, base_msg)
+}
+
+/// Parse `code`, load its top-level items into `namespace`, evaluate
+/// any expressions, and build the nREPL response messages.
+fn eval_code_in_namespace(
+    code: &str,
+    vfs_path_buf: PathBuf,
+    namespace: Rc<RefCell<NamespaceInfo>>,
+    env: &mut Env,
+    session: &Session,
+    stdout_buf: &Arc<Mutex<String>>,
+    base_msg: &HashMap<Vec<u8>, Value>,
+) -> Vec<Value> {
+    let vfs_path = env.vfs.insert(Rc::new(vfs_path_buf), code.to_owned());
 
     let (items, errors) = parse_toplevel_items(&vfs_path, code, &mut env.id_gen);
 
@@ -157,7 +195,7 @@ fn handle_eval(
         return responses;
     }
 
-    let (diagnostics, _) = load_toplevel_items_with_stubs(&items, env, ns.clone());
+    let (diagnostics, _) = load_toplevel_items_with_stubs(&items, env, namespace.clone());
 
     if !diagnostics.is_empty() {
         let warnings = diagnostics
@@ -172,7 +210,7 @@ fn handle_eval(
     }
 
     let eval_start = Instant::now();
-    let eval_result = eval_toplevel_exprs_then_stop(&items, env, session, ns.clone());
+    let eval_result = eval_toplevel_exprs_then_stop(&items, env, session, namespace.clone());
     let eval_msec = eval_start.elapsed().as_millis() as i64;
 
     let captured = std::mem::take(&mut *stdout_buf.lock().expect("stdout buffer poisoned"));
@@ -189,12 +227,12 @@ fn handle_eval(
                 None => "()".to_owned(),
             };
 
-            let ns_name = ns
+            let ns_name = namespace
                 .borrow()
                 .abs_path
                 .file_stem()
                 .map(|s| s.to_string_lossy().into_owned())
-                .unwrap_or_else(|| ns.borrow().abs_path.display().to_string());
+                .unwrap_or_else(|| namespace.borrow().abs_path.display().to_string());
 
             let mut value_msg = base_msg.clone();
             value_msg.insert(b"value".to_vec(), bstr(value_str));
@@ -503,6 +541,37 @@ const SUPPORTED_OPS: &[(&str, OpDescriptor)] = &[
         },
     ),
     (
+        "load-file",
+        OpDescriptor {
+            doc: "Loads a body of code, using supplied path and filename info to set source file and line number metadata.",
+            requires: &[
+                ("file", "Full body of code to be loaded."),
+                (
+                    "session",
+                    "The ID of the session in which the file will be loaded.",
+                ),
+            ],
+            optional: &[
+                (
+                    "file-path",
+                    "Source path (e.g. a/b/c.gdn) of the file being loaded.",
+                ),
+                ("file-name", "Name of the source file, for example foo.gdn."),
+            ],
+            returns: &[
+                ("ns", "The namespace in which the file was loaded."),
+                (
+                    "value",
+                    "The result of evaluating the file's last expression, as a string.",
+                ),
+                (
+                    "eval-msec",
+                    "The number of milliseconds taken to evaluate the file.",
+                ),
+            ],
+        },
+    ),
+    (
         "completions",
         OpDescriptor {
             doc: "Return a list of symbols matching the specified prefix that are visible in the current namespace.",
@@ -678,6 +747,53 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
             };
 
             handle_eval(&code, env, &session, &stdout_buf, &base)
+        }
+        "load-file" => {
+            let session_id = dict_get(request, "session")
+                .and_then(as_str)
+                .map(|s| s.to_owned());
+
+            let file = dict_get(request, "file")
+                .and_then(as_str)
+                .unwrap_or("")
+                .to_owned();
+
+            let file_path = dict_get(request, "file-path")
+                .and_then(as_str)
+                .or_else(|| dict_get(request, "file-name").and_then(as_str))
+                .map(|s| s.to_owned());
+
+            let session_id = match session_id {
+                Some(s) if conn.sessions.contains_key(&s) => s,
+                _ => {
+                    let mut msg = base;
+                    msg.insert(
+                        b"status".to_vec(),
+                        Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
+                    );
+                    return vec![Value::Dict(msg)];
+                }
+            };
+
+            let env = conn.sessions.get_mut(&session_id).unwrap();
+
+            let stdout_buf = Arc::new(Mutex::new(String::new()));
+            let session = Session {
+                interrupted: Arc::clone(&conn.interrupted),
+                stdout_mode: StdoutMode::WriteToBuffer(Arc::clone(&stdout_buf)),
+                start_time: Instant::now(),
+                trace_exprs: false,
+                pretty_print_json: false,
+            };
+
+            handle_load_file(
+                &file,
+                file_path.as_deref(),
+                env,
+                &session,
+                &stdout_buf,
+                &base,
+            )
         }
         "completions" => {
             let session_id = dict_get(request, "session")
@@ -1214,5 +1330,162 @@ mod tests {
         let bytes: Vec<u8> = vec![];
         let mut cursor = Cursor::new(bytes);
         assert!(read_message(&mut cursor).unwrap().is_none());
+    }
+
+    #[test]
+    fn load_file_evaluates_code_and_returns_value() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("load-file")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (
+                b"file".to_vec(),
+                bstr("fun greet(): String { \"hello\" } greet()"),
+            ),
+            (b"file-path".to_vec(), bstr("/tmp/greet.gdn")),
+        ]);
+
+        let responses = handle_message(&mut conn, &request);
+
+        let value_msg = responses
+            .iter()
+            .find_map(|r| {
+                let Value::Dict(d) = r else { return None };
+                let v = dict_get(d, "value").and_then(as_str)?;
+                Some(v.to_owned())
+            })
+            .expect("expected a value response");
+        assert_eq!(value_msg, "\"hello\"");
+
+        let done_status = responses
+            .iter()
+            .find_map(|r| {
+                let Value::Dict(d) = r else { return None };
+                let Value::List(status) = d.get(b"status".as_slice())? else {
+                    return None;
+                };
+                if status.iter().any(|s| as_str(s) == Some("done")) {
+                    Some(status.clone())
+                } else {
+                    None
+                }
+            })
+            .expect("expected a done status");
+        assert!(done_status.iter().all(|s| as_str(s) != Some("eval-error")));
+    }
+
+    #[test]
+    fn load_file_uses_file_path_namespace() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        let load_request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("load-file")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (
+                b"file".to_vec(),
+                bstr("fun my_loaded_helper(): Int { 7 } my_loaded_helper()"),
+            ),
+            (b"file-path".to_vec(), bstr("/tmp/loaded.gdn")),
+        ]);
+        let responses = handle_message(&mut conn, &load_request);
+
+        let ns_name = responses
+            .iter()
+            .find_map(|r| {
+                let Value::Dict(d) = r else { return None };
+                let ns = dict_get(d, "ns").and_then(as_str)?;
+                Some(ns.to_owned())
+            })
+            .expect("expected ns in response");
+        assert_eq!(ns_name, "loaded");
+
+        // After load-file, the session's current namespace should be
+        // the loaded file's namespace, so we can call its definitions
+        // directly.
+        let completions_request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("completions")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (b"prefix".to_vec(), bstr("my_loaded")),
+        ]);
+        let completions_responses = handle_message(&mut conn, &completions_request);
+        let Value::Dict(d) = &completions_responses[0] else {
+            panic!("expected dict");
+        };
+        let Some(Value::List(items)) = d.get(b"completions".as_slice()) else {
+            panic!("expected completions list");
+        };
+        assert!(
+            items.iter().any(|item| {
+                let Value::Dict(c) = item else { return false };
+                dict_get(c, "candidate").and_then(as_str) == Some("my_loaded_helper")
+            }),
+            "expected to find my_loaded_helper among completions"
+        );
+    }
+
+    #[test]
+    fn load_file_reports_parse_error() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("load-file")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (b"file".to_vec(), bstr("fun broken(")),
+            (b"file-path".to_vec(), bstr("/tmp/broken.gdn")),
+        ]);
+
+        let responses = handle_message(&mut conn, &request);
+
+        let done_status = responses
+            .iter()
+            .find_map(|r| {
+                let Value::Dict(d) = r else { return None };
+                let Value::List(status) = d.get(b"status".as_slice())? else {
+                    return None;
+                };
+                Some(status.clone())
+            })
+            .expect("expected status");
+        assert!(done_status.iter().any(|s| as_str(s) == Some("eval-error")));
+    }
+
+    #[test]
+    fn load_file_unknown_session() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("load-file")),
+            (b"session".to_vec(), bstr("does-not-exist")),
+            (b"file".to_vec(), bstr("1 + 1")),
+        ]);
+
+        let responses = handle_message(&mut conn, &request);
+        assert_eq!(responses.len(), 1);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
+            panic!("expected status list");
+        };
+        assert!(status.iter().any(|s| as_str(s) == Some("unknown-session")));
+    }
+
+    #[test]
+    fn describe_includes_load_file() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let request = bencode_dict_map(vec![(b"op".to_vec(), bstr("describe"))]);
+
+        let responses = handle_message(&mut conn, &request);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+        let Some(Value::Dict(ops)) = d.get(b"ops".as_slice()) else {
+            panic!("expected ops dict");
+        };
+        assert!(ops.contains_key(b"load-file".as_slice()));
     }
 }

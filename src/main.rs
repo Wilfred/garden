@@ -916,12 +916,12 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_extract_function() -> TestResult<()> {
+    fn reftest_extract_function() -> TestResult<()> {
         run_golden_tests("extract_function")
     }
 
     #[test]
-    fn test_golden_extract_variable() -> TestResult<()> {
+    fn reftest_extract_variable() -> TestResult<()> {
         run_golden_tests("extract_variable")
     }
 

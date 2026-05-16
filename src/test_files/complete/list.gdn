@@ -4,7 +4,7 @@ fun foo() {
     //   ^
 }
 
-// args: complete
+// args: reftest-complete
 // expected stdout:
 // {"label":"append","kind":2,"detail":"(T): List<T>","insertText":"append($0)","insertTextFormat":2}
 // {"label":"contains","kind":2,"detail":"(T): Bool","insertText":"contains($0)","insertTextFormat":2}

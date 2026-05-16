@@ -230,7 +230,7 @@ enum CliCommands {
         override_path: Option<PathBuf>,
     },
     /// Show possible completions at the position given.
-    Complete {
+    ReftestComplete {
         path: PathBuf,
         offset: Option<usize>,
     },
@@ -393,7 +393,7 @@ fn main() {
                 println!("{}", serde_json::to_string(&placeholder_pos).unwrap());
             }
         }
-        CliCommands::Complete { offset, path } => {
+        CliCommands::ReftestComplete { offset, path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
             let offset = offset.unwrap_or_else(|| {
@@ -908,7 +908,7 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_complete() -> TestResult<()> {
+    fn reftest_complete() -> TestResult<()> {
         run_golden_tests("complete")
     }
 

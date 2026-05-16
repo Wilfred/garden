@@ -3,6 +3,6 @@ import "__random.gdn" as random
 random::int()
 //         ^
 
-// args: complete
+// args: reftest-complete
 // expected stdout:
 // {"label":"int","kind":3,"detail":"(): Int","insertText":"int","insertTextFormat":2}

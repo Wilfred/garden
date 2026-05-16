@@ -1,5 +1,5 @@
 import "__ra"
 //           ^
 
-// args: complete
+// args: reftest-complete
 // expected stdout: {"label":"__random.gdn","kind":17}

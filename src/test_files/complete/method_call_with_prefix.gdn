@@ -3,6 +3,6 @@ fun foo(o: Option<String>) {
     //   ^
 }
 
-// args: complete
+// args: reftest-complete
 // expected stdout:
 // {"label":"or_value","kind":2,"detail":"(T): T","insertText":"or_value($0)","insertTextFormat":2}

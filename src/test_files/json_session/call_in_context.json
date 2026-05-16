@@ -2,7 +2,7 @@
 { "method": "run", "input": "foo()" }
 { "method": "run", "input": "dbg(x)" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

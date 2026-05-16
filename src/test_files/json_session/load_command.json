@@ -1,7 +1,7 @@
 { "method": "run", "input": ":load src/test_files/json_session/load_me.gdn" }
 { "method": "run", "input": "add_one(3)" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

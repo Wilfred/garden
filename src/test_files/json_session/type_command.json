@@ -1,6 +1,6 @@
 { "method": "run", "input": ":type fun() {}" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

@@ -1,7 +1,7 @@
 { "method": "run", "input": ":resume" }
 { "method": "run", "input": ":resume" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

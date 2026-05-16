@@ -2,7 +2,7 @@
 { "method": "interrupt", "input": "" }
 { "method": "run", "input": "2 + 3" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

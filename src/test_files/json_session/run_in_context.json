@@ -3,7 +3,7 @@
 { "method": "run", "input": "x" }
 { "method": "run", "input": "y" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

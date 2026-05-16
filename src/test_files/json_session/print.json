@@ -1,6 +1,6 @@
 { "method": "run", "input": "println(\"hello world\")", "id": 42 }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

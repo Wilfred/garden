@@ -1,6 +1,6 @@
 { "method": "run", "input": "{ let x = 1 }", "id": 1 }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

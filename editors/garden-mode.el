@@ -807,8 +807,6 @@ If called with a prefix, stop the previous session."
 
 (defvar garden-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-.") #'garden-definition)
-
     ;; Emacs commands to eval Garden snippets.
     (define-key map (kbd "C-x C-e") #'garden-send)
     (define-key map (kbd "C-c C-c") #'garden-send)
@@ -932,30 +930,6 @@ the result."
                        (kill-buffer (current-buffer))
                        (delete-file tmp-file-of-src)
                        (funcall callback result)))))))))
-
-(defun garden--go-to-position (pos-json)
-  "Parse POS-JSON as a buffer and position, and go to that location."
-  (let* ((info (json-parse-string (s-trim pos-json) :object-type 'plist :null-object nil))
-         (path (plist-get info :path))
-         (line (plist-get info :line_number))
-         (column (plist-get info :column)))
-    (unless info
-      (user-error "No position available."))
-    (garden--visit-path path)
-    (widen)
-    (goto-char (point-min))
-    (forward-line line)
-    (forward-char column)))
-
-(defun garden-definition ()
-  "Go to the definition of the thing at point."
-  (interactive)
-  (xref-push-marker-stack)
-  (garden--async-command
-   "definition-position"
-   (point)
-   #'garden--go-to-position
-   (list "--override-path" (buffer-file-name))))
 
 (defun garden--read-symbol (prompt)
   "Read a symbol from the minibuffer, defaulting to the one at point."

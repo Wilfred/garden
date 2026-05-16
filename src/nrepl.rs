@@ -2,7 +2,8 @@
 //!
 //! Speaks the bencode wire format (via `serde_bencode`) and supports
 //! a small subset of the standard nREPL operations: `clone`,
-//! `describe`, `eval`, `completions`, `close` and `ls-sessions`.
+//! `describe`, `eval`, `completions`, `lookup`, `close` and
+//! `ls-sessions`.
 //!
 //! See <https://nrepl.org/nrepl/index.html> for the protocol
 //! specification.
@@ -24,8 +25,8 @@ use crate::eval::{
     eval_toplevel_exprs_then_stop, load_toplevel_items_with_stubs, EvalError, ExceptionInfo,
     Session, StdoutMode,
 };
-use crate::parser::ast::IdGenerator;
-use crate::parser::vfs::Vfs;
+use crate::parser::ast::{IdGenerator, SymbolName};
+use crate::parser::vfs::{to_project_relative, Vfs};
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::values::Value_;
 
@@ -273,6 +274,72 @@ fn handle_completions(env: &Env, prefix: &str, base_msg: &HashMap<Vec<u8>, Value
     vec![Value::Dict(msg)]
 }
 
+/// Build the `lookup` response for a given symbol name. Looks up the
+/// symbol in the session's current namespace and returns information
+/// about it (file, line, doc, arglists, ...).
+fn handle_lookup(env: &Env, sym: &str, base_msg: &HashMap<Vec<u8>, Value>) -> Vec<Value> {
+    let ns = env.current_namespace();
+    let ns_borrow = ns.borrow();
+    let ns_name = ns_borrow
+        .abs_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_owned();
+
+    let value = ns_borrow.values.get(&SymbolName {
+        text: sym.to_owned(),
+    });
+
+    let Some(value) = value else {
+        let mut msg = base_msg.clone();
+        msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
+        return vec![Value::Dict(msg)];
+    };
+
+    let mut info: HashMap<Vec<u8>, Value> = HashMap::new();
+    info.insert(b"name".to_vec(), bstr(sym));
+    info.insert(b"ns".to_vec(), bstr(ns_name));
+
+    if let Some(fun_info) = value.fun_info() {
+        let params: Vec<String> = fun_info
+            .params
+            .params
+            .iter()
+            .map(|p| {
+                let mut s = p.symbol.name.text.clone();
+                if let Some(hint) = &p.hint {
+                    s.push_str(": ");
+                    s.push_str(&hint.as_src());
+                }
+                s
+            })
+            .collect();
+        let arglists_str = format!("({})", params.join(", "));
+        info.insert(b"arglists-str".to_vec(), bstr(arglists_str));
+
+        let rel_path = to_project_relative(&fun_info.pos.path, &env.project_root);
+        info.insert(b"file".to_vec(), bstr(rel_path.display().to_string()));
+        info.insert(
+            b"line".to_vec(),
+            Value::Int((fun_info.pos.line_number as i64) + 1),
+        );
+        info.insert(
+            b"column".to_vec(),
+            Value::Int((fun_info.pos.column as i64) + 1),
+        );
+
+        if let Some(doc) = &fun_info.doc_comment {
+            info.insert(b"doc".to_vec(), bstr(doc.clone()));
+        }
+    }
+
+    let mut msg = base_msg.clone();
+    msg.insert(b"info".to_vec(), Value::Dict(info));
+    msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
+    vec![Value::Dict(msg)]
+}
+
 fn format_eval_error(e: &EvalError, env: &Env) -> (String, Option<&'static str>) {
     match e {
         EvalError::Exception(ExceptionInfo { position, message }) => (
@@ -445,6 +512,24 @@ const SUPPORTED_OPS: &[(&str, OpDescriptor)] = &[
             )],
         },
     ),
+    (
+        "lookup",
+        OpDescriptor {
+            doc: "Lookup symbol info.",
+            requires: &[
+                ("sym", "The symbol to look up."),
+                (
+                    "session",
+                    "The ID of the session in which the symbol should be looked up.",
+                ),
+            ],
+            optional: &[],
+            returns: &[(
+                "info",
+                "A map of information about the symbol, including its name, namespace, file, line, column, arglists-str and doc.",
+            )],
+        },
+    ),
 ];
 
 fn op_descriptor_to_value(d: &OpDescriptor) -> Value {
@@ -610,6 +695,31 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
 
             let env = conn.sessions.get(&session_id).unwrap();
             handle_completions(env, &prefix, &base)
+        }
+        "lookup" => {
+            let session_id = dict_get(request, "session")
+                .and_then(as_str)
+                .map(|s| s.to_owned());
+
+            let sym = dict_get(request, "sym")
+                .and_then(as_str)
+                .unwrap_or("")
+                .to_owned();
+
+            let session_id = match session_id {
+                Some(s) if conn.sessions.contains_key(&s) => s,
+                _ => {
+                    let mut msg = base;
+                    msg.insert(
+                        b"status".to_vec(),
+                        Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
+                    );
+                    return vec![Value::Dict(msg)];
+                }
+            };
+
+            let env = conn.sessions.get(&session_id).unwrap();
+            handle_lookup(env, &sym, &base)
         }
         "" => {
             let mut msg = base;
@@ -829,6 +939,112 @@ mod tests {
         // The candidate's ns should reflect the session's current
         // namespace, which is __user for a fresh session.
         assert_eq!(dict_get(&candidate, "ns").and_then(as_str), Some("__user"));
+    }
+
+    #[test]
+    fn lookup_returns_prelude_info() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("lookup")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (b"sym".to_vec(), bstr("println")),
+        ]);
+
+        let responses = handle_message(&mut conn, &request);
+        assert_eq!(responses.len(), 1);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+        let Some(Value::Dict(info)) = d.get(b"info".as_slice()) else {
+            panic!("expected info dict");
+        };
+        assert_eq!(dict_get(info, "name").and_then(as_str), Some("println"));
+        assert!(dict_get(info, "arglists-str").and_then(as_str).is_some());
+    }
+
+    #[test]
+    fn lookup_returns_user_function_info() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        let eval_request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("eval")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (
+                b"code".to_vec(),
+                bstr("/// Adds one to its argument.\nfun add_one(i: Int): Int { i + 1 }"),
+            ),
+        ]);
+        handle_message(&mut conn, &eval_request);
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("lookup")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (b"sym".to_vec(), bstr("add_one")),
+        ]);
+
+        let responses = handle_message(&mut conn, &request);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+        let Some(Value::Dict(info)) = d.get(b"info".as_slice()) else {
+            panic!("expected info dict");
+        };
+        assert_eq!(dict_get(info, "name").and_then(as_str), Some("add_one"));
+        assert_eq!(dict_get(info, "ns").and_then(as_str), Some("__user"));
+        assert_eq!(
+            dict_get(info, "arglists-str").and_then(as_str),
+            Some("(i: Int)")
+        );
+        assert_eq!(
+            dict_get(info, "doc").and_then(as_str),
+            Some("Adds one to its argument.")
+        );
+        assert!(matches!(info.get(b"line".as_slice()), Some(Value::Int(_))));
+    }
+
+    #[test]
+    fn lookup_unknown_symbol_omits_info() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("lookup")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (b"sym".to_vec(), bstr("definitely_not_defined")),
+        ]);
+
+        let responses = handle_message(&mut conn, &request);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+        assert!(d.get(b"info".as_slice()).is_none());
+        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
+            panic!("expected status list");
+        };
+        assert!(status.iter().any(|s| as_str(s) == Some("done")));
+    }
+
+    #[test]
+    fn lookup_unknown_session() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("lookup")),
+            (b"session".to_vec(), bstr("does-not-exist")),
+            (b"sym".to_vec(), bstr("println")),
+        ]);
+
+        let responses = handle_message(&mut conn, &request);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
+            panic!("expected status list");
+        };
+        assert!(status.iter().any(|s| as_str(s) == Some("unknown-session")));
     }
 
     #[test]

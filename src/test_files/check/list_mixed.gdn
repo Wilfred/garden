@@ -35,4 +35,3 @@ public fun returns_bools(): List<Bool> {
 //  8| public fun returns_bools(): List<Bool> {
 //  9|   [1, True]
 // 10| }  ^
-

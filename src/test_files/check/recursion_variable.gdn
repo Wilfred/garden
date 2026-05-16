@@ -37,4 +37,3 @@ public fun qux(x: Int, _y: Int): Int {
 // 2| public fun foo(x: Int, y: Int): Int {
 // 3|     if (x == 0) {      ^
 // 4|         return 0
-

@@ -57,6 +57,4 @@ public fun example() {
 // 8|   x       ^^
 // 9| }
 
-// expected stderr: 
-// 6 issues can be fixed automatically (use `--fix`).
-
+// expected stderr: 6 issues can be fixed automatically (use `--fix`).

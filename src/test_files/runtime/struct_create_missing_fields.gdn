@@ -13,4 +13,3 @@ struct Foo {
 // -| src/test_files/runtime/struct_create_missing_fields.gdn:6:9	 __toplevel__
 // 6|     dbg(Foo{})
 //  |         ^^^^^
-

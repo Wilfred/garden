@@ -6,4 +6,3 @@
 // -| src/test_files/runtime/int_wrong_operator.gdn:1:1	 __toplevel__
 // 1| 1 +. 2
 //  | ^
-

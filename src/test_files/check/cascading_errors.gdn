@@ -21,4 +21,3 @@ public fun foo() {
 //  |           ^^^^^^^^^^^
 // 3|   // Calling methods on an error type is fine.
 // 4|   x.len()
-

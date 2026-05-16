@@ -63,4 +63,3 @@ public fun foo: Option<Int> {
 // 1| public fun foo: Option<Int> {
 // 2|   None     ^^^
 // 3| }
-

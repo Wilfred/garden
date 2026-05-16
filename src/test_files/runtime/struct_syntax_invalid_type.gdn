@@ -10,4 +10,3 @@ enum Foo { X }
 // -| src/test_files/runtime/struct_syntax_invalid_type.gdn:4:5	 __toplevel__
 // 4|     Foo{ x: 1 }
 //  |     ^^^
-

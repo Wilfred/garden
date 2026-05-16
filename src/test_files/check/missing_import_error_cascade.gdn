@@ -19,4 +19,3 @@ ns::stuff()
 // 2| import "no_such.gdn" as ns
 //  |        ^^^^^^^^^^^^^
 // 3| import "__fs.gdn" as fs
-

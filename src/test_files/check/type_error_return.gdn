@@ -22,5 +22,4 @@ public fun foo() {
 // 3|     return s.no_such_meth()
 // 4| }   ^^^^^^^^^^^^^^^^^^^^^^^
 
-// expected stderr: 
-// 1 issue can be fixed automatically (use `--fix`).
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

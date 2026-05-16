@@ -12,5 +12,4 @@ public fun foo() {
 // 2|   "a" + "b"
 // 3| }     ^
 
-// expected stderr: 
-// 1 issue can be fixed automatically (use `--fix`).
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

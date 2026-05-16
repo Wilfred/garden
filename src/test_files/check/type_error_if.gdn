@@ -49,4 +49,3 @@ public fun stuff(): String {
 // 19|     123
 // 20|   } ^^^
 // 21| }
-

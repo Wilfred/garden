@@ -4,4 +4,3 @@ fun foo() {
 }
 
 // args: highlight
-// expected stdout:

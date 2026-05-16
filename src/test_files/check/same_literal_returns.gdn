@@ -179,6 +179,4 @@ public fun different_variants(b: Bool): Bool {
 // 14|     return 1
 // 15| }   ^^^^^^^^
 
-// expected stderr: 
-// 1 issue can be fixed automatically (use `--fix`).
-
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

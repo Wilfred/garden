@@ -41,6 +41,4 @@ public fun no_repeats(x: Bool, y: Bool, z: Bool): Bool {
 //  8|     x && y && x
 //  9| }             ^
 
-// expected stderr: 
-// 2 issues can be fixed automatically (use `--fix`).
-
+// expected stderr: 2 issues can be fixed automatically (use `--fix`).

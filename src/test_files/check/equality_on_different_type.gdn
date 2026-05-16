@@ -34,4 +34,3 @@ public fun bar(s: Option<String>, i: Option<Int>) {
 //   |        ^^^^^^
 // 11|         print("hello world")
 // 12|     }
-

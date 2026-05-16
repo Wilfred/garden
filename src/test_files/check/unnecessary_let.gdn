@@ -14,5 +14,4 @@ public fun foo(): Int {
 // 3|   x       ^
 // 4| }
 
-// expected stderr: 
-// 2 issues can be fixed automatically (use `--fix`).
+// expected stderr: 2 issues can be fixed automatically (use `--fix`).

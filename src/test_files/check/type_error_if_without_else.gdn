@@ -37,5 +37,4 @@ public fun foo(b: Bool): Int {
 //  | ^^^^^
 // 5| }
 
-// expected stderr: 
-// 1 issue can be fixed automatically (use `--fix`).
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

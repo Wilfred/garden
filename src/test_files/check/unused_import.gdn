@@ -9,5 +9,4 @@ import "__fs.gdn" as fs
 // 1| import "__fs.gdn" as fs
 // 2|                      ^^
 
-// expected stderr: 
-// 1 issue can be fixed automatically (use `--fix`).
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

@@ -117,6 +117,4 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 24|     1 == 1
 // 25| }   ^^^^^^
 
-// expected stderr: 
-// 2 issues can be fixed automatically (use `--fix`).
-
+// expected stderr: 2 issues can be fixed automatically (use `--fix`).

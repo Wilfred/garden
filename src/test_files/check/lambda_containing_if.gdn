@@ -21,4 +21,3 @@ public fun map_over_strings(lines: List<String>) {
 //  |            ^^^^
 // 4|             "b"
 // 5|         } else {
-

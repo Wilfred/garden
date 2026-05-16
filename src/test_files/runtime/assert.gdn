@@ -9,4 +9,3 @@
 // -| src/test_files/runtime/assert.gdn:3:10	 __toplevel__
 // 3|   assert((1 + 1) == 3)
 //  |          ^^^^^^^^^^^^
-

@@ -6,4 +6,3 @@ reflect::lex("abc")
 // args: definition-position
 // expected stdout:
 // {"start_offset":950,"end_offset":953,"line_number":40,"end_line_number":40,"column":11,"end_column":14,"path":"GDN_TEST_ROOT/__reflect.gdn"}
-

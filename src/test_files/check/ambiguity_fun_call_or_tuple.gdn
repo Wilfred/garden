@@ -25,6 +25,4 @@ fun add_one(i: Int): Int {
 // 7|   ^^^^^^^^
 // 8|   // Should be parsed as a call, not an if followed by a tuple (5).
 
-// expected stderr: 
-// 1 issue can be fixed automatically (use `--fix`).
-
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

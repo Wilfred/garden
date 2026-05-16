@@ -68,4 +68,3 @@ fun bar() {}
 // 1| fun foo()
 // 2|         ^
 // 3| fun bar() {}
-

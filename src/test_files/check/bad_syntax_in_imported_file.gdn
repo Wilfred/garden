@@ -18,4 +18,3 @@ import "./has_bad_syntax.gdn"
 // 1| public fun bar() {
 // 2|   let x
 // 3| }     ^
-

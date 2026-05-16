@@ -48,4 +48,3 @@ foo(a b)
 // 1| foo(a b)
 // 2|     ^
 // 3| // args: dump-ast
-

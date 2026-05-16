@@ -55,4 +55,3 @@ ffun foo(_: Bool) {
 // 1| // We don't really care how this parses, but it shouldn't crash the parser.
 // 2| ffun foo(_: Bool) {
 // 3| }        ^
-

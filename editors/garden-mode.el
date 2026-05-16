@@ -832,32 +832,6 @@ If called with a prefix, stop the previous session."
   (global-set-key (kbd "C-c C-j") #'garden-show-raw-json)
   (add-hook 'garden-mode-hook #'garden-speculative-mode))
 
-(defun garden--completion-at-point ()
-  "Offer method names for the expression at point."
-  (let ((done nil)
-        (result nil))
-    (when (looking-back
-           ;; Looking at . or .foo before point.
-           (rx "." (group (* (or (syntax symbol) (syntax word)))))
-           50)
-      (let ((prefix-start-pos (match-beginning 1)))
-        (garden--async-command
-         "complete"
-         (point)
-         (lambda (s) (setq done t) (setq result s)))
-        (while (not done)
-          (sit-for 0.1))
-        (let ((items (garden--jsonl-parse result)))
-          (list
-           prefix-start-pos
-           (point)
-           (--map (plist-get it :name) items)
-           :annotation-function
-           (lambda (k)
-             (plist-get
-              (--first (string= (plist-get it :name) k) items)
-              :suffix))))))))
-
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.
 
@@ -876,10 +850,7 @@ If called with a prefix, stop the previous session."
   (setq-local comment-start "// ")
   (setq-local comment-end "")
 
-  (setq font-lock-defaults '(garden-mode-font-lock-keywords))
-
-  ;; (add-hook 'completion-at-point-functions #'garden--completion-at-point nil t)
-  )
+  (setq font-lock-defaults '(garden-mode-font-lock-keywords)))
 
 (defun garden--buf-as-tmp-file ()
   "Write the contents of the current buffer to a temporary file,

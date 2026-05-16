@@ -12,7 +12,7 @@ fun contains_expr(i: Int) {
   let _ = y + 3
 }
 
-// args: extract-function --name extracted_fun
+// args: reftest-extract-function --name extracted_fun
 // expected stdout:
 // fun increment(i: Int): Int {
 //   i + 1

@@ -4,7 +4,7 @@ fun demo() {
   //      ^^^^^
 }
 
-// args: extract-function --name extracted_fun
+// args: reftest-extract-function --name extracted_fun
 // expected stdout:
 // fun extracted_fun(): Int {
 //   1 + 2

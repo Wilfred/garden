@@ -10,7 +10,7 @@ public fun demo() {
   }
 }
 
-// args: extract-variable --name extracted_var
+// args: reftest-extract-variable --name extracted_var
 // expected stdout:
 // fun bar(_) {}
 // 

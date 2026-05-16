@@ -1,0 +1,28 @@
+fun before() {}
+
+fun contains_exprs() {
+  let x = 1
+  let y = 2
+//^^^^^^^^^^^
+  println(x + y)
+//^^^^^^^^^^^^^^^
+}
+
+fun after() {}
+
+// args: reftest-extract-function --name extracted_fun
+// expected stdout:
+// fun before() {}
+// 
+// fun extracted_fun(x: Int): Unit {
+//   let y = 2
+//   println(x + y)
+// }
+// 
+// fun contains_exprs() {
+//   let x = 1
+//   extracted_fun(x)
+// }
+// 
+// fun after() {}
+

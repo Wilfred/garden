@@ -4,7 +4,7 @@ fun file_name(foo: Int) {
     let _ = foo + bar
 }
 
-// args: highlight
+// args: reftest-highlight
 // expected stdout:
 // {"start_offset":14,"end_offset":17,"line_number":0,"end_line_number":0,"column":14,"end_column":17,"path":"GDN_TEST_ROOT/src/test_files/highlight/param.gdn"}
 // {"start_offset":57,"end_offset":60,"line_number":2,"end_line_number":2,"column":14,"end_column":17,"path":"GDN_TEST_ROOT/src/test_files/highlight/param.gdn"}

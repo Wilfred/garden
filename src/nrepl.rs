@@ -350,6 +350,129 @@ fn base_response(request: &HashMap<Vec<u8>, Value>) -> HashMap<Vec<u8>, Value> {
     base
 }
 
+/// Description of a single nREPL op, used to populate the `ops`
+/// field in a verbose `describe` response.
+struct OpDescriptor {
+    doc: &'static str,
+    requires: &'static [(&'static str, &'static str)],
+    optional: &'static [(&'static str, &'static str)],
+    returns: &'static [(&'static str, &'static str)],
+}
+
+const SUPPORTED_OPS: &[(&str, OpDescriptor)] = &[
+    (
+        "describe",
+        OpDescriptor {
+            doc: "Produce a machine- and human-readable directory and documentation for the operations supported by an nREPL endpoint.",
+            requires: &[],
+            optional: &[(
+                "verbose?",
+                "Include informational detail for each \"op\"eration in the return message.",
+            )],
+            returns: &[
+                ("aux", "Map of auxiliary data."),
+                ("ops", "Map of \"op\"erations supported by this nREPL endpoint."),
+                (
+                    "versions",
+                    "Map containing version maps, e.g. major, minor, incremental, and qualifier keys, for values, component names as keys.",
+                ),
+            ],
+        },
+    ),
+    (
+        "clone",
+        OpDescriptor {
+            doc: "Clones the current session, returning the ID of the newly-created session.",
+            requires: &[],
+            optional: &[(
+                "session",
+                "The ID of the session to be cloned; if not provided, a new session with default state will be created, and mapped to the returned id.",
+            )],
+            returns: &[("new-session", "The ID of the new session.")],
+        },
+    ),
+    (
+        "close",
+        OpDescriptor {
+            doc: "Closes the specified session.",
+            requires: &[("session", "The ID of the session to be closed.")],
+            optional: &[],
+            returns: &[],
+        },
+    ),
+    (
+        "ls-sessions",
+        OpDescriptor {
+            doc: "Lists the IDs of all active sessions.",
+            requires: &[],
+            optional: &[],
+            returns: &[("sessions", "A list of all available session IDs.")],
+        },
+    ),
+    (
+        "eval",
+        OpDescriptor {
+            doc: "Evaluates code.",
+            requires: &[
+                ("code", "The code to be evaluated."),
+                (
+                    "session",
+                    "The ID of the session in which the code will be evaluated.",
+                ),
+            ],
+            optional: &[],
+            returns: &[
+                ("ns", "The namespace in which the evaluation occurred."),
+                ("value", "The result of evaluating the code, as a string."),
+            ],
+        },
+    ),
+    (
+        "completions",
+        OpDescriptor {
+            doc: "Return a list of symbols matching the specified prefix that are visible in the current namespace.",
+            requires: &[
+                ("prefix", "The prefix to match against."),
+                (
+                    "session",
+                    "The ID of the session in which completions should be computed.",
+                ),
+            ],
+            optional: &[],
+            returns: &[(
+                "completions",
+                "A list of candidate maps, each with a candidate name, namespace, priority and type.",
+            )],
+        },
+    ),
+];
+
+fn op_descriptor_to_value(d: &OpDescriptor) -> Value {
+    let to_dict = |entries: &[(&str, &str)]| -> Value {
+        let pairs: Vec<(Vec<u8>, Value)> = entries
+            .iter()
+            .map(|(k, v)| (k.as_bytes().to_vec(), bstr(*v)))
+            .collect();
+        bencode_dict(pairs)
+    };
+
+    bencode_dict(vec![
+        (b"doc".to_vec(), bstr(d.doc)),
+        (b"requires".to_vec(), to_dict(d.requires)),
+        (b"optional".to_vec(), to_dict(d.optional)),
+        (b"returns".to_vec(), to_dict(d.returns)),
+    ])
+}
+
+fn truthy(v: &Value) -> bool {
+    match v {
+        Value::Int(n) => *n != 0,
+        Value::Bytes(b) => !b.is_empty() && b.as_slice() != b"false" && b.as_slice() != b"nil",
+        Value::List(items) => !items.is_empty(),
+        Value::Dict(d) => !d.is_empty(),
+    }
+}
+
 /// Handle a single request message from the client.
 fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> Vec<Value> {
     let op = dict_get(request, "op").and_then(as_str).unwrap_or("");
@@ -361,20 +484,21 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
 
     match op {
         "describe" => {
+            let verbose = dict_get(request, "verbose?").map(truthy).unwrap_or(false);
+
             let mut ops_dict: HashMap<Vec<u8>, Value> = HashMap::new();
-            for op in &[
-                "describe",
-                "clone",
-                "close",
-                "eval",
-                "completions",
-                "ls-sessions",
-            ] {
-                ops_dict.insert(op.as_bytes().to_vec(), Value::Dict(HashMap::new()));
+            for (name, descriptor) in SUPPORTED_OPS {
+                let value = if verbose {
+                    op_descriptor_to_value(descriptor)
+                } else {
+                    Value::Dict(HashMap::new())
+                };
+                ops_dict.insert(name.as_bytes().to_vec(), value);
             }
 
             let garden_major: i64 = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap_or(0);
             let garden_minor: i64 = env!("CARGO_PKG_VERSION_MINOR").parse().unwrap_or(0);
+            let garden_incremental: i64 = env!("CARGO_PKG_VERSION_PATCH").parse().unwrap_or(0);
 
             let versions = bencode_dict(vec![
                 (
@@ -382,6 +506,7 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
                     bencode_dict(vec![
                         (b"major".to_vec(), Value::Int(garden_major)),
                         (b"minor".to_vec(), Value::Int(garden_minor)),
+                        (b"incremental".to_vec(), Value::Int(garden_incremental)),
                     ]),
                 ),
                 (
@@ -397,6 +522,7 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
             let mut msg = base;
             msg.insert(b"ops".to_vec(), Value::Dict(ops_dict));
             msg.insert(b"versions".to_vec(), versions);
+            msg.insert(b"aux".to_vec(), Value::Dict(HashMap::new()));
             msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
             vec![Value::Dict(msg)]
         }
@@ -732,6 +858,102 @@ mod tests {
             m.insert(k, v);
         }
         m
+    }
+
+    #[test]
+    fn describe_returns_ops_versions_and_aux() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+
+        let request = bencode_dict_map(vec![(b"op".to_vec(), bstr("describe"))]);
+        let responses = handle_message(&mut conn, &request);
+        assert_eq!(responses.len(), 1);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+
+        let Some(Value::Dict(ops)) = d.get(b"ops".as_slice()) else {
+            panic!("expected ops dict");
+        };
+        for op_name in &[
+            "describe",
+            "clone",
+            "close",
+            "eval",
+            "completions",
+            "ls-sessions",
+        ] {
+            assert!(
+                ops.contains_key(op_name.as_bytes()),
+                "expected describe to advertise the {op_name} op",
+            );
+        }
+
+        let Some(Value::Dict(versions)) = d.get(b"versions".as_slice()) else {
+            panic!("expected versions dict");
+        };
+        assert!(versions.contains_key(b"garden".as_slice()));
+        assert!(versions.contains_key(b"nrepl".as_slice()));
+
+        assert!(
+            d.contains_key(b"aux".as_slice()),
+            "describe response should contain an aux field"
+        );
+
+        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
+            panic!("expected status list");
+        };
+        assert!(status.iter().any(|s| as_str(s) == Some("done")));
+    }
+
+    #[test]
+    fn describe_verbose_populates_op_descriptors() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("describe")),
+            (b"verbose?".to_vec(), bstr("true")),
+        ]);
+        let responses = handle_message(&mut conn, &request);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+
+        let Some(Value::Dict(ops)) = d.get(b"ops".as_slice()) else {
+            panic!("expected ops dict");
+        };
+
+        let Some(Value::Dict(eval_op)) = ops.get(b"eval".as_slice()) else {
+            panic!("expected eval op descriptor");
+        };
+        assert!(
+            eval_op.contains_key(b"doc".as_slice()),
+            "verbose eval op should have a doc field"
+        );
+        assert!(eval_op.contains_key(b"requires".as_slice()));
+        assert!(eval_op.contains_key(b"optional".as_slice()));
+        assert!(eval_op.contains_key(b"returns".as_slice()));
+    }
+
+    #[test]
+    fn describe_non_verbose_has_empty_op_descriptors() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+
+        let request = bencode_dict_map(vec![(b"op".to_vec(), bstr("describe"))]);
+        let responses = handle_message(&mut conn, &request);
+        let Value::Dict(d) = &responses[0] else {
+            panic!("expected dict");
+        };
+
+        let Some(Value::Dict(ops)) = d.get(b"ops".as_slice()) else {
+            panic!("expected ops dict");
+        };
+        let Some(Value::Dict(eval_op)) = ops.get(b"eval".as_slice()) else {
+            panic!("expected eval op entry");
+        };
+        assert!(
+            eval_op.is_empty(),
+            "non-verbose op entries should be empty maps"
+        );
     }
 
     #[test]

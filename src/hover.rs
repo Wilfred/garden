@@ -8,7 +8,7 @@ use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
 use crate::pos_to_id::find_item_at;
 
-pub fn show_type(src: &str, path: &Path, offset: usize) {
+pub fn reftest_hover(src: &str, path: &Path, offset: usize) {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 

@@ -3,5 +3,5 @@ fun foo() {
     //     ^
 }
 
-// args: show-type
+// args: reftest-hover
 // expected stdout: Int

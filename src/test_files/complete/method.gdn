@@ -3,7 +3,7 @@ fun file_name(s: String) {
 //   ^
 }
 
-// args: complete
+// args: reftest-complete
 // expected stdout:
 // {"label":"as_int()","kind":2,"detail":"(): Option<Int>","insertText":"as_int()","insertTextFormat":2}
 // {"label":"chars()","kind":2,"detail":"(): List<String>","insertText":"chars()","insertTextFormat":2}

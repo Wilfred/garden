@@ -8,7 +8,7 @@ fun foo(p: Person) {
 //   ^
 }
 
-// args: complete
+// args: reftest-complete
 // expected stdout:
 // {"label":"name","kind":5,"detail":": String"}
 // {"label":"num_pets","kind":5,"detail":": Int"}

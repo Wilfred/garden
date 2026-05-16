@@ -3,7 +3,7 @@ fun foo(s: String) {
     //    ^
 }
 
-// args: complete
+// args: reftest-complete
 // expected stdout:
 // {"label":"strip_prefix","kind":2,"detail":"(String): String","insertText":"strip_prefix($0)","insertTextFormat":2}
 // {"label":"strip_suffix","kind":2,"detail":"(String): String","insertText":"strip_suffix($0)","insertTextFormat":2}

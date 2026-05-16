@@ -171,7 +171,9 @@ fn handle_eval(
         responses.push(Value::Dict(warn_msg));
     }
 
+    let eval_start = Instant::now();
     let eval_result = eval_toplevel_exprs_then_stop(&items, env, session, ns.clone());
+    let eval_msec = eval_start.elapsed().as_millis() as i64;
 
     let captured = std::mem::take(&mut *stdout_buf.lock().expect("stdout buffer poisoned"));
     if !captured.is_empty() {
@@ -197,6 +199,7 @@ fn handle_eval(
             let mut value_msg = base_msg.clone();
             value_msg.insert(b"value".to_vec(), bstr(value_str));
             value_msg.insert(b"ns".to_vec(), bstr(ns_name));
+            value_msg.insert(b"eval-msec".to_vec(), Value::Int(eval_msec));
             responses.push(Value::Dict(value_msg));
 
             let mut done_msg = base_msg.clone();
@@ -216,6 +219,7 @@ fn handle_eval(
                 status.push(bstr(extra));
             }
             done_msg.insert(b"ex".to_vec(), bstr(err_text));
+            done_msg.insert(b"eval-msec".to_vec(), Value::Int(eval_msec));
             done_msg.insert(b"status".to_vec(), Value::List(status));
             responses.push(Value::Dict(done_msg));
         }
@@ -491,6 +495,10 @@ const SUPPORTED_OPS: &[(&str, OpDescriptor)] = &[
             returns: &[
                 ("ns", "The namespace in which the evaluation occurred."),
                 ("value", "The result of evaluating the code, as a string."),
+                (
+                    "eval-msec",
+                    "The number of milliseconds taken to evaluate the code.",
+                ),
             ],
         },
     ),
@@ -1045,6 +1053,35 @@ mod tests {
             panic!("expected status list");
         };
         assert!(status.iter().any(|s| as_str(s) == Some("unknown-session")));
+    }
+
+    #[test]
+    fn eval_response_includes_eval_msec() {
+        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+        let session_id = conn.new_session();
+
+        let request = bencode_dict_map(vec![
+            (b"op".to_vec(), bstr("eval")),
+            (b"session".to_vec(), bstr(session_id.clone())),
+            (b"code".to_vec(), bstr("1 + 2")),
+        ]);
+        let responses = handle_message(&mut conn, &request);
+
+        let value_msg = responses
+            .iter()
+            .find_map(|r| {
+                let Value::Dict(d) = r else { return None };
+                if d.contains_key(b"value".as_slice()) {
+                    Some(d)
+                } else {
+                    None
+                }
+            })
+            .expect("expected a response containing value");
+
+        let Some(Value::Int(_)) = value_msg.get(b"eval-msec".as_slice()) else {
+            panic!("expected eval-msec to be an integer");
+        };
     }
 
     #[test]

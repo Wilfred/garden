@@ -3,6 +3,6 @@ fun foo() {
   // ^
 }
 
-// args: rename --new-name new_foo
+// args: reftest-rename --new-name new_foo
 // expected exit status: 10
 // expected stderr: No symbol found at offset 17

@@ -144,16 +144,6 @@ enum CliCommands {
         #[clap(long)]
         override_path: Option<PathBuf>,
     },
-    /// Rename the local variable at this offset to the new name
-    /// specified.
-    Rename {
-        path: PathBuf,
-        offset: Option<usize>,
-        #[clap(long)]
-        override_path: Option<PathBuf>,
-        #[clap(long)]
-        new_name: String,
-    },
     /// Format a Garden file and print the re-indented source code.
     Format { path: PathBuf },
     /// Run the program specified, calling its main() function, then
@@ -234,6 +224,16 @@ enum CliCommands {
     ReftestPosition {
         path: PathBuf,
         offset: Option<usize>,
+    },
+    /// Rename the local variable at this offset to the new name
+    /// specified.
+    ReftestRename {
+        path: PathBuf,
+        offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
+        #[clap(long)]
+        new_name: String,
     },
     /// Parse the Garden program at the path specified and print the
     /// AST.
@@ -425,7 +425,7 @@ fn main() {
             drop(sender);
             handle.join().unwrap();
         }
-        CliCommands::Rename {
+        CliCommands::ReftestRename {
             path,
             new_name,
             offset,
@@ -961,7 +961,7 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_rename() -> TestResult<()> {
+    fn reftest_rename() -> TestResult<()> {
         run_golden_tests("rename")
     }
 

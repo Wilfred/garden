@@ -6,5 +6,5 @@ fun file_name(path: String) {
   //^
 }
 
-// args: show-type
+// args: reftest-hover
 // expected stdout: String

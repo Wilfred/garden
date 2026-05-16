@@ -2,5 +2,5 @@ fun foo(path: String) {
     //  ^
 }
 
-// args: show-type
+// args: reftest-hover
 // expected stdout: String

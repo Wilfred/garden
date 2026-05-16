@@ -81,7 +81,7 @@ use std::time::Instant;
 use clap::{Parser, Subcommand};
 use eval::{eval_up_to, EvalUpToErr, StdoutMode};
 use go_to_def::print_pos;
-use hover::show_type;
+use hover::reftest_hover;
 use json_session::{handle_request, start_eval_thread};
 use parser::vfs::{to_abs_path, Vfs, VfsPathBuf};
 use test_runner::{run_sandboxed_tests_in_file, run_tests_in_files};
@@ -220,7 +220,7 @@ enum CliCommands {
     /// Run Garden code blocks in markdown and .gdn files.
     RunCodeBlocks { paths: Vec<PathBuf> },
     /// Show the type of the expression at the position given.
-    ShowType { path: PathBuf },
+    ReftestHover { path: PathBuf },
     /// Show the definition position of the value at the position
     /// given.
     DefinitionPosition {
@@ -352,12 +352,12 @@ fn main() {
             let src = read_utf8_or_die(&abs_path);
             dump_ast(&src, &abs_path)
         }
-        CliCommands::ShowType { path } => {
+        CliCommands::ReftestHover { path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
             let offset = caret_finder::find_caret_offset(&src)
                 .expect("Could not find comment containing `^` in source.");
-            show_type(&src, &abs_path, offset)
+            reftest_hover(&src, &abs_path, offset)
         }
         CliCommands::DefinitionPosition {
             path,
@@ -948,7 +948,7 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_hover() -> TestResult<()> {
+    fn reftest_hover() -> TestResult<()> {
         run_golden_tests("hover")
     }
 

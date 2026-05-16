@@ -4,5 +4,5 @@ fun file_name(path: String): String {
   parts.last().or_throw()
 }
 
-// args: show-type
+// args: reftest-hover
 // expected stdout: String

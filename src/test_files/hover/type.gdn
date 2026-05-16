@@ -2,5 +2,5 @@ fun foo(_: String) {
   //        ^
 }
 
-// args: show-type
+// args: reftest-hover
 // expected stdout: A Unicode string, such as `"hello world"`.

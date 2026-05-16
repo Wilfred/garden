@@ -1,0 +1,18 @@
+{ "op": "clone" }
+{ "op": "lookup", "session": "garden-1", "sym": "definitely_not_defined" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

@@ -216,6 +216,12 @@ enum CliCommands {
     ///
     /// Lines starting `//` are ignored.
     ReftestJsonSession { path: PathBuf },
+    /// Replay nREPL requests from a JSON file against an in-process
+    /// nREPL connection and print the responses.
+    ///
+    /// Each non-blank, non-comment line is a JSON object representing
+    /// a single nREPL request. Lines starting `//` are ignored.
+    ReftestNrepl { path: PathBuf },
     /// Show the definition position of the value at the position
     /// given.
     ReftestPosition {
@@ -389,6 +395,11 @@ fn main() {
             for item in items {
                 println!("{}", serde_json::to_string(&item).unwrap());
             }
+        }
+        CliCommands::ReftestNrepl { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            nrepl::reftest_nrepl(&src);
         }
         CliCommands::ReftestJsonSession { path } => {
             let abs_path = to_abs_path(&path);
@@ -943,6 +954,11 @@ mod tests {
     #[test]
     fn reftest_json_session() -> TestResult<()> {
         run_reftests("json_session")
+    }
+
+    #[test]
+    fn reftest_nrepl() -> TestResult<()> {
+        run_reftests("nrepl")
     }
 
     #[test]

@@ -1,0 +1,13 @@
+{ "op": "completions", "session": "does-not-exist", "prefix": "p" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "session": "does-not-exist",
+//   "status": [
+//     "done",
+//     "error",
+//     "unknown-session"
+//   ]
+// }
+

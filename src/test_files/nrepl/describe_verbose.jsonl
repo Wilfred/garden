@@ -1,0 +1,110 @@
+{ "op": "describe", "verbose?": "true" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "aux": {},
+//   "ops": {
+//     "clone": {
+//       "doc": "Clones the current session, returning the ID of the newly-created session.",
+//       "optional": {
+//         "session": "The ID of the session to be cloned; if not provided, a new session with default state will be created, and mapped to the returned id."
+//       },
+//       "requires": {},
+//       "returns": {
+//         "new-session": "The ID of the new session."
+//       }
+//     },
+//     "close": {
+//       "doc": "Closes the specified session.",
+//       "optional": {},
+//       "requires": {
+//         "session": "The ID of the session to be closed."
+//       },
+//       "returns": {}
+//     },
+//     "completions": {
+//       "doc": "Return a list of symbols matching the specified prefix that are visible in the current namespace.",
+//       "optional": {},
+//       "requires": {
+//         "prefix": "The prefix to match against.",
+//         "session": "The ID of the session in which completions should be computed."
+//       },
+//       "returns": {
+//         "completions": "A list of candidate maps, each with a candidate name, namespace, priority and type."
+//       }
+//     },
+//     "describe": {
+//       "doc": "Produce a machine- and human-readable directory and documentation for the operations supported by an nREPL endpoint.",
+//       "optional": {
+//         "verbose?": "Include informational detail for each \"op\"eration in the return message."
+//       },
+//       "requires": {},
+//       "returns": {
+//         "aux": "Map of auxiliary data.",
+//         "ops": "Map of \"op\"erations supported by this nREPL endpoint.",
+//         "versions": "Map containing version maps, e.g. major, minor, incremental, and qualifier keys, for values, component names as keys."
+//       }
+//     },
+//     "eval": {
+//       "doc": "Evaluates code.",
+//       "optional": {},
+//       "requires": {
+//         "code": "The code to be evaluated.",
+//         "session": "The ID of the session in which the code will be evaluated."
+//       },
+//       "returns": {
+//         "eval-msec": "The number of milliseconds taken to evaluate the code.",
+//         "ns": "The namespace in which the evaluation occurred.",
+//         "value": "The result of evaluating the code, as a string."
+//       }
+//     },
+//     "load-file": {
+//       "doc": "Loads a body of code, using supplied path and filename info to set source file and line number metadata.",
+//       "optional": {
+//         "file-name": "Name of the source file, for example foo.gdn.",
+//         "file-path": "Source path (e.g. a/b/c.gdn) of the file being loaded."
+//       },
+//       "requires": {
+//         "file": "Full body of code to be loaded.",
+//         "session": "The ID of the session in which the file will be loaded."
+//       },
+//       "returns": {
+//         "eval-msec": "The number of milliseconds taken to evaluate the file.",
+//         "ns": "The namespace in which the file was loaded.",
+//         "value": "The result of evaluating the file's last expression, as a string."
+//       }
+//     },
+//     "lookup": {
+//       "doc": "Lookup symbol info.",
+//       "optional": {},
+//       "requires": {
+//         "session": "The ID of the session in which the symbol should be looked up.",
+//         "sym": "The symbol to look up."
+//       },
+//       "returns": {
+//         "info": "A map of information about the symbol, including its name, namespace, file, line, column, arglists-str and doc."
+//       }
+//     },
+//     "ls-sessions": {
+//       "doc": "Lists the IDs of all active sessions.",
+//       "optional": {},
+//       "requires": {},
+//       "returns": {
+//         "sessions": "A list of all available session IDs."
+//       }
+//     }
+//   },
+//   "status": [
+//     "done"
+//   ],
+//   "versions": {
+//     "garden": "<garden-version>",
+//     "nrepl": {
+//       "incremental": 0,
+//       "major": 0,
+//       "minor": 1
+//     }
+//   }
+// }
+

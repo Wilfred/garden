@@ -1,0 +1,23 @@
+{ "op": "clone" }
+{ "op": "load-file", "session": "garden-1", "file": "fun broken(", "file-path": "/tmp/broken.gdn" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "err": "Expected variable name, but got EOF.\nExpected a parameter name after this.\nExpected `,` or `)` here, but got `(`.\nExpected `)` after this.\nExpected `{` after this.\nExpected an expression after this.\nExpected `)`, but got EOF.\n",
+//   "session": "garden-1"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done",
+//     "eval-error"
+//   ]
+// }
+

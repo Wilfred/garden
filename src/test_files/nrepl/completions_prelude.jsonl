@@ -1,0 +1,26 @@
+{ "op": "clone" }
+{ "op": "completions", "session": "garden-1", "prefix": "printl" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "completions": [
+//     {
+//       "candidate": "println",
+//       "ns": "__user",
+//       "priority": 0,
+//       "type": "function"
+//     }
+//   ],
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

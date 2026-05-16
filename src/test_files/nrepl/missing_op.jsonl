@@ -1,0 +1,12 @@
+{ "id": "1" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "err": "Missing 'op' in request.\n",
+//   "id": "1",
+//   "status": [
+//     "error"
+//   ]
+// }
+

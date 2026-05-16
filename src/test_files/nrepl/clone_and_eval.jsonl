@@ -1,0 +1,24 @@
+{ "op": "clone" }
+{ "op": "eval", "session": "garden-1", "code": "1 + 2" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": "3"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

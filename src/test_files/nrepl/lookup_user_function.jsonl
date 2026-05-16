@@ -1,0 +1,40 @@
+{ "op": "clone" }
+{ "op": "eval", "session": "garden-1", "code": "/// Adds one to its argument.\nfun add_one(i: Int): Int { i + 1 }" }
+{ "op": "lookup", "session": "garden-1", "sym": "add_one" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": "()"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "info": {
+//     "arglists-str": "(i: Int)",
+//     "column": 1,
+//     "doc": "Adds one to its argument.",
+//     "file": "__user.gdn",
+//     "line": 1,
+//     "name": "add_one",
+//     "ns": "__user"
+//   },
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

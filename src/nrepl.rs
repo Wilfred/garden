@@ -906,6 +906,143 @@ fn serve_connection(stream: TcpStream, interrupted: Arc<AtomicBool>) {
     info!("nREPL: client {peer} disconnected");
 }
 
+/// Convert a JSON value into a bencode value. Used by the nREPL
+/// reftest format, which expresses bencode messages in JSON for
+/// readability.
+///
+/// JSON strings become bencode `Bytes`. Booleans collapse to `0` or
+/// `1` (bencode has no native boolean). Floats are truncated to
+/// integers since bencode has no float type.
+fn json_to_bencode(v: serde_json::Value) -> Value {
+    use serde_json::Value as J;
+    match v {
+        J::Null => Value::Bytes(Vec::new()),
+        J::Bool(b) => Value::Int(if b { 1 } else { 0 }),
+        J::Number(n) => Value::Int(n.as_i64().unwrap_or(0)),
+        J::String(s) => Value::Bytes(s.into_bytes()),
+        J::Array(arr) => Value::List(arr.into_iter().map(json_to_bencode).collect()),
+        J::Object(obj) => {
+            let mut d = HashMap::new();
+            for (k, v) in obj {
+                d.insert(k.into_bytes(), json_to_bencode(v));
+            }
+            Value::Dict(d)
+        }
+    }
+}
+
+/// Convert a bencode value into a JSON value for display in a
+/// reftest. Byte strings that are valid UTF-8 are rendered as JSON
+/// strings; otherwise they are rendered as an array of byte values
+/// so the output stays valid JSON.
+///
+/// Dict keys are sorted so the output is deterministic.
+fn bencode_to_json(v: &Value) -> serde_json::Value {
+    use serde_json::Value as J;
+    match v {
+        Value::Int(n) => J::Number((*n).into()),
+        Value::Bytes(b) => match std::str::from_utf8(b) {
+            Ok(s) => J::String(s.to_owned()),
+            Err(_) => J::Array(
+                b.iter()
+                    .map(|byte| J::Number((*byte as u64).into()))
+                    .collect(),
+            ),
+        },
+        Value::List(items) => J::Array(items.iter().map(bencode_to_json).collect()),
+        Value::Dict(d) => {
+            let mut keys: Vec<&Vec<u8>> = d.keys().collect();
+            keys.sort();
+            let mut map = serde_json::Map::new();
+            for k in keys {
+                let key_str = String::from_utf8_lossy(k).into_owned();
+                map.insert(key_str, bencode_to_json(&d[k]));
+            }
+            J::Object(map)
+        }
+    }
+}
+
+/// Replace fields that vary between runs (wall-clock timings, the
+/// compiled-in Garden version) with stable placeholder strings so
+/// reftest output is reproducible.
+fn normalize_for_reftest(value: serde_json::Value) -> serde_json::Value {
+    use serde_json::Value as J;
+    match value {
+        J::Object(map) => {
+            let mut new_map = serde_json::Map::new();
+            for (k, v) in map {
+                // `eval-msec` is wall-clock-dependent: mask only the
+                // integer value, not its documentation string in the
+                // verbose describe response.
+                // `garden` (when an object with version components)
+                // changes whenever we bump CARGO_PKG_VERSION.
+                let normalized = match (k.as_str(), &v) {
+                    ("eval-msec", J::Number(_)) => J::String("<eval-msec>".to_owned()),
+                    ("garden", J::Object(_)) => J::String("<garden-version>".to_owned()),
+                    _ => normalize_for_reftest(v),
+                };
+                new_map.insert(k, normalized);
+            }
+            J::Object(new_map)
+        }
+        J::Array(arr) => J::Array(arr.into_iter().map(normalize_for_reftest).collect()),
+        other => other,
+    }
+}
+
+/// Run the nREPL reftest driver against `src`.
+///
+/// `src` is a line-oriented stream where each non-blank,
+/// non-comment line is a JSON object representing one nREPL request.
+/// Lines starting with `//` are ignored. For each request we print
+/// the list of response messages as a JSON array. The request itself
+/// is omitted from the output since it already appears in the input
+/// file at the corresponding position.
+pub(crate) fn reftest_nrepl(src: &str) {
+    use serde_json::json;
+    use serde_json::Value as J;
+
+    let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+
+    for line in src.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with("//") {
+            continue;
+        }
+
+        let request_json: J = match serde_json::from_str(trimmed) {
+            Ok(v) => v,
+            Err(e) => {
+                let err_obj = json!({
+                    "error": format!("invalid JSON request: {e}"),
+                    "line": trimmed,
+                });
+                println!("{}", serde_json::to_string_pretty(&err_obj).unwrap());
+                continue;
+            }
+        };
+
+        let request_dict = match json_to_bencode(request_json) {
+            Value::Dict(d) => d,
+            _ => {
+                let err_obj = json!({
+                    "error": "request must be a JSON object",
+                    "line": trimmed,
+                });
+                println!("{}", serde_json::to_string_pretty(&err_obj).unwrap());
+                continue;
+            }
+        };
+
+        let responses = handle_message(&mut conn, &request_dict);
+        for response in responses {
+            let response_json = normalize_for_reftest(bencode_to_json(&response));
+            println!("{}", serde_json::to_string_pretty(&response_json).unwrap());
+        }
+    }
+}
+
 /// Run an nREPL server, listening on `host:port`.
 pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
     let addr = format!("{host}:{port}");
@@ -990,502 +1127,9 @@ mod tests {
     }
 
     #[test]
-    fn completions_returns_prelude_matches() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let session_id = conn.new_session();
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("completions")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (b"prefix".to_vec(), bstr("printl")),
-        ]);
-
-        let responses = handle_message(&mut conn, &request);
-        assert_eq!(responses.len(), 1);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-
-        let Some(Value::List(items)) = d.get(b"completions".as_slice()) else {
-            panic!("expected completions list");
-        };
-        assert!(
-            items.iter().any(|item| {
-                let Value::Dict(c) = item else { return false };
-                dict_get(c, "candidate").and_then(as_str) == Some("println")
-            }),
-            "expected to find println among completions"
-        );
-    }
-
-    #[test]
-    fn completions_follow_current_namespace() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let session_id = conn.new_session();
-
-        // Eval defines a new function in the session's current
-        // namespace (__user for a fresh session).
-        let eval_request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("eval")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (
-                b"code".to_vec(),
-                bstr("fun my_unique_helper(): Int { 42 } my_unique_helper()"),
-            ),
-        ]);
-        handle_message(&mut conn, &eval_request);
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("completions")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (b"prefix".to_vec(), bstr("my_unique")),
-        ]);
-        let responses = handle_message(&mut conn, &request);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-        let Some(Value::List(items)) = d.get(b"completions".as_slice()) else {
-            panic!("expected completions list");
-        };
-        let candidate = items
-            .iter()
-            .find_map(|item| {
-                let Value::Dict(c) = item else { return None };
-                let name = dict_get(c, "candidate").and_then(as_str)?;
-                if name == "my_unique_helper" {
-                    Some(c.clone())
-                } else {
-                    None
-                }
-            })
-            .expect("expected my_unique_helper among completions");
-
-        // The candidate's ns should reflect the session's current
-        // namespace, which is __user for a fresh session.
-        assert_eq!(dict_get(&candidate, "ns").and_then(as_str), Some("__user"));
-    }
-
-    #[test]
-    fn lookup_returns_prelude_info() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let session_id = conn.new_session();
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("lookup")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (b"sym".to_vec(), bstr("println")),
-        ]);
-
-        let responses = handle_message(&mut conn, &request);
-        assert_eq!(responses.len(), 1);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-        let Some(Value::Dict(info)) = d.get(b"info".as_slice()) else {
-            panic!("expected info dict");
-        };
-        assert_eq!(dict_get(info, "name").and_then(as_str), Some("println"));
-        assert!(dict_get(info, "arglists-str").and_then(as_str).is_some());
-    }
-
-    #[test]
-    fn lookup_returns_user_function_info() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let session_id = conn.new_session();
-
-        let eval_request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("eval")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (
-                b"code".to_vec(),
-                bstr("/// Adds one to its argument.\nfun add_one(i: Int): Int { i + 1 }"),
-            ),
-        ]);
-        handle_message(&mut conn, &eval_request);
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("lookup")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (b"sym".to_vec(), bstr("add_one")),
-        ]);
-
-        let responses = handle_message(&mut conn, &request);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-        let Some(Value::Dict(info)) = d.get(b"info".as_slice()) else {
-            panic!("expected info dict");
-        };
-        assert_eq!(dict_get(info, "name").and_then(as_str), Some("add_one"));
-        assert_eq!(dict_get(info, "ns").and_then(as_str), Some("__user"));
-        assert_eq!(
-            dict_get(info, "arglists-str").and_then(as_str),
-            Some("(i: Int)")
-        );
-        assert_eq!(
-            dict_get(info, "doc").and_then(as_str),
-            Some("Adds one to its argument.")
-        );
-        assert!(matches!(info.get(b"line".as_slice()), Some(Value::Int(_))));
-    }
-
-    #[test]
-    fn lookup_unknown_symbol_omits_info() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let session_id = conn.new_session();
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("lookup")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (b"sym".to_vec(), bstr("definitely_not_defined")),
-        ]);
-
-        let responses = handle_message(&mut conn, &request);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-        assert!(d.get(b"info".as_slice()).is_none());
-        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
-            panic!("expected status list");
-        };
-        assert!(status.iter().any(|s| as_str(s) == Some("done")));
-    }
-
-    #[test]
-    fn lookup_unknown_session() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("lookup")),
-            (b"session".to_vec(), bstr("does-not-exist")),
-            (b"sym".to_vec(), bstr("println")),
-        ]);
-
-        let responses = handle_message(&mut conn, &request);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
-            panic!("expected status list");
-        };
-        assert!(status.iter().any(|s| as_str(s) == Some("unknown-session")));
-    }
-
-    #[test]
-    fn eval_response_includes_eval_msec() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let session_id = conn.new_session();
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("eval")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (b"code".to_vec(), bstr("1 + 2")),
-        ]);
-        let responses = handle_message(&mut conn, &request);
-
-        let value_msg = responses
-            .iter()
-            .find_map(|r| {
-                let Value::Dict(d) = r else { return None };
-                if d.contains_key(b"value".as_slice()) {
-                    Some(d)
-                } else {
-                    None
-                }
-            })
-            .expect("expected a response containing value");
-
-        let Some(Value::Int(_)) = value_msg.get(b"eval-msec".as_slice()) else {
-            panic!("expected eval-msec to be an integer");
-        };
-    }
-
-    #[test]
-    fn completions_unknown_session() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("completions")),
-            (b"session".to_vec(), bstr("does-not-exist")),
-            (b"prefix".to_vec(), bstr("p")),
-        ]);
-
-        let responses = handle_message(&mut conn, &request);
-        assert_eq!(responses.len(), 1);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
-            panic!("expected status list");
-        };
-        assert!(status.iter().any(|s| as_str(s) == Some("unknown-session")));
-    }
-
-    fn bencode_dict_map(pairs: Vec<(Vec<u8>, Value)>) -> HashMap<Vec<u8>, Value> {
-        let mut m = HashMap::new();
-        for (k, v) in pairs {
-            m.insert(k, v);
-        }
-        m
-    }
-
-    #[test]
-    fn describe_returns_ops_versions_and_aux() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-
-        let request = bencode_dict_map(vec![(b"op".to_vec(), bstr("describe"))]);
-        let responses = handle_message(&mut conn, &request);
-        assert_eq!(responses.len(), 1);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-
-        let Some(Value::Dict(ops)) = d.get(b"ops".as_slice()) else {
-            panic!("expected ops dict");
-        };
-        for op_name in &[
-            "describe",
-            "clone",
-            "close",
-            "eval",
-            "completions",
-            "ls-sessions",
-        ] {
-            assert!(
-                ops.contains_key(op_name.as_bytes()),
-                "expected describe to advertise the {op_name} op",
-            );
-        }
-
-        let Some(Value::Dict(versions)) = d.get(b"versions".as_slice()) else {
-            panic!("expected versions dict");
-        };
-        assert!(versions.contains_key(b"garden".as_slice()));
-        assert!(versions.contains_key(b"nrepl".as_slice()));
-
-        assert!(
-            d.contains_key(b"aux".as_slice()),
-            "describe response should contain an aux field"
-        );
-
-        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
-            panic!("expected status list");
-        };
-        assert!(status.iter().any(|s| as_str(s) == Some("done")));
-    }
-
-    #[test]
-    fn describe_verbose_populates_op_descriptors() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("describe")),
-            (b"verbose?".to_vec(), bstr("true")),
-        ]);
-        let responses = handle_message(&mut conn, &request);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-
-        let Some(Value::Dict(ops)) = d.get(b"ops".as_slice()) else {
-            panic!("expected ops dict");
-        };
-
-        let Some(Value::Dict(eval_op)) = ops.get(b"eval".as_slice()) else {
-            panic!("expected eval op descriptor");
-        };
-        assert!(
-            eval_op.contains_key(b"doc".as_slice()),
-            "verbose eval op should have a doc field"
-        );
-        assert!(eval_op.contains_key(b"requires".as_slice()));
-        assert!(eval_op.contains_key(b"optional".as_slice()));
-        assert!(eval_op.contains_key(b"returns".as_slice()));
-    }
-
-    #[test]
-    fn describe_non_verbose_has_empty_op_descriptors() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-
-        let request = bencode_dict_map(vec![(b"op".to_vec(), bstr("describe"))]);
-        let responses = handle_message(&mut conn, &request);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-
-        let Some(Value::Dict(ops)) = d.get(b"ops".as_slice()) else {
-            panic!("expected ops dict");
-        };
-        let Some(Value::Dict(eval_op)) = ops.get(b"eval".as_slice()) else {
-            panic!("expected eval op entry");
-        };
-        assert!(
-            eval_op.is_empty(),
-            "non-verbose op entries should be empty maps"
-        );
-    }
-
-    #[test]
     fn clean_eof() {
         let bytes: Vec<u8> = vec![];
         let mut cursor = Cursor::new(bytes);
         assert!(read_message(&mut cursor).unwrap().is_none());
-    }
-
-    #[test]
-    fn load_file_evaluates_code_and_returns_value() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let session_id = conn.new_session();
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("load-file")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (
-                b"file".to_vec(),
-                bstr("fun greet(): String { \"hello\" } greet()"),
-            ),
-            (b"file-path".to_vec(), bstr("/tmp/greet.gdn")),
-        ]);
-
-        let responses = handle_message(&mut conn, &request);
-
-        let value_msg = responses
-            .iter()
-            .find_map(|r| {
-                let Value::Dict(d) = r else { return None };
-                let v = dict_get(d, "value").and_then(as_str)?;
-                Some(v.to_owned())
-            })
-            .expect("expected a value response");
-        assert_eq!(value_msg, "\"hello\"");
-
-        let done_status = responses
-            .iter()
-            .find_map(|r| {
-                let Value::Dict(d) = r else { return None };
-                let Value::List(status) = d.get(b"status".as_slice())? else {
-                    return None;
-                };
-                if status.iter().any(|s| as_str(s) == Some("done")) {
-                    Some(status.clone())
-                } else {
-                    None
-                }
-            })
-            .expect("expected a done status");
-        assert!(done_status.iter().all(|s| as_str(s) != Some("eval-error")));
-    }
-
-    #[test]
-    fn load_file_uses_file_path_namespace() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let session_id = conn.new_session();
-
-        let load_request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("load-file")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (
-                b"file".to_vec(),
-                bstr("fun my_loaded_helper(): Int { 7 } my_loaded_helper()"),
-            ),
-            (b"file-path".to_vec(), bstr("/tmp/loaded.gdn")),
-        ]);
-        let responses = handle_message(&mut conn, &load_request);
-
-        let ns_name = responses
-            .iter()
-            .find_map(|r| {
-                let Value::Dict(d) = r else { return None };
-                let ns = dict_get(d, "ns").and_then(as_str)?;
-                Some(ns.to_owned())
-            })
-            .expect("expected ns in response");
-        assert_eq!(ns_name, "loaded");
-
-        // After load-file, the session's current namespace should be
-        // the loaded file's namespace, so we can call its definitions
-        // directly.
-        let completions_request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("completions")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (b"prefix".to_vec(), bstr("my_loaded")),
-        ]);
-        let completions_responses = handle_message(&mut conn, &completions_request);
-        let Value::Dict(d) = &completions_responses[0] else {
-            panic!("expected dict");
-        };
-        let Some(Value::List(items)) = d.get(b"completions".as_slice()) else {
-            panic!("expected completions list");
-        };
-        assert!(
-            items.iter().any(|item| {
-                let Value::Dict(c) = item else { return false };
-                dict_get(c, "candidate").and_then(as_str) == Some("my_loaded_helper")
-            }),
-            "expected to find my_loaded_helper among completions"
-        );
-    }
-
-    #[test]
-    fn load_file_reports_parse_error() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let session_id = conn.new_session();
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("load-file")),
-            (b"session".to_vec(), bstr(session_id.clone())),
-            (b"file".to_vec(), bstr("fun broken(")),
-            (b"file-path".to_vec(), bstr("/tmp/broken.gdn")),
-        ]);
-
-        let responses = handle_message(&mut conn, &request);
-
-        let done_status = responses
-            .iter()
-            .find_map(|r| {
-                let Value::Dict(d) = r else { return None };
-                let Value::List(status) = d.get(b"status".as_slice())? else {
-                    return None;
-                };
-                Some(status.clone())
-            })
-            .expect("expected status");
-        assert!(done_status.iter().any(|s| as_str(s) == Some("eval-error")));
-    }
-
-    #[test]
-    fn load_file_unknown_session() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-
-        let request = bencode_dict_map(vec![
-            (b"op".to_vec(), bstr("load-file")),
-            (b"session".to_vec(), bstr("does-not-exist")),
-            (b"file".to_vec(), bstr("1 + 1")),
-        ]);
-
-        let responses = handle_message(&mut conn, &request);
-        assert_eq!(responses.len(), 1);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-        let Some(Value::List(status)) = d.get(b"status".as_slice()) else {
-            panic!("expected status list");
-        };
-        assert!(status.iter().any(|s| as_str(s) == Some("unknown-session")));
-    }
-
-    #[test]
-    fn describe_includes_load_file() {
-        let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
-        let request = bencode_dict_map(vec![(b"op".to_vec(), bstr("describe"))]);
-
-        let responses = handle_message(&mut conn, &request);
-        let Value::Dict(d) = &responses[0] else {
-            panic!("expected dict");
-        };
-        let Some(Value::Dict(ops)) = d.get(b"ops".as_slice()) else {
-            panic!("expected ops dict");
-        };
-        assert!(ops.contains_key(b"load-file".as_slice()));
     }
 }

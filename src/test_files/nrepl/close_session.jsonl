@@ -1,0 +1,26 @@
+{ "op": "clone" }
+{ "op": "close", "session": "garden-1" }
+{ "op": "ls-sessions" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done",
+//     "session-closed"
+//   ]
+// }
+// {
+//   "sessions": [],
+//   "status": [
+//     "done"
+//   ]
+// }
+

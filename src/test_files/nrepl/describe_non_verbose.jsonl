@@ -1,0 +1,29 @@
+{ "op": "describe" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "aux": {},
+//   "ops": {
+//     "clone": {},
+//     "close": {},
+//     "completions": {},
+//     "describe": {},
+//     "eval": {},
+//     "load-file": {},
+//     "lookup": {},
+//     "ls-sessions": {}
+//   },
+//   "status": [
+//     "done"
+//   ],
+//   "versions": {
+//     "garden": "<garden-version>",
+//     "nrepl": {
+//       "incremental": 0,
+//       "major": 0,
+//       "minor": 1
+//     }
+//   }
+// }
+

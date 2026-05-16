@@ -1,0 +1,24 @@
+{ "op": "clone" }
+{ "op": "load-file", "session": "garden-1", "file": "fun greet(): String { \"hello\" } greet()", "file-path": "/tmp/greet.gdn" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "greet",
+//   "session": "garden-1",
+//   "value": "\"hello\""
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

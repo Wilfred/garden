@@ -1,0 +1,39 @@
+{ "op": "clone" }
+{ "op": "load-file", "session": "garden-1", "file": "fun my_loaded_helper(): Int { 7 } my_loaded_helper()", "file-path": "/tmp/loaded.gdn" }
+{ "op": "completions", "session": "garden-1", "prefix": "my_loaded" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "loaded",
+//   "session": "garden-1",
+//   "value": "7"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "completions": [
+//     {
+//       "candidate": "my_loaded_helper",
+//       "ns": "loaded",
+//       "priority": 0,
+//       "type": "function"
+//     }
+//   ],
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

@@ -1,0 +1,39 @@
+{ "op": "clone" }
+{ "op": "eval", "session": "garden-1", "code": "fun my_unique_helper(): Int { 42 } my_unique_helper()" }
+{ "op": "completions", "session": "garden-1", "prefix": "my_unique" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": "42"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "completions": [
+//     {
+//       "candidate": "my_unique_helper",
+//       "ns": "__user",
+//       "priority": 0,
+//       "type": "function"
+//     }
+//   ],
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

@@ -1,0 +1,13 @@
+{ "op": "blargh" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "err": "Unknown op: blargh\n",
+//   "status": [
+//     "done",
+//     "error",
+//     "unknown-op"
+//   ]
+// }
+

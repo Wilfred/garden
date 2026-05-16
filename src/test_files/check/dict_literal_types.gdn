@@ -22,11 +22,11 @@ Dict["x" => 1, "y" => ""]
 // expected stdout:
 // Error: Unbound symbol: `no_such`
 // 
-// --| src/test_files/check/dict_literal_types.gdn:5:6
-//  4| // Bad: undefined key.
-//  5| Dict[no_such => 1]
-//  6|      ^^^^^^^
-//  7| // Bad: undefined value.
+// -| src/test_files/check/dict_literal_types.gdn:5:6
+// 4| // Bad: undefined key.
+// 5| Dict[no_such => 1]
+// 6|      ^^^^^^^
+// 7| // Bad: undefined value.
 // 
 // Error: Unbound symbol: `no_such2`
 // 
@@ -50,3 +50,4 @@ Dict["x" => 1, "y" => ""]
 // 17| // Bad: mixed value types.
 // 18| Dict["x" => 1, "y" => ""]
 // 19|                       ^^
+

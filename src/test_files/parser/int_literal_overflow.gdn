@@ -33,8 +33,8 @@ println(0123456789101112131415160123456789101112131415)
 // expected stderr:
 // Error: Parse error: `0123456789101112131415160123456789101112131415` is outside the range of valid integer values. Integers must be between `-9223372036854775808` and `9223372036854775807`.
 // 
-// --| src/test_files/parser/int_literal_overflow.gdn:1:9
-//  1| println(0123456789101112131415160123456789101112131415)
-//  2|         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//  3| // args: dump-ast
+// -| src/test_files/parser/int_literal_overflow.gdn:1:9
+// 1| println(0123456789101112131415160123456789101112131415)
+// 2|         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+// 3| // args: dump-ast
 

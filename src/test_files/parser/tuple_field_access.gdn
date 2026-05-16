@@ -91,17 +91,17 @@ fun foo(p) {
 // expected stderr:
 // Error: Parse error: Garden does not support tuple field access like `.0` or `.1`. Use destructuring instead, for example: `let (x, y) = value`.
 // 
-// ---| src/test_files/parser/tuple_field_access.gdn:2:6
-//   1| fun foo(p) {
-//   2|     p.0
-//    |      ^
-//   3|     p.1
-//   4| }
+// -| src/test_files/parser/tuple_field_access.gdn:2:6
+// 1| fun foo(p) {
+// 2|     p.0
+//  |      ^
+// 3|     p.1
+// 4| }
 // Error: Parse error: Garden does not support tuple field access like `.0` or `.1`. Use destructuring instead, for example: `let (x, y) = value`.
 // 
-// ---| src/test_files/parser/tuple_field_access.gdn:3:6
-//   1| fun foo(p) {
-//   2|     p.0
-//   3|     p.1
-//   4| }    ^
+// -| src/test_files/parser/tuple_field_access.gdn:3:6
+// 1| fun foo(p) {
+// 2|     p.0
+// 3|     p.1
+// 4| }    ^
 

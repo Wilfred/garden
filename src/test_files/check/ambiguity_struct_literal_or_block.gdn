@@ -15,21 +15,21 @@ public fun foo(): Unit {
 // expected stdout:
 // Error: Expected an expression after this.
 // 
-// --| src/test_files/check/ambiguity_struct_literal_or_block.gdn:6:20
-//  4|   while SomeStruct{} {}
-//  5| 
-//  6|   while SomeValue {}
-//  7|                    ^
-//  8|   // This is therefore a syntax error, because SomeValue cannot be a
+// -| src/test_files/check/ambiguity_struct_literal_or_block.gdn:6:20
+// 4|   while SomeStruct{} {}
+// 5| 
+// 6|   while SomeValue {}
+// 7|                    ^
+// 8|   // This is therefore a syntax error, because SomeValue cannot be a
 // 
 // Error: Expected `}` after this.
 // 
-// --| src/test_files/check/ambiguity_struct_literal_or_block.gdn:6:20
-//  4|   while SomeStruct{} {}
-//  5| 
-//  6|   while SomeValue {}
-//  7|                    ^
-//  8|   // This is therefore a syntax error, because SomeValue cannot be a
+// -| src/test_files/check/ambiguity_struct_literal_or_block.gdn:6:20
+// 4|   while SomeStruct{} {}
+// 5| 
+// 6|   while SomeValue {}
+// 7|                    ^
+// 8|   // This is therefore a syntax error, because SomeValue cannot be a
 // 
 // Error: Expected an expression after this.
 // 
@@ -38,3 +38,4 @@ public fun foo(): Unit {
 //  9|   // struct literal.
 // 10|   {}
 // 11| }  ^
+

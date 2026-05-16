@@ -9,6 +9,7 @@ dbg(items.get("oh no wrong type"))
 
 // expected stderr:
 // Exception: Expected `Int` but `"oh no wrong type"` has type `String`.
-// --| src/test_files/runtime/list_get.gdn:5:15	 __toplevel__
-//  5| dbg(items.get("oh no wrong type"))
-//   |               ^^^^^^^^^^^^^^^^^^
+// -| src/test_files/runtime/list_get.gdn:5:15	 __toplevel__
+// 5| dbg(items.get("oh no wrong type"))
+//  |               ^^^^^^^^^^^^^^^^^^
+

@@ -215,7 +215,24 @@ fn format_pos_in_fun(
     };
 
     let s_lines: Vec<_> = src.lines().collect();
-    let margin_width = format!("{}", s_lines.len()).len();
+
+    let offset = position.start_offset;
+    let end_offset = position.end_offset;
+
+    let valid_offsets = !s_lines.is_empty() && offset < src.len() && end_offset < src.len();
+    let spans = if valid_offsets {
+        LinePositions::from(src).from_region(offset, end_offset)
+    } else {
+        vec![]
+    };
+
+    // Size the left margin to fit the largest line number we will print,
+    // not the largest line number in the file overall.
+    let max_line_shown = match spans.last() {
+        Some(last_span) => (last_span.line.as_usize() + context_lines + 1).min(s_lines.len()),
+        None => s_lines.len(),
+    };
+    let margin_width = format!("{}", max_line_shown).len().max(1);
 
     let formatted_pos = format!(
         "{}| {}:{}:{}",
@@ -241,12 +258,9 @@ fn format_pos_in_fun(
     }
     res.push('\n');
 
-    let offset = position.start_offset;
-    let end_offset = position.end_offset;
-
     if s_lines.is_empty() {
         // Nothing to do.
-    } else if offset >= src.len() || end_offset >= src.len() {
+    } else if !valid_offsets {
         // TODO: this can occur when the Vfs is stale relative to the
         // last time these functions were re-evaluated.
         let relevant_line = s_lines[0].to_owned();
@@ -254,10 +268,6 @@ fn format_pos_in_fun(
         res.push_str(&format_margin_num("?", margin_width, use_color));
         res.push_str(&format_src_line(&relevant_line, use_color));
     } else {
-        let line_positions = LinePositions::from(src);
-
-        let spans = line_positions.from_region(offset, end_offset);
-
         let mut is_first = true;
 
         if let Some(span) = spans.first() {

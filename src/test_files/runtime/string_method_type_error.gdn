@@ -5,6 +5,7 @@
 // args: run
 // expected stderr:
 // Exception: Expected `String` but `123` has type `Int`.
-// --| src/test_files/runtime/string_method_type_error.gdn:2:18	 __toplevel__
-//  2|   "foo".index_of(123)
-//   |                  ^^^
+// -| src/test_files/runtime/string_method_type_error.gdn:2:18	 __toplevel__
+// 2|   "foo".index_of(123)
+//  |                  ^^^
+

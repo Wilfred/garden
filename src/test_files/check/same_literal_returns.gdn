@@ -73,22 +73,22 @@ public fun different_variants(b: Bool): Bool {
 // expected stdout:
 // Warning: All code paths in `early_return_int()` return the same value `1`.
 // 
-// --| src/test_files/check/same_literal_returns.gdn:2:12
-//  1| // Should warn: early return and final expression are the same literal.
-//  2| public fun early_return_int(b: Bool): Int {
-//  3|     if b { ^^^^^^^^^^^^^^^^
-//  4|         return 1
-// --| src/test_files/check/same_literal_returns.gdn:4:16
-//  2| public fun early_return_int(b: Bool): Int {
-//  3|     if b {
-//  4|         return 1
-//  5|     }          ^ Note: Same value here.
-//  6|     1
-// --| src/test_files/check/same_literal_returns.gdn:6:5
-//  4|         return 1
-//  5|     }
-//  6|     1
-//  7| }   ^ Note: Same value here.
+// -| src/test_files/check/same_literal_returns.gdn:2:12
+// 1| // Should warn: early return and final expression are the same literal.
+// 2| public fun early_return_int(b: Bool): Int {
+// 3|     if b { ^^^^^^^^^^^^^^^^
+// 4|         return 1
+// -| src/test_files/check/same_literal_returns.gdn:4:16
+// 2| public fun early_return_int(b: Bool): Int {
+// 3|     if b {
+// 4|         return 1
+// 5|     }          ^ Note: Same value here.
+// 6|     1
+// -| src/test_files/check/same_literal_returns.gdn:6:5
+// 4|         return 1
+// 5|     }
+// 6|     1
+// 7| }   ^ Note: Same value here.
 // 
 // Warning: All code paths in `all_explicit_returns()` return the same value `1`.
 // 
@@ -181,3 +181,4 @@ public fun different_variants(b: Bool): Bool {
 
 // expected stderr: 
 // 1 issue can be fixed automatically (use `--fix`).
+

@@ -234,8 +234,6 @@ enum CliCommands {
     ReftestPosition {
         path: PathBuf,
         offset: Option<usize>,
-        #[clap(long)]
-        override_path: Option<PathBuf>,
     },
     /// Parse the Garden program at the path specified and print the
     /// AST.
@@ -359,11 +357,7 @@ fn main() {
                 .expect("Could not find comment containing `^` in source.");
             reftest_hover(&src, &abs_path, offset)
         }
-        CliCommands::ReftestPosition {
-            path,
-            offset,
-            override_path,
-        } => {
+        CliCommands::ReftestPosition { path, offset } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
 
@@ -373,8 +367,7 @@ fn main() {
                     .expect("Could not find comment containing `^` in source.")
             });
 
-            let src_path = to_abs_path(&override_path.unwrap_or(path));
-            print_pos(&src, &src_path, offset, has_caret)
+            print_pos(&src, &abs_path, offset, has_caret)
         }
         CliCommands::ReftestHighlight { path } => {
             let abs_path = to_abs_path(&path);

@@ -191,11 +191,6 @@ enum CliCommands {
     ///
     /// Used for testing the eval-up-to feature.
     TestEvalUpTo { path: PathBuf },
-    /// Evaluate all the entries in the .jsonl file as if they were in
-    /// a JSON session.
-    ///
-    /// Lines starting `//` are ignored.
-    ReftestJsonSession { path: PathBuf },
     /// Check the Garden program at the path specified for issues.
     Check {
         path: PathBuf,
@@ -219,16 +214,6 @@ enum CliCommands {
     },
     /// Run Garden code blocks in markdown and .gdn files.
     RunCodeBlocks { paths: Vec<PathBuf> },
-    /// Show the type of the expression at the position given.
-    ReftestHover { path: PathBuf },
-    /// Show the definition position of the value at the position
-    /// given.
-    ReftestPosition {
-        path: PathBuf,
-        offset: Option<usize>,
-        #[clap(long)]
-        override_path: Option<PathBuf>,
-    },
     /// Show possible completions at the position given.
     ReftestComplete {
         path: PathBuf,
@@ -237,6 +222,21 @@ enum CliCommands {
     /// Print the positions of all occurrences of the local variable
     /// at the position given. One JSON-encoded position per line.
     ReftestHighlight { path: PathBuf },
+    /// Show the type of the expression at the position given.
+    ReftestHover { path: PathBuf },
+    /// Evaluate all the entries in the .jsonl file as if they were in
+    /// a JSON session.
+    ///
+    /// Lines starting `//` are ignored.
+    ReftestJsonSession { path: PathBuf },
+    /// Show the definition position of the value at the position
+    /// given.
+    ReftestPosition {
+        path: PathBuf,
+        offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
+    },
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },

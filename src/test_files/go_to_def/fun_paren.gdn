@@ -8,6 +8,6 @@ public fun bar() {
   // ^
 }
 
-// args: definition-position
+// args: reftest-position
 // expected stdout:
 // {"start_offset":4,"end_offset":7,"line_number":0,"end_line_number":0,"column":4,"end_column":7,"path":"GDN_TEST_ROOT/src/test_files/go_to_def/fun_paren.gdn"}

@@ -223,7 +223,7 @@ enum CliCommands {
     ReftestHover { path: PathBuf },
     /// Show the definition position of the value at the position
     /// given.
-    DefinitionPosition {
+    ReftestPosition {
         path: PathBuf,
         offset: Option<usize>,
         #[clap(long)]
@@ -359,7 +359,7 @@ fn main() {
                 .expect("Could not find comment containing `^` in source.");
             reftest_hover(&src, &abs_path, offset)
         }
-        CliCommands::DefinitionPosition {
+        CliCommands::ReftestPosition {
             path,
             offset,
             override_path,
@@ -938,7 +938,7 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_go_to_def() -> TestResult<()> {
+    fn reftest_position() -> TestResult<()> {
         run_golden_tests("go_to_def")
     }
 

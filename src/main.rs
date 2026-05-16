@@ -236,7 +236,7 @@ enum CliCommands {
     },
     /// Print the positions of all occurrences of the local variable
     /// at the position given. One JSON-encoded position per line.
-    Highlight { path: PathBuf },
+    ReftestHighlight { path: PathBuf },
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },
@@ -376,7 +376,7 @@ fn main() {
             let src_path = to_abs_path(&override_path.unwrap_or(path));
             print_pos(&src, &src_path, offset, has_caret)
         }
-        CliCommands::Highlight { path } => {
+        CliCommands::ReftestHighlight { path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
 
@@ -943,7 +943,7 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_highlight() -> TestResult<()> {
+    fn reftest_highlight() -> TestResult<()> {
         run_golden_tests("highlight")
     }
 

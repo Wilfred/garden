@@ -1,6 +1,6 @@
 { "method": "run", "input": ":load no_such_file.gdn" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

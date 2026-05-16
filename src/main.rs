@@ -195,7 +195,7 @@ enum CliCommands {
     /// a JSON session.
     ///
     /// Lines starting `//` are ignored.
-    TestJson { path: PathBuf },
+    ReftestJsonSession { path: PathBuf },
     /// Check the Garden program at the path specified for issues.
     Check {
         path: PathBuf,
@@ -405,7 +405,7 @@ fn main() {
                 println!("{}", serde_json::to_string(&item).unwrap());
             }
         }
-        CliCommands::TestJson { path } => {
+        CliCommands::ReftestJsonSession { path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
 
@@ -953,7 +953,7 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_json_session() -> TestResult<()> {
+    fn reftest_json_session() -> TestResult<()> {
         run_golden_tests("json_session")
     }
 

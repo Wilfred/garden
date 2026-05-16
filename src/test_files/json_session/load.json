@@ -1,6 +1,6 @@
 { "method": "load", "input": "fun foo() {}", "path": "x.gdn", "offset": 0, "end_offset": 12 }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

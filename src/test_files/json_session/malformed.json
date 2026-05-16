@@ -1,6 +1,6 @@
 {}
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

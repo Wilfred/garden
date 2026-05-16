@@ -1,6 +1,6 @@
 { "method": "run", "input": ":methods String::s" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

@@ -1,6 +1,6 @@
 { "method": "run", "input": "test foo { throw(\"foo\") }" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

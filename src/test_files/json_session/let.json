@@ -1,7 +1,7 @@
 { "method": "run", "input": "let x = 2" }
 { "method": "run", "input": "x * 3" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

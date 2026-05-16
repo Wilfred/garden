@@ -1,7 +1,7 @@
 { "method": "run", "input": "import \"__reflect.gdn\" as r" }
 { "method": "run", "input": ":doc r::lex" }
 
-// args: test-json
+// args: reftest-json-session
 // expected stdout:
 // {
 //   "kind": {

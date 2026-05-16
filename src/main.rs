@@ -154,28 +154,6 @@ enum CliCommands {
         #[clap(long)]
         new_name: String,
     },
-    /// Replace the expression at this offset with a variable called
-    /// `name`, and use the expression as the variables's definition.
-    ExtractVariable {
-        path: PathBuf,
-        offset: Option<usize>,
-        end_offset: Option<usize>,
-        #[clap(long)]
-        override_path: Option<PathBuf>,
-        #[clap(long)]
-        name: String,
-    },
-    /// Replace the expression at this offset with a function called
-    /// `name`, and use the expression as the function's body.
-    ExtractFunction {
-        path: PathBuf,
-        offset: Option<usize>,
-        end_offset: Option<usize>,
-        #[clap(long)]
-        override_path: Option<PathBuf>,
-        #[clap(long)]
-        name: String,
-    },
     /// Wrap the expression at the offset specified in a `match`.
     Destructure {
         path: PathBuf,
@@ -218,6 +196,28 @@ enum CliCommands {
     ReftestComplete {
         path: PathBuf,
         offset: Option<usize>,
+    },
+    /// Replace the expression at this offset with a function called
+    /// `name`, and use the expression as the function's body.
+    ReftestExtractFunction {
+        path: PathBuf,
+        offset: Option<usize>,
+        end_offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
+        #[clap(long)]
+        name: String,
+    },
+    /// Replace the expression at this offset with a variable called
+    /// `name`, and use the expression as the variables's definition.
+    ReftestExtractVariable {
+        path: PathBuf,
+        offset: Option<usize>,
+        end_offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
+        #[clap(long)]
+        name: String,
     },
     /// Print the positions of all occurrences of the local variable
     /// at the position given. One JSON-encoded position per line.
@@ -454,7 +454,7 @@ fn main() {
                 }
             }
         }
-        CliCommands::ExtractVariable {
+        CliCommands::ReftestExtractVariable {
             path,
             offset,
             end_offset,
@@ -486,7 +486,7 @@ fn main() {
                 }
             }
         }
-        CliCommands::ExtractFunction {
+        CliCommands::ReftestExtractFunction {
             path,
             offset,
             end_offset,

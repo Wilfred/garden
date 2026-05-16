@@ -3,7 +3,7 @@ public fun demo() {
   //             ^^^^^^^^^^^^^^^^^
 }
 
-// args: extract-variable --name extracted_var
+// args: reftest-extract-variable --name extracted_var
 // expected stdout:
 // public fun demo() {
 //   let extracted_var = "x" ^ ("y" ^ "z")

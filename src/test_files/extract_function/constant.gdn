@@ -8,7 +8,7 @@ fun contains_expr() {
 
 fun after() {}
 
-// args: extract-function --name bar
+// args: reftest-extract-function --name bar
 // expected stdout:
 // fun before() {}
 // 

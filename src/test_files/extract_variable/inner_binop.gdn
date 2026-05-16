@@ -5,7 +5,7 @@ public fun demo() {
   //                    ^^^^^^^^^
 }
 
-// args: extract-variable --name extracted_var
+// args: reftest-extract-variable --name extracted_var
 // expected stdout:
 // public fun demo() {
 //   // Extracted variable init value should not have parentheses.

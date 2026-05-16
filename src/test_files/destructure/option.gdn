@@ -9,7 +9,7 @@ fun bar() {
   let y = 2
 }
 
-// args: destructure
+// args: reftest-destructure
 // expected stdout:
 // fun foo(): Option<Int> {
 //   None

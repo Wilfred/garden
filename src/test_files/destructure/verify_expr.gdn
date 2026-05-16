@@ -7,7 +7,7 @@ method my_set_extension(this: Path): Path {
 //^^^^^^^^^^^^^^^^
 }
 
-// args: destructure
+// args: reftest-destructure
 // expected stdout:
 // // Ensure that we can still use destructuring on expressions used in
 // // verify positions, not infer positions (according to the type

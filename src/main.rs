@@ -154,14 +154,6 @@ enum CliCommands {
         #[clap(long)]
         new_name: String,
     },
-    /// Wrap the expression at the offset specified in a `match`.
-    Destructure {
-        path: PathBuf,
-        offset: Option<usize>,
-        end_offset: Option<usize>,
-        #[clap(long)]
-        override_path: Option<PathBuf>,
-    },
     /// Format a Garden file and print the re-indented source code.
     Format { path: PathBuf },
     /// Run the program specified, calling its main() function, then
@@ -196,6 +188,14 @@ enum CliCommands {
     ReftestComplete {
         path: PathBuf,
         offset: Option<usize>,
+    },
+    /// Wrap the expression at the offset specified in a `match`.
+    ReftestDestructure {
+        path: PathBuf,
+        offset: Option<usize>,
+        end_offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
     },
     /// Replace the expression at this offset with a function called
     /// `name`, and use the expression as the function's body.
@@ -518,7 +518,7 @@ fn main() {
                 }
             }
         }
-        CliCommands::Destructure {
+        CliCommands::ReftestDestructure {
             path,
             offset,
             end_offset,
@@ -906,7 +906,7 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_destructure() -> TestResult<()> {
+    fn reftest_destructure() -> TestResult<()> {
         run_golden_tests("destructure")
     }
 
@@ -1027,7 +1027,7 @@ mod tests {
         let path = assert_cmd::cargo::cargo_bin("garden");
         let mut cmd = Command::new(path);
 
-        cmd.arg("destructure")
+        cmd.arg("reftest-destructure")
             .arg("src/unit_test_files/destructure.gdn")
             .arg("49")
             .arg("54");

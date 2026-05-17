@@ -5,5 +5,5 @@ test foo {
 //  ^
 }
 
-// args: test-eval-up-to
+// args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/test.gdn:4: 3

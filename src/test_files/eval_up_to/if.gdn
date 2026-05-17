@@ -7,5 +7,5 @@
     }
 }
 
-// args: test-eval-up-to
+// args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/if.gdn:2: 5

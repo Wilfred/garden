@@ -6,5 +6,5 @@ fun foo(aa: Int) {
     foo(10)
 }
 
-// args: test-eval-up-to
+// args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/param.gdn:1: 10

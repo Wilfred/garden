@@ -12,5 +12,5 @@ fun foo(i: Int) {
     foo(20)
 }
 
-// args: test-eval-up-to
+// args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/call_func_last_call_indirect.gdn:2: 21

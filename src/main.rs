@@ -146,11 +146,6 @@ enum CliCommands {
     },
     /// Format a Garden file and print the re-indented source code.
     Format { path: PathBuf },
-    /// Run the program specified, calling its main() function, then
-    /// run eval-up-to at the position specified and print the result.
-    ///
-    /// Used for testing the eval-up-to feature.
-    TestEvalUpTo { path: PathBuf },
     /// Check the Garden program at the path specified for issues.
     Check {
         path: PathBuf,
@@ -187,6 +182,11 @@ enum CliCommands {
         #[clap(long)]
         override_path: Option<PathBuf>,
     },
+    /// Run the program specified, calling its main() function, then
+    /// run eval-up-to at the position specified and print the result.
+    ///
+    /// Used for testing the eval-up-to feature.
+    ReftestEvalUpTo { path: PathBuf },
     /// Replace the expression at this offset with a function called
     /// `name`, and use the expression as the function's body.
     ReftestExtractFunction {
@@ -338,12 +338,12 @@ fn main() {
             let src_path = to_abs_path(&override_path.unwrap_or(path));
             run_sandboxed_tests_in_file(&src, &src_path, offset, interrupted)
         }
-        CliCommands::TestEvalUpTo { path } => {
+        CliCommands::ReftestEvalUpTo { path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
             let offset = caret_finder::find_caret_offset(&src)
                 .expect("Could not find comment containing `^` in source.");
-            test_eval_up_to(&src, &abs_path, offset, interrupted, trace_exprs);
+            reftest_eval_up_to(&src, &abs_path, offset, interrupted, trace_exprs);
         }
         CliCommands::DumpAst { path } => {
             let abs_path = to_abs_path(&path);
@@ -593,7 +593,7 @@ fn init_tracing() {
 }
 
 /// Evaluate a garden file, then run eval-up-to and print the result.
-fn test_eval_up_to(
+fn reftest_eval_up_to(
     src: &str,
     path: &Path,
     offset: usize,

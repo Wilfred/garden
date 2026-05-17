@@ -853,8 +853,19 @@ mod tests {
 
     use goldentests::{TestConfig, TestResult};
 
-    /// Helper function to run golden tests for a specific subdirectory.
-    fn run_golden_tests(subdir: &str) -> TestResult<()> {
+    /// Run the reftests in the given subdirectory of `src/test_files/`.
+    ///
+    /// A reftest is a test that uses a human readable file to show
+    /// correct behaviour: the file contains a sample program along
+    /// with the expected output, and the test runner checks that the
+    /// program still produces that output.
+    ///
+    /// When the functionality under test does not have a natural text
+    /// representation (e.g. hover info, go-to-definition, AST dumps),
+    /// the binary exposes a dedicated `reftest-foo` subcommand that
+    /// prints a textual rendering, which the reftest file then
+    /// captures as its expected output.
+    fn run_reftests(subdir: &str) -> TestResult<()> {
         // Build the binary to ensure we're testing the latest code.
         let bin_path = escargot::CargoBuild::new()
             .bin("garden")
@@ -870,98 +881,98 @@ mod tests {
     }
 
     #[test]
-    fn test_golden_check() -> TestResult<()> {
-        run_golden_tests("check")
+    fn reftest_check() -> TestResult<()> {
+        run_reftests("check")
     }
 
     #[test]
-    fn test_golden_check_fix() -> TestResult<()> {
-        run_golden_tests("check_fix")
+    fn reftest_check_fix() -> TestResult<()> {
+        run_reftests("check_fix")
     }
 
     #[test]
-    fn test_golden_run_code_blocks() -> TestResult<()> {
-        run_golden_tests("run_code_blocks")
+    fn reftest_run_code_blocks() -> TestResult<()> {
+        run_reftests("run_code_blocks")
     }
 
     #[test]
     fn reftest_complete() -> TestResult<()> {
-        run_golden_tests("complete")
+        run_reftests("complete")
     }
 
     #[test]
     fn reftest_destructure() -> TestResult<()> {
-        run_golden_tests("destructure")
+        run_reftests("destructure")
     }
 
     #[test]
-    fn test_golden_eval_up_to() -> TestResult<()> {
-        run_golden_tests("eval_up_to")
+    fn reftest_eval_up_to() -> TestResult<()> {
+        run_reftests("eval_up_to")
     }
 
     #[test]
     fn reftest_extract_function() -> TestResult<()> {
-        run_golden_tests("extract_function")
+        run_reftests("extract_function")
     }
 
     #[test]
     fn reftest_extract_variable() -> TestResult<()> {
-        run_golden_tests("extract_variable")
+        run_reftests("extract_variable")
     }
 
     #[test]
-    fn test_golden_format() -> TestResult<()> {
-        run_golden_tests("format")
+    fn reftest_format() -> TestResult<()> {
+        run_reftests("format")
     }
 
     #[test]
     fn reftest_position() -> TestResult<()> {
-        run_golden_tests("go_to_def")
+        run_reftests("go_to_def")
     }
 
     #[test]
     fn reftest_highlight() -> TestResult<()> {
-        run_golden_tests("highlight")
+        run_reftests("highlight")
     }
 
     #[test]
     fn reftest_hover() -> TestResult<()> {
-        run_golden_tests("hover")
+        run_reftests("hover")
     }
 
     #[test]
     fn reftest_json_session() -> TestResult<()> {
-        run_golden_tests("json_session")
+        run_reftests("json_session")
     }
 
     #[test]
-    fn test_golden_parser() -> TestResult<()> {
-        run_golden_tests("parser")
+    fn reftest_parser() -> TestResult<()> {
+        run_reftests("parser")
     }
 
     #[test]
-    fn test_golden_playground() -> TestResult<()> {
-        run_golden_tests("playground")
+    fn reftest_playground() -> TestResult<()> {
+        run_reftests("playground")
     }
 
     #[test]
     fn reftest_rename() -> TestResult<()> {
-        run_golden_tests("rename")
+        run_reftests("rename")
     }
 
     #[test]
-    fn test_golden_runtime() -> TestResult<()> {
-        run_golden_tests("runtime")
+    fn reftest_runtime() -> TestResult<()> {
+        run_reftests("runtime")
     }
 
     #[test]
-    fn test_golden_sandboxed_test() -> TestResult<()> {
-        run_golden_tests("sandboxed_test")
+    fn reftest_sandboxed_test() -> TestResult<()> {
+        run_reftests("sandboxed_test")
     }
 
     #[test]
-    fn test_golden_test() -> TestResult<()> {
-        run_golden_tests("test")
+    fn reftest_test() -> TestResult<()> {
+        run_reftests("test")
     }
 
     #[test]

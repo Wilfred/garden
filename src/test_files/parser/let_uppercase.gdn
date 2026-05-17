@@ -1,6 +1,6 @@
 let A = 1
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Let(
 //     Symbol(

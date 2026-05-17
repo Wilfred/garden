@@ -2,7 +2,7 @@
 ffun foo(_: Bool) {
 }
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Variable(
 //     Symbol"ffun",

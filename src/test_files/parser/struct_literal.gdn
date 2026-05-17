@@ -1,6 +1,6 @@
 Foo{ x: 1, y: 2 }
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // StructLiteral(
 //     TypeSymbol"Foo",

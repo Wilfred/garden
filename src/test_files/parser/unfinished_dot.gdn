@@ -2,7 +2,7 @@ fun foo(s: String) {
     s.
 }
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Fun(
 //     Symbol"foo",

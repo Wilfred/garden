@@ -1,6 +1,6 @@
 import "./foo.gdn"
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Import(
 //     ImportInfo {

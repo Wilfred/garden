@@ -1,6 +1,6 @@
 abc_def
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Variable(
 //     Symbol"abc_def",

@@ -4,7 +4,7 @@ struct Foo<T> {
     foo_bar_baz: T,
 }
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Struct(
 //     StructInfo {

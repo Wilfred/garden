@@ -3,7 +3,7 @@
 // This is a doc comment.
 fun foo() {}
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Fun(
 //     Symbol"foo",

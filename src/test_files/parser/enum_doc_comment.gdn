@@ -6,7 +6,7 @@ enum Foo {}
 // World
 public enum Bar {}
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Enum(
 //     EnumInfo {

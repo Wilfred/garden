@@ -1,6 +1,6 @@
 if True {} else {}
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // If(
 //     Expression {

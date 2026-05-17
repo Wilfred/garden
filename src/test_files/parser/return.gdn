@@ -1,6 +1,6 @@
 return x
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Return(
 //     Some(

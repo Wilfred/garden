@@ -2,7 +2,7 @@ public fun foo: Option<Int> {
   None
 }
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Fun(
 //     Symbol"foo",

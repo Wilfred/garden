@@ -48,7 +48,7 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize, in_test_suite: bo
                 // time we fix a typo in the prelude.
                 //
                 // TODO: the proper solution would be placeholders in
-                // the golden test output, like LLVM's lit.
+                // the reftest output, like LLVM's lit.
                 if pos.path.ends_with("__prelude.gdn") {
                     placeholder_pos.start_offset = 12345;
                     placeholder_pos.end_offset = 12345;

@@ -1,9 +1,9 @@
 default:
     @just --list
 
-# Build and run golden test files.
+# Build and run reftest files.
 watch:
-    REGENERATE=y cargo watch -x 't golden' --watch-when-idle
+    REGENERATE=y cargo watch -x 't reftest' --watch-when-idle
     # We use --watch-when-idle to avoid re-running simply because the
     # expected output of a test file was regenerated.
 

@@ -155,12 +155,19 @@ See `src/checks/loops.rs` for a concise real example.
 - cargo clippy: Check that your Rust code is correct
 
 # Running Tests
-Garden uses golden tests in `src/test_files/` that include a sample
+Garden uses reftests in `src/test_files/` that include a sample
 program and the expected output. New features or bugfixes should
 generally include a new test file.
 
-- cargo test golden: Run all the golden tests
-- REGENERATE=y cargo test golden: Update the golden test output
+A reftest is a test that uses a human readable file to show correct
+behaviour. When the functionality under test does not have a natural
+text representation, the binary often exposes a dedicated
+`reftest-foo` subcommand that prints a textual rendering of the
+behaviour, which the reftest file then captures as its expected
+output.
+
+- cargo test reftest: Run all the reftests
+- REGENERATE=y cargo test reftest: Update the reftest output
 
 # Running Garden Programs
 - ./target/debug/garden check yourfile.gdn: Check the test program named yourfile.gdn

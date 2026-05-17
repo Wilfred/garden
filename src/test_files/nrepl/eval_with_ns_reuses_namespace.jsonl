@@ -1,0 +1,50 @@
+{ "op": "clone" }
+{ "op": "eval", "session": "garden-1", "code": "fun reuse_helper(): Int { 99 }" }
+{ "op": "eval", "session": "garden-1", "ns": "other_ns.gdn", "code": "1" }
+{ "op": "eval", "session": "garden-1", "ns": "__user.gdn", "code": "reuse_helper()" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "__user.gdn",
+//   "session": "garden-1",
+//   "value": "()"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "other_ns.gdn",
+//   "session": "garden-1",
+//   "value": "1"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "__user.gdn",
+//   "session": "garden-1",
+//   "value": "99"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

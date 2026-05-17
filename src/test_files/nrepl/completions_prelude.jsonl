@@ -13,7 +13,7 @@
 //   "completions": [
 //     {
 //       "candidate": "println",
-//       "ns": "__user",
+//       "ns": "__user.gdn",
 //       "priority": 0,
 //       "type": "function"
 //     }

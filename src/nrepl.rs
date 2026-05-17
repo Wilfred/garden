@@ -127,16 +127,103 @@ fn next_session_id(counter: &mut u64) -> String {
 
 /// Perform a single `eval` request, returning the response messages
 /// to send back to the client.
+///
+/// Honours the optional nREPL `ns`, `file`, `line` and `column`
+/// parameters:
+///
+/// - `ns` selects the namespace (a file name including the `.gdn`
+///   extension) in which to evaluate. An existing namespace with
+///   that name is reused; otherwise a fresh one is created.
+/// - `file` is used as the source path for position tracking. If
+///   `ns` is not given, the file also identifies the namespace
+///   (mirroring `load-file`).
+/// - `line` and `column` (both 1-based) shift the position metadata
+///   reported in diagnostics so they line up with the eval region
+///   in the original source file.
 fn handle_eval(
     code: &str,
+    ns_name: Option<&str>,
+    file: Option<&str>,
+    line: Option<i64>,
+    column: Option<i64>,
     env: &mut Env,
     session: &Session,
     stdout_buf: &Arc<Mutex<String>>,
     base_msg: &HashMap<Vec<u8>, Value>,
 ) -> Vec<Value> {
+    let (vfs_path, namespace) = resolve_eval_target(ns_name, file, env);
+    let padded_code = shift_code_for_position(code, line, column);
+    eval_code_in_namespace(
+        &padded_code,
+        vfs_path,
+        namespace,
+        env,
+        session,
+        stdout_buf,
+        base_msg,
+    )
+}
+
+/// Resolve the namespace and VFS path that an `eval` request should
+/// use, given the optional `ns` and `file` parameters from the
+/// request.
+fn resolve_eval_target(
+    ns_name: Option<&str>,
+    file: Option<&str>,
+    env: &mut Env,
+) -> (PathBuf, Rc<RefCell<NamespaceInfo>>) {
+    if let Some(name) = ns_name {
+        // Match the requested name against the file name of an
+        // existing namespace (e.g. `__user.gdn` matches `__user.gdn`).
+        // This is the same convention the server uses when reporting
+        // the namespace back to the client.
+        let existing = env.namespaces.iter().find_map(|(path, ns)| {
+            if path.file_name().and_then(|s| s.to_str()) == Some(name) {
+                Some((path.clone(), ns.clone()))
+            } else {
+                None
+            }
+        });
+        if let Some(found) = existing {
+            return found;
+        }
+
+        let path = to_abs_path(Path::new(name));
+        let ns = env.get_or_create_namespace(&path);
+        return (path, ns);
+    }
+
+    if let Some(f) = file {
+        let path = to_abs_path(Path::new(f));
+        let ns = env.get_or_create_namespace(&path);
+        return (path, ns);
+    }
+
     let ns = env.current_namespace();
     let path = (*ns.borrow().abs_path).clone();
-    eval_code_in_namespace(code, path, ns, env, session, stdout_buf, base_msg)
+    (path, ns)
+}
+
+/// Prepend whitespace to `code` so that the parser's line/column
+/// tracking matches the position of the eval region in the original
+/// source file. nREPL clients use 1-based line and column numbers.
+fn shift_code_for_position(code: &str, line: Option<i64>, column: Option<i64>) -> String {
+    let line = line.unwrap_or(1).max(1);
+    let column = column.unwrap_or(1).max(1);
+
+    if line == 1 && column == 1 {
+        return code.to_owned();
+    }
+
+    let mut out = String::with_capacity(code.len() + (line as usize - 1) + (column as usize - 1));
+    for _ in 1..line {
+        out.push('\n');
+    }
+    for _ in 1..column {
+        out.push(' ');
+    }
+    out.push_str(code);
+    out
 }
 
 /// Perform a single `load-file` request, returning the response
@@ -235,7 +322,7 @@ fn eval_code_in_namespace(
             let ns_name = namespace
                 .borrow()
                 .abs_path
-                .file_stem()
+                .file_name()
                 .map(|s| s.to_string_lossy().into_owned())
                 .unwrap_or_else(|| namespace.borrow().abs_path.display().to_string());
 
@@ -286,7 +373,7 @@ fn handle_completions(env: &Env, prefix: &str, base_msg: &HashMap<Vec<u8>, Value
     let ns_borrow = ns.borrow();
     let ns_name = ns_borrow
         .abs_path
-        .file_stem()
+        .file_name()
         .and_then(|s| s.to_str())
         .unwrap_or("")
         .to_owned();
@@ -335,7 +422,7 @@ fn handle_lookup(env: &Env, sym: &str, base_msg: &HashMap<Vec<u8>, Value>) -> Ve
     let ns_borrow = ns.borrow();
     let ns_name = ns_borrow
         .abs_path
-        .file_stem()
+        .file_name()
         .and_then(|s| s.to_str())
         .unwrap_or("")
         .to_owned();
@@ -436,6 +523,10 @@ fn format_eval_error(e: &EvalError, env: &Env) -> (String, Option<&'static str>)
 enum SessionRequest {
     Eval {
         code: String,
+        ns_name: Option<String>,
+        file: Option<String>,
+        line: Option<i64>,
+        column: Option<i64>,
         base_msg: HashMap<Vec<u8>, Value>,
     },
     LoadFile {
@@ -607,9 +698,24 @@ fn session_worker(
         };
 
         let responses = match req {
-            SessionRequest::Eval { code, base_msg } => {
-                handle_eval(&code, &mut env, &session, &stdout_buf, &base_msg)
-            }
+            SessionRequest::Eval {
+                code,
+                ns_name,
+                file,
+                line,
+                column,
+                base_msg,
+            } => handle_eval(
+                &code,
+                ns_name.as_deref(),
+                file.as_deref(),
+                line,
+                column,
+                &mut env,
+                &session,
+                &stdout_buf,
+                &base_msg,
+            ),
             SessionRequest::LoadFile {
                 code,
                 file_path,
@@ -718,7 +824,24 @@ const SUPPORTED_OPS: &[(&str, OpDescriptor)] = &[
                     "The ID of the session in which the code will be evaluated.",
                 ),
             ],
-            optional: &[],
+            optional: &[
+                (
+                    "ns",
+                    "The namespace in which to evaluate the code. If the namespace does not exist it is created.",
+                ),
+                (
+                    "file",
+                    "Source path of the file the code is being evaluated from, used for position metadata.",
+                ),
+                (
+                    "line",
+                    "1-based line number of the start of the code being evaluated.",
+                ),
+                (
+                    "column",
+                    "1-based column number of the start of the code being evaluated.",
+                ),
+            ],
             returns: &[
                 ("ns", "The namespace in which the evaluation occurred."),
                 ("value", "The result of evaluating the code, as a string."),
@@ -922,8 +1045,28 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
                 .and_then(as_str)
                 .unwrap_or("")
                 .to_owned();
+            let ns_name = dict_get(request, "ns")
+                .and_then(as_str)
+                .map(|s| s.to_owned());
+            let file = dict_get(request, "file")
+                .and_then(as_str)
+                .map(|s| s.to_owned());
+            let line = dict_get(request, "line").and_then(|v| match v {
+                Value::Int(n) => Some(*n),
+                Value::Bytes(b) => std::str::from_utf8(b).ok()?.parse().ok(),
+                _ => None,
+            });
+            let column = dict_get(request, "column").and_then(|v| match v {
+                Value::Int(n) => Some(*n),
+                Value::Bytes(b) => std::str::from_utf8(b).ok()?.parse().ok(),
+                _ => None,
+            });
             dispatch_to_session(conn, session_id, base, |base_msg| SessionRequest::Eval {
                 code,
+                ns_name,
+                file,
+                line,
+                column,
                 base_msg,
             });
         }

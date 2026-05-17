@@ -8,5 +8,5 @@ fun foo(aa: String): String {
     foo("hello")
 }
 
-// args: test-eval-up-to
+// args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/expression_mid_fun_body.gdn:2: ["hello"]

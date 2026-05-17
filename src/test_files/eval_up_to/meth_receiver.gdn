@@ -6,5 +6,5 @@ method foo(this: String, x: Int) {
   "abc".foo(123)
 }
 
-// args: test-eval-up-to
+// args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/meth_receiver.gdn:1: "abc"

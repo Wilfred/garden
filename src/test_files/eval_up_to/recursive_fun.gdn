@@ -13,5 +13,5 @@ fun fib(i: Int): Int {
     fib(10)
 }
 
-// args: test-eval-up-to
+// args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/recursive_fun.gdn:2: 10

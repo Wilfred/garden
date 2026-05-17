@@ -11,5 +11,5 @@ fun split_words(src: String): String {
   split_words("foo bar\nbaz")
 }
 
-// args: test-eval-up-to
+// args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/for_body_expr.gdn:3: ["foo", "bar"]

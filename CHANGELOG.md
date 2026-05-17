@@ -24,6 +24,10 @@ Added warnings for:
 * All code paths in a function return the same value
 * Unnecessary `let` that's immediately returned
 
+Added a warning for `match` expressions on `Option` values that could
+be replaced with `.or_value()` (e.g. `match opt { Some(x) => x, None
+=> 0 }` can be simplified to `opt.or_value(0)`).
+
 ## Commands
 
 Added :load to evaluate all definitions in a file and switch to that

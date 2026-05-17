@@ -475,10 +475,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
       None => continue
     }
 
-    let link_text = match post.title {
-      Some(title) => title
-      None => file_name
-    }
+    let link_text = post.title.or_value(file_name)
 
     let link_with_date = match post.date {
       Some(date) => link_text ^ " (" ^ date ^ ")"
@@ -517,10 +514,7 @@ fun write_website_page(
 
   let base_tmpl_src = base_tmpl_src.replace("__TITLE", title)
 
-  let (header, footer) = match base_tmpl_src.split_once("__MAIN_CONTENT") {
-    Some(s) => s,
-    None => ("", "")
-  }
+  let (header, footer) = base_tmpl_src.split_once("__MAIN_CONTENT").or_value(("", ""))
 
   let src = "".join([header.trim_right(), page_src, footer.trim_left()])
   fs::write_file(src, dest_path).or_throw()

@@ -1,6 +1,7 @@
 mod duplicates;
 mod hints;
 mod loops;
+mod or_value_pattern;
 mod recursion_variable;
 mod repeated_bool;
 mod same_literal_returns;
@@ -24,6 +25,7 @@ use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::ToplevelItem;
 use crate::parser::vfs::VfsPathBuf;
 use loops::check_loops;
+use or_value_pattern::check_or_value_pattern;
 use recursion_variable::check_recursion_variables;
 use repeated_bool::check_repeated_bool;
 use same_literal_returns::check_same_literal_returns;
@@ -85,6 +87,7 @@ pub(crate) fn check_toplevel_items_in_env(
     diagnostics.extend(check_unnecessary_return(items));
     diagnostics.extend(check_self_assign_compare(items));
     diagnostics.extend(check_repeated_bool(items));
+    diagnostics.extend(check_or_value_pattern(items));
 
     diagnostics
 }

@@ -36,6 +36,13 @@ jobs:
       - name: Check TS formatting
         run: npx prettier --check "website/**/*.ts"
 
+  typos:
+    name: Check spelling
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: crate-ci/typos@master
+
   actionlint:
     name: Actionlint
     runs-on: ubuntu-24.04

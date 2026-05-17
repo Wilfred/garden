@@ -1,0 +1,71 @@
+{"method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///test.gdn", "languageId": "garden", "version": 1, "text": "fun file_name() {\n  let foo = 1\n  foo + foo\n}\n"}}}
+{"id": 1, "method": "textDocument/documentHighlight", "params": {"textDocument": {"uri": "file:///test.gdn"}, "position": {"line": 1, "character": 6}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "`file_name` is never called.",
+//         "range": {
+//           "end": {
+//             "character": 13,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 4,
+//             "line": 0
+//           }
+//         },
+//         "severity": 2
+//       }
+//     ],
+//     "uri": "file:///test.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "range": {
+//         "end": {
+//           "character": 9,
+//           "line": 1
+//         },
+//         "start": {
+//           "character": 6,
+//           "line": 1
+//         }
+//       }
+//     },
+//     {
+//       "range": {
+//         "end": {
+//           "character": 5,
+//           "line": 2
+//         },
+//         "start": {
+//           "character": 2,
+//           "line": 2
+//         }
+//       }
+//     },
+//     {
+//       "range": {
+//         "end": {
+//           "character": 11,
+//           "line": 2
+//         },
+//         "start": {
+//           "character": 8,
+//           "line": 2
+//         }
+//       }
+//     }
+//   ]
+// }
+

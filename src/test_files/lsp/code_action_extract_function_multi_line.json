@@ -1,0 +1,58 @@
+{"method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///test.gdn", "languageId": "garden", "version": 1, "text": "fun foo() {\n  let x = 1\n  let y = 2\n  let _ = x + y\n}\n"}}}
+{"id": 1, "method": "textDocument/codeAction", "params": {"textDocument": {"uri": "file:///test.gdn"}, "range": {"start": {"line": 2, "character": 2}, "end": {"line": 3, "character": 15}}, "context": {"diagnostics": []}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "`foo` is never called.",
+//         "range": {
+//           "end": {
+//             "character": 7,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 4,
+//             "line": 0
+//           }
+//         },
+//         "severity": 2
+//       }
+//     ],
+//     "uri": "file:///test.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///test.gdn": [
+//             {
+//               "newText": "fun extracted(x: Int): Unit {\n  let y = 2\n  let _ = x + y\n}\n\nfun foo() {\n  let x = 1\n  extracted(x)\n}\n",
+//               "range": {
+//                 "end": {
+//                   "character": 1,
+//                   "line": 4
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.extract",
+//       "title": "Extract function"
+//     }
+//   ]
+// }
+

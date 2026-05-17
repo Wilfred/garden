@@ -1,0 +1,28 @@
+{"method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///test.gdn", "languageId": "garden", "version": 1, "text": "let x: Int = \"not an int\"\n"}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "Expected an `Int` but got a `String`.",
+//         "range": {
+//           "end": {
+//             "character": 25,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 13,
+//             "line": 0
+//           }
+//         },
+//         "severity": 1
+//       }
+//     ],
+//     "uri": "file:///test.gdn"
+//   }
+// }
+

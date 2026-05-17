@@ -1,0 +1,58 @@
+{"method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///test.gdn", "languageId": "garden", "version": 1, "text": "fun foo() {\n  let _ = 1 + 2\n}\n"}}}
+{"id": 1, "method": "textDocument/codeAction", "params": {"textDocument": {"uri": "file:///test.gdn"}, "range": {"start": {"line": 1, "character": 10}, "end": {"line": 1, "character": 15}}, "context": {"diagnostics": []}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "`foo` is never called.",
+//         "range": {
+//           "end": {
+//             "character": 7,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 4,
+//             "line": 0
+//           }
+//         },
+//         "severity": 2
+//       }
+//     ],
+//     "uri": "file:///test.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///test.gdn": [
+//             {
+//               "newText": "fun extracted(): Int {\n  1 + 2\n}\n\nfun foo() {\n  let _ = extracted()\n}\n",
+//               "range": {
+//                 "end": {
+//                   "character": 1,
+//                   "line": 2
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.extract",
+//       "title": "Extract function"
+//     }
+//   ]
+// }
+

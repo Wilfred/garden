@@ -38,7 +38,8 @@ use crate::pos_to_id::find_item_at;
 #[derive(Debug, Deserialize)]
 struct Message {
     #[allow(dead_code)]
-    jsonrpc: String,
+    #[serde(default)]
+    jsonrpc: Option<String>,
     #[serde(default)]
     id: Option<serde_json::Value>,
     method: Option<String>,
@@ -376,98 +377,69 @@ fn handle_shutdown(id: serde_json::Value) -> JsonRpcResponse<()> {
     JsonRpcResponse::new(id, ())
 }
 
-/// Send diagnostics for a file.
-fn send_diagnostics(uri: Uri, diagnostics: Vec<Diagnostic>) -> io::Result<()> {
+/// Build a publishDiagnostics notification.
+fn build_diagnostics_notification(
+    uri: Uri,
+    diagnostics: Vec<Diagnostic>,
+) -> JsonRpcNotification<PublishDiagnosticsParams> {
     let params = PublishDiagnosticsParams {
         uri,
         diagnostics,
         version: None,
     };
 
-    let notification = JsonRpcNotification::new("textDocument/publishDiagnostics", params);
-
-    write_message(&notification)
+    JsonRpcNotification::new("textDocument/publishDiagnostics", params)
 }
 
 /// Handle textDocument/didOpen notification.
-fn handle_did_open(params: &serde_json::Value, documents: &mut DocumentStore) -> io::Result<()> {
-    let uri = match params
+fn handle_did_open(
+    params: &serde_json::Value,
+    documents: &mut DocumentStore,
+) -> Option<JsonRpcNotification<PublishDiagnosticsParams>> {
+    let uri = params
         .get("textDocument")
         .and_then(|doc| doc.get("uri"))
-        .and_then(|u| u.as_str())
-    {
-        Some(uri) => uri,
-        None => return Ok(()),
-    };
+        .and_then(|u| u.as_str())?;
 
-    let text = match params
+    let text = params
         .get("textDocument")
         .and_then(|doc| doc.get("text"))
-        .and_then(|t| t.as_str())
-    {
-        Some(text) => text,
-        None => return Ok(()),
-    };
+        .and_then(|t| t.as_str())?;
 
-    // Convert URI to path
-    let url = match Url::parse(uri) {
-        Ok(u) => u,
-        Err(_) => return Ok(()),
-    };
+    let url = Url::parse(uri).ok()?;
+    let path = url.to_file_path().ok()?;
 
-    let path = match url.to_file_path() {
-        Ok(p) => p,
-        Err(_) => return Ok(()),
-    };
-
-    // Store the document content
     documents.insert(path.clone(), text.to_owned());
 
-    // Get diagnostics and send them
     let diagnostics = get_diagnostics(text, &path);
-    send_diagnostics(url, diagnostics)
+    Some(build_diagnostics_notification(url, diagnostics))
 }
 
 /// Handle textDocument/didChange notification.
-fn handle_did_change(params: &serde_json::Value, documents: &mut DocumentStore) -> io::Result<()> {
-    let uri = match params
+fn handle_did_change(
+    params: &serde_json::Value,
+    documents: &mut DocumentStore,
+) -> Option<JsonRpcNotification<PublishDiagnosticsParams>> {
+    let uri = params
         .get("textDocument")
         .and_then(|doc| doc.get("uri"))
-        .and_then(|u| u.as_str())
-    {
-        Some(uri) => uri,
-        None => return Ok(()),
-    };
+        .and_then(|u| u.as_str())?;
 
-    // Get the new text from contentChanges (full document sync)
-    let text = match params
+    // Get the new text from contentChanges (full document sync).
+    let text = params
         .get("contentChanges")
         .and_then(|changes| changes.as_array())
         .and_then(|arr| arr.first())
         .and_then(|change| change.get("text"))
-        .and_then(|t| t.as_str())
-    {
-        Some(text) => text,
-        None => return Ok(()),
-    };
+        .and_then(|t| t.as_str())?;
 
-    // Convert URI to path
-    let url = match Url::parse(uri) {
-        Ok(u) => u,
-        Err(_) => return Ok(()),
-    };
+    let url = Url::parse(uri).ok()?;
+    let path = url.to_file_path().ok()?;
 
-    let path = match url.to_file_path() {
-        Ok(p) => p,
-        Err(_) => return Ok(()),
-    };
-
-    // Update the stored document content
     documents.insert(path.clone(), text.to_owned());
 
-    // Get diagnostics and send them
     let diagnostics = get_diagnostics(text, &path);
-    send_diagnostics(url, diagnostics)
+    Some(build_diagnostics_notification(url, diagnostics))
 }
 
 /// Handle a textDocument/completion request.
@@ -917,212 +889,225 @@ fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
     offset
 }
 
+/// Outcome of processing a single LSP message.
+struct ProcessOutcome {
+    /// Responses or notifications to send back to the client.
+    messages: Vec<serde_json::Value>,
+    /// Whether the server should exit after this message.
+    should_exit: bool,
+}
+
+impl ProcessOutcome {
+    fn empty() -> Self {
+        Self {
+            messages: vec![],
+            should_exit: false,
+        }
+    }
+}
+
+/// Process a single LSP message, returning any responses to send and
+/// whether the server should exit.
+fn process_message(message: &serde_json::Value, documents: &mut DocumentStore) -> ProcessOutcome {
+    let parsed: Message = match serde_json::from_value(message.clone()) {
+        Ok(m) => m,
+        Err(e) => {
+            error!("Error parsing message: {e}");
+            return ProcessOutcome::empty();
+        }
+    };
+
+    let mut messages = vec![];
+    let mut should_exit = false;
+
+    match parsed.method.as_deref() {
+        Some("initialize") => {
+            if let Some(id) = parsed.id {
+                let Some(params) = parse_params::<InitializeParams>(message, "initialize") else {
+                    return ProcessOutcome::empty();
+                };
+                let response = handle_initialize(id, params);
+                messages.push(to_value_or_log(&response));
+            }
+        }
+        Some("initialized") => {
+            // Notification, no response.
+        }
+        Some("textDocument/completion") => {
+            if let Some(id) = parsed.id {
+                let Some(params) = parse_params::<CompletionParams>(message, "completion") else {
+                    return ProcessOutcome::empty();
+                };
+                let response = handle_completion(id, params, documents);
+                messages.push(to_value_or_log(&response));
+            }
+        }
+        Some("textDocument/definition") => {
+            if let Some(id) = parsed.id {
+                let Some(params) = parse_params::<DefinitionParams>(message, "definition") else {
+                    return ProcessOutcome::empty();
+                };
+                let response = handle_definition(id, params, documents);
+                messages.push(to_value_or_log(&response));
+            }
+        }
+        Some("textDocument/hover") => {
+            if let Some(id) = parsed.id {
+                let Some(params) = parse_params::<HoverParams>(message, "hover") else {
+                    return ProcessOutcome::empty();
+                };
+                let response = handle_hover(id, params, documents);
+                messages.push(to_value_or_log(&response));
+            }
+        }
+        Some("textDocument/documentHighlight") => {
+            if let Some(id) = parsed.id {
+                let Some(params) =
+                    parse_params::<DocumentHighlightParams>(message, "documentHighlight")
+                else {
+                    return ProcessOutcome::empty();
+                };
+                let response = handle_document_highlight(id, params, documents);
+                messages.push(to_value_or_log(&response));
+            }
+        }
+        Some("textDocument/formatting") => {
+            if let Some(id) = parsed.id {
+                let Some(params) = parse_params::<DocumentFormattingParams>(message, "formatting")
+                else {
+                    return ProcessOutcome::empty();
+                };
+                let response = handle_formatting(id, params, documents);
+                messages.push(to_value_or_log(&response));
+            }
+        }
+        Some("textDocument/codeAction") => {
+            if let Some(id) = parsed.id {
+                let Some(params) = parse_params::<CodeActionParams>(message, "codeAction") else {
+                    return ProcessOutcome::empty();
+                };
+                let response = handle_code_action(id, params, documents);
+                messages.push(to_value_or_log(&response));
+            }
+        }
+        Some("textDocument/rename") => {
+            if let Some(id) = parsed.id {
+                let Some(params) = parse_params::<RenameParams>(message, "rename") else {
+                    return ProcessOutcome::empty();
+                };
+                let response = handle_rename(id, params, documents);
+                messages.push(to_value_or_log(&response));
+            }
+        }
+        Some("textDocument/didOpen") => {
+            let params = message.get("params").unwrap_or(&serde_json::Value::Null);
+            if let Some(notification) = handle_did_open(params, documents) {
+                messages.push(to_value_or_log(&notification));
+            }
+        }
+        Some("textDocument/didChange") => {
+            let params = message.get("params").unwrap_or(&serde_json::Value::Null);
+            if let Some(notification) = handle_did_change(params, documents) {
+                messages.push(to_value_or_log(&notification));
+            }
+        }
+        Some("shutdown") => {
+            if let Some(id) = parsed.id {
+                let response = handle_shutdown(id);
+                messages.push(to_value_or_log(&response));
+            }
+            should_exit = true;
+        }
+        Some("exit") => {
+            should_exit = true;
+        }
+        _ => {}
+    }
+
+    ProcessOutcome {
+        messages,
+        should_exit,
+    }
+}
+
+fn parse_params<T: for<'de> Deserialize<'de>>(
+    message: &serde_json::Value,
+    method: &str,
+) -> Option<T> {
+    let params = message.get("params")?;
+    match serde_json::from_value::<T>(params.clone()) {
+        Ok(p) => Some(p),
+        Err(e) => {
+            error!("Error parsing {method} params: {e}");
+            None
+        }
+    }
+}
+
+fn to_value_or_log<T: Serialize>(value: &T) -> serde_json::Value {
+    serde_json::to_value(value).unwrap_or_else(|e| {
+        error!("Error serializing LSP message: {e}");
+        serde_json::Value::Null
+    })
+}
+
 /// Run the LSP server.
 pub(crate) fn run_lsp() {
-    let mut should_exit = false;
     let mut documents: DocumentStore = FxHashMap::default();
 
     loop {
         let message = match read_message() {
             Ok(Some(msg)) => msg,
-            Ok(None) => {
-                // EOF reached
-                break;
-            }
+            Ok(None) => break, // EOF
             Err(e) => {
                 error!("Error reading message: {e}");
                 continue;
             }
         };
 
-        // Parse the message
-        let parsed: Message = match serde_json::from_value(message.clone()) {
-            Ok(m) => m,
+        let outcome = process_message(&message, &mut documents);
+
+        for response in &outcome.messages {
+            if let Err(e) = write_message(response) {
+                error!("Error writing response: {e}");
+            }
+        }
+
+        if outcome.should_exit {
+            break;
+        }
+    }
+}
+
+/// Process a sequence of LSP messages from a JSONL file (as used by
+/// reftests). Each non-empty, non-comment line is parsed as a JSON
+/// object representing an LSP message. Any responses or notifications
+/// the server would emit are pretty-printed to stdout, one JSON
+/// document per call.
+pub(crate) fn reftest_lsp(src: &str) {
+    let mut documents: DocumentStore = FxHashMap::default();
+
+    for line in src.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with("//") {
+            continue;
+        }
+
+        let message: serde_json::Value = match serde_json::from_str(trimmed) {
+            Ok(v) => v,
             Err(e) => {
-                error!("Error parsing message: {e}");
+                println!("{{\"parse_error\": \"{e}\"}}");
                 continue;
             }
         };
 
-        match parsed.method.as_deref() {
-            Some("initialize") => {
-                if let Some(id) = parsed.id {
-                    let params: InitializeParams = match message
-                        .get("params")
-                        .and_then(|p| serde_json::from_value(p.clone()).ok())
-                    {
-                        Some(p) => p,
-                        None => {
-                            error!("Error parsing initialize params");
-                            continue;
-                        }
-                    };
-                    let response = handle_initialize(id, params);
-                    if let Err(e) = write_message(&response) {
-                        error!("Error writing response: {e}");
-                    }
-                }
-            }
-            Some("initialized") => {
-                // This is a notification, no response needed
-            }
-            Some("textDocument/completion") => {
-                if let Some(id) = parsed.id {
-                    let params: CompletionParams = match message
-                        .get("params")
-                        .and_then(|p| serde_json::from_value(p.clone()).ok())
-                    {
-                        Some(p) => p,
-                        None => {
-                            error!("Error parsing completion params");
-                            continue;
-                        }
-                    };
-                    let response = handle_completion(id, params, &documents);
-                    if let Err(e) = write_message(&response) {
-                        error!("Error writing response: {e}");
-                    }
-                }
-            }
-            Some("textDocument/definition") => {
-                if let Some(id) = parsed.id {
-                    let params: DefinitionParams = match message
-                        .get("params")
-                        .and_then(|p| serde_json::from_value(p.clone()).ok())
-                    {
-                        Some(p) => p,
-                        None => {
-                            error!("Error parsing definition params");
-                            continue;
-                        }
-                    };
-                    let response = handle_definition(id, params, &documents);
-                    if let Err(e) = write_message(&response) {
-                        error!("Error writing response: {e}");
-                    }
-                }
-            }
-            Some("textDocument/hover") => {
-                if let Some(id) = parsed.id {
-                    let params: HoverParams = match message
-                        .get("params")
-                        .and_then(|p| serde_json::from_value(p.clone()).ok())
-                    {
-                        Some(p) => p,
-                        None => {
-                            error!("Error parsing hover params");
-                            continue;
-                        }
-                    };
-                    let response = handle_hover(id, params, &documents);
-                    if let Err(e) = write_message(&response) {
-                        error!("Error writing response: {e}");
-                    }
-                }
-            }
-            Some("textDocument/documentHighlight") => {
-                if let Some(id) = parsed.id {
-                    let params: DocumentHighlightParams = match message
-                        .get("params")
-                        .and_then(|p| serde_json::from_value(p.clone()).ok())
-                    {
-                        Some(p) => p,
-                        None => {
-                            error!("Error parsing documentHighlight params");
-                            continue;
-                        }
-                    };
-                    let response = handle_document_highlight(id, params, &documents);
-                    if let Err(e) = write_message(&response) {
-                        error!("Error writing response: {e}");
-                    }
-                }
-            }
-            Some("textDocument/formatting") => {
-                if let Some(id) = parsed.id {
-                    let params: DocumentFormattingParams = match message
-                        .get("params")
-                        .and_then(|p| serde_json::from_value(p.clone()).ok())
-                    {
-                        Some(p) => p,
-                        None => {
-                            error!("Error parsing formatting params");
-                            continue;
-                        }
-                    };
-                    let response = handle_formatting(id, params, &documents);
-                    if let Err(e) = write_message(&response) {
-                        error!("Error writing response: {e}");
-                    }
-                }
-            }
-            Some("textDocument/codeAction") => {
-                if let Some(id) = parsed.id {
-                    let params: CodeActionParams = match message
-                        .get("params")
-                        .and_then(|p| serde_json::from_value(p.clone()).ok())
-                    {
-                        Some(p) => p,
-                        None => {
-                            error!("Error parsing code action params");
-                            continue;
-                        }
-                    };
-                    let response = handle_code_action(id, params, &documents);
-                    if let Err(e) = write_message(&response) {
-                        error!("Error writing response: {e}");
-                    }
-                }
-            }
-            Some("textDocument/rename") => {
-                if let Some(id) = parsed.id {
-                    let params: RenameParams = match message
-                        .get("params")
-                        .and_then(|p| serde_json::from_value(p.clone()).ok())
-                    {
-                        Some(p) => p,
-                        None => {
-                            error!("Error parsing rename params");
-                            continue;
-                        }
-                    };
-                    let response = handle_rename(id, params, &documents);
-                    if let Err(e) = write_message(&response) {
-                        error!("Error writing response: {e}");
-                    }
-                }
-            }
-            Some("textDocument/didOpen") => {
-                let params = message.get("params").unwrap_or(&serde_json::Value::Null);
-                if let Err(e) = handle_did_open(params, &mut documents) {
-                    error!("Error handling didOpen: {e}");
-                }
-            }
-            Some("textDocument/didChange") => {
-                let params = message.get("params").unwrap_or(&serde_json::Value::Null);
-                if let Err(e) = handle_did_change(params, &mut documents) {
-                    error!("Error handling didChange: {e}");
-                }
-            }
-            Some("shutdown") => {
-                if let Some(id) = parsed.id {
-                    let response = handle_shutdown(id);
-                    if let Err(e) = write_message(&response) {
-                        error!("Error writing response: {e}");
-                    }
-                }
-                should_exit = true;
-            }
-            Some("exit") => {
-                // Exit notification
-                break;
-            }
-            _ => {
-                // Ignore other methods
-            }
+        let outcome = process_message(&message, &mut documents);
+
+        for response in &outcome.messages {
+            println!("{}", serde_json::to_string_pretty(response).unwrap());
         }
 
-        if should_exit {
+        if outcome.should_exit {
             break;
         }
     }

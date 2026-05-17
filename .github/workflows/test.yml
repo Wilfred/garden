@@ -41,8 +41,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: ls
-      - uses: raven-actions/actionlint@v2
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            actions:
+              - '.github/**'
+      - if: steps.filter.outputs.actions == 'true'
+        uses: raven-actions/actionlint@v2
 
   build_docs:
     name: Build documentation

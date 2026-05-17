@@ -1,6 +1,6 @@
 println(0123456789101112131415160123456789101112131415)
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Call(
 //     Expression {
@@ -36,4 +36,4 @@ println(0123456789101112131415160123456789101112131415)
 // -| src/test_files/parser/int_literal_overflow.gdn:1:9
 // 1| println(0123456789101112131415160123456789101112131415)
 // 2|         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-// 3| // args: dump-ast
+// 3| // args: reftest-ast

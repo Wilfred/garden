@@ -1,6 +1,6 @@
 foo(a b)
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Call(
 //     Expression {
@@ -47,4 +47,4 @@ foo(a b)
 // -| src/test_files/parser/missing_punct.gdn:1:5
 // 1| foo(a b)
 // 2|     ^
-// 3| // args: dump-ast
+// 3| // args: reftest-ast

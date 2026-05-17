@@ -1,6 +1,6 @@
 struct { x: Int }
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Struct(
 //     StructInfo {
@@ -30,4 +30,4 @@ struct { x: Int }
 // 1| struct { x: Int }
 //  | ^^^^^^
 // 2| 
-// 3| // args: dump-ast
+// 3| // args: reftest-ast

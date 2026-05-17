@@ -1,6 +1,6 @@
 match 1 {}
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Match(
 //     Expression {

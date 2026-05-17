@@ -3,7 +3,7 @@ fun
 test bar {
 }
 
-// args: dump-ast
+// args: reftest-ast
 // expected stderr:
 // Error: Parse error: Expected a symbol after this.
 // 

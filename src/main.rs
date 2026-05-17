@@ -174,6 +174,9 @@ enum CliCommands {
     },
     /// Run Garden code blocks in markdown and .gdn files.
     RunCodeBlocks { paths: Vec<PathBuf> },
+    /// Parse the Garden program at the path specified and print the
+    /// AST.
+    ReftestAst { path: PathBuf },
     /// Show possible completions at the position given.
     ReftestComplete {
         path: PathBuf,
@@ -235,9 +238,6 @@ enum CliCommands {
         #[clap(long)]
         new_name: String,
     },
-    /// Parse the Garden program at the path specified and print the
-    /// AST.
-    DumpAst { path: PathBuf },
     /// Run a Garden snippet in a sandbox and return the output as
     /// JSON.
     PlaygroundRun { path: PathBuf },
@@ -345,10 +345,10 @@ fn main() {
                 .expect("Could not find comment containing `^` in source.");
             test_eval_up_to(&src, &abs_path, offset, interrupted, trace_exprs);
         }
-        CliCommands::DumpAst { path } => {
+        CliCommands::ReftestAst { path } => {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
-            dump_ast(&src, &abs_path)
+            reftest_ast(&src, &abs_path)
         }
         CliCommands::ReftestHover { path } => {
             let abs_path = to_abs_path(&path);
@@ -699,7 +699,7 @@ fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
     }
 }
 
-fn dump_ast(src: &str, path: &Path) {
+fn reftest_ast(src: &str, path: &Path) {
     let project_root = std::env::current_dir().unwrap_or(PathBuf::from("/"));
 
     let mut id_gen = IdGenerator::default();

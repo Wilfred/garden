@@ -4,7 +4,7 @@ fun foo(src) {
     ("")
 }
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Fun(
 //     Symbol"foo",

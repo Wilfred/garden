@@ -6,7 +6,7 @@ fun foo() {}
 // World
 public fun bar() {}
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Fun(
 //     Symbol"foo",

@@ -6,7 +6,7 @@ struct Foo {}
 // World
 public struct Bar {}
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Struct(
 //     StructInfo {

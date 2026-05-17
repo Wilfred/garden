@@ -2,7 +2,7 @@ fun foo() {
     dbg!(1);
 }
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Fun(
 //     Symbol"foo",

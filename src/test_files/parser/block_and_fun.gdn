@@ -2,7 +2,7 @@
 
 fun foo() {}
 
-// args: dump-ast
+// args: reftest-ast
 // expected stdout:
 // Block(
 //     Block {

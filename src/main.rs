@@ -179,8 +179,6 @@ enum CliCommands {
         path: PathBuf,
         offset: Option<usize>,
         end_offset: Option<usize>,
-        #[clap(long)]
-        override_path: Option<PathBuf>,
     },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.
@@ -194,8 +192,6 @@ enum CliCommands {
         offset: Option<usize>,
         end_offset: Option<usize>,
         #[clap(long)]
-        override_path: Option<PathBuf>,
-        #[clap(long)]
         name: String,
     },
     /// Replace the expression at this offset with a variable called
@@ -204,8 +200,6 @@ enum CliCommands {
         path: PathBuf,
         offset: Option<usize>,
         end_offset: Option<usize>,
-        #[clap(long)]
-        override_path: Option<PathBuf>,
         #[clap(long)]
         name: String,
     },
@@ -230,8 +224,6 @@ enum CliCommands {
     ReftestRename {
         path: PathBuf,
         offset: Option<usize>,
-        #[clap(long)]
-        override_path: Option<PathBuf>,
         #[clap(long)]
         new_name: String,
     },
@@ -429,7 +421,6 @@ fn main() {
             path,
             new_name,
             offset,
-            override_path,
         } => {
             let abs_path = to_abs_path(&path);
             let mut src = read_utf8_or_die(&abs_path);
@@ -443,8 +434,7 @@ fn main() {
                 offset
             });
 
-            let src_path = to_abs_path(&override_path.unwrap_or(path));
-            match rename::rename(&src, &src_path, offset, &new_name) {
+            match rename::rename(&src, &abs_path, offset, &new_name) {
                 Ok(new_src) => {
                     print!("{new_src}");
                 }
@@ -458,7 +448,6 @@ fn main() {
             path,
             offset,
             end_offset,
-            override_path,
             name,
         } => {
             let abs_path = to_abs_path(&path);
@@ -475,8 +464,7 @@ fn main() {
                 }
             };
 
-            let src_path = to_abs_path(&override_path.unwrap_or(path));
-            match extract_variable::extract_variable(&src, &src_path, offset, end_offset, &name) {
+            match extract_variable::extract_variable(&src, &abs_path, offset, end_offset, &name) {
                 Ok(new_src) => {
                     print!("{new_src}");
                 }
@@ -490,7 +478,6 @@ fn main() {
             path,
             offset,
             end_offset,
-            override_path,
             name,
         } => {
             let abs_path = to_abs_path(&path);
@@ -507,8 +494,7 @@ fn main() {
                 }
             };
 
-            let src_path = to_abs_path(&override_path.unwrap_or(path));
-            match extract_function::extract_function(&src, &src_path, offset, end_offset, &name) {
+            match extract_function::extract_function(&src, &abs_path, offset, end_offset, &name) {
                 Ok(new_src) => {
                     print!("{new_src}");
                 }
@@ -522,7 +508,6 @@ fn main() {
             path,
             offset,
             end_offset,
-            override_path,
         } => {
             let abs_path = to_abs_path(&path);
             let mut src = read_utf8_or_die(&abs_path);
@@ -538,8 +523,7 @@ fn main() {
                 }
             };
 
-            let src_path = to_abs_path(&override_path.unwrap_or(path));
-            match destructure::destructure(&src, &src_path, offset, end_offset) {
+            match destructure::destructure(&src, &abs_path, offset, end_offset) {
                 Ok(new_src) => {
                     print!("{new_src}");
                 }

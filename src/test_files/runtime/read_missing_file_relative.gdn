@@ -1,0 +1,13 @@
+import "__fs.gdn" as fs
+
+// When reading a relative path, the error message should include the
+// current working directory so the reader can tell where the file was
+// expected.
+
+{
+  fs::set_working_directory(Path{ p: "/tmp" })
+  dbg(Path{ p: "no_such_file_garden.txt" }.read())
+}
+
+// args: run
+// expected stdout: Err("Could not read `no_such_file_garden.txt` (relative to `/tmp`). No such file or directory (os error 2)")

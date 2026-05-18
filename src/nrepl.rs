@@ -1276,14 +1276,29 @@ pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
         .unwrap_or_else(|_| addr.clone());
     info!("nREPL server started on {local}");
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
+    // Use a non-blocking listener so the accept loop can periodically
+    // check the interrupted flag and shut down on Ctrl-C.
+    if let Err(e) = listener.set_nonblocking(true) {
+        error!("nREPL: could not set listener to non-blocking: {e}");
+        std::process::exit(1);
+    }
+
+    loop {
+        if interrupted.load(Ordering::SeqCst) {
+            info!("nREPL: shutting down");
+            return;
+        }
+
+        match listener.accept() {
+            Ok((stream, _)) => {
                 let interrupted = Arc::clone(&interrupted);
                 std::thread::Builder::new()
                     .name("nrepl-client".to_owned())
                     .spawn(move || serve_connection(stream, interrupted))
                     .expect("Could not spawn nREPL client thread");
+            }
+            Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
+                std::thread::sleep(Duration::from_millis(100));
             }
             Err(e) => {
                 error!("nREPL: error accepting connection: {e}");

@@ -10,7 +10,7 @@ use crate::parser::ast::{AstId, IdGenerator, VariantInfo};
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
-use crate::types::TypeDef;
+use crate::type_defs::TypeDef;
 
 pub(crate) fn destructure(
     src: &str,

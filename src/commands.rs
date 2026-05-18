@@ -31,7 +31,7 @@ use crate::json_session::switch_toplevel_namespace;
 use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
 use crate::parser::vfs::{to_abs_path, to_project_relative, Vfs};
 use crate::parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
-use crate::types::{BuiltInType, TypeDef};
+use crate::type_defs::{BuiltInType, TypeDef};
 use crate::values::{Value, Value_};
 use crate::version::VERSION;
 

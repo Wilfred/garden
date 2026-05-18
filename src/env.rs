@@ -5,7 +5,7 @@ use std::rc::Rc;
 use rustc_hash::{FxHashMap, FxHashSet};
 use strum::IntoEnumIterator;
 
-use crate::eval::{load_toplevel_items, Bindings, EnclosingSymbol, ExpressionState};
+use crate::eval::{load_toplevel_items, Bindings, ExpressionState};
 use crate::garden_type::TypeVarEnv;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
@@ -15,9 +15,32 @@ use crate::parser::ast::{
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
-use crate::types::{BuiltInType, TypeDef, TypeDefAndMethods};
+use crate::type_defs::{BuiltInType, TypeDef, TypeDefAndMethods};
 use crate::values::{BuiltInFunctionKind, Value, Value_};
 use crate::VfsPathBuf;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum EnclosingSymbol {
+    Fun(Symbol),
+    Method(TypeName, Symbol),
+    Test(Symbol),
+    Closure,
+    Toplevel,
+}
+
+impl std::fmt::Display for EnclosingSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            EnclosingSymbol::Fun(fun_sym) => write!(f, "fun {}()", fun_sym.name),
+            EnclosingSymbol::Method(type_name, meth_sym) => {
+                write!(f, "method {}(this: {})()", meth_sym.name, type_name.text)
+            }
+            EnclosingSymbol::Test(test_sym) => write!(f, "test {}", test_sym.name),
+            EnclosingSymbol::Closure => write!(f, "closure"),
+            EnclosingSymbol::Toplevel => write!(f, "__toplevel__"),
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct Stack(pub(crate) Vec<StackFrame>);

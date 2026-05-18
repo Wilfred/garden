@@ -18,7 +18,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::checks::{check_toplevel_items, check_toplevel_items_in_env};
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::env::{Env, StackFrame};
+use crate::env::{EnclosingSymbol, Env, StackFrame};
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::namespaces::NamespaceInfo;
@@ -35,32 +35,9 @@ use crate::parser::position::Position;
 use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
-use crate::types::TypeDef;
-use crate::values::{type_representation, BuiltInFunctionKind, Value, Value_};
+use crate::type_defs::TypeDef;
+use crate::values::{type_representation, BlockBindings, BuiltInFunctionKind, Value, Value_};
 use crate::{msgcode, msgtext};
-
-/// Bindings in a single block. For example, `x` is only bound inside
-/// the if block here.
-///
-/// ```garden
-/// if y { let x = 1 }
-/// ```
-#[derive(Debug, Clone, Default)]
-pub(crate) struct BlockBindings {
-    /// Values bound in this block, such as local variables or
-    /// function parameters.
-    pub(crate) values: FxHashMap<InternedSymbolId, Value>,
-}
-
-/// Use reference equality for block bindings, so closures have
-/// reference equality.
-impl PartialEq for BlockBindings {
-    fn eq(&self, other: &Self) -> bool {
-        std::ptr::eq(self, other)
-    }
-}
-
-impl Eq for BlockBindings {}
 
 /// The bindings in the current scope. This is a vec of block
 /// bindings, because exiting a block will remove some bindings.
@@ -152,29 +129,6 @@ impl Default for Bindings {
     fn default() -> Self {
         Self {
             block_bindings: vec![BlockBindings::default()],
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum EnclosingSymbol {
-    Fun(Symbol),
-    Method(TypeName, Symbol),
-    Test(Symbol),
-    Closure,
-    Toplevel,
-}
-
-impl std::fmt::Display for EnclosingSymbol {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            EnclosingSymbol::Fun(fun_sym) => write!(f, "fun {}()", fun_sym.name),
-            EnclosingSymbol::Method(type_name, meth_sym) => {
-                write!(f, "method {}(this: {})()", meth_sym.name, type_name.text)
-            }
-            EnclosingSymbol::Test(test_sym) => write!(f, "test {}", test_sym.name),
-            EnclosingSymbol::Closure => write!(f, "closure"),
-            EnclosingSymbol::Toplevel => write!(f, "__toplevel__"),
         }
     }
 }

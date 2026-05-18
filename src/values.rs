@@ -7,12 +7,34 @@ use rustc_hash::FxHashMap;
 use strum_macros::EnumIter;
 
 use crate::env::Env;
-use crate::eval::BlockBindings;
 use crate::garden_type::{Type, TypeDefKind};
 use crate::namespaces::NamespaceInfo;
-use crate::parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
+use crate::parser::ast::{FunInfo, InternedSymbolId, Symbol, SymbolName, TypeName};
 use crate::parser::vfs::to_project_relative;
-use crate::types::TypeDef;
+use crate::type_defs::TypeDef;
+
+/// Bindings in a single block. For example, `x` is only bound inside
+/// the if block here.
+///
+/// ```garden
+/// if y { let x = 1 }
+/// ```
+#[derive(Debug, Clone, Default)]
+pub(crate) struct BlockBindings {
+    /// Values bound in this block, such as local variables or
+    /// function parameters.
+    pub(crate) values: FxHashMap<InternedSymbolId, Value>,
+}
+
+/// Use reference equality for block bindings, so closures have
+/// reference equality.
+impl PartialEq for BlockBindings {
+    fn eq(&self, other: &Self) -> bool {
+        std::ptr::eq(self, other)
+    }
+}
+
+impl Eq for BlockBindings {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Value(pub(crate) Rc<Value_>);

@@ -1,0 +1,34 @@
+{ "op": "clone" }
+{ "op": "eval", "id": "e1", "session": "garden-1", "code": "while True { 1 }" }
+// sleep 100
+{ "op": "interrupt", "id": "i1", "session": "garden-1" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "err": "Interrupted.\n",
+//   "id": "e1",
+//   "session": "garden-1"
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "id": "e1",
+//   "session": "garden-1",
+//   "status": [
+//     "done",
+//     "interrupted"
+//   ]
+// }
+// {
+//   "id": "i1",
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }

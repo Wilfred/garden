@@ -2,8 +2,11 @@
 //!
 //! Speaks the bencode wire format (via `serde_bencode`) and supports
 //! a small subset of the standard nREPL operations: `clone`,
-//! `describe`, `eval`, `load-file`, `completions`, `lookup`, `close`
-//! and `ls-sessions`.
+//! `describe`, `eval`, `load-file`, `completions`, `lookup`,
+//! `interrupt`, `close` and `ls-sessions`.
+//!
+//! Each session runs on its own worker thread so that `interrupt`
+//! requests can be handled while an `eval` is still in progress.
 //!
 //! See <https://nrepl.org/nrepl/index.html> for the protocol
 //! specification.
@@ -14,9 +17,11 @@ use std::io::{self, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::sync::atomic::AtomicBool;
-use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::{Arc, Mutex, Weak};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use serde_bencode::value::Value;
 use tracing::{debug, error, info, warn};
@@ -245,6 +250,7 @@ fn eval_code_in_namespace(
             responses.push(Value::Dict(done_msg));
         }
         Err(e) => {
+            let is_interrupt = matches!(e, EvalError::Interrupted);
             let (err_text, status_extra) = format_eval_error(&e, env);
 
             let mut err_msg = base_msg.clone();
@@ -252,11 +258,16 @@ fn eval_code_in_namespace(
             responses.push(Value::Dict(err_msg));
 
             let mut done_msg = base_msg.clone();
-            let mut status = vec![bstr("done"), bstr("eval-error")];
-            if let Some(extra) = status_extra {
-                status.push(bstr(extra));
+            let mut status = vec![bstr("done")];
+            if is_interrupt {
+                status.push(bstr("interrupted"));
+            } else {
+                status.push(bstr("eval-error"));
+                if let Some(extra) = status_extra {
+                    status.push(bstr(extra));
+                }
+                done_msg.insert(b"ex".to_vec(), bstr(err_text));
             }
-            done_msg.insert(b"ex".to_vec(), bstr(err_text));
             done_msg.insert(b"eval-msec".to_vec(), Value::Int(eval_msec));
             done_msg.insert(b"status".to_vec(), Value::List(status));
             responses.push(Value::Dict(done_msg));
@@ -404,7 +415,7 @@ fn format_eval_error(e: &EvalError, env: &Env) -> (String, Option<&'static str>)
             ),
             Some("assertion-failed"),
         ),
-        EvalError::Interrupted => ("Interrupted.".to_owned(), Some("interrupted")),
+        EvalError::Interrupted => ("Interrupted.".to_owned(), None),
         EvalError::ReachedTickLimit(_) => {
             ("Reached the tick limit.".to_owned(), Some("tick-limit"))
         }
@@ -419,30 +430,208 @@ fn format_eval_error(e: &EvalError, env: &Env) -> (String, Option<&'static str>)
     }
 }
 
-/// State held for one client connection. Each connection may host
-/// many logical nREPL sessions.
-struct Connection {
-    sessions: HashMap<String, Env>,
-    next_id: u64,
+/// A request handed off to a session worker thread. The worker
+/// owns the session's `Env`, so any op that needs to read or mutate
+/// it (eval, load-file, completions, lookup) is dispatched here.
+enum SessionRequest {
+    Eval {
+        code: String,
+        base_msg: HashMap<Vec<u8>, Value>,
+    },
+    LoadFile {
+        code: String,
+        file_path: Option<String>,
+        base_msg: HashMap<Vec<u8>, Value>,
+    },
+    Completions {
+        prefix: String,
+        base_msg: HashMap<Vec<u8>, Value>,
+    },
+    Lookup {
+        sym: String,
+        base_msg: HashMap<Vec<u8>, Value>,
+    },
+}
+
+/// State for one logical nREPL session.
+struct SessionState {
+    request_tx: Sender<SessionRequest>,
     interrupted: Arc<AtomicBool>,
 }
 
+/// State held for one client connection. Each connection may host
+/// many logical nREPL sessions, each running on its own worker
+/// thread.
+struct Connection {
+    sessions: HashMap<String, SessionState>,
+    next_id: u64,
+    response_tx: Sender<Value>,
+    /// Shared list of session interrupt flags, used by the SIGINT
+    /// watchdog to broadcast a global interrupt to every active
+    /// session.
+    interrupt_flags: Arc<Mutex<Vec<Weak<AtomicBool>>>>,
+}
+
 impl Connection {
-    fn new(interrupted: Arc<AtomicBool>) -> Self {
+    fn new(response_tx: Sender<Value>) -> Self {
         Self {
             sessions: HashMap::new(),
             next_id: 0,
-            interrupted,
+            response_tx,
+            interrupt_flags: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
     fn new_session(&mut self) -> String {
         let id = next_session_id(&mut self.next_id);
-        let id_gen = IdGenerator::default();
-        let vfs = Vfs::default();
-        let env = Env::new(id_gen, vfs);
-        self.sessions.insert(id.clone(), env);
+        let (request_tx, request_rx) = mpsc::channel();
+        let interrupted = Arc::new(AtomicBool::new(false));
+
+        self.interrupt_flags
+            .lock()
+            .unwrap()
+            .push(Arc::downgrade(&interrupted));
+
+        let response_tx = self.response_tx.clone();
+        let worker_interrupted = Arc::clone(&interrupted);
+        let thread_name = format!("nrepl-session-{id}");
+
+        thread::Builder::new()
+            .name(thread_name)
+            .spawn(move || session_worker(request_rx, response_tx, worker_interrupted))
+            .expect("Could not spawn nREPL session worker");
+
+        self.sessions.insert(
+            id.clone(),
+            SessionState {
+                request_tx,
+                interrupted,
+            },
+        );
         id
+    }
+
+    fn close_session(&mut self, id: &str) {
+        // Wake any in-progress eval so the worker shuts down
+        // promptly once we drop the request channel.
+        if let Some(s) = self.sessions.get(id) {
+            s.interrupted.store(true, Ordering::SeqCst);
+        }
+        self.sessions.remove(id);
+    }
+
+    fn send(&self, msg: Value) {
+        let _ = self.response_tx.send(msg);
+    }
+}
+
+/// Dispatch a session-bound request to the worker thread for
+/// `session_id`. Sends an `unknown-session` response on `base` if the
+/// session does not exist or its worker has exited.
+fn dispatch_to_session(
+    conn: &Connection,
+    session_id: Option<&str>,
+    base: HashMap<Vec<u8>, Value>,
+    build_request: impl FnOnce(HashMap<Vec<u8>, Value>) -> SessionRequest,
+) {
+    let session = session_id.and_then(|s| conn.sessions.get(s));
+    let Some(session) = session else {
+        let mut msg = base;
+        msg.insert(
+            b"status".to_vec(),
+            Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
+        );
+        conn.send(Value::Dict(msg));
+        return;
+    };
+
+    let req = build_request(base.clone());
+    if session.request_tx.send(req).is_err() {
+        let mut msg = base;
+        msg.insert(
+            b"status".to_vec(),
+            Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
+        );
+        conn.send(Value::Dict(msg));
+    }
+}
+
+/// Poll the global SIGINT flag and propagate it to every active
+/// session in this connection. The connection's Ctrl-C handler in
+/// `main.rs` sets the flag; we clear it via `swap` so each press of
+/// Ctrl-C triggers exactly one round of interrupts.
+fn sigint_watchdog(
+    global_interrupted: Arc<AtomicBool>,
+    interrupt_flags: Weak<Mutex<Vec<Weak<AtomicBool>>>>,
+) {
+    loop {
+        thread::sleep(Duration::from_millis(100));
+        let Some(flags) = interrupt_flags.upgrade() else {
+            return;
+        };
+        if global_interrupted.swap(false, Ordering::SeqCst) {
+            let mut guard = flags.lock().unwrap();
+            guard.retain(|w| match w.upgrade() {
+                Some(arc) => {
+                    arc.store(true, Ordering::SeqCst);
+                    true
+                }
+                None => false,
+            });
+        }
+    }
+}
+
+/// Worker thread that owns the `Env` for a session and handles each
+/// session-bound op sequentially.
+fn session_worker(
+    request_rx: Receiver<SessionRequest>,
+    response_tx: Sender<Value>,
+    interrupted: Arc<AtomicBool>,
+) {
+    let id_gen = IdGenerator::default();
+    let vfs = Vfs::default();
+    let mut env = Env::new(id_gen, vfs);
+
+    while let Ok(req) = request_rx.recv() {
+        // Clear any stray interrupt set while the session was idle.
+        interrupted.store(false, Ordering::SeqCst);
+
+        let stdout_buf = Arc::new(Mutex::new(String::new()));
+        let session = Session {
+            interrupted: Arc::clone(&interrupted),
+            stdout_mode: StdoutMode::WriteToBuffer(Arc::clone(&stdout_buf)),
+            start_time: Instant::now(),
+            trace_exprs: false,
+            pretty_print_json: false,
+        };
+
+        let responses = match req {
+            SessionRequest::Eval { code, base_msg } => {
+                handle_eval(&code, &mut env, &session, &stdout_buf, &base_msg)
+            }
+            SessionRequest::LoadFile {
+                code,
+                file_path,
+                base_msg,
+            } => handle_load_file(
+                &code,
+                file_path.as_deref(),
+                &mut env,
+                &session,
+                &stdout_buf,
+                &base_msg,
+            ),
+            SessionRequest::Completions { prefix, base_msg } => {
+                handle_completions(&env, &prefix, &base_msg)
+            }
+            SessionRequest::Lookup { sym, base_msg } => handle_lookup(&env, &sym, &base_msg),
+        };
+        for r in responses {
+            if response_tx.send(r).is_err() {
+                return;
+            }
+        }
     }
 }
 
@@ -590,6 +779,18 @@ const SUPPORTED_OPS: &[(&str, OpDescriptor)] = &[
         },
     ),
     (
+        "interrupt",
+        OpDescriptor {
+            doc: "Attempts to interrupt any currently-running eval on the given session.",
+            requires: &[(
+                "session",
+                "The ID of the session whose eval should be interrupted.",
+            )],
+            optional: &[],
+            returns: &[],
+        },
+    ),
+    (
         "lookup",
         OpDescriptor {
             doc: "Lookup symbol info.",
@@ -635,8 +836,10 @@ fn truthy(v: &Value) -> bool {
     }
 }
 
-/// Handle a single request message from the client.
-fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> Vec<Value> {
+/// Handle a single request message from the client. Responses are
+/// queued on the connection's response channel; for `eval`, responses
+/// arrive later from the session worker.
+fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
     let op = dict_get(request, "op").and_then(as_str).unwrap_or("");
     let id = dict_get(request, "id").and_then(as_str).unwrap_or("");
     let session = dict_get(request, "session").and_then(as_str).unwrap_or("");
@@ -686,170 +889,107 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
             msg.insert(b"versions".to_vec(), versions);
             msg.insert(b"aux".to_vec(), Value::Dict(HashMap::new()));
             msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
-            vec![Value::Dict(msg)]
+            conn.send(Value::Dict(msg));
         }
         "clone" => {
             let new_id = conn.new_session();
             let mut msg = base;
             msg.insert(b"new-session".to_vec(), bstr(new_id));
             msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
-            vec![Value::Dict(msg)]
+            conn.send(Value::Dict(msg));
         }
         "close" => {
             if let Some(s) = dict_get(request, "session").and_then(as_str) {
-                conn.sessions.remove(s);
+                conn.close_session(s);
             }
             let mut msg = base;
             msg.insert(
                 b"status".to_vec(),
                 Value::List(vec![bstr("done"), bstr("session-closed")]),
             );
-            vec![Value::Dict(msg)]
+            conn.send(Value::Dict(msg));
         }
         "ls-sessions" => {
             let sessions: Vec<Value> = conn.sessions.keys().map(|s| bstr(s.clone())).collect();
             let mut msg = base;
             msg.insert(b"sessions".to_vec(), Value::List(sessions));
             msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
-            vec![Value::Dict(msg)]
+            conn.send(Value::Dict(msg));
         }
         "eval" => {
-            let session_id = dict_get(request, "session")
-                .and_then(as_str)
-                .map(|s| s.to_owned());
-
+            let session_id = dict_get(request, "session").and_then(as_str);
             let code = dict_get(request, "code")
                 .and_then(as_str)
                 .unwrap_or("")
                 .to_owned();
-
-            let session_id = match session_id {
-                Some(s) if conn.sessions.contains_key(&s) => s,
-                _ => {
+            dispatch_to_session(conn, session_id, base, |base_msg| SessionRequest::Eval {
+                code,
+                base_msg,
+            });
+        }
+        "interrupt" => {
+            let session_id = dict_get(request, "session").and_then(as_str);
+            match session_id.and_then(|s| conn.sessions.get(s)) {
+                Some(s) => {
+                    s.interrupted.store(true, Ordering::SeqCst);
+                    let mut msg = base;
+                    msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
+                    conn.send(Value::Dict(msg));
+                }
+                None => {
                     let mut msg = base;
                     msg.insert(
                         b"status".to_vec(),
                         Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
                     );
-                    return vec![Value::Dict(msg)];
+                    conn.send(Value::Dict(msg));
                 }
-            };
-
-            let env = conn.sessions.get_mut(&session_id).unwrap();
-
-            let stdout_buf = Arc::new(Mutex::new(String::new()));
-            let session = Session {
-                interrupted: Arc::clone(&conn.interrupted),
-                stdout_mode: StdoutMode::WriteToBuffer(Arc::clone(&stdout_buf)),
-                start_time: Instant::now(),
-                trace_exprs: false,
-                pretty_print_json: false,
-            };
-
-            handle_eval(&code, env, &session, &stdout_buf, &base)
+            }
         }
         "load-file" => {
-            let session_id = dict_get(request, "session")
-                .and_then(as_str)
-                .map(|s| s.to_owned());
-
-            let file = dict_get(request, "file")
+            let session_id = dict_get(request, "session").and_then(as_str);
+            let code = dict_get(request, "file")
                 .and_then(as_str)
                 .unwrap_or("")
                 .to_owned();
-
             let file_path = dict_get(request, "file-path")
                 .and_then(as_str)
                 .or_else(|| dict_get(request, "file-name").and_then(as_str))
                 .map(|s| s.to_owned());
-
-            let session_id = match session_id {
-                Some(s) if conn.sessions.contains_key(&s) => s,
-                _ => {
-                    let mut msg = base;
-                    msg.insert(
-                        b"status".to_vec(),
-                        Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
-                    );
-                    return vec![Value::Dict(msg)];
+            dispatch_to_session(conn, session_id, base, |base_msg| {
+                SessionRequest::LoadFile {
+                    code,
+                    file_path,
+                    base_msg,
                 }
-            };
-
-            let env = conn.sessions.get_mut(&session_id).unwrap();
-
-            let stdout_buf = Arc::new(Mutex::new(String::new()));
-            let session = Session {
-                interrupted: Arc::clone(&conn.interrupted),
-                stdout_mode: StdoutMode::WriteToBuffer(Arc::clone(&stdout_buf)),
-                start_time: Instant::now(),
-                trace_exprs: false,
-                pretty_print_json: false,
-            };
-
-            handle_load_file(
-                &file,
-                file_path.as_deref(),
-                env,
-                &session,
-                &stdout_buf,
-                &base,
-            )
+            });
         }
         "completions" => {
-            let session_id = dict_get(request, "session")
-                .and_then(as_str)
-                .map(|s| s.to_owned());
-
+            let session_id = dict_get(request, "session").and_then(as_str);
             let prefix = dict_get(request, "prefix")
                 .and_then(as_str)
                 .unwrap_or("")
                 .to_owned();
-
-            let session_id = match session_id {
-                Some(s) if conn.sessions.contains_key(&s) => s,
-                _ => {
-                    let mut msg = base;
-                    msg.insert(
-                        b"status".to_vec(),
-                        Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
-                    );
-                    return vec![Value::Dict(msg)];
-                }
-            };
-
-            let env = conn.sessions.get(&session_id).unwrap();
-            handle_completions(env, &prefix, &base)
+            dispatch_to_session(conn, session_id, base, |base_msg| {
+                SessionRequest::Completions { prefix, base_msg }
+            });
         }
         "lookup" => {
-            let session_id = dict_get(request, "session")
-                .and_then(as_str)
-                .map(|s| s.to_owned());
-
+            let session_id = dict_get(request, "session").and_then(as_str);
             let sym = dict_get(request, "sym")
                 .and_then(as_str)
                 .unwrap_or("")
                 .to_owned();
-
-            let session_id = match session_id {
-                Some(s) if conn.sessions.contains_key(&s) => s,
-                _ => {
-                    let mut msg = base;
-                    msg.insert(
-                        b"status".to_vec(),
-                        Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
-                    );
-                    return vec![Value::Dict(msg)];
-                }
-            };
-
-            let env = conn.sessions.get(&session_id).unwrap();
-            handle_lookup(env, &sym, &base)
+            dispatch_to_session(conn, session_id, base, |base_msg| SessionRequest::Lookup {
+                sym,
+                base_msg,
+            });
         }
         "" => {
             let mut msg = base;
             msg.insert(b"status".to_vec(), Value::List(vec![bstr("error")]));
             msg.insert(b"err".to_vec(), bstr("Missing 'op' in request.\n"));
-            vec![Value::Dict(msg)]
+            conn.send(Value::Dict(msg));
         }
         other => {
             let mut msg = base;
@@ -858,7 +998,22 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) -> V
                 Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-op")]),
             );
             msg.insert(b"err".to_vec(), bstr(format!("Unknown op: {other}\n")));
-            vec![Value::Dict(msg)]
+            conn.send(Value::Dict(msg));
+        }
+    }
+}
+
+/// Writer thread: pulls responses off the channel and writes them to
+/// the socket. Exits when all senders are dropped.
+fn writer_thread(mut writer: TcpStream, rx: Receiver<Value>) {
+    while let Ok(value) = rx.recv() {
+        if let Err(e) = write_message(&mut writer, &value) {
+            error!("nREPL: error writing response: {e}");
+            return;
+        }
+        if let Err(e) = writer.flush() {
+            error!("nREPL: error flushing writer: {e}");
+            return;
         }
     }
 }
@@ -871,10 +1026,23 @@ fn serve_connection(stream: TcpStream, interrupted: Arc<AtomicBool>) {
         .unwrap_or_else(|_| "<unknown>".to_owned());
     info!("nREPL: client connected from {peer}");
 
-    let mut writer = stream.try_clone().expect("Could not clone TCP stream");
+    let writer_stream = stream.try_clone().expect("Could not clone TCP stream");
     let mut reader = BufReader::new(stream);
 
-    let mut conn = Connection::new(interrupted);
+    let (response_tx, response_rx) = mpsc::channel();
+
+    let writer_handle = thread::Builder::new()
+        .name("nrepl-writer".to_owned())
+        .spawn(move || writer_thread(writer_stream, response_rx))
+        .expect("Could not spawn nREPL writer thread");
+
+    let mut conn = Connection::new(response_tx);
+
+    let watchdog_flags = Arc::downgrade(&conn.interrupt_flags);
+    thread::Builder::new()
+        .name("nrepl-sigint-watchdog".to_owned())
+        .spawn(move || sigint_watchdog(interrupted, watchdog_flags))
+        .expect("Could not spawn nREPL SIGINT watchdog");
 
     loop {
         let request = match read_message(&mut reader) {
@@ -890,18 +1058,18 @@ fn serve_connection(stream: TcpStream, interrupted: Arc<AtomicBool>) {
             }
         };
 
-        let responses = handle_message(&mut conn, &request);
-        for response in responses {
-            if let Err(e) = write_message(&mut writer, &response) {
-                error!("nREPL: error writing response: {e}");
-                return;
-            }
-        }
-        if let Err(e) = writer.flush() {
-            error!("nREPL: error flushing writer: {e}");
-            return;
-        }
+        handle_message(&mut conn, &request);
     }
+
+    // Dropping `conn` drops every session's request channel, which
+    // makes each worker exit once its current eval finishes. That in
+    // turn drops their `response_tx` clones, and once the last sender
+    // is gone the writer thread exits.
+    for s in conn.sessions.values() {
+        s.interrupted.store(true, Ordering::SeqCst);
+    }
+    drop(conn);
+    let _ = writer_handle.join();
 
     info!("nREPL: client {peer} disconnected");
 }
@@ -1003,10 +1171,24 @@ pub(crate) fn reftest_nrepl(src: &str) {
     use serde_json::json;
     use serde_json::Value as J;
 
-    let mut conn = Connection::new(Arc::new(AtomicBool::new(false)));
+    let (tx, rx) = mpsc::channel();
+    let mut conn = Connection::new(tx);
 
+    let mut request_count = 0;
     for line in src.lines() {
         let trimmed = line.trim();
+
+        // Test directive: `// sleep <ms>` pauses the reftest harness
+        // for the given number of milliseconds. Useful when a request
+        // needs to land while a previous async op is still in flight,
+        // e.g. firing `interrupt` against a running `eval`.
+        if let Some(rest) = trimmed.strip_prefix("// sleep ") {
+            if let Ok(ms) = rest.trim().parse::<u64>() {
+                std::thread::sleep(Duration::from_millis(ms));
+            }
+            continue;
+        }
+
         if trimmed.is_empty() || trimmed.starts_with("//") {
             continue;
         }
@@ -1035,11 +1217,45 @@ pub(crate) fn reftest_nrepl(src: &str) {
             }
         };
 
-        let responses = handle_message(&mut conn, &request_dict);
-        for response in responses {
-            let response_json = normalize_for_reftest(bencode_to_json(&response));
-            println!("{}", serde_json::to_string_pretty(&response_json).unwrap());
+        handle_message(&mut conn, &request_dict);
+        request_count += 1;
+    }
+
+    // Each request produces exactly one terminal response — a
+    // message carrying a `status` field. Drain the channel until
+    // we've seen one per request so the fixture captures
+    // asynchronous worker responses too.
+    let mut responses = Vec::new();
+    let mut status_seen = 0;
+    while status_seen < request_count {
+        let Ok(response) = rx.recv_timeout(Duration::from_secs(5)) else {
+            break;
+        };
+        let has_status = matches!(
+            &response,
+            Value::Dict(d) if d.contains_key(b"status".as_slice())
+        );
+        responses.push(response);
+        if has_status {
+            status_seen += 1;
         }
+    }
+
+    // Stable-sort by the request `id` field, so responses produced
+    // by different requests never interleave in the output even if
+    // the worker thread and the main thread race on the wire. Within
+    // a single id, the worker's send order is preserved.
+    responses.sort_by_key(|r| match r {
+        Value::Dict(d) => dict_get(d, "id")
+            .and_then(as_str)
+            .map(str::to_owned)
+            .unwrap_or_default(),
+        _ => String::new(),
+    });
+
+    for response in responses {
+        let response_json = normalize_for_reftest(bencode_to_json(&response));
+        println!("{}", serde_json::to_string_pretty(&response_json).unwrap());
     }
 }
 
@@ -1131,5 +1347,143 @@ mod tests {
         let bytes: Vec<u8> = vec![];
         let mut cursor = Cursor::new(bytes);
         assert!(read_message(&mut cursor).unwrap().is_none());
+    }
+
+    /// Read all messages with a matching `id` field from the response
+    /// channel, until a `status` containing `done` is seen.
+    fn collect_until_done(rx: &Receiver<Value>, id: &str) -> Vec<HashMap<Vec<u8>, Value>> {
+        let mut out = Vec::new();
+        loop {
+            let v = rx
+                .recv_timeout(Duration::from_secs(5))
+                .expect("timeout waiting for response");
+            let Value::Dict(d) = v else {
+                continue;
+            };
+            let msg_id = dict_get(&d, "id").and_then(as_str).unwrap_or("");
+            if msg_id != id {
+                continue;
+            }
+            let is_done = match dict_get(&d, "status") {
+                Some(Value::List(items)) => items
+                    .iter()
+                    .any(|i| as_str(i).map(|s| s == "done").unwrap_or(false)),
+                _ => false,
+            };
+            out.push(d);
+            if is_done {
+                return out;
+            }
+        }
+    }
+
+    #[test]
+    fn interrupt_aborts_eval() {
+        // Spin up a Connection without a real TCP socket and verify
+        // that an interrupt op set on the session causes a long
+        // running eval to terminate with `interrupted` status.
+        let (tx, rx) = mpsc::channel();
+        let mut conn = Connection::new(tx);
+
+        let clone_req: HashMap<Vec<u8>, Value> = HashMap::from([
+            (b"op".to_vec(), bstr("clone")),
+            (b"id".to_vec(), bstr("c1")),
+        ]);
+        handle_message(&mut conn, &clone_req);
+        let clone_resp = collect_until_done(&rx, "c1");
+        let new_session = clone_resp
+            .iter()
+            .find_map(|d| dict_get(d, "new-session").and_then(as_str))
+            .expect("clone produced a new-session id")
+            .to_owned();
+
+        // Start an infinite loop, then interrupt it.
+        let eval_req: HashMap<Vec<u8>, Value> = HashMap::from([
+            (b"op".to_vec(), bstr("eval")),
+            (b"id".to_vec(), bstr("e1")),
+            (b"session".to_vec(), bstr(new_session.clone())),
+            (b"code".to_vec(), bstr("while True { 1 }")),
+        ]);
+        handle_message(&mut conn, &eval_req);
+
+        // Give the worker a moment to enter the loop.
+        std::thread::sleep(Duration::from_millis(50));
+
+        let int_req: HashMap<Vec<u8>, Value> = HashMap::from([
+            (b"op".to_vec(), bstr("interrupt")),
+            (b"id".to_vec(), bstr("i1")),
+            (b"session".to_vec(), bstr(new_session.clone())),
+        ]);
+        handle_message(&mut conn, &int_req);
+
+        let eval_resp = collect_until_done(&rx, "e1");
+        let done = eval_resp.last().expect("eval produced a done message");
+        let status = match dict_get(done, "status") {
+            Some(Value::List(items)) => items
+                .iter()
+                .filter_map(|i| as_str(i).map(|s| s.to_owned()))
+                .collect::<Vec<_>>(),
+            _ => panic!("expected status list"),
+        };
+        assert!(
+            status.iter().any(|s| s == "interrupted"),
+            "expected interrupted in status, got {status:?}"
+        );
+        assert!(
+            !status.iter().any(|s| s == "eval-error"),
+            "interrupt should not be reported as eval-error: {status:?}"
+        );
+    }
+
+    #[test]
+    fn sigint_aborts_eval() {
+        // Verify that setting the global SIGINT flag — the same
+        // signal Ctrl-C sets in main — propagates via the watchdog
+        // and interrupts a running eval.
+        let (tx, rx) = mpsc::channel();
+        let mut conn = Connection::new(tx);
+
+        let global = Arc::new(AtomicBool::new(false));
+        let watchdog_flags = Arc::downgrade(&conn.interrupt_flags);
+        let global_for_watchdog = Arc::clone(&global);
+        thread::spawn(move || sigint_watchdog(global_for_watchdog, watchdog_flags));
+
+        let clone_req: HashMap<Vec<u8>, Value> = HashMap::from([
+            (b"op".to_vec(), bstr("clone")),
+            (b"id".to_vec(), bstr("c1")),
+        ]);
+        handle_message(&mut conn, &clone_req);
+        let clone_resp = collect_until_done(&rx, "c1");
+        let new_session = clone_resp
+            .iter()
+            .find_map(|d| dict_get(d, "new-session").and_then(as_str))
+            .expect("clone produced a new-session id")
+            .to_owned();
+
+        let eval_req: HashMap<Vec<u8>, Value> = HashMap::from([
+            (b"op".to_vec(), bstr("eval")),
+            (b"id".to_vec(), bstr("e1")),
+            (b"session".to_vec(), bstr(new_session)),
+            (b"code".to_vec(), bstr("while True { 1 }")),
+        ]);
+        handle_message(&mut conn, &eval_req);
+
+        // Let the worker enter the loop, then fire SIGINT.
+        std::thread::sleep(Duration::from_millis(50));
+        global.store(true, Ordering::SeqCst);
+
+        let eval_resp = collect_until_done(&rx, "e1");
+        let done = eval_resp.last().expect("eval produced a done message");
+        let status = match dict_get(done, "status") {
+            Some(Value::List(items)) => items
+                .iter()
+                .filter_map(|i| as_str(i).map(|s| s.to_owned()))
+                .collect::<Vec<_>>(),
+            _ => panic!("expected status list"),
+        };
+        assert!(
+            status.iter().any(|s| s == "interrupted"),
+            "expected interrupted in status, got {status:?}"
+        );
     }
 }

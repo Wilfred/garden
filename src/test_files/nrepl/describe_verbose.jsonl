@@ -59,6 +59,14 @@
 //         "value": "The result of evaluating the code, as a string."
 //       }
 //     },
+//     "interrupt": {
+//       "doc": "Attempts to interrupt any currently-running eval on the given session.",
+//       "optional": {},
+//       "requires": {
+//         "session": "The ID of the session whose eval should be interrupted."
+//       },
+//       "returns": {}
+//     },
 //     "load-file": {
 //       "doc": "Loads a body of code, using supplied path and filename info to set source file and line number metadata.",
 //       "optional": {

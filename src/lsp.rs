@@ -35,19 +35,6 @@ use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::pos_to_id::find_item_at;
 
-#[derive(Debug, Deserialize)]
-struct Message {
-    #[allow(dead_code)]
-    #[serde(default)]
-    jsonrpc: Option<String>,
-    #[serde(default)]
-    id: Option<serde_json::Value>,
-    method: Option<String>,
-    #[allow(dead_code)]
-    #[serde(default)]
-    params: Option<serde_json::Value>,
-}
-
 /// JSON-RPC 2.0 response structure.
 #[derive(Debug, Serialize)]
 struct JsonRpcResponse<T> {
@@ -890,6 +877,7 @@ fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
 }
 
 /// Outcome of processing a single LSP message.
+#[derive(Default)]
 struct ProcessOutcome {
     /// Responses or notifications to send back to the client.
     messages: Vec<serde_json::Value>,
@@ -897,124 +885,97 @@ struct ProcessOutcome {
     should_exit: bool,
 }
 
-impl ProcessOutcome {
-    fn empty() -> Self {
-        Self {
-            messages: vec![],
-            should_exit: false,
-        }
-    }
-}
-
 /// Process a single LSP message, returning any responses to send and
 /// whether the server should exit.
 fn process_message(message: &serde_json::Value, documents: &mut DocumentStore) -> ProcessOutcome {
-    let parsed: Message = match serde_json::from_value(message.clone()) {
-        Ok(m) => m,
-        Err(e) => {
-            error!("Error parsing message: {e}");
-            return ProcessOutcome::empty();
-        }
-    };
+    let method = message.get("method").and_then(|m| m.as_str());
+    let id = message.get("id").cloned();
+    let params = message.get("params").unwrap_or(&serde_json::Value::Null);
 
     let mut messages = vec![];
     let mut should_exit = false;
 
-    match parsed.method.as_deref() {
+    match method {
         Some("initialize") => {
-            if let Some(id) = parsed.id {
-                let Some(params) = parse_params::<InitializeParams>(message, "initialize") else {
-                    return ProcessOutcome::empty();
+            if let Some(id) = id {
+                let Some(p) = parse_params::<InitializeParams>(message) else {
+                    return ProcessOutcome::default();
                 };
-                let response = handle_initialize(id, params);
-                messages.push(to_value_or_log(&response));
+                messages.push(to_value(handle_initialize(id, p)));
             }
         }
         Some("initialized") => {
             // Notification, no response.
         }
         Some("textDocument/completion") => {
-            if let Some(id) = parsed.id {
-                let Some(params) = parse_params::<CompletionParams>(message, "completion") else {
-                    return ProcessOutcome::empty();
+            if let Some(id) = id {
+                let Some(p) = parse_params::<CompletionParams>(message) else {
+                    return ProcessOutcome::default();
                 };
-                let response = handle_completion(id, params, documents);
-                messages.push(to_value_or_log(&response));
+                messages.push(to_value(handle_completion(id, p, documents)));
             }
         }
         Some("textDocument/definition") => {
-            if let Some(id) = parsed.id {
-                let Some(params) = parse_params::<DefinitionParams>(message, "definition") else {
-                    return ProcessOutcome::empty();
+            if let Some(id) = id {
+                let Some(p) = parse_params::<DefinitionParams>(message) else {
+                    return ProcessOutcome::default();
                 };
-                let response = handle_definition(id, params, documents);
-                messages.push(to_value_or_log(&response));
+                messages.push(to_value(handle_definition(id, p, documents)));
             }
         }
         Some("textDocument/hover") => {
-            if let Some(id) = parsed.id {
-                let Some(params) = parse_params::<HoverParams>(message, "hover") else {
-                    return ProcessOutcome::empty();
+            if let Some(id) = id {
+                let Some(p) = parse_params::<HoverParams>(message) else {
+                    return ProcessOutcome::default();
                 };
-                let response = handle_hover(id, params, documents);
-                messages.push(to_value_or_log(&response));
+                messages.push(to_value(handle_hover(id, p, documents)));
             }
         }
         Some("textDocument/documentHighlight") => {
-            if let Some(id) = parsed.id {
-                let Some(params) =
-                    parse_params::<DocumentHighlightParams>(message, "documentHighlight")
-                else {
-                    return ProcessOutcome::empty();
+            if let Some(id) = id {
+                let Some(p) = parse_params::<DocumentHighlightParams>(message) else {
+                    return ProcessOutcome::default();
                 };
-                let response = handle_document_highlight(id, params, documents);
-                messages.push(to_value_or_log(&response));
+                messages.push(to_value(handle_document_highlight(id, p, documents)));
             }
         }
         Some("textDocument/formatting") => {
-            if let Some(id) = parsed.id {
-                let Some(params) = parse_params::<DocumentFormattingParams>(message, "formatting")
-                else {
-                    return ProcessOutcome::empty();
+            if let Some(id) = id {
+                let Some(p) = parse_params::<DocumentFormattingParams>(message) else {
+                    return ProcessOutcome::default();
                 };
-                let response = handle_formatting(id, params, documents);
-                messages.push(to_value_or_log(&response));
+                messages.push(to_value(handle_formatting(id, p, documents)));
             }
         }
         Some("textDocument/codeAction") => {
-            if let Some(id) = parsed.id {
-                let Some(params) = parse_params::<CodeActionParams>(message, "codeAction") else {
-                    return ProcessOutcome::empty();
+            if let Some(id) = id {
+                let Some(p) = parse_params::<CodeActionParams>(message) else {
+                    return ProcessOutcome::default();
                 };
-                let response = handle_code_action(id, params, documents);
-                messages.push(to_value_or_log(&response));
+                messages.push(to_value(handle_code_action(id, p, documents)));
             }
         }
         Some("textDocument/rename") => {
-            if let Some(id) = parsed.id {
-                let Some(params) = parse_params::<RenameParams>(message, "rename") else {
-                    return ProcessOutcome::empty();
+            if let Some(id) = id {
+                let Some(p) = parse_params::<RenameParams>(message) else {
+                    return ProcessOutcome::default();
                 };
-                let response = handle_rename(id, params, documents);
-                messages.push(to_value_or_log(&response));
+                messages.push(to_value(handle_rename(id, p, documents)));
             }
         }
         Some("textDocument/didOpen") => {
-            let params = message.get("params").unwrap_or(&serde_json::Value::Null);
             if let Some(notification) = handle_did_open(params, documents) {
-                messages.push(to_value_or_log(&notification));
+                messages.push(to_value(notification));
             }
         }
         Some("textDocument/didChange") => {
-            let params = message.get("params").unwrap_or(&serde_json::Value::Null);
             if let Some(notification) = handle_did_change(params, documents) {
-                messages.push(to_value_or_log(&notification));
+                messages.push(to_value(notification));
             }
         }
         Some("shutdown") => {
-            if let Some(id) = parsed.id {
-                let response = handle_shutdown(id);
-                messages.push(to_value_or_log(&response));
+            if let Some(id) = id {
+                messages.push(to_value(handle_shutdown(id)));
             }
             should_exit = true;
         }
@@ -1030,25 +991,19 @@ fn process_message(message: &serde_json::Value, documents: &mut DocumentStore) -
     }
 }
 
-fn parse_params<T: for<'de> Deserialize<'de>>(
-    message: &serde_json::Value,
-    method: &str,
-) -> Option<T> {
+fn to_value<T: Serialize>(value: T) -> serde_json::Value {
+    serde_json::to_value(value).expect("LSP response should serialize")
+}
+
+fn parse_params<T: for<'de> Deserialize<'de>>(message: &serde_json::Value) -> Option<T> {
     let params = message.get("params")?;
     match serde_json::from_value::<T>(params.clone()) {
         Ok(p) => Some(p),
         Err(e) => {
-            error!("Error parsing {method} params: {e}");
+            error!("Error parsing LSP params: {e}");
             None
         }
     }
-}
-
-fn to_value_or_log<T: Serialize>(value: &T) -> serde_json::Value {
-    serde_json::to_value(value).unwrap_or_else(|e| {
-        error!("Error serializing LSP message: {e}");
-        serde_json::Value::Null
-    })
 }
 
 /// Run the LSP server.
@@ -1096,7 +1051,7 @@ pub(crate) fn reftest_lsp(src: &str) {
         let message: serde_json::Value = match serde_json::from_str(trimmed) {
             Ok(v) => v,
             Err(e) => {
-                println!("{{\"parse_error\": \"{e}\"}}");
+                println!("{}", serde_json::json!({ "parse_error": e.to_string() }));
                 continue;
             }
         };

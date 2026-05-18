@@ -380,12 +380,26 @@ dependencies = [
 ]
 
 [[package]]
-name = "goldentests"
-version = "1.4.1"
+name = "globset"
+version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b5cf23a0e42b915eb405d068a7969de8ab8f80d093f50cd1c7a2ba82f6f2de6"
+checksum = "52dfc19153a48bde0cbd630453615c8151bce3a5adfac7a0aebfbf0a1e1f57e3"
+dependencies = [
+ "aho-corasick",
+ "bstr",
+ "log",
+ "regex-automata",
+ "regex-syntax",
+]
+
+[[package]]
+name = "goldentests"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d88aa4e6b007bc5ac5bde27e3a7088942667fd858507bdf0176e0329b8a60b4"
 dependencies = [
  "colored",
+ "globset",
  "rayon",
  "serde",
  "shlex",

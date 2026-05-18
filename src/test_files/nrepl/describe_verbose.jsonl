@@ -48,7 +48,12 @@
 //     },
 //     "eval": {
 //       "doc": "Evaluates code.",
-//       "optional": {},
+//       "optional": {
+//         "column": "1-based column number of the start of the code being evaluated.",
+//         "file": "Source path of the file the code is being evaluated from, used for position metadata.",
+//         "line": "1-based line number of the start of the code being evaluated.",
+//         "ns": "The namespace in which to evaluate the code. If the namespace does not exist it is created."
+//       },
 //       "requires": {
 //         "code": "The code to be evaluated.",
 //         "session": "The ID of the session in which the code will be evaluated."

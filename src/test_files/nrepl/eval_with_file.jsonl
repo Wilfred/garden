@@ -1,5 +1,5 @@
 { "op": "clone" }
-{ "op": "load-file", "session": "garden-1", "file": "fun greet(): String { \"hello\" } greet()", "file-path": "/tmp/greet.gdn" }
+{ "op": "eval", "session": "garden-1", "file": "/tmp/from_file.gdn", "code": "1 + 1" }
 
 // args: reftest-nrepl
 // expected stdout:
@@ -11,9 +11,9 @@
 // }
 // {
 //   "eval-msec": "<eval-msec>",
-//   "ns": "greet.gdn",
+//   "ns": "from_file.gdn",
 //   "session": "garden-1",
-//   "value": "\"hello\""
+//   "value": "2"
 // }
 // {
 //   "session": "garden-1",

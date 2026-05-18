@@ -1,5 +1,5 @@
 { "op": "clone" }
-{ "op": "eval", "session": "garden-1", "code": "println(\"hello\")" }
+{ "op": "eval", "session": "garden-1", "line": 10, "column": 5, "code": "throw(\"boom\")" }
 
 // args: reftest-nrepl
 // expected stdout:
@@ -10,19 +10,16 @@
 //   ]
 // }
 // {
-//   "out": "hello\n",
+//   "err": "Exception: boom\n--| __user.gdn:10:5\t __toplevel__\n ?| \n",
 //   "session": "garden-1"
 // }
 // {
 //   "eval-msec": "<eval-msec>",
-//   "ns": "__user.gdn",
-//   "session": "garden-1",
-//   "value": "Unit"
-// }
-// {
+//   "ex": "Exception: boom\n--| __user.gdn:10:5\t __toplevel__\n ?| ",
 //   "session": "garden-1",
 //   "status": [
-//     "done"
+//     "done",
+//     "eval-error"
 //   ]
 // }
 

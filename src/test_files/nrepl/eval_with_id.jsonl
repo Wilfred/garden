@@ -12,7 +12,7 @@
 // {
 //   "eval-msec": "<eval-msec>",
 //   "id": "42",
-//   "ns": "__user",
+//   "ns": "__user.gdn",
 //   "session": "garden-1",
 //   "value": "3"
 // }

@@ -1,6 +1,6 @@
 { "op": "clone" }
-{ "op": "load-file", "session": "garden-1", "file": "fun my_loaded_helper(): Int { 7 } my_loaded_helper()", "file-path": "/tmp/loaded.gdn" }
-{ "op": "completions", "session": "garden-1", "prefix": "my_loaded" }
+{ "op": "eval", "session": "garden-1", "ns": "my_ns.gdn", "code": "fun my_ns_fn(): Int { 1 } my_ns_fn()" }
+{ "op": "completions", "session": "garden-1", "prefix": "my_ns_fn" }
 
 // args: reftest-nrepl
 // expected stdout:
@@ -12,9 +12,9 @@
 // }
 // {
 //   "eval-msec": "<eval-msec>",
-//   "ns": "loaded.gdn",
+//   "ns": "my_ns.gdn",
 //   "session": "garden-1",
-//   "value": "7"
+//   "value": "1"
 // }
 // {
 //   "session": "garden-1",
@@ -25,8 +25,8 @@
 // {
 //   "completions": [
 //     {
-//       "candidate": "my_loaded_helper",
-//       "ns": "loaded.gdn",
+//       "candidate": "my_ns_fn",
+//       "ns": "my_ns.gdn",
 //       "priority": 0,
 //       "type": "function"
 //     }

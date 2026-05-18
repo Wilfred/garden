@@ -8,7 +8,7 @@ use crate::env::Env;
 use crate::parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
 use crate::parser::diagnostics::MessagePart;
 use crate::parser::position::Position;
-use crate::types::{BuiltInType, TypeDef, TypeDefAndMethods};
+use crate::type_defs::{BuiltInType, TypeDef, TypeDefAndMethods};
 use crate::values::{Value, Value_};
 use crate::{msgcode, msgtext};
 

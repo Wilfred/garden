@@ -14,7 +14,7 @@ use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{AstId, Expression_, IdGenerator, ImportInfo, SymbolName, ToplevelItem};
 use crate::parser::parse_toplevel_items;
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
-use crate::types::TypeDef;
+use crate::type_defs::TypeDef;
 use crate::values::Value_;
 use crate::Vfs;
 

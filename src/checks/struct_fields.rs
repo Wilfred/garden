@@ -9,7 +9,7 @@ use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::env::Env;
-use crate::types::TypeDef;
+use crate::type_defs::TypeDef;
 
 struct StructFieldVisitor<'a> {
     env: &'a Env,

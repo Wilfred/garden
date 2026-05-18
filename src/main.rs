@@ -67,7 +67,7 @@ mod sandboxed_playground;
 mod syntax_check;
 mod syntax_highlighter;
 mod test_runner;
-mod types;
+mod type_defs;
 mod values;
 mod version;
 

@@ -9,8 +9,7 @@ use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::env::StackFrame;
-use crate::eval::EnclosingSymbol;
+use crate::env::{EnclosingSymbol, StackFrame};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::lex::{lex, STRING_RE};
 use crate::parser::position::Position;

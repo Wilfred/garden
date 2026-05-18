@@ -4,7 +4,7 @@ use std::rc::Rc;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::parser::ast::{SymbolName, TypeName};
-use crate::types::TypeDefAndMethods;
+use crate::type_defs::TypeDefAndMethods;
 use crate::values::Value;
 
 #[derive(Debug, Clone)]

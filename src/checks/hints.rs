@@ -7,7 +7,7 @@ use crate::{msgcode, msgtext};
 
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::env::Env;
-use crate::types::{BuiltInType, TypeDef};
+use crate::type_defs::{BuiltInType, TypeDef};
 
 pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = HintVisitor {

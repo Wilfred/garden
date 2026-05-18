@@ -22,7 +22,7 @@ use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
 use crate::parser::vfs::{VfsId, VfsPathBuf};
-use crate::types::TypeDef;
+use crate::type_defs::TypeDef;
 use crate::values::{Value, Value_};
 use crate::{msgcode, msgtext};
 

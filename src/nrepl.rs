@@ -1460,7 +1460,7 @@ mod tests {
         handle_message(&mut conn, &eval_req);
 
         // Give the worker a moment to enter the loop.
-        std::thread::sleep(Duration::from_millis(50));
+        std::thread::sleep(Duration::from_millis(500));
 
         let int_req: HashMap<Vec<u8>, Value> = HashMap::from([
             (b"op".to_vec(), bstr("interrupt")),
@@ -1522,7 +1522,7 @@ mod tests {
         handle_message(&mut conn, &eval_req);
 
         // Let the worker enter the loop, then fire SIGINT.
-        std::thread::sleep(Duration::from_millis(50));
+        std::thread::sleep(Duration::from_millis(500));
         global.store(true, Ordering::SeqCst);
 
         let eval_resp = collect_until_done(&rx, "e1");

@@ -10,4 +10,4 @@ import "__fs.gdn" as fs
 }
 
 // args: run
-// expected stdout: Err("Could not read `no_such_file_garden.txt` (relative to `/tmp`). No such file or directory (os error 2)")
+// expected stdout: Err("Could not read `no_such_file_garden.txt` (relative to `/tmp`). No such file or directory")

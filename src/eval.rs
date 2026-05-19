@@ -702,6 +702,17 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
     Ok(src)
 }
 
+/// Strip the trailing ` (os error N)` suffix that `std::io::Error`'s
+/// Display includes, leaving just the human-readable reason.
+fn strip_os_error_suffix(s: &str) -> String {
+    if let Some(idx) = s.rfind(" (os error ") {
+        if s.ends_with(')') {
+            return s[..idx].to_string();
+        }
+    }
+    s.to_string()
+}
+
 fn describe_read_error(path: &Path, e: &std::io::Error) -> ErrorMessage {
     let parts = match e.kind() {
         std::io::ErrorKind::NotFound => {
@@ -5267,13 +5278,14 @@ fn eval_built_in_method_call(
             let v = match std::fs::read_to_string(&path) {
                 Ok(s) => Value::ok(Value::new(Value_::String(s))),
                 Err(e) => {
+                    let reason = strip_os_error_suffix(&e.to_string());
                     let msg = if orig_path.is_relative() {
                         format!(
-                            "Could not read `{path_s}` (relative to `{}`). {e}",
+                            "Could not read `{path_s}` (relative to `{}`). {reason}",
                             env.working_directory.display()
                         )
                     } else {
-                        format!("Could not read `{path_s}`. {e}")
+                        format!("Could not read `{path_s}`. {reason}")
                     };
                     Value::err(Value::new(Value_::String(msg)))
                 }

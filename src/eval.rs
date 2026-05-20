@@ -5257,18 +5257,32 @@ fn eval_built_in_method_call(
                 }
             };
 
-            let path = PathBuf::from(path_s.clone());
-            let path = if path.is_relative() {
-                env.working_directory.join(path)
+            let orig_path = PathBuf::from(path_s.clone());
+            let path = if orig_path.is_relative() {
+                env.working_directory.join(&orig_path)
             } else {
-                path
+                orig_path.clone()
             };
 
-            let v = match std::fs::read_to_string(path) {
+            let v = match std::fs::read_to_string(&path) {
                 Ok(s) => Value::ok(Value::new(Value_::String(s))),
-                Err(e) => Value::err(Value::new(Value_::String(format!(
-                    "Could not read `{path_s}`. {e}"
-                )))),
+                Err(e) => {
+                    let reason = match e.kind() {
+                        std::io::ErrorKind::NotFound => "No such file".to_owned(),
+                        std::io::ErrorKind::PermissionDenied => "Permission denied".to_owned(),
+                        std::io::ErrorKind::IsADirectory => "Is a directory".to_owned(),
+                        kind => format!("{kind}"),
+                    };
+                    let msg = if orig_path.is_relative() {
+                        format!(
+                            "Could not read `{path_s}` (relative to `{}`). {reason}.",
+                            env.working_directory.display()
+                        )
+                    } else {
+                        format!("Could not read `{path_s}`. {reason}.")
+                    };
+                    Value::err(Value::new(Value_::String(msg)))
+                }
             };
 
             if expr_value_is_used {

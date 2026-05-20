@@ -11,5 +11,5 @@ dbg(fs::write_file("hello world", Path{ p: "/tmp/no_such_dir_garden/bar.txt" }))
 // args: run
 // expected stdout:
 // Err("Could not read directory `/tmp/no_such_dir_garden/`. No such file or directory (os error 2)")
-// Err("Could not read `/tmp/no_such_dir_garden/foo.txt`. No such file or directory")
+// Err("Could not read `/tmp/no_such_dir_garden/foo.txt`. No such file.")
 // Err("Could not write `/tmp/no_such_dir_garden/bar.txt`. No such file or directory (os error 2)")

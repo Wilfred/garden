@@ -534,7 +534,7 @@ impl Value {
                 };
 
                 format!(
-                    "<fun {}() {}:{}>",
+                    "<fun {} {}:{}>",
                     name_sym.name,
                     file_name,
                     fun_info.pos.line_number + 1
@@ -557,12 +557,7 @@ impl Value {
                         None => format!("{}", pos_path.display()),
                     };
 
-                    format!(
-                        "<fun {}() {}:{}>",
-                        kind,
-                        file_name,
-                        info.pos.line_number + 1
-                    )
+                    format!("<fun {} {}:{}>", kind, file_name, info.pos.line_number + 1)
                 }
                 None => format!("{kind}"),
             },

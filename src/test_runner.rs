@@ -123,6 +123,10 @@ fn sandboxed_tests_summary(
                 num_sandboxed += 1;
                 "sandboxed".to_owned()
             }
+            Some(EvalError::Exited(_, code)) => {
+                num_errored += 1;
+                format!("exited with code {code}")
+            }
             None => {
                 num_passed += 1;
                 "passed".to_owned()
@@ -240,6 +244,7 @@ pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) -> String
                 EvalError::ReachedTickLimit(position) => (Some(position), None),
                 EvalError::ReachedStackLimit(position) => (Some(position), None),
                 EvalError::ForbiddenInSandbox(position) => (Some(position), None),
+                EvalError::Exited(position, _) => (Some(position), None),
             };
 
             match (pos, msg) {

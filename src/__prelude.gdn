@@ -893,6 +893,19 @@ public fun throw(message: String): NoValue {
   __BUILT_IN_IMPLEMENTATION
 }
 
+/// Stop the program immediately, with the given exit code.
+///
+/// Use 0 to indicate success and a non-zero value to indicate
+/// failure. See also `throw()` for terminating with an error
+/// message.
+///
+/// ```garden nocheck
+/// exit(0)
+/// ```
+public fun exit(code: Int): NoValue {
+  __BUILT_IN_IMPLEMENTATION
+}
+
 /// Write a string to stdout. See also `println()` and `eprint()`.
 ///
 /// ```

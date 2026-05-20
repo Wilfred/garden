@@ -543,6 +543,28 @@ public method append<T>(this: List<T>, value: T): List<T> {
   __BUILT_IN_IMPLEMENTATION
 }
 
+/// Return a new list with all the items from `this`, followed by all
+/// the items from `other`.
+///
+/// ```
+/// [1, 2].concat([3, 4]) //-> [1, 2, 3, 4]
+/// ```
+public method concat<T>(this: List<T>, other: List<T>): List<T> {
+  let result: List<T> = this
+  for item in other {
+    result = result.append(item)
+  }
+
+  result
+}
+
+test list_concat {
+  assert([].concat([]) == [])
+  assert([1, 2].concat([]) == [1, 2])
+  assert([].concat([1, 2]) == [1, 2])
+  assert([1, 2].concat([3, 4]) == [1, 2, 3, 4])
+}
+
 /// Does this list contain `item`?
 ///
 /// ```

@@ -7,6 +7,7 @@ fun foo() {
 // args: reftest-complete
 // expected stdout:
 // {"label":"append","kind":2,"detail":"(T): List<T>","insertText":"append($0)","insertTextFormat":2}
+// {"label":"concat","kind":2,"detail":"(List<T>): List<T>","insertText":"concat($0)","insertTextFormat":2}
 // {"label":"contains","kind":2,"detail":"(T): Bool","insertText":"contains($0)","insertTextFormat":2}
 // {"label":"enumerate()","kind":2,"detail":"(): List<(Int, T)>","insertText":"enumerate()","insertTextFormat":2}
 // {"label":"filter","kind":2,"detail":"(Fun<(T), Bool>): List<T>","insertText":"filter($0)","insertTextFormat":2}
@@ -19,3 +20,4 @@ fun foo() {
 // {"label":"len()","kind":2,"detail":"(): Int","insertText":"len()","insertTextFormat":2}
 // {"label":"map","kind":2,"detail":"(Fun<(T), U>): List<U>","insertText":"map($0)","insertTextFormat":2}
 // {"label":"slice","kind":2,"detail":"(Int, Int): List<T>","insertText":"slice($0)","insertTextFormat":2}
+

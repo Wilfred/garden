@@ -414,6 +414,7 @@ pub(crate) enum BuiltInFunctionKind {
     PreludeDbg,
     PreludeEprint,
     PreludeEprintln,
+    PreludeExit,
     PreludePrint,
     PreludePrintln,
     PreludeReadLine,
@@ -458,6 +459,7 @@ impl BuiltInFunctionKind {
     pub(crate) fn namespace_path(&self) -> PathBuf {
         match self {
             BuiltInFunctionKind::PreludeThrow
+            | BuiltInFunctionKind::PreludeExit
             | BuiltInFunctionKind::PreludeStringRepr
             | BuiltInFunctionKind::PreludeDbg
             | BuiltInFunctionKind::PreludePrint
@@ -504,6 +506,7 @@ impl Display for BuiltInFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
             BuiltInFunctionKind::PreludeThrow => "throw",
+            BuiltInFunctionKind::PreludeExit => "exit",
             BuiltInFunctionKind::FsListDirectory => "list_directory",
             BuiltInFunctionKind::ShellRun => "run",
             BuiltInFunctionKind::PreludeStringRepr => "string_repr",

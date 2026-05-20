@@ -1,0 +1,12 @@
+fun bail() {
+  println("about to exit")
+  exit(0)
+  println("unreachable")
+}
+
+bail()
+println("also unreachable")
+
+// args: run
+// expected stdout:
+// about to exit

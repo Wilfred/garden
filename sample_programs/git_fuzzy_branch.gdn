@@ -1,12 +1,87 @@
 #!/usr/bin/env -S garden run
 
-fun in_git_repo(): Bool {
-  let git_dir_path = working_directory() ^ "/.git"
-  path_exists(git_dir_path)
+// A port of https://github.com/Wilfred/git-fuzzy
+//
+// Usage: git_fuzzy_branch <name substring>
+//
+// Tries to check out a branch matching the argument. If multiple
+// branches match, lists them with the matched substring highlighted.
+// If no branches match, falls back to checking out the argument as a
+// commit.
+
+// ANSI escape character. There's no `\x1b` escape sequence in Garden
+// string literals (only `\\`, `\"`, `\n` and `\t`), so we shell out
+// to `printf` to get a single ESC byte.
+fun esc(): String {
+  shell("printf", ["\\033"]).or_throw()
 }
 
-fun check_out(branch_name: String): Unit {
-  print(shell("git", ["checkout", branch_name]).or_throw())
+fun green(s: String): String {
+  ((esc() ^ "[32m") ^ s) ^ (esc() ^ "[0m")
+}
+
+fun in_git_repo(): Bool {
+  match shell("git", ["rev-parse", "--is-inside-work-tree"]) {
+    Ok(_) => True
+    Err(_) => False
+  }
+}
+
+fun list_branches(): List<String> {
+  let out = shell(
+    "git",
+    [
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/",
+      "refs/remotes/",
+    ],
+  ).or_throw()
+
+  // Drop any "origin/HEAD -> origin/main" style entries that
+  // `for-each-ref` doesn't actually produce but we guard against
+  // anyway, and dedupe remote branches whose short name already
+  // exists locally.
+  let local = out.lines().filter(fun(name: String) {
+    name.contains("/").not()
+  })
+
+  let remote_only = out.lines().filter(fun(name: String) {
+    if name.contains("/").not() {
+      return False
+    }
+
+    // Strip the remote name (e.g. "origin/") and skip if we already
+    // have a local branch with that name.
+    match name.split_once("/") {
+      Some((_remote, branch)) => local.contains(branch).not()
+      None => True
+    }
+  })
+
+  let result: List<String> = []
+  for b in local {
+    result = result.append(b)
+  }
+  for b in remote_only {
+    result = result.append(b)
+  }
+
+  result
+}
+
+fun highlight(name: String, needle: String): String {
+  match name.split_once(needle) {
+    Some((before, after)) => (before ^ green(needle)) ^ after
+    None => name
+  }
+}
+
+fun check_out(ref: String): Unit {
+  match shell("git", ["checkout", ref]) {
+    Ok(out) => print(out)
+    Err(out) => print(out)
+  }
 }
 
 {
@@ -15,33 +90,46 @@ fun check_out(branch_name: String): Unit {
     println("Usage: git_fuzzy_branch <name substring>")
     return
   }
-  let needle = args.get(0)
 
-  if in_git_repo() == False {
+  let needle = match args.get(0) {
+    Some(s) => s
+    None => return
+  }
+
+  if in_git_repo().not() {
     println("Not in a git repository.")
     return
   }
 
-  let all_branches = shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"])
-    .or_throw()
-    .lines()
+  let all_branches = list_branches()
+
+  // Exact match wins.
   if all_branches.contains(needle) {
-    // If there's a branch with this name exactly, use it.
     check_out(needle)
     return
   }
 
-  let branches = all_branches.filter(fun(name: String) { name.contains(needle) })
-  match branches.first() {
-    Some(name) => {
-      if branches.len() == 1 {
-        check_out(name)
-      } else {
-        let formatted_branches = ", ".join(branches)
-        let msg = "".join(["Found ", string_repr(branches.len()), " branches: ", formatted_branches])
-        println(msg)
-      }
+  let matches = all_branches.filter(fun(name: String) {
+    name.contains(needle)
+  })
+
+  if matches.len() == 1 {
+    match matches.first() {
+      Some(name) => check_out(name)
+      None => {}
     }
-    None => println("No branches found matching: " ^ needle)
+    return
   }
+
+  if matches.is_empty() {
+    println(("No branches match " ^ string_repr(needle)) ^ ", trying as commit...")
+    check_out(needle)
+    return
+  }
+
+  let highlighted = matches.map(fun(name: String) {
+    "  " ^ highlight(name, needle)
+  })
+  let header = ("Ambiguous branch name " ^ string_repr(needle)) ^ ". Multiple matches:"
+  println("\n".join([header].append("\n".join(highlighted))))
 }

@@ -2740,17 +2740,25 @@ fn eval_built_in_call(
 
                     let v = match command.output() {
                         Ok(output) => {
-                            let mut s = String::new();
-
                             // TODO: complain if output is not UTF-8.
-                            s.write_str(&String::from_utf8_lossy(&output.stdout))
-                                .unwrap();
-                            s.write_str(&String::from_utf8_lossy(&output.stderr))
-                                .unwrap();
-
                             if output.status.success() {
-                                Value::ok(Value::new(Value_::String(s)))
+                                let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+                                let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+
+                                let tuple = Value::new(Value_::Tuple {
+                                    items: vec![
+                                        Value::new(Value_::String(stdout)),
+                                        Value::new(Value_::String(stderr)),
+                                    ],
+                                    item_types: vec![Type::string(), Type::string()],
+                                });
+                                Value::ok(tuple)
                             } else {
+                                let mut s = String::new();
+                                s.write_str(&String::from_utf8_lossy(&output.stdout))
+                                    .unwrap();
+                                s.write_str(&String::from_utf8_lossy(&output.stderr))
+                                    .unwrap();
                                 Value::err(Value::new(Value_::String(s)))
                             }
                         }

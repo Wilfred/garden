@@ -1,0 +1,18 @@
+// An if without else always evaluates to Unit, regardless of the type
+// of the then block.
+fun take_unit(_: Unit) {}
+
+{
+    take_unit(if True { 1 })
+    take_unit(if False { 1 })
+
+    let x = if True { "hello" }
+    println(string_repr(x))
+
+    let y = if False { "hello" }
+    println(string_repr(y))
+}
+
+// args: run
+// expected stdout: Unit
+// Unit

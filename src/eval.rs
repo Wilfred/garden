@@ -1579,19 +1579,19 @@ fn eval_if(
         .expect("Popped an empty value stack for if condition");
 
     if let Some(b) = condition_value.as_rust_bool() {
-        if b {
-            eval_block(env, expr_value_is_used, then_body);
-        } else {
-            if let Some(else_body) = else_body {
-                eval_block(env, expr_value_is_used, else_body);
-            } else {
-                // Ensure we always push a bindings block.
-                env.current_frame_mut().bindings.push_block();
+        // When there's no else, the if always evaluates to Unit
+        // regardless of the then block's type, so the branch's value
+        // is not used. The Unit is pushed by the if's
+        // EvaluatedAllSubexpressions continuation.
+        let branch_value_used = expr_value_is_used && else_body.is_some();
 
-                if expr_value_is_used {
-                    env.push_value(Value::unit());
-                }
-            }
+        if b {
+            eval_block(env, branch_value_used, then_body);
+        } else if let Some(else_body) = else_body {
+            eval_block(env, branch_value_used, else_body);
+        } else {
+            // Ensure we always push a bindings block.
+            env.current_frame_mut().bindings.push_block();
         }
     } else {
         return Err((
@@ -5742,6 +5742,10 @@ fn eval_expr(
             }
             ExpressionState::EvaluatedAllSubexpressions => {
                 env.current_frame_mut().bindings.pop_block();
+
+                if expr_value_is_used && else_body.is_none() {
+                    env.push_value(Value::unit());
+                }
             }
         },
         Expression_::While(condition, ref body) => {

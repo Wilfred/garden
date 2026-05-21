@@ -32,7 +32,16 @@ import "__fs.gdn" as fs
 fs::list_directory(Path{ p: "/"})
 ```
 
-Do not make changes to CHANGELOG.md.
+Do not make changes to CHANGELOG.md unless the user explicitly
+requests it.
+
+# Commit Messages
+
+Keep commit messages concise and matter-of-fact. State what changed,
+not why it's an improvement. Do not justify the change or describe it
+as a fix/cleanup/refactor in evaluative terms. Do not repeat internal
+implementation details that are visible in the diff. Headings are
+rarely needed — a single short line is usually enough.
 
 # Writing Error Messages
 

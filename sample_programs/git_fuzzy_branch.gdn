@@ -1,10 +1,10 @@
 #!/usr/bin/env -S garden run
 
+import "__fs.gdn" as fs
 import "__shell.gdn" as shell
 
 fun in_git_repo(): Bool {
-  let git_dir_path = working_directory() ^ "/.git"
-  path_exists(git_dir_path)
+  fs::working_directory().join(".git").exists()
 }
 
 fun check_out(branch_name: String): Unit {
@@ -18,7 +18,7 @@ fun check_out(branch_name: String): Unit {
     println("Usage: git_fuzzy_branch <name substring>")
     return
   }
-  let needle = args.get(0)
+  let needle = args.get(0).or_throw()
 
   if in_git_repo() == False {
     println("Not in a git repository.")

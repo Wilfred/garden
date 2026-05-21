@@ -1,4 +1,4 @@
-fun add_one(i: Int): Int {
+public fun add_one(i: Int): Int {
   i + 1
 }
 

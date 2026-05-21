@@ -87,6 +87,25 @@ jobs:
       - name: Build website
         run: just site-build
 
+  check_sample_programs:
+    name: Check sample programs
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+
+      - name: Build Garden
+        run: cargo build --release
+
+      - name: Run garden check on sample programs
+        run: |
+          status=0
+          for f in sample_programs/*.gdn; do
+            echo "=== $f ==="
+            ./target/release/garden check "$f" || status=1
+          done
+          exit $status
+
   # dry_run_publish:
   #   runs-on: ubuntu-24.04
   #   steps:

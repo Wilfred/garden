@@ -1,0 +1,9 @@
+public fun foo(b: Bool) {
+    if b {
+        string_repr(123)
+    }
+}
+
+// args: check
+// expected exit status: 0
+// expected stdout:

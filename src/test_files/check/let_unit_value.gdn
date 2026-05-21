@@ -1,0 +1,32 @@
+public fun greet(): Unit {
+    println("hi")
+}
+
+public fun foo(): Unit {
+    let x = greet()
+    let _ = println("hello")
+    println(string_repr(x))
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Binding a value of type `Unit` to a variable is rarely useful.
+// 
+// -| src/test_files/check/let_unit_value.gdn:6:13
+// 5| public fun foo(): Unit {
+// 6|     let x = greet()
+//  |             ^^^^^^^
+// 7|     let _ = println("hello")
+// 8|     println(string_repr(x))
+// 
+// Warning: Binding a value of type `Unit` to a variable is rarely useful.
+// 
+// -| src/test_files/check/let_unit_value.gdn:7:13
+// 5| public fun foo(): Unit {
+// 6|     let x = greet()
+// 7|     let _ = println("hello")
+//  |             ^^^^^^^^^^^^^^^^
+// 8|     println(string_repr(x))
+// 9| }
+

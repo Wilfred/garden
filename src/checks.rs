@@ -7,6 +7,7 @@ mod same_literal_returns;
 mod self_assign_compare;
 mod struct_fields;
 pub mod type_checker;
+mod unit_let;
 mod unnecessary_let;
 mod unnecessary_return;
 mod unreachable;
@@ -28,6 +29,7 @@ use recursion_variable::check_recursion_variables;
 use repeated_bool::check_repeated_bool;
 use same_literal_returns::check_same_literal_returns;
 use self_assign_compare::check_self_assign_compare;
+use unit_let::check_unit_let;
 use unnecessary_let::check_unnecessary_let;
 use unnecessary_return::check_unnecessary_return;
 use unreachable::check_unreachable;
@@ -74,6 +76,7 @@ pub(crate) fn check_toplevel_items_in_env(
 
     let summary = check_types(vfs_path, items, env, namespace);
     diagnostics.extend(check_unused_defs(items, &summary));
+    diagnostics.extend(check_unit_let(items, &summary));
 
     diagnostics.extend(summary.diagnostics);
     diagnostics.extend(check_duplicates(items, env));

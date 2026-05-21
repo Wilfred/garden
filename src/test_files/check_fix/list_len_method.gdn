@@ -1,0 +1,11 @@
+{
+  let items = [1, 2, 3]
+  items.len
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// {
+//   let items = [1, 2, 3]
+//   items.len()
+// }

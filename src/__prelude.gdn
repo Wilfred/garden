@@ -904,13 +904,13 @@ public fun read_line(): Result<String, String> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-/// Execute the given string as a shell command, and return stdout
-/// concatenated with stderr.
+/// Execute the given string as a shell command, and return a tuple
+/// of stdout and stderr.
 ///
 /// ```
 /// shell("ls", ["-l", "/"])
 /// ```
-public fun shell(command: String, args: List<String>): Result<String, String> {
+public fun shell(command: String, args: List<String>): Result<(String, String), String> {
   __BUILT_IN_IMPLEMENTATION
 }
 

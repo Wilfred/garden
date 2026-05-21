@@ -3,6 +3,11 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Fix precedence of `2 + 1 * 3.**
 
+## Standard Library
+
+`shell()` now returns a tuple `(stdout, stderr)` on success, instead
+of stdout and stderr concatenated together.
+
 ## Tooling
 
 Added a `--trace` CLI flag that enables expression tracing when

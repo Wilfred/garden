@@ -1,0 +1,10 @@
+{
+    let (stdout, stderr) = shell("sh", ["-c", "echo out; echo err 1>&2"]).or_throw()
+    dbg(stdout)
+    dbg(stderr)
+}
+
+// args: run
+// expected stdout:
+// "out\n"
+// "err\n"

@@ -1978,7 +1978,7 @@ impl TypeCheckVisitor<'_> {
                 }
             }
             None => {
-                self.verify_block(&Type::unit(), then_block, type_bindings, expected_return_ty);
+                self.infer_block(then_block, type_bindings, expected_return_ty);
                 Type::unit()
             }
         }
@@ -2411,12 +2411,7 @@ impl TypeCheckVisitor<'_> {
                         expected_ty.clone()
                     }
                     None => {
-                        self.verify_block(
-                            &Type::unit(),
-                            then_block,
-                            type_bindings,
-                            expected_return_ty,
-                        );
+                        self.infer_block(then_block, type_bindings, expected_return_ty);
                         Type::unit()
                     }
                 }

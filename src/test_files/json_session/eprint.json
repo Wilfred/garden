@@ -1,0 +1,26 @@
+{ "method": "run", "input": "eprintln(\"hello stderr\")", "id": 42 }
+
+// args: reftest-json-session
+// expected stdout:
+// {
+//   "kind": {
+//     "printed_stderr": {
+//       "s": "hello stderr\n"
+//     }
+//   },
+//   "position": null
+// }
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Ok": "Unit"
+//       },
+//       "stack_frame_name": "__user.gdn"
+//     }
+//   },
+//   "position": null,
+//   "id": 42
+// }
+

@@ -1,0 +1,10 @@
+{
+    eprint("hello ")
+    eprintln("stderr")
+    println("stdout")
+}
+
+// args: run
+// expected stderr: hello stderr
+
+// expected stdout: stdout

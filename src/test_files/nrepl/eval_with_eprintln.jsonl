@@ -1,0 +1,28 @@
+{ "op": "clone" }
+{ "op": "eval", "session": "garden-1", "code": "eprintln(\"hello\")" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "err": "hello\n",
+//   "session": "garden-1"
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": "Unit"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

@@ -870,7 +870,7 @@ public fun throw(message: String): NoValue {
   __BUILT_IN_IMPLEMENTATION
 }
 
-/// Write a string to stdout. See also `println()`.
+/// Write a string to stdout. See also `println()` and `eprint()`.
 ///
 /// ```
 /// print("hello world\n")
@@ -879,12 +879,30 @@ public fun print(_: String): Unit {
   __BUILT_IN_IMPLEMENTATION
 }
 
-/// Write a string to stdout, with a newline appended. See also `print()`.
+/// Write a string to stdout, with a newline appended. See also `print()` and `eprintln()`.
 ///
 /// ```
 /// println("hello world")
 /// ```
 public fun println(_: String): Unit {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+/// Write a string to stderr. See also `eprintln()` and `print()`.
+///
+/// ```
+/// eprint("hello world in stderr\n")
+/// ```
+public fun eprint(_: String): Unit {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+/// Write a string to stderr, with a newline appended. See also `eprint()` and `println()`.
+///
+/// ```
+/// eprintln("hello world in stderr")
+/// ```
+public fun eprintln(_: String): Unit {
   __BUILT_IN_IMPLEMENTATION
 }
 

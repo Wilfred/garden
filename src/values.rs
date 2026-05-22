@@ -388,18 +388,16 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BuiltInFunctionKind {
-    PreludeGetEnv,
     PreludePrint,
     PreludePrintln,
     PreludeReadLine,
-    PreludeShell,
-    // TODO: It's a little confusing that we have both shell() and
-    // shell_arguments(), these should go in separate namespaces once
-    // we have namespaces.
     PreludeShellArguments,
     PreludeSourceDirectory,
     PreludeStringRepr,
     PreludeThrow,
+
+    ShellGetEnv,
+    ShellRun,
 
     FsCopyFile,
     FsCreateDir,
@@ -430,14 +428,15 @@ impl BuiltInFunctionKind {
     pub(crate) fn namespace_path(&self) -> PathBuf {
         match self {
             BuiltInFunctionKind::PreludeThrow
-            | BuiltInFunctionKind::PreludeShell
             | BuiltInFunctionKind::PreludeStringRepr
             | BuiltInFunctionKind::PreludePrint
             | BuiltInFunctionKind::PreludePrintln
             | BuiltInFunctionKind::PreludeReadLine
             | BuiltInFunctionKind::PreludeSourceDirectory
-            | BuiltInFunctionKind::PreludeShellArguments
-            | BuiltInFunctionKind::PreludeGetEnv => PathBuf::from("__prelude.gdn"),
+            | BuiltInFunctionKind::PreludeShellArguments => PathBuf::from("__prelude.gdn"),
+            BuiltInFunctionKind::ShellRun | BuiltInFunctionKind::ShellGetEnv => {
+                PathBuf::from("__shell.gdn")
+            }
             BuiltInFunctionKind::FsWriteFile
             | BuiltInFunctionKind::FsListDirectory
             | BuiltInFunctionKind::FsWorkingDirectory
@@ -470,7 +469,7 @@ impl Display for BuiltInFunctionKind {
         let name = match self {
             BuiltInFunctionKind::PreludeThrow => "throw",
             BuiltInFunctionKind::FsListDirectory => "list_directory",
-            BuiltInFunctionKind::PreludeShell => "shell",
+            BuiltInFunctionKind::ShellRun => "run",
             BuiltInFunctionKind::PreludeStringRepr => "string_repr",
             BuiltInFunctionKind::PreludePrint => "print",
             BuiltInFunctionKind::PreludePrintln => "println",
@@ -491,7 +490,7 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::ReflectPreludeTypes => "prelude_types",
             BuiltInFunctionKind::ReflectNamespaceFunctions => "namespace_functions",
             BuiltInFunctionKind::ReflectMethodsForType => "methods_for_type",
-            BuiltInFunctionKind::PreludeGetEnv => "get_env",
+            BuiltInFunctionKind::ShellGetEnv => "get_env",
             BuiltInFunctionKind::ReflectKeywords => "keywords",
             BuiltInFunctionKind::RandomRandomInt => "int",
             BuiltInFunctionKind::FsCreateDir => "create_dir",

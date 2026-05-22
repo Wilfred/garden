@@ -1,0 +1,32 @@
+/// Execute the given string as a shell command, and return a tuple
+/// of stdout and stderr.
+///
+/// ```
+/// import "__shell.gdn" as shell
+/// shell::run("ls", ["-l", "/"])
+/// ```
+public fun run(command: String, args: List<String>): Result<(String, String), String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+/// Get the value of an environment variable.
+///
+/// Returns `Some(value)` if the environment variable is set, or `None`
+/// if it is not set.
+///
+/// ```
+/// import "__shell.gdn" as shell
+/// shell::get_env("HOME") // Some("/home/user")
+/// shell::get_env("NO_SUCH_VAR") // None
+/// ```
+public fun get_env(name: String): Option<String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test get_env {
+  let path = get_env("PATH")
+  assert(path.is_some())
+
+  let nonexistent = get_env("THIS_VARIABLE_SHOULD_NOT_EXIST_12345")
+  assert(nonexistent.is_none())
+}

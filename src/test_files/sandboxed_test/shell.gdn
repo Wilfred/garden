@@ -1,5 +1,7 @@
+import "__shell.gdn" as shell
+
 test shell_is_unsafe {
-    shell("ls", ["/"])
+    shell::run("ls", ["/"])
     // ^
 }
 

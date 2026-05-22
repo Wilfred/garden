@@ -1,5 +1,7 @@
+import "__shell.gdn" as shell
+
 fun main() {
-  let count = get_env("COUNT").or_throw().as_int().or_throw()
+  let count = shell::get_env("COUNT").or_throw().as_int().or_throw()
 
   println("start")
 

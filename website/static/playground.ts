@@ -6,6 +6,7 @@ import { StreamLanguage } from "@codemirror/language";
 import { history, historyKeymap } from "@codemirror/commands";
 import { keymap, highlightActiveLine } from "@codemirror/view";
 import { defaultKeymap } from "@codemirror/commands";
+import escapeHtml from "escape-html";
 
 // Store EditorView instances for each snippet
 const editorViews = new WeakMap<Element, EditorView>();
@@ -104,7 +105,7 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
     .then((response) => response.json())
     .then((data: PlaygroundResponse) => {
       if (!data.success) {
-        snippetDiv.innerHTML = `Error: ${data.error || "Unknown error"}`;
+        snippetDiv.innerHTML = `Error: ${escapeHtml(data.error || "Unknown error")}`;
         return;
       }
 
@@ -120,22 +121,22 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
 
       for (const item of data.results) {
         if ("printed" in item) {
-          outputParts.push(item.printed.s);
+          outputParts.push(escapeHtml(item.printed.s));
         } else if ("printed_stderr" in item) {
           outputParts.push(
-            `<span class="stderr">${item.printed_stderr.s}</span>`,
+            `<span class="stderr">${escapeHtml(item.printed_stderr.s)}</span>`,
           );
         } else if ("error" in item || "value" in item) {
           const result = item;
 
           if (result.error) {
-            snippetDiv.innerHTML = `Error: ${result.error}`;
+            snippetDiv.innerHTML = `Error: ${escapeHtml(result.error)}`;
             hasError = true;
             break;
           }
 
           if (result.value) {
-            valueParts.push(result.value);
+            valueParts.push(escapeHtml(result.value));
           }
         }
       }
@@ -157,7 +158,7 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
     })
     .catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
-      snippetDiv.innerHTML = `Fetch error: ${message}`;
+      snippetDiv.innerHTML = `Fetch error: ${escapeHtml(message)}`;
     });
 }
 

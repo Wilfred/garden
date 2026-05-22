@@ -1,5 +1,7 @@
+import "__shell.gdn" as shell
+
 {
-    let (stdout, stderr) = shell("sh", ["-c", "echo out; echo err 1>&2"]).or_throw()
+    let (stdout, stderr) = shell::run("sh", ["-c", "echo out; echo err 1>&2"]).or_throw()
     dbg(stdout)
     dbg(stderr)
 }

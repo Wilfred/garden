@@ -903,16 +903,6 @@ public fun read_line(): Result<String, String> {
   __BUILT_IN_IMPLEMENTATION
 }
 
-/// Execute the given string as a shell command, and return a tuple
-/// of stdout and stderr.
-///
-/// ```
-/// shell("ls", ["-l", "/"])
-/// ```
-public fun shell(command: String, args: List<String>): Result<(String, String), String> {
-  __BUILT_IN_IMPLEMENTATION
-}
-
 /// Return the pretty-printed string representation of this value.
 ///
 /// ```
@@ -1058,27 +1048,6 @@ test path_read {
 /// --foo`, then this function will return `["--foo"]`.
 public fun shell_arguments(): List<String> {
   __BUILT_IN_IMPLEMENTATION
-}
-
-/// Get the value of an environment variable.
-///
-/// Returns `Some(value)` if the environment variable is set, or `None`
-/// if it is not set.
-///
-/// ```
-/// get_env("HOME") // Some("/home/user")
-/// get_env("NO_SUCH_VAR") // None
-/// ```
-public fun get_env(name: String): Option<String> {
-  __BUILT_IN_IMPLEMENTATION
-}
-
-test get_env {
-  let path = get_env("PATH")
-  assert(path.is_some())
-
-  let nonexistent = get_env("THIS_VARIABLE_SHOULD_NOT_EXIST_12345")
-  assert(nonexistent.is_none())
 }
 
 /// A collection of functions and types from importing a file.

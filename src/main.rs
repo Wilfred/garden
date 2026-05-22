@@ -1014,7 +1014,8 @@ mod tests {
             .arg("src/__prelude.gdn")
             .arg("src/__fs.gdn")
             .arg("src/__random.gdn")
-            .arg("src/__reflect.gdn");
+            .arg("src/__reflect.gdn")
+            .arg("src/__shell.gdn");
         cmd.assert().success();
     }
 

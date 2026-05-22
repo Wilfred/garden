@@ -1,5 +1,7 @@
+import "__shell.gdn" as shell
+
 {
-    dbg(shell("no_such_command", []))
+    dbg(shell::run("no_such_command", []))
 }
 
 // args: run

@@ -622,6 +622,7 @@ pub(crate) const BUILT_IN_FILES: &[(&str, &str)] = &[
     ("__fs.gdn", include_str!("__fs.gdn")),
     ("__random.gdn", include_str!("__random.gdn")),
     ("__reflect.gdn", include_str!("__reflect.gdn")),
+    ("__shell.gdn", include_str!("__shell.gdn")),
     ("__time.gdn", include_str!("__time.gdn")),
 ];
 
@@ -2728,7 +2729,7 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
-        BuiltInFunctionKind::PreludeShell => {
+        BuiltInFunctionKind::ShellRun => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
@@ -3066,7 +3067,7 @@ fn eval_built_in_call(
                 }));
             }
         }
-        BuiltInFunctionKind::PreludeGetEnv => {
+        BuiltInFunctionKind::ShellGetEnv => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),

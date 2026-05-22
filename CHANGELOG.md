@@ -8,6 +8,16 @@
 `shell()` now returns a tuple `(stdout, stderr)` on success, instead
 of stdout and stderr concatenated together.
 
+Moved `shell()` and `get_env()` from the prelude to a new `__shell.gdn`
+built-in namespace. `shell()` has been renamed to `run()`.
+
+```
+import "__shell.gdn" as shell
+
+shell::run("ls", ["-l", "/"])
+shell::get_env("HOME")
+```
+
 ## Tooling
 
 Added a `--trace` CLI flag that enables expression tracing when

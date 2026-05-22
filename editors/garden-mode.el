@@ -695,7 +695,7 @@ With a prefix argument, also save the stringified result to the kill ring."
          "import" "internal" "external" "public" "shared"
          "if" "else" "while" "return" "test" "match"
          "break" "continue" "for" "in" "assert"
-         "as" "method")
+         "as" "method" "try" "catch")
        'symbols)
      . font-lock-keyword-face)
 

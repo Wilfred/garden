@@ -2560,7 +2560,7 @@ fn parse_function_(
 
 pub(crate) const KEYWORDS: &[&str] = &[
     "let", "fun", "enum", "struct", "import", "if", "else", "while", "return", "test", "match",
-    "break", "continue", "for", "in", "assert", "as", "method", "public", "shared",
+    "break", "continue", "for", "in", "assert", "as", "method", "public", "shared", "try", "catch",
 ];
 
 pub(crate) fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {

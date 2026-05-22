@@ -650,8 +650,14 @@ fn normalize_blank_lines(src: &str, toplevel_start_lines: &[usize]) -> String {
         i += 1;
 
         // Check if the next line (after any blanks) starts a new toplevel definition
-        // If so, we need exactly one blank line between them
-        if i < lines.len() && !lines[i].trim().is_empty() && toplevel_lines.contains(&i) {
+        // If so, we need exactly one blank line between them. Doc comments
+        // (lines starting with `//`) on the previous line are considered
+        // attached to the following item, so no blank line is inserted.
+        if i < lines.len()
+            && !lines[i].trim().is_empty()
+            && toplevel_lines.contains(&i)
+            && !line.trim_start().starts_with("//")
+        {
             // Next non-blank line is a toplevel definition, but there's no blank line
             // Insert one blank line
             result.push('\n');

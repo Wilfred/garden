@@ -285,7 +285,6 @@ test trim {
   assert("a  ".trim() == "a")
 }
 
-
 /// Returns this string without the suffix specified. If this string
 /// does not end with the suffix, return the string unchanged.
 ///

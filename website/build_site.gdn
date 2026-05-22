@@ -34,7 +34,13 @@ fun drop_leading_comments(src: String): String {
   "\n".join(lines.slice(first_code_line, lines.len()))
 }
 
-fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Path, base_tmpl_src: String): Unit {
+fun write_fun_page(
+  ns_name: String,
+  ns: Namespace,
+  fun_name: String,
+  out_dir: Path,
+  base_tmpl_src: String,
+): Unit {
   let qualified_name = "::".join([ns_name, fun_name])
 
   match reflect::doc_comment(ns, fun_name) {
@@ -63,7 +69,12 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
   }
 }
 
-fun write_method_page(type_name: String, method_name: String, out_dir: Path, base_tmpl_src: String): Unit {
+fun write_method_page(
+  type_name: String,
+  method_name: String,
+  out_dir: Path,
+  base_tmpl_src: String,
+): Unit {
   let qualified_name = type_name ^ "::" ^ method_name
 
   match reflect::doc_comment_for_method(type_name, method_name) {
@@ -107,14 +118,21 @@ fun render_doc_comment(
   markdown::render(md_src, file, self_url)
 }
 
-fun render_type_doc_comment(heading: String, doc_comment: String, src: String, methods: List<String>, type_name: String, self_url: Option<String>): String {
+fun render_type_doc_comment(
+  heading: String,
+  doc_comment: String,
+  src: String,
+  methods: List<String>,
+  type_name: String,
+  self_url: Option<String>,
+): String {
   let src = "```garden nocheck title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
 
   let methods_section = if methods.is_empty() {
     ""
   } else {
     let method_list = methods.map(fun(m: String) {
-      "* [`" ^ m ^ "()`](/method:" ^ type_name ^ "::" ^ m ^ ".html)"
+        "* [`" ^ m ^ "()`](/method:" ^ type_name ^ "::" ^ m ^ ".html)"
     })
     "\n\n## Methods\n\n" ^ "\n".join(method_list)
   }
@@ -170,7 +188,7 @@ fun write_markdown_page(
     substitute_shorthand(website_dir, page_src_md),
     Some(md_path),
     Some(self_url))
-  
+
   write_website_page(base_tmpl_string, page_src, out_path, title)
 }
 
@@ -420,46 +438,46 @@ fun code_link(text: String, url: String): String {
 /// Replace all __FOO strings in markdown `src` with runtime values.
 fun substitute_shorthand(website_dir: Path, src: String): String {
   let keyword_links = reflect::keywords().map(fun(keyword: String) {
-    code_link(keyword, "./keyword:" ^ keyword ^ ".html")
+      code_link(keyword, "./keyword:" ^ keyword ^ ".html")
   })
 
   let keyword_links = join_with_commas_and(keyword_links)
 
   let operator_links = reflect::operators().map(fun(operator: String) {
-    let page_name = ops::url_safe_name(operator)
-    code_link(operator, "./operator:" ^ page_name ^ ".html")
+      let page_name = ops::url_safe_name(operator)
+      code_link(operator, "./operator:" ^ page_name ^ ".html")
   })
 
   let operator_links = join_with_commas_and(operator_links)
 
   let type_links = reflect::prelude_types().map(fun(name: String) {
-    code_link(name, "./type:" ^ name ^ ".html")
+      code_link(name, "./type:" ^ name ^ ".html")
   })
 
   let type_links = join_with_commas_and(type_links)
 
   let prelude_funs = reflect::namespace_functions(prelude).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__prelude.gdn::" ^ name ^ ".html")
+      code_link(name ^ "()", "./fun:__prelude.gdn::" ^ name ^ ".html")
   })
   let prelude_funs = join_with_commas_and(prelude_funs)
 
   let fs_funs = reflect::namespace_functions(fs).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__fs.gdn::" ^ name ^ ".html")
+      code_link(name ^ "()", "./fun:__fs.gdn::" ^ name ^ ".html")
   })
   let fs_funs = join_with_commas_and(fs_funs)
 
   let random_funs = reflect::namespace_functions(random).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__random.gdn::" ^ name ^ ".html")
+      code_link(name ^ "()", "./fun:__random.gdn::" ^ name ^ ".html")
   })
   let random_funs = join_with_commas_and(random_funs)
 
   let reflect_funs = reflect::namespace_functions(reflect).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__reflect.gdn::" ^ name ^ ".html")
+      code_link(name ^ "()", "./fun:__reflect.gdn::" ^ name ^ ".html")
   })
   let reflect_funs = join_with_commas_and(reflect_funs)
 
   let time_funs = reflect::namespace_functions(time).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__time.gdn::" ^ name ^ ".html")
+      code_link(name ^ "()", "./fun:__time.gdn::" ^ name ^ ".html")
   })
   let time_funs = join_with_commas_and(time_funs)
 

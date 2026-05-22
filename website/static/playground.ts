@@ -65,6 +65,12 @@ type StdoutOutput = {
   };
 };
 
+type StderrOutput = {
+  printed_stderr: {
+    s: string;
+  };
+};
+
 type PlaygroundResult = {
   error: string | null;
   value: string | null;
@@ -72,7 +78,7 @@ type PlaygroundResult = {
 
 type PlaygroundResponse = {
   success: boolean;
-  results?: (StdoutOutput | PlaygroundResult)[];
+  results?: (StdoutOutput | StderrOutput | PlaygroundResult)[];
   error?: string;
   rawOutput?: string;
 };
@@ -107,19 +113,19 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
         return;
       }
 
-      // Iterate over all results
-      const stdoutParts: string[] = [];
+      // Iterate over all results, preserving stdout/stderr emission order.
+      const outputParts: string[] = [];
       const valueParts: string[] = [];
       let hasError = false;
 
       for (const item of data.results) {
-        // Check if this is a stdout object
         if ("printed" in item) {
-          const stdoutItem = item;
-          stdoutParts.push(stdoutItem.printed.s);
-        }
-        // Check if this is a result object
-        else if ("error" in item || "value" in item) {
+          outputParts.push(item.printed.s);
+        } else if ("printed_stderr" in item) {
+          outputParts.push(
+            `<span class="stderr">${item.printed_stderr.s}</span>`,
+          );
+        } else if ("error" in item || "value" in item) {
           const result = item;
 
           if (result.error) {
@@ -136,8 +142,8 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
 
       if (!hasError) {
         let output = "";
-        if (stdoutParts.length > 0) {
-          output = stdoutParts.join("");
+        if (outputParts.length > 0) {
+          output = outputParts.join("");
         }
         if (valueParts.length > 0) {
           if (output.length > 0) {

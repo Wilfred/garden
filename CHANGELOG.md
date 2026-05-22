@@ -18,6 +18,8 @@ shell::run("ls", ["-l", "/"])
 shell::get_env("HOME")
 ```
 
+Added `eprint()` and `eprintln()` for writing to stderr.
+
 ## Tooling
 
 Added a `--trace` CLI flag that enables expression tracing when

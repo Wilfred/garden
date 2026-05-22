@@ -105,6 +105,9 @@ pub(crate) enum ResponseKind {
     Printed {
         s: String,
     },
+    PrintedStderr {
+        s: String,
+    },
     /// We received an interrupt request. The current (or next)
     /// evaluate request will return an error of "Interrupted".
     Interrupted {

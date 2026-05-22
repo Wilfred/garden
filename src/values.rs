@@ -388,6 +388,8 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BuiltInFunctionKind {
+    PreludeEprint,
+    PreludeEprintln,
     PreludePrint,
     PreludePrintln,
     PreludeReadLine,
@@ -431,6 +433,8 @@ impl BuiltInFunctionKind {
             | BuiltInFunctionKind::PreludeStringRepr
             | BuiltInFunctionKind::PreludePrint
             | BuiltInFunctionKind::PreludePrintln
+            | BuiltInFunctionKind::PreludeEprint
+            | BuiltInFunctionKind::PreludeEprintln
             | BuiltInFunctionKind::PreludeReadLine
             | BuiltInFunctionKind::PreludeSourceDirectory
             | BuiltInFunctionKind::PreludeShellArguments => PathBuf::from("__prelude.gdn"),
@@ -473,6 +477,8 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::PreludeStringRepr => "string_repr",
             BuiltInFunctionKind::PreludePrint => "print",
             BuiltInFunctionKind::PreludePrintln => "println",
+            BuiltInFunctionKind::PreludeEprint => "eprint",
+            BuiltInFunctionKind::PreludeEprintln => "eprintln",
             BuiltInFunctionKind::PreludeReadLine => "read_line",
             BuiltInFunctionKind::PreludeSourceDirectory => "source_directory",
             BuiltInFunctionKind::PreludeShellArguments => "shell_arguments",

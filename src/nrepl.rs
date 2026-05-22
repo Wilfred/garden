@@ -133,11 +133,14 @@ fn handle_eval(
     env: &mut Env,
     session: &Session,
     stdout_buf: &Arc<Mutex<String>>,
+    stderr_buf: &Arc<Mutex<String>>,
     base_msg: &HashMap<Vec<u8>, Value>,
 ) -> Vec<Value> {
     let ns = env.current_namespace();
     let path = (*ns.borrow().abs_path).clone();
-    eval_code_in_namespace(code, path, ns, env, session, stdout_buf, base_msg)
+    eval_code_in_namespace(
+        code, path, ns, env, session, stdout_buf, stderr_buf, base_msg,
+    )
 }
 
 /// Perform a single `load-file` request, returning the response
@@ -151,6 +154,7 @@ fn handle_load_file(
     env: &mut Env,
     session: &Session,
     stdout_buf: &Arc<Mutex<String>>,
+    stderr_buf: &Arc<Mutex<String>>,
     base_msg: &HashMap<Vec<u8>, Value>,
 ) -> Vec<Value> {
     let path: PathBuf = match file_path {
@@ -158,7 +162,9 @@ fn handle_load_file(
         None => (*env.current_namespace().borrow().abs_path).clone(),
     };
     let ns = env.get_or_create_namespace(&path);
-    eval_code_in_namespace(code, path, ns, env, session, stdout_buf, base_msg)
+    eval_code_in_namespace(
+        code, path, ns, env, session, stdout_buf, stderr_buf, base_msg,
+    )
 }
 
 /// Parse `code`, load its top-level items into `namespace`, evaluate
@@ -170,6 +176,7 @@ fn eval_code_in_namespace(
     env: &mut Env,
     session: &Session,
     stdout_buf: &Arc<Mutex<String>>,
+    stderr_buf: &Arc<Mutex<String>>,
     base_msg: &HashMap<Vec<u8>, Value>,
 ) -> Vec<Value> {
     let vfs_path = env.vfs.insert(Rc::new(vfs_path_buf), code.to_owned());
@@ -219,11 +226,18 @@ fn eval_code_in_namespace(
     let eval_result = eval_toplevel_exprs_then_stop(&items, env, session, namespace.clone());
     let eval_msec = eval_start.elapsed().as_millis() as i64;
 
-    let captured = std::mem::take(&mut *stdout_buf.lock().expect("stdout buffer poisoned"));
-    if !captured.is_empty() {
+    let captured_stdout = std::mem::take(&mut *stdout_buf.lock().expect("stdout buffer poisoned"));
+    if !captured_stdout.is_empty() {
         let mut out_msg = base_msg.clone();
-        out_msg.insert(b"out".to_vec(), bstr(captured));
+        out_msg.insert(b"out".to_vec(), bstr(captured_stdout));
         responses.push(Value::Dict(out_msg));
+    }
+
+    let captured_stderr = std::mem::take(&mut *stderr_buf.lock().expect("stderr buffer poisoned"));
+    if !captured_stderr.is_empty() {
+        let mut err_msg = base_msg.clone();
+        err_msg.insert(b"err".to_vec(), bstr(captured_stderr));
+        responses.push(Value::Dict(err_msg));
     }
 
     match eval_result {
@@ -599,18 +613,27 @@ fn session_worker(
         interrupted.store(false, Ordering::SeqCst);
 
         let stdout_buf = Arc::new(Mutex::new(String::new()));
+        let stderr_buf = Arc::new(Mutex::new(String::new()));
         let session = Session {
             interrupted: Arc::clone(&interrupted),
-            stdout_mode: StdoutMode::WriteToBuffer(Arc::clone(&stdout_buf)),
+            stdout_mode: StdoutMode::WriteToNReplBuffers {
+                stdout_buf: Arc::clone(&stdout_buf),
+                stderr_buf: Arc::clone(&stderr_buf),
+            },
             start_time: Instant::now(),
             trace_exprs: false,
             pretty_print_json: false,
         };
 
         let responses = match req {
-            SessionRequest::Eval { code, base_msg } => {
-                handle_eval(&code, &mut env, &session, &stdout_buf, &base_msg)
-            }
+            SessionRequest::Eval { code, base_msg } => handle_eval(
+                &code,
+                &mut env,
+                &session,
+                &stdout_buf,
+                &stderr_buf,
+                &base_msg,
+            ),
             SessionRequest::LoadFile {
                 code,
                 file_path,
@@ -621,6 +644,7 @@ fn session_worker(
                 &mut env,
                 &session,
                 &stdout_buf,
+                &stderr_buf,
                 &base_msg,
             ),
             SessionRequest::Completions { prefix, base_msg } => {

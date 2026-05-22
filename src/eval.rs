@@ -195,21 +195,31 @@ pub(crate) enum StdoutJsonFormat {
     Playground,
 }
 
-/// How output from print() is handled.
+/// How output from `print()`, `println()`, `eprint()` and `eprintln()`
+/// is handled. Currently the same mode governs both stdout and stderr
+/// output from the running program.
 #[derive(Debug)]
 pub(crate) enum StdoutMode {
-    /// Write the string to stdout unmodified.
+    /// Write the string to stdout (or stderr for `eprint`/`eprintln`)
+    /// unmodified.
     WriteDirectly,
     /// Write the string to stdout in a JSON format, so we can can
     /// consume stdout in a REPL session or the playground backend
-    /// without getting confused.
+    /// without getting confused. `eprint`/`eprintln` output is sent
+    /// to stdout in this mode as a `printed_stderr` JSON response,
+    /// so the playground can display it alongside stdout.
     WriteJson(StdoutJsonFormat),
-    /// Append the string to the given buffer instead of writing it to
-    /// stdout. Used by the nREPL server to capture output and send it
-    /// back to the connected client.
-    WriteToBuffer(Arc<std::sync::Mutex<String>>),
-    /// Don't write anything to stdout when print() is called, treat
-    /// it as a no-op. This is used when running tests in a sandbox.
+    /// Append output to the given buffers instead of writing it
+    /// anywhere. Used by the nREPL server to capture output and send
+    /// it back to the connected client. `print`/`println` go to
+    /// `stdout_buf`; `eprint`/`eprintln` go to `stderr_buf`.
+    WriteToNReplBuffers {
+        stdout_buf: Arc<std::sync::Mutex<String>>,
+        stderr_buf: Arc<std::sync::Mutex<String>>,
+    },
+    /// Don't write anything when `print`/`println`/`eprint`/`eprintln`
+    /// are called, treat them as a no-op. This is used when running
+    /// tests in a sandbox.
     DoNotWrite,
 }
 
@@ -218,6 +228,8 @@ pub(crate) struct Session {
     pub(crate) interrupted: Arc<AtomicBool>,
     /// Whether `print()` should write to stdout directly, or if we
     /// should write a JSON message to stdout summarising the print.
+    /// Also governs how `eprint()`/`eprintln()` output to stderr is
+    /// handled.
     pub(crate) stdout_mode: StdoutMode,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
@@ -2634,8 +2646,11 @@ fn eval_built_in_call(
                     // needs a test
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteToBuffer(buf) => {
-                    buf.lock().expect("stdout buffer poisoned").push_str(s);
+                StdoutMode::WriteToNReplBuffers { stdout_buf, .. } => {
+                    stdout_buf
+                        .lock()
+                        .expect("stdout buffer poisoned")
+                        .push_str(s);
                 }
                 StdoutMode::DoNotWrite => {}
             }
@@ -2683,8 +2698,107 @@ fn eval_built_in_call(
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteToBuffer(buf) => {
-                    let mut b = buf.lock().expect("stdout buffer poisoned");
+                StdoutMode::WriteToNReplBuffers { stdout_buf, .. } => {
+                    let mut b = stdout_buf.lock().expect("stdout buffer poisoned");
+                    b.push_str(s);
+                    b.push('\n');
+                }
+                StdoutMode::DoNotWrite => {}
+            }
+
+            if expr_value_is_used {
+                env.push_value(Value::unit());
+            }
+        }
+        BuiltInFunctionKind::PreludeEprint => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
+            match &session.stdout_mode {
+                StdoutMode::WriteDirectly => {
+                    eprint!("{s}");
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
+                    let response = Response {
+                        kind: ResponseKind::PrintedStderr { s: s.clone() },
+                        position: None,
+                        id: None,
+                    };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                    let response = ResponseKind::PrintedStderr { s: s.clone() };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteToNReplBuffers { stderr_buf, .. } => {
+                    stderr_buf
+                        .lock()
+                        .expect("stderr buffer poisoned")
+                        .push_str(s);
+                }
+                StdoutMode::DoNotWrite => {}
+            }
+
+            if expr_value_is_used {
+                env.push_value(Value::unit());
+            }
+        }
+        BuiltInFunctionKind::PreludeEprintln => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
+            match &session.stdout_mode {
+                StdoutMode::WriteDirectly => {
+                    eprintln!("{s}");
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
+                    let response = Response {
+                        kind: ResponseKind::PrintedStderr {
+                            s: format!("{s}\n"),
+                        },
+                        position: None,
+                        id: None,
+                    };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                    let response = ResponseKind::PrintedStderr {
+                        s: format!("{s}\n"),
+                    };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteToNReplBuffers { stderr_buf, .. } => {
+                    let mut b = stderr_buf.lock().expect("stderr buffer poisoned");
                     b.push_str(s);
                     b.push('\n');
                 }

@@ -36,6 +36,19 @@ jobs:
       - name: Check TS formatting
         run: npx prettier --check "website/**/*.ts"
 
+      - name: Build Garden
+        run: cargo build
+
+      - name: Check Garden formatting
+        run: |
+          status=0
+          while IFS= read -r -d '' f; do
+            if ! ./target/debug/garden format --check "$f"; then
+              status=1
+            fi
+          done < <(find src website sample_programs benchmarks -name '*.gdn' -not -path '*/test_files/*' -not -path '*/unit_test_files/*' -print0)
+          exit "$status"
+
   typos:
     name: Check spelling
     runs-on: ubuntu-24.04

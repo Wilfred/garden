@@ -687,8 +687,8 @@ fun render_paragraph(src: String, self_url: Option<String>): String {
 
 fun render_bullets(items: List<String>, self_url: Option<String>): String {
   let rendered_items = items.map(fun(item: String) {
-    let rendered_item = render_inline(item.strip_prefix("*").trim_left(), self_url)
-    "<li>" ^ rendered_item ^ "</li>"
+      let rendered_item = render_inline(item.strip_prefix("*").trim_left(), self_url)
+      "<li>" ^ rendered_item ^ "</li>"
   })
 
   "<ul>\n" ^ "\n".join(rendered_items) ^ "\n</ul>"

@@ -145,7 +145,14 @@ enum CliCommands {
         override_path: Option<PathBuf>,
     },
     /// Format a Garden file and print the re-indented source code.
-    Format { path: PathBuf },
+    Format {
+        path: PathBuf,
+        /// Check if the file is already formatted. Exits with a
+        /// non-zero status if formatting would change the file, and
+        /// does not print the formatted output.
+        #[clap(long, action)]
+        check: bool,
+    },
     /// Check the Garden program at the path specified for issues.
     Check {
         path: PathBuf,
@@ -544,12 +551,19 @@ fn main() {
                 }
             }
         }
-        CliCommands::Format { path } => {
+        CliCommands::Format { path, check } => {
             let abs_path = to_abs_path(&path);
             let mut src = read_utf8_or_die(&abs_path);
             src = remove_testing_footer(&src);
             let formatted = format::format(&src, &abs_path);
-            print!("{formatted}");
+            if check {
+                if src != formatted {
+                    eprintln!("{}: not formatted", path.display());
+                    std::process::exit(1);
+                }
+            } else {
+                print!("{formatted}");
+            }
         }
         CliCommands::PlaygroundRun { path } => {
             let abs_path = to_abs_path(&path);

@@ -42,6 +42,7 @@ pub(crate) trait Visitor {
     fn visit_method_info_default(&mut self, method_info: &MethodInfo) {
         self.visit_type_hint(&method_info.receiver_hint);
         self.visit_symbol(&method_info.receiver_sym);
+        self.visit_symbol(&method_info.name_sym);
 
         if let Some(fun_info) = method_info.fun_info() {
             self.visit_fun_info(fun_info);
@@ -49,6 +50,7 @@ pub(crate) trait Visitor {
     }
 
     fn visit_test_info(&mut self, test_info: &TestInfo) {
+        self.visit_symbol(&test_info.name_sym);
         self.visit_block(&test_info.body);
     }
 
@@ -57,21 +59,39 @@ pub(crate) trait Visitor {
     }
 
     fn visit_enum_info_default(&mut self, enum_info: &EnumInfo) {
+        self.visit_type_symbol(&enum_info.name_sym);
+        for type_param in &enum_info.type_params {
+            self.visit_type_symbol(type_param);
+        }
         for variant in &enum_info.variants {
+            self.visit_symbol(&variant.name_sym);
             if let Some(hint) = &variant.payload_hint {
                 self.visit_type_hint(hint);
             }
         }
     }
 
-    fn visit_import_info(&mut self, _: &ImportInfo) {}
+    fn visit_import_info(&mut self, import_info: &ImportInfo) {
+        self.visit_import_info_default(import_info);
+    }
+
+    fn visit_import_info_default(&mut self, import_info: &ImportInfo) {
+        if let Some(namespace_sym) = &import_info.namespace_sym {
+            self.visit_symbol(namespace_sym);
+        }
+    }
 
     fn visit_struct_info(&mut self, struct_info: &StructInfo) {
         self.visit_struct_info_default(struct_info);
     }
 
     fn visit_struct_info_default(&mut self, struct_info: &StructInfo) {
+        self.visit_type_symbol(&struct_info.name_sym);
+        for type_param in &struct_info.type_params {
+            self.visit_type_symbol(type_param);
+        }
         for field in &struct_info.fields {
+            self.visit_symbol(&field.sym);
             self.visit_type_hint(&field.hint);
         }
     }

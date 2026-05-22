@@ -31,6 +31,7 @@
 
     // Recommended Options
     "strict": true,
+    "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,

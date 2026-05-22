@@ -154,6 +154,25 @@ impl IndentationVisitor {
         }
     }
 
+    /// Visit each argument expression in a call, increasing depth only
+    /// while visiting nested expressions that don't carry their own
+    /// block. A function literal argument's body is a `Block`, and
+    /// `visit_block` already increases depth for its contents, so
+    /// incrementing here too would over-indent the lambda body by an
+    /// extra level.
+    fn visit_call_arguments(&mut self, arguments: &[crate::parser::ast::ExpressionWithComma]) {
+        for arg in arguments {
+            let bumps_own_depth = matches!(arg.expr.expr_, Expression_::FunLiteral(_));
+            if !bumps_own_depth {
+                self.current_depth += 1;
+            }
+            self.visit_expr(&arg.expr);
+            if !bumps_own_depth {
+                self.current_depth -= 1;
+            }
+        }
+    }
+
     /// Fix indentation of function call arguments that span multiple lines.
     /// Arguments on lines after the opening parenthesis are indented one level
     /// deeper than the call expression itself.
@@ -372,23 +391,13 @@ impl Visitor for IndentationVisitor {
             self.visit_expr(recv);
             self.fix_function_argument_indentation(paren_args);
 
-            // Increase depth while visiting arguments so nested calls are indented correctly
-            self.current_depth += 1;
-            for arg in &paren_args.arguments {
-                self.visit_expr(&arg.expr);
-            }
-            self.current_depth -= 1;
+            self.visit_call_arguments(&paren_args.arguments);
         } else if let Expression_::MethodCall(recv, meth_name, paren_args) = expr_ {
             self.visit_symbol(meth_name);
             self.visit_expr(recv);
             self.fix_function_argument_indentation(paren_args);
 
-            // Increase depth while visiting arguments so nested calls are indented correctly
-            self.current_depth += 1;
-            for arg in &paren_args.arguments {
-                self.visit_expr(&arg.expr);
-            }
-            self.current_depth -= 1;
+            self.visit_call_arguments(&paren_args.arguments);
         } else {
             // For all other expression types, delegate to the visitor's default behavior
             // which handles recursion into nested expressions

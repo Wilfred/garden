@@ -1,0 +1,41 @@
+fun map_call(items: List<Int>): List<Int> {
+  items.map(fun(x: Int) {
+x + 1
+  })
+}
+
+fun regular_call(xs: List<Int>): List<Int> {
+  some_call(fun(x: Int) {
+x * 2
+  })
+}
+
+fun nested_lambdas(xs: List<Int>): List<List<Int>> {
+  xs.map(fun(x: Int) {
+    xs.map(fun(y: Int) {
+x + y
+    })
+  })
+}
+
+// args: format
+// expected stdout:
+// fun map_call(items: List<Int>): List<Int> {
+//   items.map(fun(x: Int) {
+//     x + 1
+//   })
+// }
+// 
+// fun regular_call(xs: List<Int>): List<Int> {
+//   some_call(fun(x: Int) {
+//     x * 2
+//   })
+// }
+// 
+// fun nested_lambdas(xs: List<Int>): List<List<Int>> {
+//   xs.map(fun(x: Int) {
+//     xs.map(fun(y: Int) {
+//       x + y
+//     })
+//   })
+// }

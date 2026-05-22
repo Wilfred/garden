@@ -15,7 +15,7 @@
 //     "column": 1,
 //     "doc": "Write a string to stdout, with a newline appended. See also `print()`.\n\n```\nprintln(\"hello world\")\n```",
 //     "file": "__prelude.gdn",
-//     "line": 883,
+//     "line": 882,
 //     "name": "println",
 //     "ns": "__user"
 //   },

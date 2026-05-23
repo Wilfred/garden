@@ -609,6 +609,29 @@ fn parse_while(
     )
 }
 
+fn parse_try(
+    tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let try_token = require_token(tokens, diagnostics, "try");
+
+    let try_body = parse_block(tokens, id_gen, diagnostics, false);
+
+    require_token(tokens, diagnostics, "catch");
+    require_token(tokens, diagnostics, "(");
+    let catch_sym = parse_symbol(tokens, id_gen, diagnostics, Some("catch variable name"));
+    require_token(tokens, diagnostics, ")");
+
+    let catch_body = parse_block(tokens, id_gen, diagnostics, false);
+
+    Expression::new(
+        Position::merge(&try_token.position, &catch_body.close_brace),
+        Expression_::Try(try_body, catch_sym, catch_body),
+        id_gen.next(),
+    )
+}
+
 fn parse_for_in(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
@@ -1407,6 +1430,9 @@ fn parse_expression_no_trailing(
         }
         if token.text == "match" {
             return parse_match(tokens, id_gen, diagnostics);
+        }
+        if token.text == "try" {
+            return parse_try(tokens, id_gen, diagnostics);
         }
     }
 

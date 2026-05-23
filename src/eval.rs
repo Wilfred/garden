@@ -5967,6 +5967,17 @@ fn eval_expr(
                 }
             }
         }
+        Expression_::Try(_, _, _) => {
+            return Err((
+                RestoreValues(vec![]),
+                EvalError::Exception(ExceptionInfo {
+                    position: expr_position,
+                    message: ErrorMessage(vec![msgtext!(
+                        "try/catch is not yet implemented at runtime."
+                    )]),
+                }),
+            ));
+        }
         Expression_::Return(expr) => {
             if expr_state.done_children() {
                 // No more expressions to evaluate in this function, we're returning.

@@ -46,6 +46,9 @@ Added warnings for:
 Added :load to evaluate all definitions in a file and switch to that
 namespace.
 
+`garden check` now accepts `--ignore-warnings` to suppress warnings
+and only display errors.
+
 ## Standard Library
 
 Added `random::choose()`.

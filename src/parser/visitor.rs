@@ -158,6 +158,9 @@ pub(crate) trait Visitor {
             Expression_::ForIn(sym, expr, body) => {
                 self.visit_expr_for_in(sym, expr, body);
             }
+            Expression_::Try(try_body, catch_sym, catch_body) => {
+                self.visit_expr_try(try_body, catch_sym, catch_body);
+            }
             Expression_::Break => {}
             Expression_::Continue => {}
             Expression_::Assign(sym, expr) => {
@@ -291,6 +294,12 @@ pub(crate) trait Visitor {
         self.visit_dest(dest);
         self.visit_expr(expr);
         self.visit_block(body);
+    }
+
+    fn visit_expr_try(&mut self, try_body: &Block, catch_sym: &Symbol, catch_body: &Block) {
+        self.visit_block(try_body);
+        self.visit_symbol(catch_sym);
+        self.visit_block(catch_body);
     }
 
     fn visit_expr_variable(&mut self, symbol: &Symbol) {

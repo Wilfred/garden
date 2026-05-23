@@ -1,0 +1,35 @@
+try { 1 } catch (e) { 2 }
+
+// args: reftest-ast
+// expected stdout:
+// Try(
+//     Block {
+//         open_brace: Position { ... },
+//         exprs: [
+//             Expression {
+//                 position: Position { ... },
+//                 expr_: IntLiteral(
+//                     1,
+//                 ),
+//                 value_is_used: true,
+//                 id: SyntaxId(0),
+//             },
+//         ],
+//         close_brace: Position { ... },
+//     },
+//     Symbol"e",
+//     Block {
+//         open_brace: Position { ... },
+//         exprs: [
+//             Expression {
+//                 position: Position { ... },
+//                 expr_: IntLiteral(
+//                     2,
+//                 ),
+//                 value_is_used: true,
+//                 id: SyntaxId(2),
+//             },
+//         ],
+//         close_brace: Position { ... },
+//     },
+// )

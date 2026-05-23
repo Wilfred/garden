@@ -901,6 +901,11 @@ impl TypeCheckVisitor<'_> {
 
                 Type::unit()
             }
+            Expression_::Try(try_body, _catch_sym, catch_body) => {
+                self.infer_block(try_body, type_bindings, expected_return_ty);
+                self.infer_block(catch_body, type_bindings, expected_return_ty);
+                Type::unit()
+            }
             Expression_::Break | Expression_::Continue => {
                 // As with `return`, these never produce a value, they
                 // jump elsewhere. `let x = break` will never assign

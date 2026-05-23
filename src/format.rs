@@ -414,6 +414,9 @@ impl Visitor for IndentationVisitor {
                 Expression_::ForIn(sym, expr, body) => {
                     self.visit_expr_for_in(sym, expr, body);
                 }
+                Expression_::Try(try_body, catch_sym, catch_body) => {
+                    self.visit_expr_try(try_body, catch_sym, catch_body);
+                }
                 Expression_::Break => {}
                 Expression_::Continue => {}
                 Expression_::Assign(sym, expr) => {

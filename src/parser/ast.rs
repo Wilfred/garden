@@ -438,6 +438,10 @@ pub(crate) enum Expression_ {
     /// ```
     ForIn(LetDestination, Rc<Expression>, Block),
     /// ```garden
+    /// try { x } catch (e) { y }
+    /// ```
+    Try(Block, Symbol, Block),
+    /// ```garden
     /// break
     /// ```
     Break,

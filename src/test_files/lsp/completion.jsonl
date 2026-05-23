@@ -1,0 +1,42 @@
+{"method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///test.gdn", "languageId": "garden", "version": 1, "text": "let s = \"hello\"\ns.len\n"}}}
+{"id": 1, "method": "textDocument/completion", "params": {"textDocument": {"uri": "file:///test.gdn"}, "position": {"line": 1, "character": 3}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "Struct `String` has no field `len`.",
+//         "range": {
+//           "end": {
+//             "character": 5,
+//             "line": 1
+//           },
+//           "start": {
+//             "character": 2,
+//             "line": 1
+//           }
+//         },
+//         "severity": 1
+//       }
+//     ],
+//     "uri": "file:///test.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "detail": "(): Int",
+//       "insertText": "len()",
+//       "insertTextFormat": 2,
+//       "kind": 2,
+//       "label": "len()"
+//     }
+//   ]
+// }
+

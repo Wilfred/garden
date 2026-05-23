@@ -1,0 +1,24 @@
+{"method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///test.gdn", "languageId": "garden", "version": 1, "text": "/// Add one to the given integer.\nfun add_one(x: Int): Int {\n  x + 1\n}\n\nadd_one(5)\n"}}}
+{"id": 1, "method": "textDocument/hover", "params": {"textDocument": {"uri": "file:///test.gdn"}, "position": {"line": 5, "character": 1}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///test.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": {
+//     "contents": {
+//       "kind": "markdown",
+//       "value": "```garden\nFun<(Int), Int>\n```\n\nAdd one to the given integer."
+//     }
+//   }
+// }
+

@@ -1,0 +1,31 @@
+{"method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///test.gdn", "languageId": "garden", "version": 1, "text": "fun add_one(x: Int): Int {\n  x + 1\n}\n\nadd_one(5)\n"}}}
+{"id": 1, "method": "textDocument/definition", "params": {"textDocument": {"uri": "file:///test.gdn"}, "position": {"line": 4, "character": 0}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///test.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": {
+//     "range": {
+//       "end": {
+//         "character": 11,
+//         "line": 0
+//       },
+//       "start": {
+//         "character": 4,
+//         "line": 0
+//       }
+//     },
+//     "uri": "file:///test.gdn"
+//   }
+// }
+

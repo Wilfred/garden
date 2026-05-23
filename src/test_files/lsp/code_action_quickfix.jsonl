@@ -1,0 +1,81 @@
+{"method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///test.gdn", "languageId": "garden", "version": 1, "text": "Path{ p: \"/foo\" }.readd()\n"}}}
+{"id": 1, "method": "textDocument/codeAction", "params": {"textDocument": {"uri": "file:///test.gdn"}, "range": {"start": {"line": 0, "character": 18}, "end": {"line": 0, "character": 23}}, "context": {"diagnostics": []}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "`Path` has no method `readd`. Did you mean `read`?",
+//         "range": {
+//           "end": {
+//             "character": 23,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 18,
+//             "line": 0
+//           }
+//         },
+//         "severity": 1
+//       }
+//     ],
+//     "uri": "file:///test.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///test.gdn": [
+//             {
+//               "newText": "read",
+//               "range": {
+//                 "end": {
+//                   "character": 23,
+//                   "line": 0
+//                 },
+//                 "start": {
+//                   "character": 18,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "quickfix",
+//       "title": "Use `read` here."
+//     },
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///test.gdn": [
+//             {
+//               "newText": "fun extracted() {\n  Path{ p: \"/foo\" }.readd()\n}\n\nextracted()\n",
+//               "range": {
+//                 "end": {
+//                   "character": 25,
+//                   "line": 0
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.extract",
+//       "title": "Extract function"
+//     }
+//   ]
+// }
+

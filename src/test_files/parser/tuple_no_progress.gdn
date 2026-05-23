@@ -1,0 +1,47 @@
+(,{
+
+// args: dump-ast
+// expected stdout:
+// TupleLiteral(
+//     [
+//         Expression {
+//             position: Position { ... },
+//             expr_: Invalid,
+//             value_is_used: true,
+//             id: SyntaxId(0),
+//         },
+//         Expression {
+//             position: Position { ... },
+//             expr_: Invalid,
+//             value_is_used: true,
+//             id: SyntaxId(1),
+//         },
+//     ],
+// )
+// Block(
+//     Block {
+//         open_brace: Position { ... },
+//         exprs: [],
+//         close_brace: Position { ... },
+//     },
+// )
+
+// expected stderr:
+// Error: Parse error: Expected an expression after this.
+// --| src/test_files/parser/tuple_no_progress.gdn:1:1
+//  1| (,{
+//   | ^
+//  2| 
+//  3| // args: dump-ast
+// Error: Parse error: Expected an expression after this.
+// --| src/test_files/parser/tuple_no_progress.gdn:1:2
+//  1| (,{
+//  2|  ^
+//  3| // args: dump-ast
+// Error: Parse error: Expected `)` after this.
+// --| src/test_files/parser/tuple_no_progress.gdn:1:2
+//  1| (,{
+//  2|  ^
+//  3| // args: dump-ast
+// Parse error (incomplete input): Expected `}`, but got EOF.
+

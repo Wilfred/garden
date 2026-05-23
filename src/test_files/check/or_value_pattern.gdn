@@ -1,0 +1,78 @@
+// Should warn: matches the simple `Some(x) => x` / `None => default` pattern.
+public fun simple(opt: Option<Int>): Int {
+    match opt {
+        Some(x) => x,
+        None => 0,
+    }
+}
+
+// Should warn: same pattern with arms in the opposite order.
+public fun reversed(opt: Option<String>): String {
+    match opt {
+        None => "default",
+        Some(s) => s,
+    }
+}
+
+// Should not warn: the `Some` arm does not just return the bound variable.
+public fun some_does_more(opt: Option<Int>): Int {
+    match opt {
+        Some(x) => x + 1,
+        None => 0,
+    }
+}
+
+// Should not warn: the `None` arm uses control flow.
+public fun none_returns(opt: Option<Int>): Option<Int> {
+    let v = match opt {
+        Some(x) => x,
+        None => return None,
+    }
+
+    Some(v)
+}
+
+// Should not warn: extra wildcard arm instead of `None`.
+public fun has_wildcard(opt: Option<Int>): Int {
+    match opt {
+        Some(x) => x,
+        _ => 0,
+    }
+}
+
+// Should not warn: the `None` arm calls a function, which would be
+// evaluated eagerly if rewritten with `.or_value()`.
+public fun expensive_default(opt: Option<Int>): Int {
+    match opt {
+        Some(x) => x,
+        None => compute_default(),
+    }
+}
+
+fun compute_default(): Int {
+    42
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: This `match` can be replaced with a call to `.or_value()`.
+// 
+// -| src/test_files/check/or_value_pattern.gdn:3:11
+// 1| // Should warn: matches the simple `Some(x) => x` / `None => default` pattern.
+// 2| public fun simple(opt: Option<Int>): Int {
+// 3|     match opt {
+//  |           ^^^
+// 4|         Some(x) => x,
+// 5|         None => 0,
+// 
+// Warning: This `match` can be replaced with a call to `.or_value()`.
+// 
+// --| src/test_files/check/or_value_pattern.gdn:11:11
+//  9| // Should warn: same pattern with arms in the opposite order.
+// 10| public fun reversed(opt: Option<String>): String {
+// 11|     match opt {
+//   |           ^^^
+// 12|         None => "default",
+// 13|         Some(s) => s,
+

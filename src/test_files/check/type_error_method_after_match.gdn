@@ -17,3 +17,13 @@ public fun foo(x: Option<Int>) {
 // 6| 
 // 7|     i.foo()
 // 8| }     ^^^
+// 
+// Warning: This `match` can be replaced with a call to `.or_value()`.
+// 
+// -| src/test_files/check/type_error_method_after_match.gdn:2:19
+// 1| public fun foo(x: Option<Int>) {
+// 2|     let i = match x {
+//  |                   ^
+// 3|         Some(v) => v,
+// 4|         None => 0,
+

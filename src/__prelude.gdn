@@ -769,6 +769,31 @@ test list_enumerate {
   assert(["a", "b"].enumerate() == [(0, "a"), (1, "b")])
 }
 
+/// Return a new list of these integers sorted in ascending order.
+///
+/// ```
+/// sort_nums([3, 1, 2]) //-> [1, 2, 3]
+/// ```
+public fun sort_nums(items: List<Int>): List<Int> {
+  match items.first() {
+    None => [],
+    Some(pivot) => {
+      let rest = items.slice(1, items.len())
+      let smaller = rest.filter(fun(x: Int) { x < pivot })
+      let larger = rest.filter(fun(x: Int) { x >= pivot })
+      sort_nums(smaller).concat([pivot]).concat(sort_nums(larger))
+    },
+  }
+}
+
+test sort_nums {
+  assert(sort_nums([]) == [])
+  assert(sort_nums([1]) == [1])
+  assert(sort_nums([3, 1, 2]) == [1, 2, 3])
+  assert(sort_nums([2, 1, 2, 1]) == [1, 1, 2, 2])
+  assert(sort_nums([-1, 5, 0, -3, 10]) == [-3, -1, 0, 5, 10])
+}
+
 /// The option type. Use this when you might have a value, but might
 /// not.
 enum Option<T> {

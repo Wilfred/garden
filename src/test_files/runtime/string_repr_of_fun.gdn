@@ -9,6 +9,6 @@ fun do_stuff() {}
 // args: run
 // expected stdout:
 // <fun do_stuff string_repr_of_fun.gdn:1>
-// <fun println __prelude.gdn:882>
+// <fun println __prelude.gdn:907>
 // <closure string_repr_of_fun.gdn:6>
 

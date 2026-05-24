@@ -3210,6 +3210,23 @@ fn eval_built_in_call(
                 env.push_value(value);
             }
         }
+        BuiltInFunctionKind::ShellIsTty => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            if expr_value_is_used {
+                use std::io::IsTerminal as _;
+                env.push_value(Value::bool(std::io::stdout().is_terminal()));
+            }
+        }
         BuiltInFunctionKind::ReflectKeywords => {
             check_arity(
                 &SymbolName {

@@ -30,3 +30,14 @@ test get_env {
   let nonexistent = get_env("THIS_VARIABLE_SHOULD_NOT_EXIST_12345")
   assert(nonexistent.is_none())
 }
+
+/// Return `True` if stdout is connected to a terminal (TTY), or
+/// `False` if stdout has been redirected to a file or pipe.
+///
+/// ```
+/// import "__shell.gdn" as shell
+/// shell::is_tty()
+/// ```
+public fun is_tty(): Bool {
+  __BUILT_IN_IMPLEMENTATION
+}

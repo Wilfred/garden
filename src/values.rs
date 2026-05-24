@@ -399,6 +399,7 @@ pub(crate) enum BuiltInFunctionKind {
     PreludeThrow,
 
     ShellGetEnv,
+    ShellIsTty,
     ShellRun,
 
     FsCopyFile,
@@ -438,9 +439,9 @@ impl BuiltInFunctionKind {
             | BuiltInFunctionKind::PreludeReadLine
             | BuiltInFunctionKind::PreludeSourceDirectory
             | BuiltInFunctionKind::PreludeShellArguments => PathBuf::from("__prelude.gdn"),
-            BuiltInFunctionKind::ShellRun | BuiltInFunctionKind::ShellGetEnv => {
-                PathBuf::from("__shell.gdn")
-            }
+            BuiltInFunctionKind::ShellRun
+            | BuiltInFunctionKind::ShellGetEnv
+            | BuiltInFunctionKind::ShellIsTty => PathBuf::from("__shell.gdn"),
             BuiltInFunctionKind::FsWriteFile
             | BuiltInFunctionKind::FsListDirectory
             | BuiltInFunctionKind::FsWorkingDirectory
@@ -497,6 +498,7 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::ReflectNamespaceFunctions => "namespace_functions",
             BuiltInFunctionKind::ReflectMethodsForType => "methods_for_type",
             BuiltInFunctionKind::ShellGetEnv => "get_env",
+            BuiltInFunctionKind::ShellIsTty => "is_tty",
             BuiltInFunctionKind::ReflectKeywords => "keywords",
             BuiltInFunctionKind::RandomRandomInt => "int",
             BuiltInFunctionKind::FsCreateDir => "create_dir",

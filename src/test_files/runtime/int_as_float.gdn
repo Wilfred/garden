@@ -1,0 +1,11 @@
+{
+  dbg(1.as_float())
+  dbg(0.as_float())
+  dbg((-3).as_float())
+}
+
+// args: run
+// expected stdout:
+// 1.0
+// 0.0
+// -3.0

@@ -502,6 +502,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
                 ("floor", BuiltInMethodKind::FloatFloor),
             ],
         ),
+        ("Int", vec![("as_float", BuiltInMethodKind::IntAsFloat)]),
         (
             "List",
             vec![

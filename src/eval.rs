@@ -5122,6 +5122,45 @@ fn eval_built_in_method_call(
                 }
             }
         }
+        BuiltInMethodKind::IntAsFloat => {
+            check_arity(
+                &SymbolName {
+                    text: "Int::as_float".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            match receiver_value.as_ref() {
+                Value_::Int(i) => {
+                    if expr_value_is_used {
+                        env.push_value(Value::new(Value_::Float(*i as f64)));
+                    }
+                }
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[0].clone(),
+                            message: format_type_error(
+                                &TypeName { text: "Int".into() },
+                                receiver_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            }
+        }
         BuiltInMethodKind::ListAppend => {
             check_arity(
                 &SymbolName {

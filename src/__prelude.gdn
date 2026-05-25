@@ -859,6 +859,15 @@ struct Int {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
+/// Convert this integer to a floating point value.
+///
+/// ```
+/// 1.as_float() //-> 1.0
+/// ```
+public method as_float(this: Int): Float {
+  __BUILT_IN_IMPLEMENTATION
+}
+
 /// A 64-bit floating point number, such as `1.5` or `-1_000.00`.
 struct Float {
   __BUILT_IN_IMPLEMENTATION: NoValue,

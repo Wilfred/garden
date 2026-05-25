@@ -945,6 +945,7 @@ pub(crate) enum BuiltInMethodKind {
     DictSet,
     FloatCeil,
     FloatFloor,
+    IntAsFloat,
     ListAppend,
     ListContains,
     ListGet,

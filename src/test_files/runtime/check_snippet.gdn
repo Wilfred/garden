@@ -5,4 +5,6 @@ import "__reflect.gdn" as reflect
 }
 
 // args: run
-// expected stdout: Ok(Unit)
+// expected stderr:
+// [src/test_files/runtime/check_snippet.gdn:4:3] reflect::check_snippet("True", Path{ p: "__snippet.gdn" }) //-> Ok(Unit)
+

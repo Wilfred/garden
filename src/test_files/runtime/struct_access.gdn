@@ -12,4 +12,4 @@ fun get_x(foo: Foo): Int {
 }
 
 // args: run
-// expected stdout: 3
+// expected stderr: [src/test_files/runtime/struct_access.gdn:10:5] get_x(Foo{ x: 1 + 2 }) //-> 3

@@ -388,6 +388,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BuiltInFunctionKind {
+    PreludeDbg,
     PreludeEprint,
     PreludeEprintln,
     PreludePrint,
@@ -432,6 +433,7 @@ impl BuiltInFunctionKind {
         match self {
             BuiltInFunctionKind::PreludeThrow
             | BuiltInFunctionKind::PreludeStringRepr
+            | BuiltInFunctionKind::PreludeDbg
             | BuiltInFunctionKind::PreludePrint
             | BuiltInFunctionKind::PreludePrintln
             | BuiltInFunctionKind::PreludeEprint
@@ -476,6 +478,7 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::FsListDirectory => "list_directory",
             BuiltInFunctionKind::ShellRun => "run",
             BuiltInFunctionKind::PreludeStringRepr => "string_repr",
+            BuiltInFunctionKind::PreludeDbg => "dbg",
             BuiltInFunctionKind::PreludePrint => "print",
             BuiltInFunctionKind::PreludePrintln => "println",
             BuiltInFunctionKind::PreludeEprint => "eprint",

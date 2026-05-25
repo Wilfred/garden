@@ -7,8 +7,9 @@
 }
 
 // args: run
-// expected stdout:
-// 1
-// 2
-// -1
-// -2
+// expected stderr:
+// [src/test_files/runtime/float_rounding.gdn:2:3] 1.2.floor() //-> 1
+// [src/test_files/runtime/float_rounding.gdn:3:3] 1.2.ceil() //-> 2
+// [src/test_files/runtime/float_rounding.gdn:5:3] -1.2.ceil() //-> -1
+// [src/test_files/runtime/float_rounding.gdn:6:3] -1.2.floor() //-> -2
+

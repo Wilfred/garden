@@ -6,4 +6,4 @@
 }
 
 // args: run
-// expected stdout: []
+// expected stderr: [src/test_files/runtime/shell_arguments.gdn:4:3] shell_arguments() //-> []

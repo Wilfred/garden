@@ -5,12 +5,11 @@
 }
 
 // args: run
-// expected stdout:
-// 1
-// 2
-
 // expected stderr:
+// [src/test_files/runtime/modulo.gdn:2:3] 11 % 5 //-> 1
+// [src/test_files/runtime/modulo.gdn:3:3] -4 % 3 //-> 2
 // Exception: Tried to calculate the remainder of dividing 10 by zero.
 // -| src/test_files/runtime/modulo.gdn:4:3	 __toplevel__
 // 4|   10 % 0
 //  |   ^^^^^^
+

@@ -17,4 +17,6 @@ struct Foo {
 }
 
 // args: run
-// expected stdout: 123
+// expected stderr:
+// [src/test_files/runtime/redefine_type.gdn:16:3] Foo{ name: "" }.do_stuff() //-> 123
+

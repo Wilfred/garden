@@ -7,4 +7,6 @@ fun option_identity<T>(value: Option<T>): Option<T> {
 }
 
 // args: run
-// expected stdout: Some(1)
+// expected stderr:
+// [src/test_files/runtime/return_generic.gdn:6:5] option_identity(Some(1)) //-> Some(1)
+

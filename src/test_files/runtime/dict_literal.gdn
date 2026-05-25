@@ -6,4 +6,6 @@ fun get_dict(): Dict<String> {
 dbg(get_dict())
 
 // args: run
-// expected stdout: Dict["a" => "hello", "bc" => "world", "z" => ""]
+// expected stderr:
+// [src/test_files/runtime/dict_literal.gdn:6:1] get_dict() //-> Dict["a" => "hello", "bc" => "world", "z" => ""]
+

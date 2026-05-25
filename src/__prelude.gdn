@@ -40,7 +40,8 @@ enum Result<T, E> {
   Err(E),
 }
 
-/// Write an arbitrary value to stdout, along with debugging metadata.
+/// Write an arbitrary value to stderr, along with the source file
+/// name and line number.
 ///
 /// Returns the input, so you can use `dbg` in larger expressions
 /// `foo(dbg(bar()))`.
@@ -49,8 +50,7 @@ enum Result<T, E> {
 /// dbg([1, 2])
 /// ```
 public fun dbg<T>(value: T): T {
-  println(string_repr(value))
-  value
+  __BUILT_IN_IMPLEMENTATION
 }
 
 /// Throw an exception because you haven't written this code yet.

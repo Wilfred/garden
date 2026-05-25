@@ -71,8 +71,8 @@
 // }
 // {
 //   "kind": {
-//     "printed": {
-//       "s": "1\n"
+//     "printed_stderr": {
+//       "s": "[__user.gdn:1:1] x //-> 1\n"
 //     }
 //   },
 //   "position": null

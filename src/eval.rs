@@ -2970,6 +2970,62 @@ fn eval_built_in_call(
                 env.push_value(Value::new(Value_::String(arg_values[0].display(env))));
             }
         }
+        BuiltInFunctionKind::PreludeDbg => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let rel_path =
+                crate::parser::vfs::to_project_relative(&position.path, &env.project_root);
+            let value_repr = arg_values[0].display(env);
+            let arg_src = env.vfs.pos_src(&arg_positions[0]).unwrap_or("").to_owned();
+
+            let header = format!(
+                "[{}:{}:{}]",
+                rel_path.display(),
+                position.line_number + 1,
+                position.column + 1,
+            );
+            let line = if arg_src.is_empty() {
+                format!("{header} //-> {value_repr}\n")
+            } else {
+                format!("{header} {arg_src} //-> {value_repr}\n")
+            };
+
+            match &session.stdout_mode {
+                StdoutMode::WriteDirectly => {
+                    eprint!("{line}");
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
+                    let response = Response {
+                        kind: ResponseKind::PrintedStderr { s: line.clone() },
+                        position: None,
+                        id: None,
+                    };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                    let response = ResponseKind::PrintedStderr { s: line.clone() };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::WriteToNReplBuffers { stderr_buf, .. } => {
+                    let mut b = stderr_buf.lock().expect("stderr buffer poisoned");
+                    b.push_str(&line);
+                }
+                StdoutMode::DoNotWrite => {}
+            }
+
+            if expr_value_is_used {
+                env.push_value(arg_values[0].clone());
+            }
+        }
         BuiltInFunctionKind::ReflectNamespaceFunctions => {
             check_arity(
                 &SymbolName {

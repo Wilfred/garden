@@ -10,8 +10,9 @@
 }
 
 // args: run
-// expected stdout:
-// 1
-// 2
-// 4
-// 5
+// expected stderr:
+// [src/test_files/runtime/for_continue.gdn:8:9] item //-> 1
+// [src/test_files/runtime/for_continue.gdn:8:9] item //-> 2
+// [src/test_files/runtime/for_continue.gdn:8:9] item //-> 4
+// [src/test_files/runtime/for_continue.gdn:8:9] item //-> 5
+

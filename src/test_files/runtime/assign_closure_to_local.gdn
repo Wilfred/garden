@@ -24,4 +24,4 @@ fun stuff() {
 stuff()
 
 // args: run
-// expected stdout: 5
+// expected stderr: [src/test_files/runtime/assign_closure_to_local.gdn:21:3] f(2, 3) //-> 5

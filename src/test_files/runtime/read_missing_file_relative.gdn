@@ -10,4 +10,6 @@ import "__fs.gdn" as fs
 }
 
 // args: run
-// expected stdout: Err("Could not read `no_such_file_garden.txt` (relative to `/tmp`). No such file.")
+// expected stderr:
+// [src/test_files/runtime/read_missing_file_relative.gdn:9:3] Path{ p: "no_such_file_garden.txt" }.read() //-> Err("Could not read `no_such_file_garden.txt` (relative to `/tmp`). No such file.")
+

@@ -1,11 +1,15 @@
 /// Execute the given string as a shell command, and return a tuple
 /// of stdout and stderr.
 ///
+/// On failure, returns a tuple of the exit code and the combined
+/// stdout and stderr output. The exit code is `-1` if the command
+/// could not be spawned or was terminated by a signal.
+///
 /// ```
 /// import "__shell.gdn" as shell
 /// shell::run("ls", ["-l", "/"])
 /// ```
-public fun run(command: String, args: List<String>): Result<(String, String), String> {
+public fun run(command: String, args: List<String>): Result<(String, String), (Int, String)> {
   __BUILT_IN_IMPLEMENTATION
 }
 

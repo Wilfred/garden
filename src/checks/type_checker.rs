@@ -901,11 +901,13 @@ impl TypeCheckVisitor<'_> {
 
                 Type::unit()
             }
-            Expression_::Try(try_body, _catch_sym, catch_body) => {
-                self.infer_block(try_body, type_bindings, expected_return_ty);
-                self.infer_block(catch_body, type_bindings, expected_return_ty);
-                Type::unit()
-            }
+            Expression_::Try(try_body, catch_sym, catch_body) => self.infer_try(
+                try_body,
+                catch_sym,
+                catch_body,
+                type_bindings,
+                expected_return_ty,
+            ),
             Expression_::Break | Expression_::Continue => {
                 // As with `return`, these never produce a value, they
                 // jump elsewhere. `let x = break` will never assign
@@ -1989,6 +1991,53 @@ impl TypeCheckVisitor<'_> {
         }
     }
 
+    fn infer_try(
+        &mut self,
+        try_body: &Block,
+        catch_sym: &Symbol,
+        catch_body: &Block,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+    ) -> Type {
+        let try_ty = self.infer_block(try_body, type_bindings, expected_return_ty);
+
+        self.bindings.enter_block();
+        self.set_binding(catch_sym, Type::Any);
+        let catch_ty = self.infer_block(catch_body, type_bindings, expected_return_ty);
+        self.bindings.exit_block();
+
+        match unify(&try_ty, &catch_ty) {
+            Some(ty) => ty,
+            None => {
+                let message = ErrorMessage(vec![
+                    msgcode!("try"),
+                    msgtext!(" and "),
+                    msgcode!("catch"),
+                    msgtext!(" have incompatible types: "),
+                    msgcode!("{}", try_ty),
+                    msgtext!(" and "),
+                    msgcode!("{}", catch_ty),
+                    msgtext!("."),
+                ]);
+
+                let position = match try_body.exprs.last() {
+                    Some(last_expr) => last_expr.position.clone(),
+                    None => Position::merge(&try_body.open_brace, &try_body.close_brace),
+                };
+
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    fixes: vec![],
+                    severity: Severity::Error,
+                    message,
+                    position,
+                });
+
+                Type::error("Incompatible try/catch blocks")
+            }
+        }
+    }
+
     fn infer_namespace_access(
         &mut self,
         recv: &Expression,
@@ -2420,6 +2469,16 @@ impl TypeCheckVisitor<'_> {
                         Type::unit()
                     }
                 }
+            }
+            (Expression_::Try(try_body, catch_sym, catch_body), _) => {
+                self.verify_block(expected_ty, try_body, type_bindings, expected_return_ty);
+
+                self.bindings.enter_block();
+                self.set_binding(catch_sym, Type::Any);
+                self.verify_block(expected_ty, catch_body, type_bindings, expected_return_ty);
+                self.bindings.exit_block();
+
+                expected_ty.clone()
             }
             _ => self.infer_expr_(expr_, pos, expr_id, type_bindings, expected_return_ty),
         };

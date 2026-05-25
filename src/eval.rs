@@ -5967,17 +5967,21 @@ fn eval_expr(
                 }
             }
         }
-        Expression_::Try(_, _, _) => {
-            return Err((
-                RestoreValues(vec![]),
-                EvalError::Exception(ExceptionInfo {
-                    position: expr_position,
-                    message: ErrorMessage(vec![msgtext!(
-                        "try/catch is not yet implemented at runtime."
-                    )]),
-                }),
-            ));
-        }
+        Expression_::Try(try_body, _catch_sym, _catch_body) => match expr_state {
+            ExpressionState::NotEvaluated => {
+                env.push_expr_to_eval(
+                    ExpressionState::EvaluatedAllSubexpressions,
+                    outer_expr.clone(),
+                );
+                eval_block(env, expr_value_is_used, try_body);
+            }
+            ExpressionState::PartiallyEvaluated => {
+                unreachable!("Try should not be in PartiallyEvaluated state");
+            }
+            ExpressionState::EvaluatedAllSubexpressions => {
+                env.current_frame_mut().bindings.pop_block();
+            }
+        },
         Expression_::Return(expr) => {
             if expr_state.done_children() {
                 // No more expressions to evaluate in this function, we're returning.

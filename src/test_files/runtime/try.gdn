@@ -1,0 +1,14 @@
+// The try block is evaluated and its last value is returned.
+// (catch is not yet evaluated at runtime.)
+let x = try {
+  println("in try")
+  "from try"
+} catch (e) {
+  "from catch"
+}
+println(x)
+
+// args: run
+// expected stdout:
+// in try
+// from try

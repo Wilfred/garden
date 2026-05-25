@@ -2903,12 +2903,26 @@ fn eval_built_in_call(
                                     .unwrap();
                                 s.write_str(&String::from_utf8_lossy(&output.stderr))
                                     .unwrap();
-                                Value::err(Value::new(Value_::String(s)))
+                                let exit_code = output.status.code().unwrap_or(-1);
+                                let tuple = Value::new(Value_::Tuple {
+                                    items: vec![
+                                        Value::new(Value_::Int(exit_code as i64)),
+                                        Value::new(Value_::String(s)),
+                                    ],
+                                    item_types: vec![Type::int(), Type::string()],
+                                });
+                                Value::err(tuple)
                             }
                         }
                         Err(e) => {
-                            let s = Value::new(Value_::String(format!("{e}")));
-                            Value::err(s)
+                            let tuple = Value::new(Value_::Tuple {
+                                items: vec![
+                                    Value::new(Value_::Int(-1)),
+                                    Value::new(Value_::String(format!("{e}"))),
+                                ],
+                                item_types: vec![Type::int(), Type::string()],
+                            });
+                            Value::err(tuple)
                         }
                     };
 

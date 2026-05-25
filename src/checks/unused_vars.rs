@@ -596,7 +596,11 @@ impl Visitor for UnusedVariableVisitor {
             // variant, and that we've covered all the variants.
 
             self.push_scope();
-            if let Some(payload_dest) = &pattern.payload {
+            if let Pattern::Variant {
+                payload: Some(payload_dest),
+                ..
+            } = pattern
+            {
                 self.visit_dest(payload_dest);
             }
 

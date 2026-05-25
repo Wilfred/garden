@@ -5,4 +5,4 @@ import "./lib.gdn"
 }
 
 // args: run
-// expected stdout: 42
+// expected stderr: [src/test_files/runtime/import.gdn:4:3] foo() //-> 42

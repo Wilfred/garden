@@ -12,4 +12,4 @@ method get_x(this: Foo): Int {
 }
 
 // args: run
-// expected stdout: 123
+// expected stderr: [src/test_files/runtime/struct_method.gdn:11:3] f.get_x() //-> 123

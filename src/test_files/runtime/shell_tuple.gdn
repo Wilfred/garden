@@ -7,6 +7,7 @@ import "__shell.gdn" as shell
 }
 
 // args: run
-// expected stdout:
-// "out\n"
-// "err\n"
+// expected stderr:
+// [src/test_files/runtime/shell_tuple.gdn:5:5] stdout //-> "out\n"
+// [src/test_files/runtime/shell_tuple.gdn:6:5] stderr //-> "err\n"
+

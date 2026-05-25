@@ -27,9 +27,10 @@ fun foo(): String { "abc" }
 }
 
 // args: run
-// expected stdout:
-// 1
-// 2
-// 3
-// 2
-// 12
+// expected stderr:
+// [src/test_files/runtime/for.gdn:16:5] item //-> 1
+// [src/test_files/runtime/for.gdn:16:5] item //-> 2
+// [src/test_files/runtime/for.gdn:16:5] item //-> 3
+// [src/test_files/runtime/for.gdn:25:5] x * y //-> 2
+// [src/test_files/runtime/for.gdn:25:5] x * y //-> 12
+

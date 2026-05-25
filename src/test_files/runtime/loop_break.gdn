@@ -12,4 +12,4 @@
 }
 
 // args: run
-// expected stdout: 10
+// expected stderr: [src/test_files/runtime/loop_break.gdn:11:5] i //-> 10

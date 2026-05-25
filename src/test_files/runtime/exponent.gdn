@@ -3,4 +3,4 @@
 }
 
 // args: run
-// expected stdout: 1024
+// expected stderr: [src/test_files/runtime/exponent.gdn:2:3] 2 ** 10 //-> 1024

@@ -5,4 +5,4 @@
 }
 
 // args: run
-// expected stdout: 11
+// expected stderr: [src/test_files/runtime/add_assign.gdn:4:3] i //-> 11

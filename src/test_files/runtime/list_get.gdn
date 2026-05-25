@@ -5,10 +5,10 @@ dbg(items.get(0))
 dbg(items.get("oh no wrong type"))
 
 // args: run
-// expected stdout: Some("hello")
-
 // expected stderr:
+// [src/test_files/runtime/list_get.gdn:3:1] items.get(0) //-> Some("hello")
 // Exception: Expected `Int` but `"oh no wrong type"` has type `String`.
 // -| src/test_files/runtime/list_get.gdn:5:15	 __toplevel__
 // 5| dbg(items.get("oh no wrong type"))
 //  |               ^^^^^^^^^^^^^^^^^^
+

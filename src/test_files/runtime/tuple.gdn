@@ -10,6 +10,7 @@ fun return_tuple(): (Int, String) {
 }
 
 // args: run
-// expected stdout:
-// (123, "foo")
-// 123
+// expected stderr:
+// [src/test_files/runtime/tuple.gdn:7:5] v //-> (123, "foo")
+// [src/test_files/runtime/tuple.gdn:9:5] i //-> 123
+

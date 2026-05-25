@@ -3,4 +3,6 @@
 }
 
 // args: run
-// expected stdout: Some("source_directory.gdn")
+// expected stderr:
+// [src/test_files/runtime/source_directory.gdn:2:3] source_directory().or_throw().file_name() //-> Some("source_directory.gdn")
+

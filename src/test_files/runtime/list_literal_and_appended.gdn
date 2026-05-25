@@ -9,4 +9,6 @@
 }
 
 // args: run
-// expected stdout: True
+// expected stderr:
+// [src/test_files/runtime/list_literal_and_appended.gdn:8:5] literal == changed //-> True
+

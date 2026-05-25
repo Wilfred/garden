@@ -14,9 +14,10 @@
 }
 
 // args: run
-// expected stdout:
-// 1
-// 2
-// 4
-// 5
-// "done"
+// expected stderr:
+// [src/test_files/runtime/loop_continue.gdn:10:9] i //-> 1
+// [src/test_files/runtime/loop_continue.gdn:10:9] i //-> 2
+// [src/test_files/runtime/loop_continue.gdn:10:9] i //-> 4
+// [src/test_files/runtime/loop_continue.gdn:10:9] i //-> 5
+// [src/test_files/runtime/loop_continue.gdn:13:5] "done" //-> "done"
+

@@ -4,4 +4,4 @@
 }
 
 // args: run
-// expected stdout: 1000
+// expected stderr: [src/test_files/runtime/integer_underscores.gdn:3:3] i //-> 1000

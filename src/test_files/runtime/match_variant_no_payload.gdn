@@ -11,4 +11,6 @@ fun takes_opt(v: Option<Int>): Int {
 }
 
 // args: run
-// expected stdout: 123
+// expected stderr:
+// [src/test_files/runtime/match_variant_no_payload.gdn:9:5] takes_opt(None) //-> 123
+

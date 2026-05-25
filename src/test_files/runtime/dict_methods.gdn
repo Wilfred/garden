@@ -19,10 +19,11 @@ dbg(d.items())
 print_dict(d.remove("x"))
 
 // args: run
-// expected stdout:
-// Some(1)
-// None
-// Dict["x" => 1, "y" => 42]
-// Dict["x" => 1, "y" => 43]
-// [("x", 1), ("y", 43)]
-// Dict["y" => 43]
+// expected stderr:
+// [src/test_files/runtime/dict_methods.gdn:8:1] d.get("x") //-> Some(1)
+// [src/test_files/runtime/dict_methods.gdn:9:1] d.get("y") //-> None
+// [src/test_files/runtime/dict_methods.gdn:3:3] d //-> Dict["x" => 1, "y" => 42]
+// [src/test_files/runtime/dict_methods.gdn:3:3] d //-> Dict["x" => 1, "y" => 43]
+// [src/test_files/runtime/dict_methods.gdn:17:1] d.items() //-> [("x", 1), ("y", 43)]
+// [src/test_files/runtime/dict_methods.gdn:3:3] d //-> Dict["y" => 43]
+

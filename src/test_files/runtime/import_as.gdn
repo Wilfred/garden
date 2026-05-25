@@ -5,4 +5,4 @@ import "./lib.gdn" as f
 }
 
 // args: run
-// expected stdout: 42
+// expected stderr: [src/test_files/runtime/import_as.gdn:4:3] f::foo() //-> 42

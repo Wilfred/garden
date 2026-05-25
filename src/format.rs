@@ -463,10 +463,11 @@ impl Visitor for IndentationVisitor {
             // Process each match arm
             for (pattern, case_block) in cases {
                 // Format the pattern line (e.g., "Some(v) => " or "None =>")
-                let pattern_line = pattern.variant_sym.position.line_number;
+                let pattern_pos = pattern.position();
+                let pattern_line = pattern_pos.line_number;
                 if !self.processed_lines.contains(&pattern_line) {
                     let target_indent = self.current_depth * 2;
-                    let current_indent = pattern.variant_sym.position.column;
+                    let current_indent = pattern_pos.column;
 
                     if current_indent != target_indent {
                         self.line_edits.push(LineEdit {

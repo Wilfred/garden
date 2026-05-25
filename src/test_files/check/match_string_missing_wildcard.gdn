@@ -1,0 +1,19 @@
+public fun describe(s: String): Int {
+  match s {
+    "hi" => 1,
+    "bye" => 2,
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: This match expression on a `String` is not exhaustive. Add a `_` case to handle the remaining strings.
+// 
+// -| src/test_files/check/match_string_missing_wildcard.gdn:2:9
+// 1| public fun describe(s: String): Int {
+// 2|   match s {
+//  |         ^
+// 3|     "hi" => 1,
+// 4|     "bye" => 2,
+

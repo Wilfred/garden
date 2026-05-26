@@ -20,7 +20,6 @@ use url::Url;
 /// Storage for open document contents, keyed by file path.
 type DocumentStore = FxHashMap<PathBuf, String>;
 
-use crate::built_in_files::BuiltInFiles;
 use crate::checks::check_toplevel_items_in_env;
 use crate::checks::type_checker::check_types;
 use crate::completions;
@@ -35,6 +34,7 @@ use crate::parser::position::Position as GardenPosition;
 use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::pos_to_id::find_item_at;
+use crate::temp_built_in_files::TempBuiltInFiles;
 
 #[derive(Debug, Deserialize)]
 struct Message {
@@ -509,7 +509,7 @@ fn handle_definition(
     id: serde_json::Value,
     params: DefinitionParams,
     documents: &DocumentStore,
-    built_in_files: Option<&BuiltInFiles>,
+    temp_built_in_files: Option<&TempBuiltInFiles>,
 ) -> JsonRpcResponse<Option<Location>> {
     let uri = &params.text_document_position_params.text_document.uri;
     let position = params.text_document_position_params.position;
@@ -541,7 +541,7 @@ fn handle_definition(
     // Definitions in built-in files have relative paths like
     // `__prelude.gdn`. Redirect those to the temporary on-disk copy so
     // the editor can open them.
-    let def_path = built_in_files
+    let def_path = temp_built_in_files
         .and_then(|b| b.resolve(&def_pos.path))
         .unwrap_or_else(|| (*def_pos.path).clone());
 
@@ -931,7 +931,7 @@ pub(crate) fn run_lsp() {
     let mut should_exit = false;
     let mut documents: DocumentStore = FxHashMap::default();
 
-    let built_in_files = match BuiltInFiles::new("garden-lsp") {
+    let temp_built_in_files = match TempBuiltInFiles::new("garden-lsp") {
         Ok(b) => Some(b),
         Err(e) => {
             error!("Could not write built-in files to a temporary directory: {e}");
@@ -1014,7 +1014,7 @@ pub(crate) fn run_lsp() {
                         }
                     };
                     let response =
-                        handle_definition(id, params, &documents, built_in_files.as_ref());
+                        handle_definition(id, params, &documents, temp_built_in_files.as_ref());
                     if let Err(e) = write_message(&response) {
                         error!("Error writing response: {e}");
                     }

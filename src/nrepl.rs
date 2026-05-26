@@ -27,7 +27,6 @@ use std::time::{Duration, Instant};
 use serde_bencode::value::Value;
 use tracing::{debug, error, info, warn};
 
-use crate::built_in_files::BuiltInFiles;
 use crate::diagnostics::format_exception_with_stack;
 use crate::env::Env;
 use crate::eval::{
@@ -38,6 +37,7 @@ use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{IdGenerator, SymbolName};
 use crate::parser::vfs::{to_abs_path, to_project_relative, Vfs};
 use crate::parser::{parse_toplevel_items, ParseError};
+use crate::temp_built_in_files::TempBuiltInFiles;
 use crate::values::Value_;
 
 /// Refuse to buffer a single message larger than this. Prevents a
@@ -350,7 +350,7 @@ fn handle_lookup(
     env: &Env,
     sym: &str,
     base_msg: &HashMap<Vec<u8>, Value>,
-    built_in_files: Option<&BuiltInFiles>,
+    temp_built_in_files: Option<&TempBuiltInFiles>,
 ) -> Vec<Value> {
     let ns = env.current_namespace();
     let ns_borrow = ns.borrow();
@@ -392,7 +392,7 @@ fn handle_lookup(
         let arglists_str = format!("({})", params.join(", "));
         info.insert(b"arglists-str".to_vec(), bstr(arglists_str));
 
-        let file_path = built_in_files
+        let file_path = temp_built_in_files
             .and_then(|b| b.resolve(&fun_info.pos.path))
             .unwrap_or_else(|| to_project_relative(&fun_info.pos.path, &env.project_root));
         info.insert(b"file".to_vec(), bstr(file_path.display().to_string()));
@@ -496,24 +496,24 @@ struct Connection {
     /// On-disk copies of the built-in Garden files, shared across all
     /// sessions of this connection so `lookup` responses can point at
     /// real files for built-in symbols.
-    built_in_files: Arc<Option<BuiltInFiles>>,
+    temp_built_in_files: Arc<Option<TempBuiltInFiles>>,
 }
 
 impl Connection {
     fn new(response_tx: Sender<Value>) -> Self {
-        Self::with_built_in_files(response_tx, Arc::new(None))
+        Self::with_temp_built_in_files(response_tx, Arc::new(None))
     }
 
-    fn with_built_in_files(
+    fn with_temp_built_in_files(
         response_tx: Sender<Value>,
-        built_in_files: Arc<Option<BuiltInFiles>>,
+        temp_built_in_files: Arc<Option<TempBuiltInFiles>>,
     ) -> Self {
         Self {
             sessions: HashMap::new(),
             next_id: 0,
             response_tx,
             interrupt_flags: Arc::new(Mutex::new(Vec::new())),
-            built_in_files,
+            temp_built_in_files,
         }
     }
 
@@ -529,13 +529,18 @@ impl Connection {
 
         let response_tx = self.response_tx.clone();
         let worker_interrupted = Arc::clone(&interrupted);
-        let built_in_files = Arc::clone(&self.built_in_files);
+        let temp_built_in_files = Arc::clone(&self.temp_built_in_files);
         let thread_name = format!("nrepl-session-{id}");
 
         thread::Builder::new()
             .name(thread_name)
             .spawn(move || {
-                session_worker(request_rx, response_tx, worker_interrupted, built_in_files)
+                session_worker(
+                    request_rx,
+                    response_tx,
+                    worker_interrupted,
+                    temp_built_in_files,
+                )
             })
             .expect("Could not spawn nREPL session worker");
 
@@ -626,7 +631,7 @@ fn session_worker(
     request_rx: Receiver<SessionRequest>,
     response_tx: Sender<Value>,
     interrupted: Arc<AtomicBool>,
-    built_in_files: Arc<Option<BuiltInFiles>>,
+    temp_built_in_files: Arc<Option<TempBuiltInFiles>>,
 ) {
     let id_gen = IdGenerator::default();
     let vfs = Vfs::default();
@@ -675,7 +680,7 @@ fn session_worker(
                 handle_completions(&env, &prefix, &base_msg)
             }
             SessionRequest::Lookup { sym, base_msg } => {
-                handle_lookup(&env, &sym, &base_msg, built_in_files.as_ref().as_ref())
+                handle_lookup(&env, &sym, &base_msg, temp_built_in_files.as_ref().as_ref())
             }
         };
         for r in responses {
@@ -1073,7 +1078,7 @@ fn writer_thread(mut writer: TcpStream, rx: Receiver<Value>) {
 fn serve_connection(
     stream: TcpStream,
     interrupted: Arc<AtomicBool>,
-    built_in_files: Arc<Option<BuiltInFiles>>,
+    temp_built_in_files: Arc<Option<TempBuiltInFiles>>,
 ) {
     let peer = stream
         .peer_addr()
@@ -1091,7 +1096,7 @@ fn serve_connection(
         .spawn(move || writer_thread(writer_stream, response_rx))
         .expect("Could not spawn nREPL writer thread");
 
-    let mut conn = Connection::with_built_in_files(response_tx, built_in_files);
+    let mut conn = Connection::with_temp_built_in_files(response_tx, temp_built_in_files);
 
     let watchdog_flags = Arc::downgrade(&conn.interrupt_flags);
     thread::Builder::new()
@@ -1368,7 +1373,7 @@ pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
         }
     };
 
-    let built_in_files = Arc::new(match BuiltInFiles::new("garden-nrepl") {
+    let temp_built_in_files = Arc::new(match TempBuiltInFiles::new("garden-nrepl") {
         Ok(b) => Some(b),
         Err(e) => {
             warn!("nREPL: could not write built-in files to a temporary directory: {e}");
@@ -1392,10 +1397,10 @@ pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
         match listener.accept() {
             Ok((stream, _)) => {
                 let interrupted = Arc::clone(&interrupted);
-                let built_in_files = Arc::clone(&built_in_files);
+                let temp_built_in_files = Arc::clone(&temp_built_in_files);
                 std::thread::Builder::new()
                     .name("nrepl-client".to_owned())
-                    .spawn(move || serve_connection(stream, interrupted, built_in_files))
+                    .spawn(move || serve_connection(stream, interrupted, temp_built_in_files))
                     .expect("Could not spawn nREPL client thread");
             }
             Err(e) if e.kind() == io::ErrorKind::WouldBlock => {

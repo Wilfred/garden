@@ -27,6 +27,7 @@ use std::time::{Duration, Instant};
 use serde_bencode::value::Value;
 use tracing::{debug, error, info, warn};
 
+use crate::built_in_files::BuiltInFiles;
 use crate::diagnostics::format_exception_with_stack;
 use crate::env::Env;
 use crate::eval::{
@@ -345,7 +346,12 @@ fn handle_completions(env: &Env, prefix: &str, base_msg: &HashMap<Vec<u8>, Value
 /// Build the `lookup` response for a given symbol name. Looks up the
 /// symbol in the session's current namespace and returns information
 /// about it (file, line, doc, arglists, ...).
-fn handle_lookup(env: &Env, sym: &str, base_msg: &HashMap<Vec<u8>, Value>) -> Vec<Value> {
+fn handle_lookup(
+    env: &Env,
+    sym: &str,
+    base_msg: &HashMap<Vec<u8>, Value>,
+    built_in_files: Option<&BuiltInFiles>,
+) -> Vec<Value> {
     let ns = env.current_namespace();
     let ns_borrow = ns.borrow();
     let ns_name = ns_borrow
@@ -386,8 +392,10 @@ fn handle_lookup(env: &Env, sym: &str, base_msg: &HashMap<Vec<u8>, Value>) -> Ve
         let arglists_str = format!("({})", params.join(", "));
         info.insert(b"arglists-str".to_vec(), bstr(arglists_str));
 
-        let rel_path = to_project_relative(&fun_info.pos.path, &env.project_root);
-        info.insert(b"file".to_vec(), bstr(rel_path.display().to_string()));
+        let file_path = built_in_files
+            .and_then(|b| b.resolve(&fun_info.pos.path))
+            .unwrap_or_else(|| to_project_relative(&fun_info.pos.path, &env.project_root));
+        info.insert(b"file".to_vec(), bstr(file_path.display().to_string()));
         info.insert(
             b"line".to_vec(),
             Value::Int((fun_info.pos.line_number as i64) + 1),
@@ -485,15 +493,27 @@ struct Connection {
     /// watchdog to broadcast a global interrupt to every active
     /// session.
     interrupt_flags: Arc<Mutex<Vec<Weak<AtomicBool>>>>,
+    /// On-disk copies of the built-in Garden files, shared across all
+    /// sessions of this connection so `lookup` responses can point at
+    /// real files for built-in symbols.
+    built_in_files: Arc<Option<BuiltInFiles>>,
 }
 
 impl Connection {
     fn new(response_tx: Sender<Value>) -> Self {
+        Self::with_built_in_files(response_tx, Arc::new(None))
+    }
+
+    fn with_built_in_files(
+        response_tx: Sender<Value>,
+        built_in_files: Arc<Option<BuiltInFiles>>,
+    ) -> Self {
         Self {
             sessions: HashMap::new(),
             next_id: 0,
             response_tx,
             interrupt_flags: Arc::new(Mutex::new(Vec::new())),
+            built_in_files,
         }
     }
 
@@ -509,11 +529,14 @@ impl Connection {
 
         let response_tx = self.response_tx.clone();
         let worker_interrupted = Arc::clone(&interrupted);
+        let built_in_files = Arc::clone(&self.built_in_files);
         let thread_name = format!("nrepl-session-{id}");
 
         thread::Builder::new()
             .name(thread_name)
-            .spawn(move || session_worker(request_rx, response_tx, worker_interrupted))
+            .spawn(move || {
+                session_worker(request_rx, response_tx, worker_interrupted, built_in_files)
+            })
             .expect("Could not spawn nREPL session worker");
 
         self.sessions.insert(
@@ -603,6 +626,7 @@ fn session_worker(
     request_rx: Receiver<SessionRequest>,
     response_tx: Sender<Value>,
     interrupted: Arc<AtomicBool>,
+    built_in_files: Arc<Option<BuiltInFiles>>,
 ) {
     let id_gen = IdGenerator::default();
     let vfs = Vfs::default();
@@ -650,7 +674,9 @@ fn session_worker(
             SessionRequest::Completions { prefix, base_msg } => {
                 handle_completions(&env, &prefix, &base_msg)
             }
-            SessionRequest::Lookup { sym, base_msg } => handle_lookup(&env, &sym, &base_msg),
+            SessionRequest::Lookup { sym, base_msg } => {
+                handle_lookup(&env, &sym, &base_msg, built_in_files.as_ref().as_ref())
+            }
         };
         for r in responses {
             if response_tx.send(r).is_err() {
@@ -1044,7 +1070,11 @@ fn writer_thread(mut writer: TcpStream, rx: Receiver<Value>) {
 }
 
 /// Serve a single TCP connection until the client disconnects.
-fn serve_connection(stream: TcpStream, interrupted: Arc<AtomicBool>) {
+fn serve_connection(
+    stream: TcpStream,
+    interrupted: Arc<AtomicBool>,
+    built_in_files: Arc<Option<BuiltInFiles>>,
+) {
     let peer = stream
         .peer_addr()
         .map(|a| a.to_string())
@@ -1061,7 +1091,7 @@ fn serve_connection(stream: TcpStream, interrupted: Arc<AtomicBool>) {
         .spawn(move || writer_thread(writer_stream, response_rx))
         .expect("Could not spawn nREPL writer thread");
 
-    let mut conn = Connection::new(response_tx);
+    let mut conn = Connection::with_built_in_files(response_tx, built_in_files);
 
     let watchdog_flags = Arc::downgrade(&conn.interrupt_flags);
     thread::Builder::new()
@@ -1338,6 +1368,14 @@ pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
         }
     };
 
+    let built_in_files = Arc::new(match BuiltInFiles::new("garden-nrepl") {
+        Ok(b) => Some(b),
+        Err(e) => {
+            warn!("nREPL: could not write built-in files to a temporary directory: {e}");
+            None
+        }
+    });
+
     // Use a non-blocking listener so the accept loop can periodically
     // check the interrupted flag and shut down on Ctrl-C.
     if let Err(e) = listener.set_nonblocking(true) {
@@ -1354,9 +1392,10 @@ pub(crate) fn run_nrepl(host: &str, port: u16, interrupted: Arc<AtomicBool>) {
         match listener.accept() {
             Ok((stream, _)) => {
                 let interrupted = Arc::clone(&interrupted);
+                let built_in_files = Arc::clone(&built_in_files);
                 std::thread::Builder::new()
                     .name("nrepl-client".to_owned())
-                    .spawn(move || serve_connection(stream, interrupted))
+                    .spawn(move || serve_connection(stream, interrupted, built_in_files))
                     .expect("Could not spawn nREPL client thread");
             }
             Err(e) if e.kind() == io::ErrorKind::WouldBlock => {

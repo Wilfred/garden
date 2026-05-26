@@ -127,6 +127,133 @@ fn next_session_id(counter: &mut u64) -> String {
     format!("garden-{counter}")
 }
 
+/// Options for streaming the printed value back to the client.
+///
+/// Set via the `nrepl.middleware.print/*` keys on an `eval` or
+/// `load-file` request, mirroring the nREPL print middleware. See
+/// <https://nrepl.org/nrepl/design/middleware.html#nrepl-middleware-print>.
+#[derive(Clone, Debug)]
+struct PrintOptions {
+    /// If true, the printed value is sent in multiple response
+    /// messages each containing a `value` chunk of at most
+    /// `buffer_size` bytes.
+    stream: bool,
+    /// Maximum size in bytes of each streamed `value` chunk.
+    buffer_size: usize,
+    /// Maximum total size in bytes of the printed value. When the
+    /// value exceeds the quota, the response is truncated and the
+    /// terminal status includes `truncated`.
+    quota: Option<usize>,
+}
+
+impl Default for PrintOptions {
+    fn default() -> Self {
+        Self {
+            stream: false,
+            buffer_size: 1024,
+            quota: None,
+        }
+    }
+}
+
+fn parse_print_options(request: &HashMap<Vec<u8>, Value>) -> PrintOptions {
+    let stream = dict_get(request, "nrepl.middleware.print/stream?")
+        .map(truthy)
+        .unwrap_or(false);
+
+    let parse_size = |key: &str| -> Option<usize> {
+        match dict_get(request, key) {
+            Some(Value::Int(n)) if *n > 0 => Some(*n as usize),
+            Some(Value::Bytes(b)) => std::str::from_utf8(b).ok()?.parse().ok(),
+            _ => None,
+        }
+    };
+
+    let buffer_size = parse_size("nrepl.middleware.print/buffer-size").unwrap_or(1024);
+    let quota = parse_size("nrepl.middleware.print/quota");
+
+    PrintOptions {
+        stream,
+        buffer_size,
+        quota,
+    }
+}
+
+/// Split a string into chunks of at most `chunk_size` bytes, never
+/// splitting in the middle of a UTF-8 character.
+fn chunk_str(s: &str, chunk_size: usize) -> Vec<&str> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    let mut chunks = Vec::new();
+    let mut start = 0;
+    while start < s.len() {
+        let mut end = (start + chunk_size).min(s.len());
+        while end > start && !s.is_char_boundary(end) {
+            end -= 1;
+        }
+        if end == start {
+            // A single character is larger than chunk_size; emit it
+            // anyway so we make progress.
+            end = start + 1;
+            while end < s.len() && !s.is_char_boundary(end) {
+                end += 1;
+            }
+        }
+        chunks.push(&s[start..end]);
+        start = end;
+    }
+    chunks
+}
+
+/// Apply the print options to `value_str`, returning the value
+/// messages to send and whether the result was truncated by quota.
+fn build_value_messages(
+    value_str: &str,
+    ns_name: &str,
+    eval_msec: i64,
+    print_opts: &PrintOptions,
+    base_msg: &HashMap<Vec<u8>, Value>,
+) -> (Vec<Value>, bool) {
+    let (display, truncated) = match print_opts.quota {
+        Some(q) if value_str.len() > q => {
+            let mut end = q;
+            while end > 0 && !value_str.is_char_boundary(end) {
+                end -= 1;
+            }
+            (&value_str[..end], true)
+        }
+        _ => (value_str, false),
+    };
+
+    let mut messages = Vec::new();
+
+    if print_opts.stream {
+        let chunks = chunk_str(display, print_opts.buffer_size);
+        if chunks.is_empty() {
+            let mut msg = base_msg.clone();
+            msg.insert(b"value".to_vec(), bstr(""));
+            msg.insert(b"ns".to_vec(), bstr(ns_name));
+            messages.push(Value::Dict(msg));
+        } else {
+            for chunk in chunks {
+                let mut msg = base_msg.clone();
+                msg.insert(b"value".to_vec(), bstr(chunk));
+                msg.insert(b"ns".to_vec(), bstr(ns_name));
+                messages.push(Value::Dict(msg));
+            }
+        }
+    } else {
+        let mut msg = base_msg.clone();
+        msg.insert(b"value".to_vec(), bstr(display));
+        msg.insert(b"ns".to_vec(), bstr(ns_name));
+        msg.insert(b"eval-msec".to_vec(), Value::Int(eval_msec));
+        messages.push(Value::Dict(msg));
+    }
+
+    (messages, truncated)
+}
+
 /// Perform a single `eval` request, returning the response messages
 /// to send back to the client.
 fn handle_eval(
@@ -136,11 +263,12 @@ fn handle_eval(
     stdout_buf: &Arc<Mutex<String>>,
     stderr_buf: &Arc<Mutex<String>>,
     base_msg: &HashMap<Vec<u8>, Value>,
+    print_opts: &PrintOptions,
 ) -> Vec<Value> {
     let ns = env.current_namespace();
     let path = (*ns.borrow().abs_path).clone();
     eval_code_in_namespace(
-        code, path, ns, env, session, stdout_buf, stderr_buf, base_msg,
+        code, path, ns, env, session, stdout_buf, stderr_buf, base_msg, print_opts,
     )
 }
 
@@ -157,6 +285,7 @@ fn handle_load_file(
     stdout_buf: &Arc<Mutex<String>>,
     stderr_buf: &Arc<Mutex<String>>,
     base_msg: &HashMap<Vec<u8>, Value>,
+    print_opts: &PrintOptions,
 ) -> Vec<Value> {
     let path: PathBuf = match file_path {
         Some(p) => to_abs_path(Path::new(p)),
@@ -164,7 +293,7 @@ fn handle_load_file(
     };
     let ns = env.get_or_create_namespace(&path);
     eval_code_in_namespace(
-        code, path, ns, env, session, stdout_buf, stderr_buf, base_msg,
+        code, path, ns, env, session, stdout_buf, stderr_buf, base_msg, print_opts,
     )
 }
 
@@ -179,6 +308,7 @@ fn eval_code_in_namespace(
     stdout_buf: &Arc<Mutex<String>>,
     stderr_buf: &Arc<Mutex<String>>,
     base_msg: &HashMap<Vec<u8>, Value>,
+    print_opts: &PrintOptions,
 ) -> Vec<Value> {
     let vfs_path = env.vfs.insert(Rc::new(vfs_path_buf), code.to_owned());
 
@@ -255,14 +385,19 @@ fn eval_code_in_namespace(
                 .map(|s| s.to_string_lossy().into_owned())
                 .unwrap_or_else(|| namespace.borrow().abs_path.display().to_string());
 
-            let mut value_msg = base_msg.clone();
-            value_msg.insert(b"value".to_vec(), bstr(value_str));
-            value_msg.insert(b"ns".to_vec(), bstr(ns_name));
-            value_msg.insert(b"eval-msec".to_vec(), Value::Int(eval_msec));
-            responses.push(Value::Dict(value_msg));
+            let (value_msgs, truncated) =
+                build_value_messages(&value_str, &ns_name, eval_msec, print_opts, base_msg);
+            responses.extend(value_msgs);
 
             let mut done_msg = base_msg.clone();
-            done_msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
+            let mut status = vec![bstr("done")];
+            if truncated {
+                status.push(bstr("truncated"));
+            }
+            if print_opts.stream {
+                done_msg.insert(b"eval-msec".to_vec(), Value::Int(eval_msec));
+            }
+            done_msg.insert(b"status".to_vec(), Value::List(status));
             responses.push(Value::Dict(done_msg));
         }
         Err(e) => {
@@ -460,11 +595,13 @@ enum SessionRequest {
     Eval {
         code: String,
         base_msg: HashMap<Vec<u8>, Value>,
+        print_opts: PrintOptions,
     },
     LoadFile {
         code: String,
         file_path: Option<String>,
         base_msg: HashMap<Vec<u8>, Value>,
+        print_opts: PrintOptions,
     },
     Completions {
         prefix: String,
@@ -655,18 +792,24 @@ fn session_worker(
         };
 
         let responses = match req {
-            SessionRequest::Eval { code, base_msg } => handle_eval(
+            SessionRequest::Eval {
+                code,
+                base_msg,
+                print_opts,
+            } => handle_eval(
                 &code,
                 &mut env,
                 &session,
                 &stdout_buf,
                 &stderr_buf,
                 &base_msg,
+                &print_opts,
             ),
             SessionRequest::LoadFile {
                 code,
                 file_path,
                 base_msg,
+                print_opts,
             } => handle_load_file(
                 &code,
                 file_path.as_deref(),
@@ -675,6 +818,7 @@ fn session_worker(
                 &stdout_buf,
                 &stderr_buf,
                 &base_msg,
+                &print_opts,
             ),
             SessionRequest::Completions { prefix, base_msg } => {
                 handle_completions(&env, &prefix, &base_msg)
@@ -978,9 +1122,11 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
                 .and_then(as_str)
                 .unwrap_or("")
                 .to_owned();
+            let print_opts = parse_print_options(request);
             dispatch_to_session(conn, session_id, base, |base_msg| SessionRequest::Eval {
                 code,
                 base_msg,
+                print_opts,
             });
         }
         "interrupt" => {
@@ -1012,11 +1158,13 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
                 .and_then(as_str)
                 .or_else(|| dict_get(request, "file-name").and_then(as_str))
                 .map(|s| s.to_owned());
+            let print_opts = parse_print_options(request);
             dispatch_to_session(conn, session_id, base, |base_msg| {
                 SessionRequest::LoadFile {
                     code,
                     file_path,
                     base_msg,
+                    print_opts,
                 }
             });
         }

@@ -6861,10 +6861,9 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 );
             }
 
-            // Print the whole call stack every 10,000 ticks if the
-            // environment variable GDN_PROFILE is set, to enable
-            // basic profiling.
-            if env.ticks % 10_000 == 0 && std::env::var("GDN_PROFILE").is_ok() {
+            // Print the whole call stack every 10,000 ticks if
+            // profiling is enabled, for basic profiling.
+            if env.ticks % 10_000 == 0 && env.profile {
                 for (i, frame) in env.stack.0.iter().enumerate() {
                     print!(
                         "{}{}",

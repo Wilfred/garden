@@ -37,6 +37,7 @@
 // compile.
 #![allow(clippy::cmp_owned)]
 
+mod built_in_files;
 mod caret_finder;
 mod checks;
 mod cli_session;

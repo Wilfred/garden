@@ -3,7 +3,8 @@
 //! Speaks the bencode wire format (via `serde_bencode`) and supports
 //! a small subset of the standard nREPL operations: `clone`,
 //! `describe`, `eval`, `load-file`, `completions`, `lookup`,
-//! `interrupt`, `close` and `ls-sessions`.
+//! `interrupt`, `close`, `ls-sessions` and the cider-nrepl `ns-path`
+//! op (used by `cider-find-ns`).
 //!
 //! Each session runs on its own worker thread so that `interrupt`
 //! requests can be handled while an `eval` is still in progress.
@@ -408,6 +409,32 @@ fn handle_lookup(env: &Env, sym: &str, base_msg: &HashMap<Vec<u8>, Value>) -> Ve
     vec![Value::Dict(msg)]
 }
 
+/// Build the `ns-path` response for a given namespace name. This is
+/// the cider-nrepl op used by `cider-find-ns` to jump to a
+/// namespace's source file. Garden identifies namespaces by their
+/// file path, so we look for a loaded namespace whose file stem
+/// matches `ns_name`.
+fn handle_ns_path(env: &Env, ns_name: &str, base_msg: &HashMap<Vec<u8>, Value>) -> Vec<Value> {
+    let mut msg = base_msg.clone();
+
+    let found = env.namespaces.values().find(|ns| {
+        ns.borrow()
+            .abs_path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .is_some_and(|s| s == ns_name)
+    });
+
+    if let Some(ns) = found {
+        let abs_path = ns.borrow().abs_path.clone();
+        let rel_path = to_project_relative(&abs_path, &env.project_root);
+        msg.insert(b"path".to_vec(), bstr(rel_path.display().to_string()));
+    }
+
+    msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
+    vec![Value::Dict(msg)]
+}
+
 fn format_eval_error(e: &EvalError, env: &Env) -> (String, Option<&'static str>) {
     match e {
         EvalError::Exception(ExceptionInfo { position, message }) => (
@@ -464,6 +491,10 @@ enum SessionRequest {
     },
     Lookup {
         sym: String,
+        base_msg: HashMap<Vec<u8>, Value>,
+    },
+    NsPath {
+        ns: String,
         base_msg: HashMap<Vec<u8>, Value>,
     },
 }
@@ -651,6 +682,7 @@ fn session_worker(
                 handle_completions(&env, &prefix, &base_msg)
             }
             SessionRequest::Lookup { sym, base_msg } => handle_lookup(&env, &sym, &base_msg),
+            SessionRequest::NsPath { ns, base_msg } => handle_ns_path(&env, &ns, &base_msg),
         };
         for r in responses {
             if response_tx.send(r).is_err() {
@@ -833,6 +865,24 @@ const SUPPORTED_OPS: &[(&str, OpDescriptor)] = &[
             )],
         },
     ),
+    (
+        "ns-path",
+        OpDescriptor {
+            doc: "Return the file path of the source file that defines the given namespace. Used by cider-find-ns.",
+            requires: &[
+                ("ns", "The namespace whose source path should be returned."),
+                (
+                    "session",
+                    "The ID of the session in which the namespace should be looked up.",
+                ),
+            ],
+            optional: &[],
+            returns: &[(
+                "path",
+                "The path of the source file defining the namespace, if known.",
+            )],
+        },
+    ),
 ];
 
 fn op_descriptor_to_value(d: &OpDescriptor) -> Value {
@@ -1007,6 +1057,17 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
                 .to_owned();
             dispatch_to_session(conn, session_id, base, |base_msg| SessionRequest::Lookup {
                 sym,
+                base_msg,
+            });
+        }
+        "ns-path" => {
+            let session_id = dict_get(request, "session").and_then(as_str);
+            let ns = dict_get(request, "ns")
+                .and_then(as_str)
+                .unwrap_or("")
+                .to_owned();
+            dispatch_to_session(conn, session_id, base, |base_msg| SessionRequest::NsPath {
+                ns,
                 base_msg,
             });
         }

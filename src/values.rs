@@ -96,7 +96,7 @@ pub(crate) enum Value_ {
     },
     /// A dictionary, a hash map with string keys.
     Dict {
-        items: FxHashMap<String, Value>,
+        items: rpds::HashTrieMap<String, Value>,
         /// The type of the values in this dict, e.g. Int in `Dict["x" => 1]`.
         value_type: Type,
     },

@@ -1654,14 +1654,16 @@ fn eval_while_body(
 
     let stack_frame = env.current_frame_mut();
     if b {
-        stack_frame
-            .exprs_to_eval
-            .push((ExpressionState::EvaluatedAllSubexpressions, expr.clone()));
-
         // After the loop body, we will want to evaluate the expression again.
         stack_frame
             .exprs_to_eval
             .push((ExpressionState::NotEvaluated, expr.clone()));
+
+        // Push the body block cleanup above the next-iteration entry
+        // so it runs between iterations, not deferred to the end.
+        stack_frame
+            .exprs_to_eval
+            .push((ExpressionState::EvaluatedAllSubexpressions, expr.clone()));
 
         // Evaluate the body.
         eval_block(env, expr_value_is_used, body);
@@ -1746,17 +1748,16 @@ fn eval_for_in(
         return Ok(());
     }
 
-    // After each iteration's body, we want to pop the iteration's
-    // bindings block (pushed by `eval_block`), so schedule an
-    // EvaluatedAllSubexpressions state for this iteration.
+    // After an iteration the loop body, evaluate again. We don't
+    // re-evaluate the iteree expression though.
+    env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
+
+    // Push the body block cleanup above the next-iteration entry so
+    // it runs between iterations, not deferred to the end.
     env.push_expr_to_eval(
         ExpressionState::EvaluatedAllSubexpressions,
         outer_expr.clone(),
     );
-
-    // After an iteration the loop body, evaluate again. We don't
-    // re-evaluate the iteree expression though.
-    env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
     // Push the iterated value and the index for the next time we call
     // this function.
@@ -6894,7 +6895,15 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             //
             if env.stop_at_expr_id.is_some() && env.stop_at_expr_id.as_ref() == Some(&outer_expr.id)
             {
-                if expr_state.done_children() {
+                // For loops EvaluatedAllSubexpressions fires per
+                // iteration; don't stop while more iterations remain.
+                let more_iterations_queued = env
+                    .current_frame()
+                    .exprs_to_eval
+                    .iter()
+                    .any(|(_, e)| e.id == outer_expr.id);
+
+                if expr_state.done_children() && !more_iterations_queued {
                     let v = if let Some(value) = env.current_frame().evalled_values.last().cloned()
                     {
                         value
@@ -7019,6 +7028,9 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
 
         match &expr.expr_ {
             Expression_::While(_, _) => {
+                // Run the body block cleanup that the drained
+                // EvaluatedAllSubexpressions would have done.
+                env.push_expr_to_eval(ExpressionState::EvaluatedAllSubexpressions, expr.clone());
                 break;
             }
             Expression_::ForIn(_, _, _) => {
@@ -7030,6 +7042,7 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
                 env.pop_value()
                     .expect("Index used by `for` should be present");
 
+                env.push_expr_to_eval(ExpressionState::EvaluatedAllSubexpressions, expr.clone());
                 break;
             }
             _ => {}

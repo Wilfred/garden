@@ -84,6 +84,22 @@ type PlaygroundResponse = {
   rawOutput?: string;
 };
 
+type CheckDiagnostic = {
+  line_number: number;
+  end_line_number: number;
+  column: number;
+  end_column: number;
+  message: string;
+  severity: "error" | "warning";
+};
+
+type CheckResponse = {
+  success: boolean;
+  diagnostics?: CheckDiagnostic[];
+  error?: string;
+  rawOutput?: string;
+};
+
 function evalSnippet(src: string, snippetDiv: HTMLElement): void {
   snippetDiv.hidden = false;
 
@@ -155,6 +171,48 @@ function evalSnippet(src: string, snippetDiv: HTMLElement): void {
 
         snippetDiv.innerHTML = output;
       }
+    })
+    .catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      snippetDiv.innerHTML = `Fetch error: ${escapeHtml(message)}`;
+    });
+}
+
+function checkSnippet(src: string, snippetDiv: HTMLElement): void {
+  snippetDiv.hidden = false;
+
+  snippetDiv.innerHTML = '<div class="spinner"></div>';
+
+  fetch("https://playground.garden-lang.org/check", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ src }),
+  })
+    .then((response) => response.json())
+    .then((data: CheckResponse) => {
+      if (!data.success) {
+        snippetDiv.innerHTML = `Error: ${escapeHtml(data.error || "Unknown error")}`;
+        return;
+      }
+
+      const diagnostics = data.diagnostics || [];
+      if (diagnostics.length === 0) {
+        snippetDiv.innerHTML = "No issues found.";
+        return;
+      }
+
+      const lines = diagnostics.map((d) => {
+        const label = d.severity === "error" ? "Error" : "Warning";
+        const cls = d.severity === "error" ? "stderr" : "";
+        const prefix = `${label} at line ${d.line_number}, column ${d.column}: `;
+        const text = `${prefix}${d.message}`;
+        return cls
+          ? `<span class="${cls}">${escapeHtml(text)}</span>`
+          : escapeHtml(text);
+      });
+      snippetDiv.innerHTML = lines.join("\n");
     })
     .catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
@@ -276,6 +334,7 @@ function setupSnippetButtons(): void {
 
 function setupPlayground(): void {
   const playgroundRunButton = document.querySelector("#playground-run");
+  const playgroundCheckButton = document.querySelector("#playground-check");
   const playgroundEditor = document.querySelector("#playground-editor");
   const playgroundOutput = document.querySelector("#playground-output");
   if (
@@ -312,6 +371,13 @@ function setupPlayground(): void {
       const src = editorView.state.sliceDoc();
       evalSnippet(src, playgroundOutput);
     });
+
+    if (playgroundCheckButton) {
+      playgroundCheckButton.addEventListener("click", () => {
+        const src = editorView.state.sliceDoc();
+        checkSnippet(src, playgroundOutput);
+      });
+    }
 
     editorView.focus();
   }

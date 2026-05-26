@@ -65,6 +65,13 @@ app.get('/', (req, res) => {
           src: 'Garden source code to execute (string, required)'
         },
         returns: 'JSON object with success status and execution results or error'
+      },
+      'POST /check': {
+        description: 'Statically check Garden code for issues without running it',
+        parameters: {
+          src: 'Garden source code to check (string, required)'
+        },
+        returns: 'JSON object with success status and a list of diagnostics'
       }
     }
   });
@@ -137,6 +144,69 @@ app.post('/run', (req, res) => {
           runCache.set(src, response);
         }
         res.json(response);
+      } catch (parseError) {
+        return res.json({
+          success: false,
+          error: `Failed to parse Garden output: ${parseError.message}`,
+          rawOutput: stdout
+        });
+      }
+    });
+  });
+});
+
+app.post('/check', (req, res) => {
+  const { src } = req.body;
+
+  if (src === undefined || src === null) {
+    return res.status(400).json({
+      success: false,
+      error: 'src parameter is required'
+    });
+  }
+
+  const codePreview = src.length > 200 ? src.substring(0, 200) + '...' : src;
+  logger.info({
+    codeLength: src.length,
+    codePreview
+  }, 'Checking code');
+
+  const tmpFile = path.join(os.tmpdir(), `garden-check-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.gdn`);
+
+  fs.writeFile(tmpFile, src, (writeError) => {
+    if (writeError) {
+      return res.json({
+        success: false,
+        error: writeError.message
+      });
+    }
+
+    exec(`garden check --json "${tmpFile}"`, (execError, stdout, stderr) => {
+      fs.unlink(tmpFile, (unlinkError) => {
+        if (unlinkError) {
+          logger.error({ error: unlinkError.message, tmpFile }, 'Failed to delete temp file');
+        }
+      });
+
+      // `garden check` exits non-zero when there are diagnostics, so
+      // we don't treat that as a failure here — only a real spawn
+      // error counts. `execError.code` is the process exit code; any
+      // other error (e.g. ENOENT) means the binary couldn't be run.
+      if (execError && execError.code === undefined) {
+        return res.json({
+          success: false,
+          error: `Check failed: ${execError.message}`,
+          stderr: stderr
+        });
+      }
+
+      try {
+        const lines = stdout.split('\n').filter(line => line.length > 0);
+        const diagnostics = lines.map(line => JSON.parse(line));
+        res.json({
+          success: true,
+          diagnostics: diagnostics
+        });
       } catch (parseError) {
         return res.json({
           success: false,

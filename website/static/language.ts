@@ -24,7 +24,7 @@ export const gardenLanguage = StreamLanguage.define({
     // Keywords
     if (
       stream.match(
-        /\b(as|assert|break|continue|else|enum|for|fun|if|import|in|let|match|method|public|return|shared|struct|test|while)\b/,
+        /\b(as|assert|break|catch|continue|else|enum|for|fun|if|import|in|let|match|method|public|return|shared|struct|test|try|while)\b/,
       )
     ) {
       return "keyword";

@@ -850,6 +850,15 @@ If called with a prefix, stop the previous session."
   (setq-local comment-start "// ")
   (setq-local comment-end "")
 
+  ;; Cider assumes Clojure by default, so it tries to send Clojure
+  ;; code on startup.
+  ;;
+  ;; We don't have anything we need to send at startup, but we don't
+  ;; want errors. Use a placeholder integer instead.
+  ;;
+  ;; https://github.com/clojure-emacs/cider/issues/3905
+  (setq-local cider-repl-init-code '("123123"))
+
   (setq font-lock-defaults '(garden-mode-font-lock-keywords)))
 
 (defun garden--buf-as-tmp-file ()

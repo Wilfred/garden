@@ -1,5 +1,5 @@
 {
-  "files": ["playground.ts"],
+  "files": ["playground.ts", "api.ts", "language.ts", "editor.ts", "snippets.ts"],
   "compilerOptions": {
     // File Layout
     // "rootDir": "./src",

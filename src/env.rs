@@ -518,6 +518,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
                 ("exists", BuiltInMethodKind::PathExists),
                 ("read", BuiltInMethodKind::PathRead),
                 ("read_bytes", BuiltInMethodKind::PathReadBytes),
+                ("info", BuiltInMethodKind::PathInfo),
             ],
         ),
         (

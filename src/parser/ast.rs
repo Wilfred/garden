@@ -953,6 +953,7 @@ pub(crate) enum BuiltInMethodKind {
     PathExists,
     PathRead,
     PathReadBytes,
+    PathInfo,
     StringAsInt,
     StringChars,
     StringIndexOf,

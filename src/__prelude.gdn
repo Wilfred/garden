@@ -1094,6 +1094,24 @@ test path_read {
   assert(Path{ p: "/dev/null" }.read() == Ok(""))
 }
 
+/// Read the contents of `path` as a list of bytes.
+///
+/// Each byte is returned as an `Int` in the range 0 to 255.
+///
+/// ```
+/// Path{ p: "/tmp/foo.txt" }.read_bytes()
+/// ```
+public method read_bytes(this: Path): Result<List<Int>, String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test path_read_bytes {
+  match Path{ p: "/dev/null" }.read_bytes() {
+    Ok(bs) => { assert(bs.len() == 0) }
+    Err(_) => { assert(False) }
+  }
+}
+
 /// Get the arguments passed when this program was run.
 ///
 /// For example, if the shell command was `garden run my_program.gdn

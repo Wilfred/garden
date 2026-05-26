@@ -1,0 +1,14 @@
+import "__fs.gdn" as fs
+
+{
+  fs::write_file("Hi\n", Path{ p: "/tmp/garden_read_bytes_reftest.txt" })
+  dbg(Path{ p: "/tmp/garden_read_bytes_reftest.txt" }.read_bytes())
+  fs::remove_file(Path{ p: "/tmp/garden_read_bytes_reftest.txt" })
+
+  dbg(Path{ p: "/no_such_file_garden_read_bytes" }.read_bytes())
+}
+
+// args: run
+// expected stderr:
+// [src/test_files/runtime/read_bytes.gdn:5:3] Path{ p: "/tmp/garden_read_bytes_reftest.txt" }.read_bytes() //-> Ok([72, 105, 10])
+// [src/test_files/runtime/read_bytes.gdn:8:3] Path{ p: "/no_such_file_garden_read_bytes" }.read_bytes() //-> Err("Could not read `/no_such_file_garden_read_bytes`. No such file.")

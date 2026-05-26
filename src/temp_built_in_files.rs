@@ -16,12 +16,12 @@ use crate::eval::BUILT_IN_FILES;
 /// On-disk copies of the built-in Garden files, written into a
 /// temporary directory. The directory is removed when this value is
 /// dropped.
-pub(crate) struct BuiltInFiles {
+pub(crate) struct TempBuiltInFiles {
     dir: PathBuf,
     paths: FxHashMap<PathBuf, PathBuf>,
 }
 
-impl BuiltInFiles {
+impl TempBuiltInFiles {
     /// Write the built-in files into a fresh directory inside the
     /// system temp directory, named with `prefix` and the current
     /// process ID.
@@ -59,7 +59,7 @@ impl BuiltInFiles {
     }
 }
 
-impl Drop for BuiltInFiles {
+impl Drop for TempBuiltInFiles {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.dir);
     }
@@ -73,7 +73,7 @@ mod tests {
     fn resolves_built_in_and_cleans_up() {
         let dir_path;
         {
-            let built_ins = BuiltInFiles::new("garden-built-in-files-test").unwrap();
+            let built_ins = TempBuiltInFiles::new("garden-built-in-files-test").unwrap();
             dir_path = built_ins.dir().to_path_buf();
             assert!(dir_path.is_dir());
 

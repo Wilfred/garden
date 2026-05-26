@@ -37,7 +37,6 @@
 // compile.
 #![allow(clippy::cmp_owned)]
 
-mod built_in_files;
 mod caret_finder;
 mod checks;
 mod cli_session;
@@ -67,6 +66,7 @@ mod run_code_blocks;
 mod sandboxed_playground;
 mod syntax_check;
 mod syntax_highlighter;
+mod temp_built_in_files;
 mod test_runner;
 mod type_defs;
 mod values;

@@ -150,6 +150,10 @@ pub(crate) struct Env {
     /// Command line arguments used to invoke this Garden program,
     /// e.g. `vec!["--stuff"]`.
     pub(crate) cli_args: Vec<String>,
+
+    /// If set, print the call stack every 10,000 ticks for basic
+    /// profiling.
+    pub(crate) profile: bool,
 }
 
 impl Env {
@@ -196,6 +200,7 @@ impl Env {
             vfs,
             initial_state: None,
             cli_args: vec![],
+            profile: false,
         };
 
         let prelude_namespace = fresh_prelude(&mut env, &prelude_vfs_path);

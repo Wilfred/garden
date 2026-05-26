@@ -125,6 +125,17 @@ enum CliCommands {
         /// Evaluate the given code instead of reading from a file.
         #[clap(short)]
         c: Option<String>,
+        /// Print the call stack periodically for basic profiling.
+        #[clap(
+            long,
+            action = clap::ArgAction::Set,
+            env = "GDN_PROFILE",
+            value_parser = clap::builder::BoolishValueParser::new(),
+            default_value_t = false,
+            num_args = 0..=1,
+            default_missing_value = "true",
+        )]
+        profile: bool,
         path: Option<PathBuf>,
         arguments: Vec<String>,
     },
@@ -275,7 +286,12 @@ fn main() {
     match args.command {
         CliCommands::Repl => cli_session::repl(interrupted, trace_exprs),
         CliCommands::Json => json_session::json_session(interrupted),
-        CliCommands::Run { c, path, arguments } => {
+        CliCommands::Run {
+            c,
+            profile,
+            path,
+            arguments,
+        } => {
             let (src, abs_path) = match (c, path) {
                 (Some(code), None) => {
                     // Use a synthetic absolute path for code provided via -c
@@ -295,7 +311,14 @@ fn main() {
                     std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
                 }
             };
-            run_file(&src, &abs_path, &arguments, interrupted, trace_exprs)
+            run_file(
+                &src,
+                &abs_path,
+                &arguments,
+                interrupted,
+                trace_exprs,
+                profile,
+            )
         }
         CliCommands::RunCodeBlocks { paths } => {
             run_code_blocks::run_code_blocks(&paths, interrupted);
@@ -799,6 +822,7 @@ fn run_file(
     arguments: &[String],
     interrupted: Arc<AtomicBool>,
     trace_exprs: bool,
+    profile: bool,
 ) {
     let mut id_gen = IdGenerator::default();
     let mut vfs = Vfs::default();
@@ -808,6 +832,7 @@ fn run_file(
 
     let mut env = Env::new(id_gen, vfs);
     env.cli_args = Vec::from(arguments);
+    env.profile = profile;
 
     // Set the toplevel stack frame as also in the file namespace.
     let ns = env.get_or_create_namespace(path);

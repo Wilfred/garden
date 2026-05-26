@@ -23,5 +23,5 @@ import "./other_file.gdn" as other_file
 other_file::visible_everywhere()
 ```
 
-The keywords `shared`, `internal` and `external` are currently
-reserved for additional visibility levels.
+The keyword `shared` is currently reserved for an additional
+visibility level.

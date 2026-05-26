@@ -1112,6 +1112,35 @@ test path_read_bytes {
   }
 }
 
+/// Metadata about a filesystem path, returned by `Path.info`.
+///
+/// `is_symlink` is True when this path is itself a symbolic link.
+/// `size` is the size of the file in bytes. For symbolic links, `size`
+/// is the length of the link target rather than the size of the file
+/// it points to.
+struct PathInfo {
+  is_file: Bool,
+  is_directory: Bool,
+  is_symlink: Bool,
+  size: Int,
+}
+
+/// Return metadata about this path without following symbolic links.
+///
+/// ```
+/// Path{ p: "/" }.info()
+/// ```
+public method info(this: Path): Result<PathInfo, String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test path_info {
+  match Path{ p: "/" }.info() {
+    Ok(info) => { assert(info.is_directory) }
+    Err(_) => { assert(False) }
+  }
+}
+
 /// Get the arguments passed when this program was run.
 ///
 /// For example, if the shell command was `garden run my_program.gdn

@@ -5651,6 +5651,114 @@ fn eval_built_in_method_call(
                 env.push_value(v);
             }
         }
+        BuiltInMethodKind::PathInfo => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
+            check_arity(
+                &SymbolName {
+                    text: "Path::info".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let path_s = match unwrap_path(receiver_value, env) {
+                Ok(s) => s,
+                Err(msg) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
+                    }
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: msg,
+                        }),
+                    ));
+                }
+            };
+
+            let orig_path = PathBuf::from(path_s.clone());
+            let path = if orig_path.is_relative() {
+                env.working_directory.join(&orig_path)
+            } else {
+                orig_path.clone()
+            };
+
+            let v = match std::fs::symlink_metadata(&path) {
+                Ok(metadata) => {
+                    let file_type = metadata.file_type();
+                    let fields = vec![
+                        (
+                            SymbolName::from("is_file"),
+                            Value::bool(file_type.is_file()),
+                        ),
+                        (
+                            SymbolName::from("is_directory"),
+                            Value::bool(file_type.is_dir()),
+                        ),
+                        (
+                            SymbolName::from("is_symlink"),
+                            Value::bool(file_type.is_symlink()),
+                        ),
+                        (
+                            SymbolName::from("size"),
+                            Value::new(Value_::Int(metadata.len() as i64)),
+                        ),
+                    ];
+                    let info = Value::new(Value_::Struct {
+                        type_name: TypeName {
+                            text: "PathInfo".to_owned(),
+                        },
+                        fields,
+                        runtime_type: Type::UserDefined {
+                            kind: TypeDefKind::Struct,
+                            name: TypeName {
+                                text: "PathInfo".to_owned(),
+                            },
+                            args: vec![],
+                        },
+                    });
+                    Value::ok(info)
+                }
+                Err(e) => {
+                    let reason = match e.kind() {
+                        std::io::ErrorKind::NotFound => "No such file or directory".to_owned(),
+                        std::io::ErrorKind::PermissionDenied => "Permission denied".to_owned(),
+                        kind => format!("{kind}"),
+                    };
+                    let msg = if orig_path.is_relative() {
+                        format!(
+                            "Could not read info for `{path_s}` (relative to `{}`). {reason}.",
+                            env.working_directory.display()
+                        )
+                    } else {
+                        format!("Could not read info for `{path_s}`. {reason}.")
+                    };
+                    Value::err(Value::new(Value_::String(msg)))
+                }
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltInMethodKind::StringAsInt => {
             check_arity(
                 &SymbolName {

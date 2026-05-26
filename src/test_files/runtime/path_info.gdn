@@ -1,0 +1,25 @@
+import "__fs.gdn" as fs
+
+{
+  fs::write_file("Hi\n", Path{ p: "/tmp/garden_path_info_reftest.txt" })
+  let file_info = Path{ p: "/tmp/garden_path_info_reftest.txt" }.info().or_throw()
+  dbg(file_info.is_file)
+  dbg(file_info.is_directory)
+  dbg(file_info.is_symlink)
+  dbg(file_info.size)
+  fs::remove_file(Path{ p: "/tmp/garden_path_info_reftest.txt" })
+
+  let dir_info = Path{ p: "/" }.info().or_throw()
+  dbg(dir_info.is_directory)
+
+  dbg(Path{ p: "/no_such_file_garden_path_info" }.info())
+}
+
+// args: run
+// expected stderr:
+// [src/test_files/runtime/path_info.gdn:6:3] file_info.is_file //-> True
+// [src/test_files/runtime/path_info.gdn:7:3] file_info.is_directory //-> False
+// [src/test_files/runtime/path_info.gdn:8:3] file_info.is_symlink //-> False
+// [src/test_files/runtime/path_info.gdn:9:3] file_info.size //-> 3
+// [src/test_files/runtime/path_info.gdn:13:3] dir_info.is_directory //-> True
+// [src/test_files/runtime/path_info.gdn:15:3] Path{ p: "/no_such_file_garden_path_info" }.info() //-> Err("Could not read info for `/no_such_file_garden_path_info`. No such file or directory.")

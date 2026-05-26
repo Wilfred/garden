@@ -692,7 +692,7 @@ With a prefix argument, also save the stringified result to the kill ring."
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt
        '("let" "fun" "enum" "struct"
-         "import" "internal" "external" "public" "shared"
+         "import" "public" "shared"
          "if" "else" "while" "return" "test" "match"
          "break" "continue" "for" "in" "assert"
          "as" "method" "try" "catch")

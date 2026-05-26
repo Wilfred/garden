@@ -1,0 +1,33 @@
+{ "op": "clone" }
+{ "op": "eval", "session": "garden-1", "code": "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]", "id": "1", "nrepl.middleware.print/stream?": "1", "nrepl.middleware.print/buffer-size": 8, "nrepl.middleware.print/quota": 12 }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "id": "1",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": "[1, 2, 3"
+// }
+// {
+//   "id": "1",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": ", 4,"
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "id": "1",
+//   "session": "garden-1",
+//   "status": [
+//     "done",
+//     "truncated"
+//   ]
+// }
+

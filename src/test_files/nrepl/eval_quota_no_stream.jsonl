@@ -1,0 +1,27 @@
+{ "op": "clone" }
+{ "op": "eval", "session": "garden-1", "code": "[1, 2, 3, 4, 5]", "id": "1", "nrepl.middleware.print/quota": 6 }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "id": "1",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": "[1, 2,"
+// }
+// {
+//   "id": "1",
+//   "session": "garden-1",
+//   "status": [
+//     "done",
+//     "truncated"
+//   ]
+// }
+

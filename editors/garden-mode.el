@@ -857,6 +857,9 @@ If called with a prefix, stop the previous session."
   ;; want errors. Use a placeholder integer instead.
   ;;
   ;; https://github.com/clojure-emacs/cider/issues/3905
+  ;;
+  ;; See also the command `nrepl-toggle-message-logging' for
+  ;; investigating nREPL issues.
   (setq-local cider-repl-init-code '("123123"))
 
   (setq font-lock-defaults '(garden-mode-font-lock-keywords)))

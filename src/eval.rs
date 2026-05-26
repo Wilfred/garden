@@ -5030,8 +5030,7 @@ fn eval_built_in_method_call(
 
             match receiver_value.as_ref() {
                 Value_::Dict { items, value_type } => {
-                    let mut items = items.clone();
-                    items.remove(key_to_remove);
+                    let items = items.remove(key_to_remove);
 
                     if expr_value_is_used {
                         env.push_value(Value::new(Value_::Dict {
@@ -5081,8 +5080,7 @@ fn eval_built_in_method_call(
 
             match receiver_value.as_ref() {
                 Value_::Dict { items, .. } => {
-                    let mut items = items.clone();
-                    items.insert(key_to_insert.clone(), value_to_insert.clone());
+                    let items = items.insert(key_to_insert.clone(), value_to_insert.clone());
 
                     if expr_value_is_used {
                         // TODO: check that the new value has the same
@@ -6487,7 +6485,7 @@ fn eval_expr(
         }
         Expression_::DictLiteral(item_exprs) => {
             if expr_state.done_children() {
-                let mut items: FxHashMap<String, Value> = FxHashMap::default();
+                let mut items: rpds::HashTrieMap<String, Value> = rpds::HashTrieMap::new();
                 let mut value_type = Type::no_value();
 
                 for kv in item_exprs {
@@ -6512,7 +6510,7 @@ fn eval_expr(
                         env,
                     )?;
 
-                    items.insert(key_str.clone(), value_value);
+                    items.insert_mut(key_str.clone(), value_value);
                 }
 
                 if expr_value_is_used {

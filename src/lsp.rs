@@ -26,7 +26,7 @@ use crate::completions;
 use crate::destructure::destructure;
 use crate::diagnostics::{Autofix, Diagnostic as GardenDiagnostic, Severity};
 use crate::env::Env;
-use crate::eval::load_toplevel_items;
+use crate::eval::{load_toplevel_items, BUILT_IN_FILES};
 use crate::extract_function::extract_function;
 use crate::highlight::highlight_occurrences;
 use crate::parser::ast::IdGenerator;
@@ -34,6 +34,51 @@ use crate::parser::position::Position as GardenPosition;
 use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::pos_to_id::find_item_at;
+
+/// On-disk copies of the built-in Garden files (`__prelude.gdn`,
+/// `__fs.gdn`, etc.) so the editor can navigate to them via go-to-def.
+///
+/// The directory is removed when this value is dropped.
+struct BuiltInFiles {
+    dir: PathBuf,
+    paths: FxHashMap<PathBuf, PathBuf>,
+}
+
+impl BuiltInFiles {
+    fn new() -> io::Result<Self> {
+        let dir = std::env::temp_dir().join(format!("garden-lsp-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir)?;
+
+        let mut paths = FxHashMap::default();
+        for (name, content) in BUILT_IN_FILES {
+            let temp_path = dir.join(name);
+            std::fs::write(&temp_path, content)?;
+
+            if let Ok(meta) = std::fs::metadata(&temp_path) {
+                let mut perms = meta.permissions();
+                perms.set_readonly(true);
+                let _ = std::fs::set_permissions(&temp_path, perms);
+            }
+
+            paths.insert(PathBuf::from(name), temp_path);
+        }
+
+        Ok(Self { dir, paths })
+    }
+
+    /// If `path` refers to a built-in file, return the on-disk path of
+    /// the temporary copy.
+    fn resolve(&self, path: &Path) -> Option<PathBuf> {
+        self.paths.get(path).cloned()
+    }
+}
+
+impl Drop for BuiltInFiles {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.dir);
+    }
+}
 
 #[derive(Debug, Deserialize)]
 struct Message {
@@ -508,6 +553,7 @@ fn handle_definition(
     id: serde_json::Value,
     params: DefinitionParams,
     documents: &DocumentStore,
+    built_in_files: Option<&BuiltInFiles>,
 ) -> JsonRpcResponse<Option<Location>> {
     let uri = &params.text_document_position_params.text_document.uri;
     let position = params.text_document_position_params.position;
@@ -536,9 +582,16 @@ fn handle_definition(
         None => return JsonRpcResponse::new(id, None),
     };
 
+    // Definitions in built-in files have relative paths like
+    // `__prelude.gdn`. Redirect those to the temporary on-disk copy so
+    // the editor can open them.
+    let def_path = built_in_files
+        .and_then(|b| b.resolve(&def_pos.path))
+        .unwrap_or_else(|| (*def_pos.path).clone());
+
     // Convert to LSP Location format
     let location = Location {
-        uri: path_to_uri(&def_pos.path),
+        uri: path_to_uri(&def_path),
         range: garden_pos_to_lsp_range(&def_pos),
     };
 
@@ -922,6 +975,14 @@ pub(crate) fn run_lsp() {
     let mut should_exit = false;
     let mut documents: DocumentStore = FxHashMap::default();
 
+    let built_in_files = match BuiltInFiles::new() {
+        Ok(b) => Some(b),
+        Err(e) => {
+            error!("Could not write built-in files to a temporary directory: {e}");
+            None
+        }
+    };
+
     loop {
         let message = match read_message() {
             Ok(Some(msg)) => msg,
@@ -996,7 +1057,8 @@ pub(crate) fn run_lsp() {
                             continue;
                         }
                     };
-                    let response = handle_definition(id, params, &documents);
+                    let response =
+                        handle_definition(id, params, &documents, built_in_files.as_ref());
                     if let Err(e) = write_message(&response) {
                         error!("Error writing response: {e}");
                     }
@@ -1147,5 +1209,23 @@ mod tests {
         assert_eq!(line_char_to_offset(src, 1, 2), 21);
         // Line 1, character 3 is '.'
         assert_eq!(line_char_to_offset(src, 1, 3), 22);
+    }
+
+    #[test]
+    fn test_built_in_files_resolve_and_cleanup() {
+        let dir_path;
+        {
+            let built_ins = BuiltInFiles::new().unwrap();
+            dir_path = built_ins.dir.clone();
+            assert!(dir_path.is_dir());
+
+            let resolved = built_ins
+                .resolve(&PathBuf::from("__prelude.gdn"))
+                .expect("__prelude.gdn should resolve");
+            assert!(resolved.is_file());
+
+            assert!(built_ins.resolve(&PathBuf::from("not_a_builtin.gdn")).is_none());
+        }
+        assert!(!dir_path.exists());
     }
 }

@@ -1736,10 +1736,6 @@ impl TypeCheckVisitor<'_> {
         let inferred_rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
 
         // Add a special case for users confusing the int and float operators.
-        //
-        // TODO: this is technically checking the lhs/rhs twice, so if lhs or rhs
-        // are e.g. complex match blocks that violate expected_return_ty, we'll
-        // emit duplicate diagnostics for it.
         if is_subtype(&inferred_lhs_ty, &Type::int()) && is_subtype(&inferred_rhs_ty, &Type::int())
         {
             let (int_op, float_op) = match op.kind {
@@ -1772,8 +1768,17 @@ impl TypeCheckVisitor<'_> {
                 position: op.position.clone(),
             });
         } else {
-            self.verify_expr(&Type::float(), lhs, type_bindings, expected_return_ty);
-            self.verify_expr(&Type::float(), rhs, type_bindings, expected_return_ty);
+            for (operand, operand_ty) in [(lhs, &inferred_lhs_ty), (rhs, &inferred_rhs_ty)] {
+                if !is_subtype(operand_ty, &Type::float()) {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        fixes: vec![],
+                        severity: Severity::Error,
+                        message: format_type_mismatch(&Type::float(), operand_ty),
+                        position: operand.position.clone(),
+                    });
+                }
+            }
         }
 
         Type::float()

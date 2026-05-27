@@ -3450,6 +3450,147 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
+        BuiltInFunctionKind::FsWriteBytes => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let items = match arg_values[0].as_ref() {
+                Value_::List { items, .. } => items.clone(),
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[0].clone(),
+                            message: format_type_error(
+                                &TypeName {
+                                    text: "List".into(),
+                                },
+                                &arg_values[0],
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            };
+
+            let mut bytes: Vec<u8> = Vec::with_capacity(items.len());
+            for item in items.iter() {
+                let i = match item.as_ref() {
+                    Value_::Int(i) => *i,
+                    _ => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err((
+                            RestoreValues(saved_values),
+                            EvalError::Exception(ExceptionInfo {
+                                position: arg_positions[0].clone(),
+                                message: format_type_error(
+                                    &TypeName { text: "Int".into() },
+                                    item,
+                                    env,
+                                ),
+                            }),
+                        ));
+                    }
+                };
+
+                if !(0..=255).contains(&i) {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[0].clone(),
+                            message: ErrorMessage(vec![
+                                msgtext!("Byte values must be in the range 0 to 255, got "),
+                                msgcode!("{}", i),
+                                msgtext!("."),
+                            ]),
+                        }),
+                    ));
+                }
+
+                bytes.push(i as u8);
+            }
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let path_s = match unwrap_path(&arg_values[1], env) {
+                Ok(s) => s,
+                Err(msg) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
+                    }
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: msg,
+                        }),
+                    ));
+                }
+            };
+
+            let path = PathBuf::from(&path_s);
+            let path = if path.is_relative() {
+                env.working_directory.join(path)
+            } else {
+                path
+            };
+
+            let v = match std::fs::write(&path, &bytes) {
+                Ok(()) => Value::ok(Value::unit()),
+                Err(e) => {
+                    let msg = format!("Could not write `{path_s}`. {e}");
+                    Value::err(Value::new(Value_::String(msg)))
+                }
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltInFunctionKind::FsCreateDir => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];

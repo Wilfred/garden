@@ -409,6 +409,8 @@ pub(crate) enum BuiltInFunctionKind {
     FsCopyFile,
     FsCreateDir,
     FsListDirectory,
+    FsReadFile,
+    FsReadFileBytes,
     FsRemoveDir,
     FsRemoveFile,
     FsSetWorkingDirectory,
@@ -456,6 +458,8 @@ impl BuiltInFunctionKind {
             | BuiltInFunctionKind::FsCreateDir
             | BuiltInFunctionKind::FsRemoveDir
             | BuiltInFunctionKind::FsCopyFile
+            | BuiltInFunctionKind::FsReadFile
+            | BuiltInFunctionKind::FsReadFileBytes
             | BuiltInFunctionKind::FsRemoveFile => PathBuf::from("__fs.gdn"),
             BuiltInFunctionKind::ReflectSourceForFun
             | BuiltInFunctionKind::ReflectSourceForMethod
@@ -513,6 +517,8 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::FsCreateDir => "create_dir",
             BuiltInFunctionKind::FsRemoveDir => "remove_dir",
             BuiltInFunctionKind::FsCopyFile => "copy_file",
+            BuiltInFunctionKind::FsReadFile => "read_file",
+            BuiltInFunctionKind::FsReadFileBytes => "read_file_bytes",
             BuiltInFunctionKind::FsRemoveFile => "remove_file",
             BuiltInFunctionKind::TimeUnixtime => "unixtime",
             BuiltInFunctionKind::ReflectBuiltInFiles => "built_in_files",

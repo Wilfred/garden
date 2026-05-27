@@ -183,7 +183,7 @@ fun write_markdown_page(
   let html_file_name = out_path.file_name().or_throw()
   let self_url = "/" ^ html_file_name
 
-  let page_src_md = md_path.read().or_throw()
+  let page_src_md = fs::read_file(md_path).or_throw()
   let page_src = markdown::render(
     substitute_shorthand(website_dir, page_src_md),
     Some(md_path),
@@ -236,7 +236,7 @@ fun blog_posts(website_dir: Path): List<BlogPost> {
     let published = False
     let title: Option<String> = None
     let date: Option<String> = None
-    let src = match path.read() {
+    let src = match fs::read_file(path) {
       Ok(src) => {
         let (metadata, src) = split_metadata(src)
         for line in metadata.or_value("").lines() {
@@ -307,7 +307,7 @@ fun build_site(): Unit {
   fs::create_dir(out_dir.join("static").join("fonts"))
 
   let base_tmpl_path = website_dir.join("template.html")
-  let base_tmpl_src = base_tmpl_path.read().or_throw()
+  let base_tmpl_src = fs::read_file(base_tmpl_path).or_throw()
 
   build_blog(website_dir, out_dir, base_tmpl_src)
 

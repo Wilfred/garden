@@ -1,5 +1,7 @@
+import "__fs.gdn" as fs
+
 {
-  let s = Path{ p: "/foo" }.read().or_throw()
+  let s = fs::read_file(Path{ p: "/foo" }).or_throw()
   s.split_once(",")
 }
 

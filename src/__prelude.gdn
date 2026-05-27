@@ -382,6 +382,10 @@ test string_chars {
 }
 
 /// A filesystem path.
+///
+/// `Path` provides path manipulation methods such as `parent`, `join`,
+/// `extension` and `set_extension`. Functions that read from or write
+/// to the filesystem live in the `__fs.gdn` module.
 struct Path {
   p: String,
 }
@@ -1064,37 +1068,6 @@ public method exists(this: Path): Bool {
 test path_exists {
   assert(Path{ p: "/" }.exists() == True)
   assert(Path{ p: "/no_such_dir_for_garden_test" }.exists() == False)
-}
-
-/// Read the contents of `path` as a string.
-///
-/// ```
-/// Path{ p: "/tmp/foo.txt" }.read()
-/// ```
-public method read(this: Path): Result<String, String> {
-  __BUILT_IN_IMPLEMENTATION
-}
-
-test path_read {
-  assert(Path{ p: "/dev/null" }.read() == Ok(""))
-}
-
-/// Read the contents of `path` as a list of bytes.
-///
-/// Each byte is returned as an `Int` in the range 0 to 255.
-///
-/// ```
-/// Path{ p: "/tmp/foo.txt" }.read_bytes()
-/// ```
-public method read_bytes(this: Path): Result<List<Int>, String> {
-  __BUILT_IN_IMPLEMENTATION
-}
-
-test path_read_bytes {
-  match Path{ p: "/dev/null" }.read_bytes() {
-    Ok(bs) => { assert(bs.is_empty()) }
-    Err(_) => { assert(False) }
-  }
 }
 
 /// Metadata about a filesystem path, returned by `Path.info`.

@@ -1,3 +1,36 @@
+/// Read the contents of file `path` as a string.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::read_file(Path{ p: "/tmp/foo.txt" })
+/// ```
+public fun read_file(path: Path): Result<String, String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test read_file {
+  assert(read_file(Path{ p: "/dev/null" }) == Ok(""))
+}
+
+/// Read the contents of file `path` as a list of bytes.
+///
+/// Each byte is returned as an `Int` in the range 0 to 255.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::read_file_bytes(Path{ p: "/tmp/foo.txt" })
+/// ```
+public fun read_file_bytes(path: Path): Result<List<Int>, String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test read_file_bytes {
+  match read_file_bytes(Path{ p: "/dev/null" }) {
+    Ok(bs) => { assert(bs.is_empty()) }
+    Err(_) => { assert(False) }
+  }
+}
+
 /// Write `content` to file `path`.
 ///
 /// If `path` already exists, its content is replaced with `content`.

@@ -3796,6 +3796,165 @@ fn eval_built_in_call(
                 env.push_value(v);
             }
         }
+        BuiltInFunctionKind::FsReadFile => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let path_s = match unwrap_path(&arg_values[0], env) {
+                Ok(s) => s,
+                Err(msg) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
+                    }
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: msg,
+                        }),
+                    ));
+                }
+            };
+
+            let orig_path = PathBuf::from(path_s.clone());
+            let path = if orig_path.is_relative() {
+                env.working_directory.join(&orig_path)
+            } else {
+                orig_path.clone()
+            };
+
+            let v = match std::fs::read_to_string(&path) {
+                Ok(s) => Value::ok(Value::new(Value_::String(s))),
+                Err(e) => {
+                    let reason = match e.kind() {
+                        std::io::ErrorKind::NotFound => "No such file".to_owned(),
+                        std::io::ErrorKind::PermissionDenied => "Permission denied".to_owned(),
+                        std::io::ErrorKind::IsADirectory => "Is a directory".to_owned(),
+                        kind => format!("{kind}"),
+                    };
+                    let msg = if orig_path.is_relative() {
+                        format!(
+                            "Could not read `{path_s}` (relative to `{}`). {reason}.",
+                            env.working_directory.display()
+                        )
+                    } else {
+                        format!("Could not read `{path_s}`. {reason}.")
+                    };
+                    Value::err(Value::new(Value_::String(msg)))
+                }
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
+        BuiltInFunctionKind::FsReadFileBytes => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let path_s = match unwrap_path(&arg_values[0], env) {
+                Ok(s) => s,
+                Err(msg) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
+                    }
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: msg,
+                        }),
+                    ));
+                }
+            };
+
+            let orig_path = PathBuf::from(path_s.clone());
+            let path = if orig_path.is_relative() {
+                env.working_directory.join(&orig_path)
+            } else {
+                orig_path.clone()
+            };
+
+            let v = match std::fs::read(&path) {
+                Ok(bytes) => {
+                    let items = bytes
+                        .into_iter()
+                        .map(|b| Value::new(Value_::Int(b as i64)))
+                        .collect();
+                    Value::ok(Value::new(Value_::List {
+                        items,
+                        elem_type: Type::int(),
+                    }))
+                }
+                Err(e) => {
+                    let reason = match e.kind() {
+                        std::io::ErrorKind::NotFound => "No such file".to_owned(),
+                        std::io::ErrorKind::PermissionDenied => "Permission denied".to_owned(),
+                        std::io::ErrorKind::IsADirectory => "Is a directory".to_owned(),
+                        kind => format!("{kind}"),
+                    };
+                    let msg = if orig_path.is_relative() {
+                        format!(
+                            "Could not read `{path_s}` (relative to `{}`). {reason}.",
+                            env.working_directory.display()
+                        )
+                    } else {
+                        format!("Could not read `{path_s}`. {reason}.")
+                    };
+                    Value::err(Value::new(Value_::String(msg)))
+                }
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltInFunctionKind::FsRemoveFile => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
@@ -5727,165 +5886,6 @@ fn eval_built_in_method_call(
                     path
                 };
                 env.push_value(Value::bool(path.exists()));
-            }
-        }
-        BuiltInMethodKind::PathRead => {
-            if env.enforce_sandbox {
-                let mut saved_values = vec![];
-                for value in arg_values.iter().rev() {
-                    saved_values.push(value.clone());
-                }
-                saved_values.push(receiver_value.clone());
-
-                return Err((
-                    RestoreValues(saved_values),
-                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
-                ));
-            }
-
-            check_arity(
-                &SymbolName {
-                    text: "Path::read".to_owned(),
-                },
-                receiver_value,
-                receiver_pos,
-                0,
-                arg_positions,
-                arg_values,
-            )?;
-
-            let path_s = match unwrap_path(receiver_value, env) {
-                Ok(s) => s,
-                Err(msg) => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
-                    }
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::Exception(ExceptionInfo {
-                            position: receiver_pos.clone(),
-                            message: msg,
-                        }),
-                    ));
-                }
-            };
-
-            let orig_path = PathBuf::from(path_s.clone());
-            let path = if orig_path.is_relative() {
-                env.working_directory.join(&orig_path)
-            } else {
-                orig_path.clone()
-            };
-
-            let v = match std::fs::read_to_string(&path) {
-                Ok(s) => Value::ok(Value::new(Value_::String(s))),
-                Err(e) => {
-                    let reason = match e.kind() {
-                        std::io::ErrorKind::NotFound => "No such file".to_owned(),
-                        std::io::ErrorKind::PermissionDenied => "Permission denied".to_owned(),
-                        std::io::ErrorKind::IsADirectory => "Is a directory".to_owned(),
-                        kind => format!("{kind}"),
-                    };
-                    let msg = if orig_path.is_relative() {
-                        format!(
-                            "Could not read `{path_s}` (relative to `{}`). {reason}.",
-                            env.working_directory.display()
-                        )
-                    } else {
-                        format!("Could not read `{path_s}`. {reason}.")
-                    };
-                    Value::err(Value::new(Value_::String(msg)))
-                }
-            };
-
-            if expr_value_is_used {
-                env.push_value(v);
-            }
-        }
-        BuiltInMethodKind::PathReadBytes => {
-            if env.enforce_sandbox {
-                let mut saved_values = vec![];
-                for value in arg_values.iter().rev() {
-                    saved_values.push(value.clone());
-                }
-                saved_values.push(receiver_value.clone());
-
-                return Err((
-                    RestoreValues(saved_values),
-                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
-                ));
-            }
-
-            check_arity(
-                &SymbolName {
-                    text: "Path::read_bytes".to_owned(),
-                },
-                receiver_value,
-                receiver_pos,
-                0,
-                arg_positions,
-                arg_values,
-            )?;
-
-            let path_s = match unwrap_path(receiver_value, env) {
-                Ok(s) => s,
-                Err(msg) => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
-                    }
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::Exception(ExceptionInfo {
-                            position: receiver_pos.clone(),
-                            message: msg,
-                        }),
-                    ));
-                }
-            };
-
-            let orig_path = PathBuf::from(path_s.clone());
-            let path = if orig_path.is_relative() {
-                env.working_directory.join(&orig_path)
-            } else {
-                orig_path.clone()
-            };
-
-            let v = match std::fs::read(&path) {
-                Ok(bytes) => {
-                    let items = bytes
-                        .into_iter()
-                        .map(|b| Value::new(Value_::Int(b as i64)))
-                        .collect();
-                    Value::ok(Value::new(Value_::List {
-                        items,
-                        elem_type: Type::int(),
-                    }))
-                }
-                Err(e) => {
-                    let reason = match e.kind() {
-                        std::io::ErrorKind::NotFound => "No such file".to_owned(),
-                        std::io::ErrorKind::PermissionDenied => "Permission denied".to_owned(),
-                        std::io::ErrorKind::IsADirectory => "Is a directory".to_owned(),
-                        kind => format!("{kind}"),
-                    };
-                    let msg = if orig_path.is_relative() {
-                        format!(
-                            "Could not read `{path_s}` (relative to `{}`). {reason}.",
-                            env.working_directory.display()
-                        )
-                    } else {
-                        format!("Could not read `{path_s}`. {reason}.")
-                    };
-                    Value::err(Value::new(Value_::String(msg)))
-                }
-            };
-
-            if expr_value_is_used {
-                env.push_value(v);
             }
         }
         BuiltInMethodKind::PathInfo => {

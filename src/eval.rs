@@ -5438,6 +5438,103 @@ fn eval_built_in_method_call(
                 }
             }
         }
+        BuiltInMethodKind::ListSlice => {
+            check_arity(
+                &SymbolName {
+                    text: "List::slice".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let (items, elem_type) = match receiver_value.as_ref() {
+                Value_::List { items, elem_type } => (items, elem_type),
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: format_type_error(
+                                &TypeName {
+                                    text: "List".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            };
+
+            let i_arg = match arg_values[0].as_ref() {
+                Value_::Int(i) => *i,
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[0].clone(),
+                            message: format_type_error(
+                                &TypeName { text: "Int".into() },
+                                &arg_values[0],
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            };
+            let j_arg = match arg_values[1].as_ref() {
+                Value_::Int(j) => *j,
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[1].clone(),
+                            message: format_type_error(
+                                &TypeName { text: "Int".into() },
+                                &arg_values[1],
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            };
+
+            let len = items.len() as i64;
+            let j_adjusted = if j_arg < 0 { len + j_arg } else { j_arg };
+
+            let start = i_arg.max(0).min(len) as usize;
+            let end = j_adjusted.max(0).min(len) as usize;
+            let end = end.max(start);
+
+            if expr_value_is_used {
+                let new_items = items[start..end].to_vec();
+                env.push_value(Value::new(Value_::List {
+                    items: new_items,
+                    elem_type: elem_type.clone(),
+                }));
+            }
+        }
         BuiltInMethodKind::PathExists => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];

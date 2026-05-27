@@ -720,22 +720,7 @@ test list_index_of {
 /// [10, 11, 12].slice(1, -1) //-> [11]
 /// ```
 public method slice<T>(this: List<T>, i: Int, j: Int): List<T> {
-  if (j < 0) {
-    j = this.len() + j
-  }
-
-  let items: List<T> = []
-
-  let index = 0
-  for item in this {
-    if (index >= i) && (index < j) {
-      items = items.append(item)
-    }
-
-    index += 1
-  }
-
-  items
+  __BUILT_IN_IMPLEMENTATION
 }
 
 test list_slice {

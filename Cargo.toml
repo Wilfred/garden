@@ -50,6 +50,3 @@ assert_cmd = "2.0.14"
 escargot = "0.5"
 goldentests = "1.4.2"
 predicates = "3"
-
-[profile.release]
-opt-level = "s"

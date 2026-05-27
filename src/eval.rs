@@ -3077,7 +3077,7 @@ fn eval_built_in_call(
             let items = fun_names
                 .into_iter()
                 .map(|n| Value::new(Value_::String(n)))
-                .collect::<Vec<_>>();
+                .collect::<rpds::Vector<_>>();
 
             if expr_value_is_used {
                 env.push_value(Value::new(Value_::List {
@@ -3118,7 +3118,7 @@ fn eval_built_in_call(
             let items = method_names
                 .into_iter()
                 .map(|n| Value::new(Value_::String(n)))
-                .collect::<Vec<_>>();
+                .collect::<rpds::Vector<_>>();
 
             if expr_value_is_used {
                 env.push_value(Value::new(Value_::List {
@@ -3179,11 +3179,11 @@ fn eval_built_in_call(
 
             let value = match path.read_dir() {
                 Ok(dir_iter) => {
-                    let mut items = vec![];
+                    let mut items = rpds::Vector::new();
                     for entry in dir_iter {
                         // TODO: don't silently discard errors.
                         if let Ok(entry) = entry {
-                            items.push(Value::path(entry.path().display().to_string()));
+                            items.push_back_mut(Value::path(entry.path().display().to_string()));
                         }
                     }
 
@@ -3242,7 +3242,7 @@ fn eval_built_in_call(
                     .cli_args
                     .iter()
                     .map(|arg| Value::new(Value_::String(arg.clone())))
-                    .collect::<Vec<_>>();
+                    .collect::<rpds::Vector<_>>();
 
                 env.push_value(Value::new(Value_::List {
                     items,
@@ -3316,7 +3316,7 @@ fn eval_built_in_call(
                 let items = keywords
                     .into_iter()
                     .map(|k| Value::new(Value_::String(k)))
-                    .collect::<Vec<_>>();
+                    .collect::<rpds::Vector<_>>();
                 env.push_value(Value::new(Value_::List {
                     items,
                     elem_type: Type::string(),
@@ -3780,20 +3780,20 @@ fn eval_built_in_call(
 
             let (mut token_stream, _lex_errors) = lex::lex(&vfs_path, src);
 
-            let mut items = vec![];
+            let mut items = rpds::Vector::new();
             while let Some(token) = token_stream.pop() {
                 for (pos, comment_str) in &token.preceding_comments {
-                    items.push(as_int_str_tuple(pos.start_offset as i64, comment_str));
+                    items.push_back_mut(as_int_str_tuple(pos.start_offset as i64, comment_str));
                 }
 
-                items.push(as_int_str_tuple(
+                items.push_back_mut(as_int_str_tuple(
                     token.position.start_offset as i64,
                     token.text,
                 ));
             }
 
             for (pos, comment_str) in &token_stream.trailing_comments {
-                items.push(as_int_str_tuple(pos.start_offset as i64, comment_str));
+                items.push_back_mut(as_int_str_tuple(pos.start_offset as i64, comment_str));
             }
 
             let v = Value_::List {
@@ -4120,7 +4120,7 @@ fn eval_built_in_call(
             let items = names
                 .into_iter()
                 .map(|n| Value::new(Value_::String(n)))
-                .collect::<Vec<_>>();
+                .collect::<rpds::Vector<_>>();
 
             let v = Value::new(Value_::List {
                 items,
@@ -4183,7 +4183,7 @@ fn eval_built_in_call(
                 arg_values,
             )?;
 
-            let items: Vec<Value> = BUILT_IN_FILES
+            let items: rpds::Vector<Value> = BUILT_IN_FILES
                 .iter()
                 .map(|(name, _)| Value::new(Value_::String((*name).to_owned())))
                 .collect();
@@ -4210,9 +4210,9 @@ fn check_snippet(src: &str, path: PathBuf, env: &Env) -> Value {
     let vfs_path = check_env.vfs.insert(Rc::new(path.clone()), src.to_owned());
     let (items, syntax_errors) = parse_toplevel_items(&vfs_path, src, &mut check_env.id_gen);
 
-    let mut error_messages = vec![];
+    let mut error_messages = rpds::Vector::new();
     for err in syntax_errors {
-        error_messages.push(Value::new(Value_::String(err.message().as_string())));
+        error_messages.push_back_mut(Value::new(Value_::String(err.message().as_string())));
     }
 
     for Diagnostic {
@@ -4222,7 +4222,7 @@ fn check_snippet(src: &str, path: PathBuf, env: &Env) -> Value {
         match severity {
             Severity::Warning => {}
             Severity::Error => {
-                error_messages.push(Value::new(Value_::String(message.as_string())));
+                error_messages.push_back_mut(Value::new(Value_::String(message.as_string())));
             }
         }
     }
@@ -4965,7 +4965,7 @@ fn eval_built_in_method_call(
 
                     list_items_rust.sort_by_key(|(k, _v)| k.clone());
 
-                    let mut list_items = vec![];
+                    let mut list_items = rpds::Vector::new();
                     for (item_key, item_value) in list_items_rust.iter() {
                         let key_str = Value::new(Value_::String(item_key.clone()));
                         let tuple_items = vec![key_str, item_value.clone()];
@@ -4974,7 +4974,7 @@ fn eval_built_in_method_call(
                             items: tuple_items,
                             item_types: vec![Type::string(), value_type.clone()],
                         });
-                        list_items.push(tuple);
+                        list_items.push_back_mut(tuple);
                     }
 
                     if expr_value_is_used {
@@ -5244,8 +5244,7 @@ fn eval_built_in_method_call(
 
             match receiver_value.as_ref() {
                 Value_::List { items, .. } => {
-                    let mut new_items = items.clone();
-                    new_items.push(arg_values[0].clone());
+                    let new_items = items.push_back(arg_values[0].clone());
 
                     if expr_value_is_used {
                         let elem_type = Type::from_value(&arg_values[0]);
@@ -5348,7 +5347,7 @@ fn eval_built_in_method_call(
                     let v = if *i >= items.len() as i64 || *i < 0 {
                         Value::none()
                     } else {
-                        Value::some(items[*i as usize].clone())
+                        Value::some(items.get(*i as usize).unwrap().clone())
                     };
 
                     if expr_value_is_used {
@@ -5528,7 +5527,12 @@ fn eval_built_in_method_call(
             let end = end.max(start);
 
             if expr_value_is_used {
-                let new_items = items[start..end].to_vec();
+                let new_items: rpds::Vector<Value> = items
+                    .iter()
+                    .skip(start)
+                    .take(end - start)
+                    .cloned()
+                    .collect();
                 env.push_value(Value::new(Value_::List {
                     items: new_items,
                     elem_type: elem_type.clone(),
@@ -5902,9 +5906,9 @@ fn eval_built_in_method_call(
             saved_values.push(receiver_value.clone());
 
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
-            let mut items = vec![];
+            let mut items = rpds::Vector::new();
             for (_, c) in s.char_indices() {
-                items.push(Value::new(Value_::String(format!("{c}"))));
+                items.push_back_mut(Value::new(Value_::String(format!("{c}"))));
             }
             let chars_list = Value::new(Value_::List {
                 items,
@@ -6108,7 +6112,7 @@ fn eval_built_in_method_call(
             let lines = s
                 .lines()
                 .map(|line| Value::new(Value_::String(line.to_owned())))
-                .collect::<Vec<_>>();
+                .collect::<rpds::Vector<_>>();
 
             let elem_type = if lines.is_empty() {
                 Type::no_value()
@@ -6451,7 +6455,7 @@ fn eval_expr(
         }
         Expression_::ListLiteral(items) => {
             if expr_state.done_children() {
-                let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
+                let mut list_values: rpds::Vector<Value> = rpds::Vector::new();
                 let mut element_type = Type::no_value();
 
                 for _ in 0..items.len() {
@@ -6461,7 +6465,7 @@ fn eval_expr(
                     // TODO: check that all elements are of a compatible type.
                     // [1, None] should be an error.
                     element_type = Type::from_value(&element);
-                    list_values.push(element);
+                    list_values.push_back_mut(element);
                 }
 
                 if expr_value_is_used {
@@ -7792,7 +7796,9 @@ mod tests {
         assert_eq!(
             value,
             Value::new(Value_::List {
-                items: vec![Value::new(Value_::Int(3)), Value::new(Value_::Int(12))],
+                items: [Value::new(Value_::Int(3)), Value::new(Value_::Int(12))]
+                    .into_iter()
+                    .collect(),
                 elem_type: Type::int()
             })
         );
@@ -7865,11 +7871,13 @@ mod tests {
         assert_eq!(
             value,
             Value::new(Value_::List {
-                items: vec![
+                items: [
                     Value::new(Value_::Int(1)),
                     Value::new(Value_::Int(2)),
                     Value::new(Value_::Int(3))
-                ],
+                ]
+                .into_iter()
+                .collect(),
                 elem_type: Type::int()
             })
         );

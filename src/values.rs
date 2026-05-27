@@ -85,7 +85,10 @@ pub(crate) enum Value_ {
     /// A string value.
     String(String),
     /// A list value, along with the type of its elements.
-    List { items: Vec<Value>, elem_type: Type },
+    List {
+        items: rpds::Vector<Value>,
+        elem_type: Type,
+    },
     /// A tuple value, along with type of each item.
     Tuple {
         items: Vec<Value>,

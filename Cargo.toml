@@ -29,6 +29,7 @@ owo-colors = { version = "4.0.0", features = ["supports-colors"] }
 pulldown-cmark = "0.12"
 rand = "0.9.1"
 regex = "1.7.1"
+rpds = "1.1.0"
 rustyline = "17.0.1"
 serde = { version = "1.0.104", features = ["derive", "rc"] }
 serde_bencode = "0.2.4"

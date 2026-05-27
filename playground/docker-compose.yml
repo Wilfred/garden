@@ -26,7 +26,7 @@ services:
       - garden-network
 
   watchtower:
-    image: containrrr/watchtower
+    image: nickfedor/watchtower:1.17.1
     restart: unless-stopped
     container_name: garden-watchtower
     volumes:

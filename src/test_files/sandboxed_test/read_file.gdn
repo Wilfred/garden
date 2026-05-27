@@ -1,6 +1,8 @@
+import "__fs.gdn" as fs
+
 test read_file_is_unsafe {
-  Path{ p: "/tmp/foo.txt" }.read()
-  //                          ^
+  fs::read_file(Path{ p: "/tmp/foo.txt" })
+  //              ^
 }
 
 // args: sandboxed-test

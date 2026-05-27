@@ -1,6 +1,6 @@
 {
   // Previously Path methods did not produce a type error here.
-  Path{ p: "/foo" }.read().foo()
+  Path{ p: "/foo" }.info().foo()
 }
 
 // args: check
@@ -11,5 +11,6 @@
 // -| src/test_files/check/missing_method_chained.gdn:3:28
 // 1| {
 // 2|   // Previously Path methods did not produce a type error here.
-// 3|   Path{ p: "/foo" }.read().foo()
+// 3|   Path{ p: "/foo" }.info().foo()
 // 4| }                          ^^^
+

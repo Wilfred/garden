@@ -29,7 +29,8 @@ while True {}
 ```
 
 ```
-Path{ p: "/etc/passwd" }.read()
+import "__fs.gdn" as fs
+fs::read_file(Path{ p: "/etc/passwd" })
 ```
 
 Some programming languages choose to compile their interpreter to

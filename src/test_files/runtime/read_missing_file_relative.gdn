@@ -6,9 +6,9 @@ import "__fs.gdn" as fs
 
 {
   fs::set_working_directory(Path{ p: "/tmp" })
-  dbg(Path{ p: "no_such_file_garden.txt" }.read())
+  dbg(fs::read_file(Path{ p: "no_such_file_garden.txt" }))
 }
 
 // args: run
 // expected stderr:
-// [src/test_files/runtime/read_missing_file_relative.gdn:9:3] Path{ p: "no_such_file_garden.txt" }.read() //-> Err("Could not read `no_such_file_garden.txt` (relative to `/tmp`). No such file.")
+// [src/test_files/runtime/read_missing_file_relative.gdn:9:3] fs::read_file(Path{ p: "no_such_file_garden.txt" }) //-> Err("Could not read `no_such_file_garden.txt` (relative to `/tmp`). No such file.")

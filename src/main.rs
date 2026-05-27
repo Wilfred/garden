@@ -1607,7 +1607,7 @@ fun main() {
 
         // Create a temporary test file with a typo that has a quickfix
         let test_content = r#"fun main() {
-  Path{ p: "/foo" }.readd()
+  Path{ p: "/foo" }.existts()
 }
 "#;
         let test_file = std::env::temp_dir().join("garden_lsp_test_code_action.gdn");
@@ -1628,9 +1628,9 @@ fun main() {
             r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#;
         let initialized = r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#;
 
-        // Request code actions at line 1, characters 20-25 (where "readd" is)
+        // Request code actions at line 1, characters 20-27 (where "existts" is)
         let code_action_request = format!(
-            r#"{{"jsonrpc":"2.0","id":2,"method":"textDocument/codeAction","params":{{"textDocument":{{"uri":"{}"}},"range":{{"start":{{"line":1,"character":20}},"end":{{"line":1,"character":25}}}},"context":{{"diagnostics":[]}}}}}}"#,
+            r#"{{"jsonrpc":"2.0","id":2,"method":"textDocument/codeAction","params":{{"textDocument":{{"uri":"{}"}},"range":{{"start":{{"line":1,"character":20}},"end":{{"line":1,"character":27}}}},"context":{{"diagnostics":[]}}}}}}"#,
             file_uri
         );
 
@@ -1679,8 +1679,8 @@ fun main() {
 
         // Should contain the quickfix title
         assert!(
-            stdout.contains("read"),
-            "Should contain 'read' in the quickfix suggestion"
+            stdout.contains("exists"),
+            "Should contain 'exists' in the quickfix suggestion"
         );
 
         // Should contain quickfix kind

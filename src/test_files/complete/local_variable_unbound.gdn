@@ -1,0 +1,9 @@
+fun example() {
+    let num_bits = 350_208
+    let num_bytes = num_b / 8
+//                       ^
+}
+
+// args: reftest-complete
+// expected stdout:
+// {"label":"num_bits","kind":6,"detail":": Int"}

@@ -950,6 +950,7 @@ pub(crate) enum BuiltInMethodKind {
     ListContains,
     ListGet,
     ListLen,
+    ListSlice,
     PathExists,
     PathRead,
     PathReadBytes,

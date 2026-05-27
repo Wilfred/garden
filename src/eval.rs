@@ -1927,11 +1927,10 @@ fn eval_let(
     let expr_value = env
         .pop_value()
         .expect("Popped an empty value stack for let value");
-    let stack_frame = env.current_frame_mut();
-    let type_bindings = stack_frame.type_bindings.clone();
 
     if let Some(hint) = hint {
-        let expected_ty = match Type::from_hint(hint, &env.types, &type_bindings) {
+        let stack_frame = env.current_frame();
+        let expected_ty = match Type::from_hint(hint, &env.types, &stack_frame.type_bindings) {
             Ok(ty) => ty,
             Err(e) => {
                 return Err((

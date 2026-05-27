@@ -413,6 +413,7 @@ pub(crate) enum BuiltInFunctionKind {
     FsRemoveFile,
     FsSetWorkingDirectory,
     FsWorkingDirectory,
+    FsWriteBytes,
     FsWriteFile,
     RandomRandomInt,
     ReflectBuiltInFiles,
@@ -448,6 +449,7 @@ impl BuiltInFunctionKind {
             | BuiltInFunctionKind::ShellGetEnv
             | BuiltInFunctionKind::ShellIsTty => PathBuf::from("__shell.gdn"),
             BuiltInFunctionKind::FsWriteFile
+            | BuiltInFunctionKind::FsWriteBytes
             | BuiltInFunctionKind::FsListDirectory
             | BuiltInFunctionKind::FsWorkingDirectory
             | BuiltInFunctionKind::FsSetWorkingDirectory
@@ -492,6 +494,7 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::FsSetWorkingDirectory => "set_working_directory",
             BuiltInFunctionKind::FsWorkingDirectory => "working_directory",
             BuiltInFunctionKind::FsWriteFile => "write_file",
+            BuiltInFunctionKind::FsWriteBytes => "write_bytes",
             BuiltInFunctionKind::ReflectCheckSnippet => "check_snippet",
             BuiltInFunctionKind::ReflectLex => "lex",
             BuiltInFunctionKind::ReflectDocComment => "doc_comment",

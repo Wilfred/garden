@@ -15,6 +15,23 @@ test write_file {
   write_file("hello world", Path{ p: "/tmp/file_from_garden_testing.txt" })
 }
 
+/// Write `bytes` to file `path`.
+///
+/// Each value in `bytes` must be in the range 0 to 255. If `path`
+/// already exists, its content is replaced.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::write_bytes([72, 105], Path{ p: "/tmp/foo.bin" })
+/// ```
+public fun write_bytes(bytes: List<Int>, path: Path): Result<Unit, String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test write_bytes {
+  write_bytes([104, 105], Path{ p: "/tmp/bytes_from_garden_testing.bin" })
+}
+
 /// Copy the file from `src` to `dest`.
 ///
 /// If `dest` already exists, its content is replaced with the content

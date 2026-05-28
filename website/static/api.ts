@@ -32,7 +32,7 @@ type PlaygroundResponse = {
   rawOutput?: string;
 };
 
-type CheckDiagnostic = {
+export type CheckDiagnostic = {
   line_number: number;
   end_line_number: number;
   column: number;
@@ -120,7 +120,11 @@ export function evalSnippet(src: string, snippetDiv: HTMLElement): void {
     });
 }
 
-export function checkSnippet(src: string, snippetDiv: HTMLElement): void {
+export function checkSnippet(
+  src: string,
+  snippetDiv: HTMLElement,
+  onDiagnostics?: (diagnostics: CheckDiagnostic[]) => void,
+): void {
   snippetDiv.hidden = false;
 
   snippetDiv.innerHTML = '<div class="spinner"></div>';
@@ -140,6 +144,9 @@ export function checkSnippet(src: string, snippetDiv: HTMLElement): void {
       }
 
       const diagnostics = data.diagnostics || [];
+      if (onDiagnostics) {
+        onDiagnostics(diagnostics);
+      }
       if (diagnostics.length === 0) {
         snippetDiv.innerHTML = "No issues found.";
         return;

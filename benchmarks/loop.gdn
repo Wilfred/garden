@@ -5,7 +5,10 @@ fun main() {
 
   println("start")
 
-  for _ in range(0, count) {}
+  let i = 0
+  while i < count {
+    i += 1
+  }
 
   println("finish")
 }

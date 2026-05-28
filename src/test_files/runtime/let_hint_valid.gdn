@@ -1,6 +1,6 @@
 {
-    let x: String = "foo"
-    print(x)
+  let x: String = "foo"
+  print(x)
 }
 
 // args: run

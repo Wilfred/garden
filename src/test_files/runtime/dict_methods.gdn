@@ -26,4 +26,3 @@ print_dict(d.remove("x"))
 // [src/test_files/runtime/dict_methods.gdn:3:3] d //-> Dict["x" => 1, "y" => 43]
 // [src/test_files/runtime/dict_methods.gdn:17:1] d.items() //-> [("x", 1), ("y", 43)]
 // [src/test_files/runtime/dict_methods.gdn:3:3] d //-> Dict["y" => 43]
-

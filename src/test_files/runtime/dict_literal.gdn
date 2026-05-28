@@ -8,4 +8,3 @@ dbg(get_dict())
 // args: run
 // expected stderr:
 // [src/test_files/runtime/dict_literal.gdn:6:1] get_dict() //-> Dict["a" => "hello", "bc" => "world", "z" => ""]
-

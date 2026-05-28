@@ -11,4 +11,3 @@ fun do_stuff() {}
 // <fun do_stuff string_repr_of_fun.gdn:1>
 // <fun println __prelude.gdn:901>
 // <closure string_repr_of_fun.gdn:6>
-

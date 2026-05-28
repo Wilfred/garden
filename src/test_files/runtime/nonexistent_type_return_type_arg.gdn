@@ -1,9 +1,9 @@
 fun foo(): Option<NoSuchType> {
-    None
+  None
 }
 
 {
-    foo()
+  foo()
 }
 
 // args: run
@@ -12,6 +12,7 @@ fun foo(): Option<NoSuchType> {
 // -| src/test_files/runtime/nonexistent_type_return_type_arg.gdn:1:12	 fun foo()
 // 1| fun foo(): Option<NoSuchType> {
 //  |            ^^^^^^^^^^^^^^^^^^
-// -| src/test_files/runtime/nonexistent_type_return_type_arg.gdn:6:5	 __toplevel__
-// 6|     foo()
-//  |     ^^^^^
+// -| src/test_files/runtime/nonexistent_type_return_type_arg.gdn:6:3	 __toplevel__
+// 6|   foo()
+//  |   ^^^^^
+

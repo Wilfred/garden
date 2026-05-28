@@ -1,10 +1,10 @@
 fun foo(): List<Int> {
-    [""] // should error
+  [""] // should error
 }
 
 {
-    foo()
-    return
+  foo()
+  return
 }
 
 // args: run
@@ -13,6 +13,7 @@ fun foo(): List<Int> {
 // -| src/test_files/runtime/return_invalid_list.gdn:1:12	 fun foo()
 // 1| fun foo(): List<Int> {
 //  |            ^^^^^^^^^
-// -| src/test_files/runtime/return_invalid_list.gdn:6:5	 __toplevel__
-// 6|     foo()
-//  |     ^^^^^
+// -| src/test_files/runtime/return_invalid_list.gdn:6:3	 __toplevel__
+// 6|   foo()
+//  |   ^^^^^
+

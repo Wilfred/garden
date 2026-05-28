@@ -1,15 +1,15 @@
 {
-    let i = 0
-    while True {
-        if i == 10 {
-            break
-        }
-
-        i = i + 1
+  let i = 0
+  while True {
+    if i == 10 {
+      break
     }
 
-    dbg(i)
+    i = i + 1
+  }
+
+  dbg(i)
 }
 
 // args: run
-// expected stderr: [src/test_files/runtime/loop_break.gdn:11:5] i //-> 10
+// expected stderr: [src/test_files/runtime/loop_break.gdn:11:3] i //-> 10

@@ -3,14 +3,14 @@
 fun take_unit(_: Unit) {}
 
 {
-    take_unit(if True { 1 })
-    take_unit(if False { 1 })
+  take_unit(if True { 1 })
+  take_unit(if False { 1 })
 
-    let x = if True { "hello" }
-    println(string_repr(x))
+  let x = if True { "hello" }
+  println(string_repr(x))
 
-    let y = if False { "hello" }
-    println(string_repr(y))
+  let y = if False { "hello" }
+  println(string_repr(y))
 }
 
 // args: run

@@ -1,12 +1,12 @@
 fun foo(b: Bool): Int {
-    if b {
-        // Type error, but should also error at runtime.
-        123
-    }
+  if b {
+    // Type error, but should also error at runtime.
+    123
+  }
 }
 
 {
-    foo(True)
+  foo(True)
 }
 
 // args: run
@@ -15,6 +15,7 @@ fun foo(b: Bool): Int {
 // -| src/test_files/runtime/if_without_else.gdn:1:19	 fun foo()
 // 1| fun foo(b: Bool): Int {
 //  |                   ^^^
-// -| src/test_files/runtime/if_without_else.gdn:9:5	 __toplevel__
-// 9|     foo(True)
-//  |     ^^^^^^^^^
+// -| src/test_files/runtime/if_without_else.gdn:9:3	 __toplevel__
+// 9|   foo(True)
+//  |   ^^^^^^^^^
+

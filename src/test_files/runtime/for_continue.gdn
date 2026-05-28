@@ -1,18 +1,18 @@
 {
-    let items = [1, 2, 3, 4, 5]
-    for item in items {
-        if item == 3 {
-            continue
-        }
-
-        dbg(item)
+  let items = [1, 2, 3, 4, 5]
+  for item in items {
+    if item == 3 {
+      continue
     }
+
+    dbg(item)
+  }
 }
 
 // args: run
 // expected stderr:
-// [src/test_files/runtime/for_continue.gdn:8:9] item //-> 1
-// [src/test_files/runtime/for_continue.gdn:8:9] item //-> 2
-// [src/test_files/runtime/for_continue.gdn:8:9] item //-> 4
-// [src/test_files/runtime/for_continue.gdn:8:9] item //-> 5
+// [src/test_files/runtime/for_continue.gdn:8:5] item //-> 1
+// [src/test_files/runtime/for_continue.gdn:8:5] item //-> 2
+// [src/test_files/runtime/for_continue.gdn:8:5] item //-> 4
+// [src/test_files/runtime/for_continue.gdn:8:5] item //-> 5
 

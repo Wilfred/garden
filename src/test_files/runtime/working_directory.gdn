@@ -8,4 +8,3 @@ import "__fs.gdn" as fs
 // args: run
 // expected stderr:
 // [src/test_files/runtime/working_directory.gdn:5:3] fs::working_directory() //-> Path{ p: "/tmp" }
-

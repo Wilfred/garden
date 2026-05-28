@@ -1,12 +1,13 @@
 enum Foo { X }
 
 {
-    Foo{ x: 1 }
+  Foo{ x: 1 }
 }
 
 // args: run
 // expected stderr:
 // Exception: `Foo` is not a struct, so it cannot be initialized with struct syntax.
-// -| src/test_files/runtime/struct_syntax_invalid_type.gdn:4:5	 __toplevel__
-// 4|     Foo{ x: 1 }
-//  |     ^^^
+// -| src/test_files/runtime/struct_syntax_invalid_type.gdn:4:3	 __toplevel__
+// 4|   Foo{ x: 1 }
+//  |   ^^^
+

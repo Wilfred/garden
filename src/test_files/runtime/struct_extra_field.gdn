@@ -1,12 +1,13 @@
 struct Foo {}
 
 {
-    Foo{ x: 1 }
+  Foo{ x: 1 }
 }
 
 // args: run
 // expected stderr:
 // Exception: `Foo` does not have a field named `x`.
-// -| src/test_files/runtime/struct_extra_field.gdn:4:10	 __toplevel__
-// 4|     Foo{ x: 1 }
-//  |          ^
+// -| src/test_files/runtime/struct_extra_field.gdn:4:8	 __toplevel__
+// 4|   Foo{ x: 1 }
+//  |        ^
+

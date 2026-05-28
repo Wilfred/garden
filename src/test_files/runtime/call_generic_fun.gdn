@@ -1,7 +1,7 @@
 fun foo<T>(x: T): Unit {}
 
 {
-    foo(1)
+  foo(1)
 }
 
 // args: run

@@ -23,4 +23,3 @@
 // --| src/test_files/runtime/match_destructure.gdn:12:5	 __toplevel__
 // 12|     Some((_, _)) => {
 //   |     ^^^^
-

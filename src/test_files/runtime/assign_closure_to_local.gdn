@@ -17,7 +17,7 @@ fun stuff() {
   // which is compatible with any more specific type for a function of
   // two arguments.
   let f: Fun<(Int, Int), Int> = fun(x, y) { x + y }
-  
+
   dbg(f(2, 3))
 }
 

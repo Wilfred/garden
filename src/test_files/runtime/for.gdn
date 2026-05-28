@@ -33,4 +33,3 @@ fun foo(): String { "abc" }
 // [src/test_files/runtime/for.gdn:16:5] item //-> 3
 // [src/test_files/runtime/for.gdn:25:5] x * y //-> 2
 // [src/test_files/runtime/for.gdn:25:5] x * y //-> 12
-

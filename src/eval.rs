@@ -7256,7 +7256,10 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
 
                 break;
             }
-            _ => {}
+            _ => {
+                // TODO: this needs to clean up any items pushed to the value stack.
+                // E.g. in `1 + break`.
+            }
         }
     }
 
@@ -7274,6 +7277,9 @@ fn eval_continue(env: &mut Env) {
             expr.expr_,
             Expression_::While(_, _) | Expression_::ForIn(_, _, _)
         ) {
+            // TODO: this needs to clean up any items pushed to the value stack.
+            // E.g. in `1 + continue`.
+
             env.push_expr_to_eval(expr_state, expr);
             break;
         }

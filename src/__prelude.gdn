@@ -1092,7 +1092,7 @@ public method read_bytes(this: Path): Result<List<Int>, String> {
 
 test path_read_bytes {
   match Path{ p: "/dev/null" }.read_bytes() {
-    Ok(bs) => { assert(bs.len() == 0) }
+    Ok(bs) => { assert(bs.is_empty()) }
     Err(_) => { assert(False) }
   }
 }

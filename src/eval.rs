@@ -7241,13 +7241,6 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
     while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
-        match expr_state {
-            ExpressionState::EvaluatedAllSubexpressions => {
-                continue;
-            }
-            ExpressionState::NotEvaluated | ExpressionState::PartiallyEvaluated => {}
-        }
-
         match &expr.expr_ {
             Expression_::While(_, _) => {
                 break;

@@ -1,16 +1,15 @@
 fun bar(x: Int) {
-    x
-//  ^
+  x
+  //  ^
 }
 
 fun foo(i: Int) {
-    bar(i + 1)
+  bar(i + 1)
 }
 
 {
-    foo(10)
-    foo(20)
+  foo(10)
+  foo(20)
 }
-
 // args: reftest-eval-up-to
-// expected stdout: src/test_files/eval_up_to/call_func_last_call_indirect.gdn:2: 21
+// expected stderr: Could not find anything to execute

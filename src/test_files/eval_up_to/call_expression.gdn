@@ -6,6 +6,5 @@ fun foo () {
   add_one(2)
   //     ^
 }
-
 // args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/call_expression.gdn:6: 3

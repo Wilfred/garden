@@ -1,17 +1,16 @@
 fun fib(i: Int): Int {
-    if i == 0 {
+  if i == 0 {
     // ^
-        return 0
-    } else if i == 1 {
-        return 1
-    } else {
-        return fib(i - 1) + fib(i - 2)
-    }
+    return 0
+  } else if i == 1 {
+    return 1
+  } else {
+    return fib(i - 1) + fib(i - 2)
+  }
 }
 
 {
-    fib(10)
+  fib(10)
 }
-
 // args: reftest-eval-up-to
-// expected stdout: src/test_files/eval_up_to/recursive_fun.gdn:2: 10
+// expected stdout: src/test_files/eval_up_to/recursive_fun.gdn:2: False

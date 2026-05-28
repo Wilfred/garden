@@ -2,6 +2,5 @@
   for x in [1, 2, 3] {}
   //  ^
 }
-
 // args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/for_var.gdn:2: 1

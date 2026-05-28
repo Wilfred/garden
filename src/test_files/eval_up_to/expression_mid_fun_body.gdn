@@ -1,12 +1,11 @@
 fun foo(aa: String): String {
-    let lines = aa.lines()
-    //               ^
-    "world"
+  let lines = aa.lines()
+  //               ^
+  "world"
 }
 
 {
-    foo("hello")
+  foo("hello")
 }
-
 // args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/expression_mid_fun_body.gdn:2: ["hello"]

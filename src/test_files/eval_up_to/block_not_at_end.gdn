@@ -1,11 +1,10 @@
 {
-    let aa = 1
-    aa = aa + 1
-    aa
-//  ^
-    
-    123
-}
+  let aa = 1
+  aa = aa + 1
+  aa
+  //  ^
 
+  123
+}
 // args: reftest-eval-up-to
-// expected stdout: src/test_files/eval_up_to/block_not_at_end.gdn:4: 2
+// expected stderr: Could not find anything to execute

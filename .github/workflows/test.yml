@@ -46,7 +46,10 @@ jobs:
             if ! ./target/debug/garden format --check "$f"; then
               status=1
             fi
-          done < <(find src website sample_programs benchmarks -name '*.gdn' -not -path '*/test_files/*' -not -path '*/unit_test_files/*' -print0)
+          done < <({
+            find src website sample_programs benchmarks -name '*.gdn' -not -path '*/test_files/*' -not -path '*/unit_test_files/*' -print0
+            find src/test_files/eval_up_to -name '*.gdn' -print0
+          })
           exit "$status"
 
   typos:

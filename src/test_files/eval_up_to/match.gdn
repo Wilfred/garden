@@ -1,11 +1,10 @@
 {
-    let x = Some(123)
-    match x {
-    //  ^
-        Some(i) => i * 10,
-        None => -45
-    }
+  let x = Some(123)
+  match x {
+    // ^
+    Some(i) => i * 10,
+    None => -45
+  }
 }
-
 // args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/match.gdn:3: 1230

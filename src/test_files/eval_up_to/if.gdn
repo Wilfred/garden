@@ -1,11 +1,10 @@
 {
-    if True {
-//  ^
-        5
-    } else {
-        6
-    }
+  if True {
+    //   ^
+    5
+  } else {
+    6
+  }
 }
-
 // args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/if.gdn:2: 5

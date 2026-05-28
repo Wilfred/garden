@@ -1,9 +1,8 @@
 {
-    if 1 == 2 {
-        //^
-        print("yikes")
-    }
+  if 1 == 2 {
+    //^
+    print("yikes")
+  }
 }
-
 // args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/if_condition.gdn:2: False

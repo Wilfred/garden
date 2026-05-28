@@ -1,7 +1,6 @@
 {
-    let foo = 1 + 2
-    //  ^
+  let foo = 1 + 2
+  //  ^
 }
-
 // args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/let_var.gdn:2: 3

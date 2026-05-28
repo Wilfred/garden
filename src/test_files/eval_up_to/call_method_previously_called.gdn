@@ -11,6 +11,5 @@ method increment(this: WrappedNum): Int {
   let wn = WrappedNum{ value: 10 }
   wn.increment()
 }
-
 // args: reftest-eval-up-to
 // expected stdout: src/test_files/eval_up_to/call_method_previously_called.gdn:6: 10

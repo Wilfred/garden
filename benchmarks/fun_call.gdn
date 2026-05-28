@@ -3,7 +3,13 @@ import "__shell.gdn" as shell
 fun noop() {}
 
 fun main() {
-  let count = shell::get_env("COUNT").or_throw().as_int().or_throw()
+  let count = match shell::get_env("COUNT") {
+    Some(raw_count) => raw_count.as_int().or_throw()
+    None => {
+      eprintln("Environment variable COUNT is required.")
+      return
+    }
+  }
 
   println("start")
 

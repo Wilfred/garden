@@ -2328,15 +2328,23 @@ impl TypeCheckVisitor<'_> {
     /// Verify that `expr` has a type that is a subtype of
     /// `expected_ty`. Return the inferred type.
     ///
-    /// These two types may differ: for example, `[]` has an inferred
-    /// type of `List<NoValue>`, which is a subtype of `List<Int>`.
+    /// The inferred type may be a narrower subtype of `expected_ty`.
+    /// For example, `[]` has an inferred type of `List<NoValue>`,
+    /// which is a subtype of `List<Int>`.
     ///
-    /// For function literals, this allows more expressions to be
-    /// checked. Inference cannot handle `fun(x) { x.foo }` but
-    /// verifying/checking can because we know the expected lambda
-    /// type.
+    /// For some expressions, verifying allows us to accept
+    /// expressions whose type cannot be inferred. For example,
+    /// inference cannot handle `fun(x) { x.foo }` but
+    /// verifying/checking can when we know the expected lambda type.
     ///
-    /// When in doubt, prefer adding more cases to `infer_expr`.
+    /// When in doubt, try to add more cases to `infer_expr` when
+    /// adding new types or expressions. The more we can infer, the
+    /// better.
+    ///
+    /// However, prefer calling `check_expr` over `infer_expr` when
+    /// additional type information is available. This gives us
+    /// strictly more information to use in the typechecker (e.g. the
+    /// lambda example above).
     fn verify_expr(
         &mut self,
         expected_ty: &Type,

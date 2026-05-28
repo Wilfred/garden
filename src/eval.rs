@@ -1666,13 +1666,6 @@ fn eval_while_body(
         // Evaluate the body.
         eval_block(env, expr_value_is_used, body);
     } else {
-        stack_frame.bindings.push_block();
-
-        // We're done.
-        stack_frame
-            .exprs_to_eval
-            .push((ExpressionState::EvaluatedAllSubexpressions, expr.clone()));
-
         // Push the result of the loop here, rather than in the
         // EvaluatedAllSubexpressions branch, so we push it exactly
         // once (the EvaluatedAllSubexpressions branch runs once per

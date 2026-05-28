@@ -71,6 +71,7 @@ mod test_runner;
 mod type_defs;
 mod values;
 mod version;
+mod wrap_in_dbg;
 
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -254,6 +255,13 @@ enum CliCommands {
         offset: Option<usize>,
         #[clap(long)]
         new_name: String,
+    },
+    /// Wrap the expression at the offset specified in a call to
+    /// `dbg()`.
+    ReftestWrapInDbg {
+        path: PathBuf,
+        offset: Option<usize>,
+        end_offset: Option<usize>,
     },
     /// Run a Garden snippet in a sandbox and return the output as
     /// JSON.
@@ -566,6 +574,35 @@ fn main() {
             };
 
             match destructure::destructure(&src, &abs_path, offset, end_offset) {
+                Ok(new_src) => {
+                    print!("{new_src}");
+                }
+                Err(msg) => {
+                    eprintln!("{msg}");
+                    std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+                }
+            }
+        }
+        CliCommands::ReftestWrapInDbg {
+            path,
+            offset,
+            end_offset,
+        } => {
+            let abs_path = to_abs_path(&path);
+            let mut src = read_utf8_or_die(&abs_path);
+            let (offset, end_offset) = match (offset, end_offset) {
+                (Some(offset), Some(end_offset)) => (offset, end_offset),
+                _ => {
+                    src = remove_testing_footer(&src);
+                    let region = caret_finder::find_caret_region(&src)
+                        .expect("Could not find comment region containing `^^` in source.");
+                    src = caret_finder::remove_caret(&src);
+
+                    region
+                }
+            };
+
+            match wrap_in_dbg::wrap_in_dbg(&src, &abs_path, offset, end_offset) {
                 Ok(new_src) => {
                     print!("{new_src}");
                 }
@@ -969,6 +1006,11 @@ mod tests {
     #[test]
     fn reftest_extract_variable() -> TestResult<()> {
         run_reftests("extract_variable")
+    }
+
+    #[test]
+    fn reftest_wrap_in_dbg() -> TestResult<()> {
+        run_reftests("wrap_in_dbg")
     }
 
     #[test]

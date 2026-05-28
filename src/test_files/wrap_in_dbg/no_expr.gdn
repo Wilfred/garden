@@ -1,0 +1,7 @@
+fun bar() {
+}
+//^
+
+// args: reftest-wrap-in-dbg
+// expected exit status: 10
+// expected stderr: No expression found at this selected position.

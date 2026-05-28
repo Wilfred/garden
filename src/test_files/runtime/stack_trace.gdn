@@ -1,28 +1,29 @@
 test foo {
-    call_it2()
+  call_it2()
 }
 
 fun call_it() {
-    no_such()
+  no_such()
 }
 
 fun call_it2() {
-    call_it()
+  call_it()
 }
 
 {
-    call_it2()
+  call_it2()
 }
 
 // args: run
 // expected stderr:
 // Exception: No such variable `no_such`.
-// -| src/test_files/runtime/stack_trace.gdn:6:5	 fun call_it()
-// 6|     no_such()
-//  |     ^^^^^^^
-// --| src/test_files/runtime/stack_trace.gdn:10:5	 fun call_it2()
-// 10|     call_it()
-//   |     ^^^^^^^^^
-// --| src/test_files/runtime/stack_trace.gdn:14:5	 __toplevel__
-// 14|     call_it2()
-//   |     ^^^^^^^^^^
+// -| src/test_files/runtime/stack_trace.gdn:6:3	 fun call_it()
+// 6|   no_such()
+//  |   ^^^^^^^
+// --| src/test_files/runtime/stack_trace.gdn:10:3	 fun call_it2()
+// 10|   call_it()
+//   |   ^^^^^^^^^
+// --| src/test_files/runtime/stack_trace.gdn:14:3	 __toplevel__
+// 14|   call_it2()
+//   |   ^^^^^^^^^^
+

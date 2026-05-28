@@ -1,6 +1,6 @@
 {
-    dbg("ab" ^ "cd")
+  dbg("ab" ^ "cd")
 }
 
 // args: run
-// expected stderr: [src/test_files/runtime/string_concat_operator.gdn:2:5] "ab" ^ "cd" //-> "abcd"
+// expected stderr: [src/test_files/runtime/string_concat_operator.gdn:2:3] "ab" ^ "cd" //-> "abcd"

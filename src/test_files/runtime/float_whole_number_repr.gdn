@@ -7,4 +7,3 @@
 // expected stderr:
 // [src/test_files/runtime/float_whole_number_repr.gdn:2:3] 1.0 //-> 1.0
 // [src/test_files/runtime/float_whole_number_repr.gdn:3:3] -1.010 //-> -1.01
-

@@ -11,4 +11,3 @@
 // [src/test_files/runtime/float_arithmetic.gdn:3:3] 0.25 -. 1.5 //-> -1.25
 // [src/test_files/runtime/float_arithmetic.gdn:4:3] 0.5 *. 10.2 //-> 5.1
 // [src/test_files/runtime/float_arithmetic.gdn:5:3] 1.0 /. 3.0 //-> 0.3333333333333333
-

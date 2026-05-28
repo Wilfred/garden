@@ -1,10 +1,10 @@
 fun foo(): Unit {
-    // This function should still return Unit.
-    let _ = 1
+  // This function should still return Unit.
+  let _ = 1
 }
 
 {
-    foo()
+  foo()
 }
 
 // args: run

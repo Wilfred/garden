@@ -577,8 +577,16 @@ fn main() {
         }
         CliCommands::Format { path, check } => {
             let abs_path = to_abs_path(&path);
-            let mut src = read_utf8_or_die(&abs_path);
-            src = remove_testing_footer(&src);
+            let raw_src = read_utf8_or_die(&abs_path);
+            let mut src = remove_testing_footer(&raw_src);
+            // The formatter emits a single trailing newline. When a
+            // reftest footer separates the body from `// args:`, trim
+            // those blank lines so the comparison ignores them.
+            if src.len() != raw_src.len() {
+                while src.ends_with("\n\n") {
+                    src.pop();
+                }
+            }
             let formatted = format::format(&src, &abs_path);
             if check {
                 if src != formatted {

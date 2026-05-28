@@ -1,16 +1,16 @@
 fun return_tuple(): (Int, String) {
-    (123, "foo")
+  (123, "foo")
 }
 
 {
-    let v = return_tuple()
-    dbg(v)
-    let (i, _) = v
-    dbg(i)
+  let v = return_tuple()
+  dbg(v)
+  let (i, _) = v
+  dbg(i)
 }
 
 // args: run
 // expected stderr:
-// [src/test_files/runtime/tuple.gdn:7:5] v //-> (123, "foo")
-// [src/test_files/runtime/tuple.gdn:9:5] i //-> 123
+// [src/test_files/runtime/tuple.gdn:7:3] v //-> (123, "foo")
+// [src/test_files/runtime/tuple.gdn:9:3] i //-> 123
 

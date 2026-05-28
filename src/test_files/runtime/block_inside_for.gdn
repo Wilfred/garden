@@ -1,23 +1,23 @@
 fun render_inline() {
-    for _ in [10] {
-        if True {
-            11
-        } else {
-            12
-        }
+  for _ in [10] {
+    if True {
+      11
+    } else {
+      12
     }
-    
-    for _ in [13] {
-        match True {
-            True => 14,
-            False => 15,
-        }
+  }
+
+  for _ in [13] {
+    match True {
+      True => 14,
+      False => 15,
     }
+  }
 }
 
 {
-    render_inline()
-    println("done")
+  render_inline()
+  println("done")
 }
 
 // args: run

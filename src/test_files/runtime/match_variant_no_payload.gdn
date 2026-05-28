@@ -1,16 +1,16 @@
 fun takes_opt(v: Option<Int>): Int {
-    match v {
-        Some(i) => i + 1,
-        None => 123,
-    }
+  match v {
+    Some(i) => i + 1,
+    None => 123,
+  }
 }
 
 {
-    dbg(takes_opt(None))
-    Unit
+  dbg(takes_opt(None))
+  Unit
 }
 
 // args: run
 // expected stderr:
-// [src/test_files/runtime/match_variant_no_payload.gdn:9:5] takes_opt(None) //-> 123
+// [src/test_files/runtime/match_variant_no_payload.gdn:9:3] takes_opt(None) //-> 123
 

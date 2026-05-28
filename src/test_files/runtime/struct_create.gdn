@@ -4,11 +4,11 @@ struct Foo {
 }
 
 {
-    dbg(Foo{ x: 1 + 2, y: "abc" })
-    Unit
+  dbg(Foo{ x: 1 + 2, y: "abc" })
+  Unit
 }
 
 // args: run
 // expected stderr:
-// [src/test_files/runtime/struct_create.gdn:7:5] Foo{ x: 1 + 2, y: "abc" } //-> Foo{ x: 3, y: "abc" }
+// [src/test_files/runtime/struct_create.gdn:7:3] Foo{ x: 1 + 2, y: "abc" } //-> Foo{ x: 3, y: "abc" }
 

@@ -1,22 +1,23 @@
 fun foo(_a: Int, b: Int): Int {
-    b
+  b
 }
 
 {
-    let n = 0
-    // Using a `while` loop as a function argument used to push
-    // multiple Unit values onto the value stack, corrupting it.
-    dbg(foo(10, while n < 3 { n += 1 }))
+  let n = 0
+  // Using a `while` loop as a function argument used to push
+  // multiple Unit values onto the value stack, corrupting it.
+  dbg(foo(10, while n < 3 { n += 1 }))
 
-    // Using a `for` loop as a function argument used to push no
-    // value at all, so the call popped an unrelated value as its
-    // receiver.
-    dbg(foo(20, for _ in [1, 2, 3] {}))
+  // Using a `for` loop as a function argument used to push no
+  // value at all, so the call popped an unrelated value as its
+  // receiver.
+  dbg(foo(20, for _ in [1, 2, 3] {}))
 }
 
 // args: run
 // expected stderr:
 // Exception: Expected `Int` but got `Unit`.
-// -| src/test_files/runtime/loop_as_argument.gdn:9:17	 __toplevel__
-// 9|     dbg(foo(10, while n < 3 { n += 1 }))
-//  |                 ^^^^^^^^^^^^^^^^^^^^^^
+// -| src/test_files/runtime/loop_as_argument.gdn:9:15	 __toplevel__
+// 9|   dbg(foo(10, while n < 3 { n += 1 }))
+//  |               ^^^^^^^^^^^^^^^^^^^^^^
+

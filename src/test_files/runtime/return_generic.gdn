@@ -1,12 +1,12 @@
 fun option_identity<T>(value: Option<T>): Option<T> {
-    value
+  value
 }
 
 {
-    dbg(option_identity(Some(1)))
+  dbg(option_identity(Some(1)))
 }
 
 // args: run
 // expected stderr:
-// [src/test_files/runtime/return_generic.gdn:6:5] option_identity(Some(1)) //-> Some(1)
+// [src/test_files/runtime/return_generic.gdn:6:3] option_identity(Some(1)) //-> Some(1)
 

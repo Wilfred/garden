@@ -3,12 +3,12 @@ struct Box<T> {
 }
 
 fun foo(): Box<Int> {
-    Box{ value: 1234 }
+  Box{ value: 1234 }
 }
 
 {
-    foo()
-    return
+  foo()
+  return
 }
 
 // args: run

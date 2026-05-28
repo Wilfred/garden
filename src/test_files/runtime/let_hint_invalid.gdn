@@ -1,10 +1,11 @@
 {
-    let x: String = 123
+  let x: String = 123
 }
 
 // args: run
 // expected stderr:
 // Exception: Expected `String` but `123` has type `Int`.
-// -| src/test_files/runtime/let_hint_invalid.gdn:2:21	 __toplevel__
-// 2|     let x: String = 123
-//  |                     ^^^
+// -| src/test_files/runtime/let_hint_invalid.gdn:2:19	 __toplevel__
+// 2|   let x: String = 123
+//  |                   ^^^
+

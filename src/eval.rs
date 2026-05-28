@@ -196,10 +196,9 @@ pub(crate) enum StdoutJsonFormat {
 }
 
 /// How output from `print()`, `println()`, `eprint()` and `eprintln()`
-/// is handled. Currently the same mode governs both stdout and stderr
-/// output from the running program.
+/// is handled.
 #[derive(Debug)]
-pub(crate) enum StdoutMode {
+pub(crate) enum StdoutStderrMode {
     /// Write the string to stdout (or stderr for `eprint`/`eprintln`)
     /// unmodified.
     WriteDirectly,
@@ -228,9 +227,7 @@ pub(crate) struct Session {
     pub(crate) interrupted: Arc<AtomicBool>,
     /// Whether `print()` should write to stdout directly, or if we
     /// should write a JSON message to stdout summarising the print.
-    /// Also governs how `eprint()`/`eprintln()` output to stderr is
-    /// handled.
-    pub(crate) stdout_mode: StdoutMode,
+    pub(crate) stdout_stderr_mode: StdoutStderrMode,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
     /// Whether JSON should be pretty-printed. This applies to any
@@ -2621,11 +2618,11 @@ fn eval_built_in_call(
             saved_values.push(receiver_value.clone());
 
             let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
-            match &session.stdout_mode {
-                StdoutMode::WriteDirectly => {
+            match &session.stdout_stderr_mode {
+                StdoutStderrMode::WriteDirectly => {
                     print!("{s}");
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {
                         kind: ResponseKind::Printed { s: s.clone() },
                         position: None,
@@ -2633,18 +2630,18 @@ fn eval_built_in_call(
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::Playground) => {
                     let response = ResponseKind::Printed { s: s.clone() };
                     // needs a test
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteToNReplBuffers { stdout_buf, .. } => {
+                StdoutStderrMode::WriteToNReplBuffers { stdout_buf, .. } => {
                     stdout_buf
                         .lock()
                         .expect("stdout buffer poisoned")
                         .push_str(s);
                 }
-                StdoutMode::DoNotWrite => {}
+                StdoutStderrMode::DoNotWrite => {}
             }
 
             if expr_value_is_used {
@@ -2670,11 +2667,11 @@ fn eval_built_in_call(
             saved_values.push(receiver_value.clone());
 
             let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
-            match &session.stdout_mode {
-                StdoutMode::WriteDirectly => {
+            match &session.stdout_stderr_mode {
+                StdoutStderrMode::WriteDirectly => {
                     println!("{s}");
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {
                         kind: ResponseKind::Printed {
                             s: format!("{s}\n"),
@@ -2684,18 +2681,18 @@ fn eval_built_in_call(
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::Playground) => {
                     let response = ResponseKind::Printed {
                         s: format!("{s}\n"),
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteToNReplBuffers { stdout_buf, .. } => {
+                StdoutStderrMode::WriteToNReplBuffers { stdout_buf, .. } => {
                     let mut b = stdout_buf.lock().expect("stdout buffer poisoned");
                     b.push_str(s);
                     b.push('\n');
                 }
-                StdoutMode::DoNotWrite => {}
+                StdoutStderrMode::DoNotWrite => {}
             }
 
             if expr_value_is_used {
@@ -2721,11 +2718,11 @@ fn eval_built_in_call(
             saved_values.push(receiver_value.clone());
 
             let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
-            match &session.stdout_mode {
-                StdoutMode::WriteDirectly => {
+            match &session.stdout_stderr_mode {
+                StdoutStderrMode::WriteDirectly => {
                     eprint!("{s}");
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {
                         kind: ResponseKind::PrintedStderr { s: s.clone() },
                         position: None,
@@ -2733,17 +2730,17 @@ fn eval_built_in_call(
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::Playground) => {
                     let response = ResponseKind::PrintedStderr { s: s.clone() };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteToNReplBuffers { stderr_buf, .. } => {
+                StdoutStderrMode::WriteToNReplBuffers { stderr_buf, .. } => {
                     stderr_buf
                         .lock()
                         .expect("stderr buffer poisoned")
                         .push_str(s);
                 }
-                StdoutMode::DoNotWrite => {}
+                StdoutStderrMode::DoNotWrite => {}
             }
 
             if expr_value_is_used {
@@ -2769,11 +2766,11 @@ fn eval_built_in_call(
             saved_values.push(receiver_value.clone());
 
             let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
-            match &session.stdout_mode {
-                StdoutMode::WriteDirectly => {
+            match &session.stdout_stderr_mode {
+                StdoutStderrMode::WriteDirectly => {
                     eprintln!("{s}");
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {
                         kind: ResponseKind::PrintedStderr {
                             s: format!("{s}\n"),
@@ -2783,18 +2780,18 @@ fn eval_built_in_call(
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::Playground) => {
                     let response = ResponseKind::PrintedStderr {
                         s: format!("{s}\n"),
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteToNReplBuffers { stderr_buf, .. } => {
+                StdoutStderrMode::WriteToNReplBuffers { stderr_buf, .. } => {
                     let mut b = stderr_buf.lock().expect("stderr buffer poisoned");
                     b.push_str(s);
                     b.push('\n');
                 }
-                StdoutMode::DoNotWrite => {}
+                StdoutStderrMode::DoNotWrite => {}
             }
 
             if expr_value_is_used {
@@ -2991,11 +2988,11 @@ fn eval_built_in_call(
                 format!("{header} {arg_src} //-> {value_repr}\n")
             };
 
-            match &session.stdout_mode {
-                StdoutMode::WriteDirectly => {
+            match &session.stdout_stderr_mode {
+                StdoutStderrMode::WriteDirectly => {
                     eprint!("{line}");
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::ReplSession) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {
                         kind: ResponseKind::PrintedStderr { s: line.clone() },
                         position: None,
@@ -3003,15 +3000,15 @@ fn eval_built_in_call(
                     };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteJson(StdoutJsonFormat::Playground) => {
+                StdoutStderrMode::WriteJson(StdoutJsonFormat::Playground) => {
                     let response = ResponseKind::PrintedStderr { s: line.clone() };
                     print_as_json(&response, session.pretty_print_json);
                 }
-                StdoutMode::WriteToNReplBuffers { stderr_buf, .. } => {
+                StdoutStderrMode::WriteToNReplBuffers { stderr_buf, .. } => {
                     let mut b = stderr_buf.lock().expect("stderr buffer poisoned");
                     b.push_str(&line);
                 }
-                StdoutMode::DoNotWrite => {}
+                StdoutStderrMode::DoNotWrite => {}
             }
 
             if expr_value_is_used {
@@ -7836,7 +7833,7 @@ mod tests {
         let interrupted = Arc::new(AtomicBool::new(false));
         let session = Session {
             interrupted,
-            stdout_mode: StdoutMode::WriteDirectly,
+            stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
             start_time: Instant::now(),
             trace_exprs: false,
             pretty_print_json: true,
@@ -8345,7 +8342,7 @@ mod tests {
         let interrupted = Arc::new(AtomicBool::new(false));
         let session = Session {
             interrupted,
-            stdout_mode: StdoutMode::WriteDirectly,
+            stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
             start_time: Instant::now(),
             trace_exprs: false,
             pretty_print_json: true,

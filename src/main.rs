@@ -80,7 +80,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
-use eval::{eval_up_to, EvalUpToErr, StdoutMode};
+use eval::{eval_up_to, EvalUpToErr, StdoutStderrMode};
 use go_to_def::print_pos;
 use hover::reftest_hover;
 use json_session::{handle_request, start_eval_thread};
@@ -438,7 +438,7 @@ fn main() {
 
             let session = Session {
                 interrupted: Arc::clone(&interrupted),
-                stdout_mode: StdoutMode::WriteJson(StdoutJsonFormat::ReplSession),
+                stdout_stderr_mode: StdoutStderrMode::WriteJson(StdoutJsonFormat::ReplSession),
                 start_time: Instant::now(),
                 trace_exprs,
                 pretty_print_json: true,
@@ -648,7 +648,7 @@ fn reftest_eval_up_to(
 
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::WriteDirectly,
+        stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
         start_time: Instant::now(),
         trace_exprs,
         pretty_print_json: true,
@@ -841,7 +841,7 @@ fn run_file(
 
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::WriteDirectly,
+        stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
         start_time: Instant::now(),
         trace_exprs,
         pretty_print_json: false,

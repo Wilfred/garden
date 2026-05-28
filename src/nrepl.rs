@@ -13,7 +13,6 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fs;
 use std::io::{self, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
@@ -21,8 +20,8 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex, Weak};
-use std::thread;
 use std::time::{Duration, Instant};
+use std::{fs, thread};
 
 use serde_bencode::value::Value;
 use tracing::{debug, error, info, warn};
@@ -31,7 +30,7 @@ use crate::diagnostics::format_exception_with_stack;
 use crate::env::Env;
 use crate::eval::{
     eval_toplevel_exprs_then_stop, load_toplevel_items_with_stubs, EvalError, ExceptionInfo,
-    Session, StdoutMode,
+    Session, StdoutStderrMode,
 };
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{IdGenerator, SymbolName};
@@ -782,7 +781,7 @@ fn session_worker(
         let stderr_buf = Arc::new(Mutex::new(String::new()));
         let session = Session {
             interrupted: Arc::clone(&interrupted),
-            stdout_mode: StdoutMode::WriteToNReplBuffers {
+            stdout_stderr_mode: StdoutStderrMode::WriteToNReplBuffers {
                 stdout_buf: Arc::clone(&stdout_buf),
                 stderr_buf: Arc::clone(&stderr_buf),
             },
@@ -1376,8 +1375,7 @@ fn normalize_for_reftest(value: serde_json::Value) -> serde_json::Value {
 /// is omitted from the output since it already appears in the input
 /// file at the corresponding position.
 pub(crate) fn reftest_nrepl(src: &str) {
-    use serde_json::json;
-    use serde_json::Value as J;
+    use serde_json::{json, Value as J};
 
     let (tx, rx) = mpsc::channel();
     let mut conn = Connection::new(tx);

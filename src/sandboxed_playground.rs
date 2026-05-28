@@ -9,7 +9,7 @@ use serde::Serialize;
 
 use crate::env::Env;
 use crate::eval::{
-    eval_toplevel_items, EvalError, ExceptionInfo, Session, StdoutJsonFormat, StdoutMode,
+    eval_toplevel_items, EvalError, ExceptionInfo, Session, StdoutJsonFormat, StdoutStderrMode,
 };
 use crate::parser::ast::IdGenerator;
 use crate::parser::parse_toplevel_items;
@@ -52,7 +52,7 @@ pub(crate) fn run_sandboxed_playground(
 
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::WriteJson(StdoutJsonFormat::Playground),
+        stdout_stderr_mode: StdoutStderrMode::WriteJson(StdoutJsonFormat::Playground),
         start_time: Instant::now(),
         trace_exprs,
         pretty_print_json: false,

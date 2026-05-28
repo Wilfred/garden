@@ -14,7 +14,7 @@ use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
 use crate::{
-    load_toplevel_items, parse_toplevel_items_or_die, Env, EvalError, Session, StdoutMode,
+    load_toplevel_items, parse_toplevel_items_or_die, Env, EvalError, Session, StdoutStderrMode,
 };
 
 #[derive(Serialize, Debug)]
@@ -49,7 +49,7 @@ fn sandboxed_tests_summary(
 
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::DoNotWrite,
+        stdout_stderr_mode: StdoutStderrMode::DoNotWrite,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,
@@ -294,7 +294,7 @@ pub(crate) fn run_tests_in_files(
 ) {
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::WriteDirectly,
+        stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,

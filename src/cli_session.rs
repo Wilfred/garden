@@ -13,7 +13,7 @@ use crate::diagnostics::format_exception_with_stack;
 use crate::env::Env;
 use crate::eval::{
     eval, load_toplevel_items_with_stubs, push_test_stackframe, EvalError, ExceptionInfo,
-    ExpressionState, Session, StdoutMode,
+    ExpressionState, Session, StdoutStderrMode,
 };
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::{parse_toplevel_items, ParseError};
@@ -99,7 +99,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
 
     let mut session = Session {
         interrupted,
-        stdout_mode: StdoutMode::WriteDirectly,
+        stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
         start_time: Instant::now(),
         trace_exprs,
         pretty_print_json: false,

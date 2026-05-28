@@ -10,7 +10,7 @@ use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag, TagEnd};
 
 use crate::diagnostics::{format_diagnostic, format_exception_with_stack, Diagnostic};
 use crate::env::Env;
-use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session, StdoutMode};
+use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session, StdoutStderrMode};
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_abs_path, to_project_relative, Vfs};
@@ -233,7 +233,7 @@ fn eval_code_block(
 
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::DoNotWrite,
+        stdout_stderr_mode: StdoutStderrMode::DoNotWrite,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,

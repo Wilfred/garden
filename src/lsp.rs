@@ -862,8 +862,15 @@ fn build_destructure_action(
 
 /// A range that covers the entire source document.
 fn whole_document_range(src: &str) -> Range {
-    let line_count = src.lines().count();
-    let last_line_length = src.lines().last().map_or(0, |l| l.len());
+    let (end_line, end_character) = if src.is_empty() {
+        (0, 0)
+    } else if src.ends_with('\n') {
+        (src.lines().count(), 0)
+    } else {
+        let line_count = src.lines().count();
+        let last_line_length = src.lines().last().map_or(0, |l| l.len());
+        (line_count.saturating_sub(1), last_line_length)
+    };
 
     Range {
         start: Position {
@@ -871,8 +878,8 @@ fn whole_document_range(src: &str) -> Range {
             character: 0,
         },
         end: Position {
-            line: line_count.saturating_sub(1) as u32,
-            character: last_line_length as u32,
+            line: end_line as u32,
+            character: end_character as u32,
         },
     }
 }
@@ -1165,5 +1172,30 @@ mod tests {
         assert_eq!(line_char_to_offset(src, 1, 2), 21);
         // Line 1, character 3 is '.'
         assert_eq!(line_char_to_offset(src, 1, 3), 22);
+    }
+
+    #[test]
+    fn test_whole_document_range_trailing_newline() {
+        // A file ending in `\n` must extend the range past the last content
+        // line, otherwise replacing it leaves the original `\n` in the
+        // document and the replacement (which also ends in `\n`) introduces
+        // a spurious blank line.
+        let range = whole_document_range("abc\ndef\n");
+        assert_eq!(range.end.line, 2);
+        assert_eq!(range.end.character, 0);
+    }
+
+    #[test]
+    fn test_whole_document_range_no_trailing_newline() {
+        let range = whole_document_range("abc\ndef");
+        assert_eq!(range.end.line, 1);
+        assert_eq!(range.end.character, 3);
+    }
+
+    #[test]
+    fn test_whole_document_range_empty() {
+        let range = whole_document_range("");
+        assert_eq!(range.end.line, 0);
+        assert_eq!(range.end.character, 0);
     }
 }

@@ -7240,7 +7240,7 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
 fn eval_break(env: &mut Env, expr_value_is_used: bool) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
-    while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
+    while let Some((_, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
         match &expr.expr_ {
             Expression_::While(_, _) => {
                 break;

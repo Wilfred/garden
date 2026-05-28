@@ -1,3 +1,16 @@
+//! A bidirectional type checker.
+//!
+//! ## Resources
+//!
+//! Bidirectional Typing Rules: A Tutorial
+//! <https://davidchristiansen.dk/tutorials/bidirectional.pdf>
+//!
+//! Bidirectional typing for a simply typed lambda calculus
+//! <https://github.com/brendanzab/language-garden/tree/main/elab-stlc-bidirectional>
+//!
+//! Bidirectional typing for higher-rank polymorphism
+//! <https://github.com/brendanzab/language-garden/tree/main/elab-system-f-bidirectional>
+
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::path::PathBuf;

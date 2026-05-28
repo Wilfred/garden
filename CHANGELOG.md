@@ -3,27 +3,54 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Fix precedence of `2 + 1 * 3.**
 
+## Language
+
+`if` without an `else` now always has a Unit type, regardless of the
+content of the block. `if foo { 1 }` is now permitted.
+
+`try` and `catch` are now reserved words.
+
+The string representation of function values is now much more
+readable. Before: `print`, after: `<fun print __prelude.gdn:907>`.
+
+Improved performance of `List`, `HashMap` and `List::slice()`.
+
 ## Standard Library
 
 `shell()` now returns a tuple `(stdout, stderr)` on success, instead
-of stdout and stderr concatenated together.
+of stdout and stderr concatenated together. The error case now include
+the exit code.
 
 Moved `shell()` and `get_env()` from the prelude to a new `__shell.gdn`
-built-in namespace. `shell()` has been renamed to `run()`.
+built-in namespace. `shell()` has been renamed to `run()`. Added
+`is_tty` to __shell.gdn`.
 
-```
-import "__shell.gdn" as shell
-
-shell::run("ls", ["-l", "/"])
-shell::get_env("HOME")
-```
-
-Added `eprint()` and `eprintln()` for writing to stderr.
+Added `eprint()` and `eprintln()` for writing to stderr. Added
+`List::concat()`, `Int::as_float()`, `Path::read_bytes()`,
+`Path::info()`, `sort_nums()` and `__fs::write_bytes()`.
 
 ## Tooling
 
+`dbg()` now prints the line number and expression, and writes its
+output to stderr. The output format looks like this:
+
+```
+[x.gdn:1:1] 1 + 2 //-> 3
+```
+
 Added a `--trace` CLI flag that enables expression tracing when
 evaluating code. This behaves the same as `:trace` in the REPL.
+
+The formatter now splits functions and methods with very long
+parameter lists.
+
+nREPL support has been substantially expanded.
+
+The LSP now offers completion of built-in module names and enum
+destructuring.
+
+Added checks for unconditional recursion and assigning a `Unit` value
+to a variable.
 
 # 0.24 (released 10 May 2026)
 **Goal: Better LSP.**

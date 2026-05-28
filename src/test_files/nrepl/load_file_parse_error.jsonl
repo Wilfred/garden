@@ -10,7 +10,7 @@
 //   ]
 // }
 // {
-//   "err": "Expected variable name, but got EOF.\nExpected a parameter name after this.\nExpected `,` or `)` here, but got `(`.\nExpected `)` after this.\nExpected `{` after this.\nExpected an expression after this.\nExpected `)`, but got EOF.\n",
+//   "err": "Expected variable name, but reached the end of the file.\nExpected a parameter name after this.\nExpected `,` or `)` here, but got `(`.\nExpected `)` after this.\nExpected `{` after this.\nExpected an expression after this.\nExpected `)`, but reached the end of the file.\n",
 //   "session": "garden-1"
 // }
 // {

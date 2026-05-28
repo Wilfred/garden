@@ -73,7 +73,7 @@ fn require_a_token<'a>(
 
             diagnostics.push(ParseError::Incomplete {
                 message: ErrorMessage(vec![msgtext!(
-                    "Expected {}, but got EOF.",
+                    "Expected {}, but reached the end of the file.",
                     token_description
                 )]),
                 position,
@@ -142,7 +142,7 @@ fn check_required_token<'a>(
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!("{}", expected),
-                    msgtext!(", but got EOF."),
+                    msgtext!(", but reached the end of the file."),
                 ]),
                 position,
             });
@@ -431,7 +431,7 @@ fn parse_dict_literal_items(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!("]"),
-                    msgtext!(", but got EOF."),
+                    msgtext!(", but reached the end of the file."),
                 ]),
             });
             break;
@@ -925,7 +925,7 @@ fn parse_struct_literal_fields(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!("}}"),
-                    msgtext!(" here, but got EOF."),
+                    msgtext!(" here, but reached the end of the file."),
                 ]),
             });
             break;
@@ -987,7 +987,7 @@ fn parse_match(
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!("}}"),
-                    msgtext!(" here, but got EOF."),
+                    msgtext!(" here, but reached the end of the file."),
                 ]),
             });
             break;
@@ -1166,7 +1166,7 @@ fn parse_comma_separated_exprs(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!("{}", terminator),
-                    msgtext!(", but got EOF."),
+                    msgtext!(", but reached the end of the file."),
                 ]),
             });
             break;
@@ -1577,7 +1577,7 @@ fn parse_enum_body(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!("}}"),
-                    msgtext!(" here, but got EOF."),
+                    msgtext!(" here, but reached the end of the file."),
                 ]),
             });
             break;
@@ -1871,7 +1871,7 @@ fn parse_type_arguments(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!(">"),
-                    msgtext!(" here, but got EOF."),
+                    msgtext!(" here, but reached the end of the file."),
                 ]),
             });
             break arg_pos;
@@ -1934,7 +1934,7 @@ fn parse_type_params(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!(">"),
-                    msgtext!(" here, but got EOF."),
+                    msgtext!(" here, but reached the end of the file."),
                 ]),
             });
             break;
@@ -1974,7 +1974,7 @@ fn parse_tuple_type_hint(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!(")"),
-                    msgtext!(" after this, but got EOF."),
+                    msgtext!(" after this, but reached the end of the file."),
                 ]),
             });
             break;
@@ -2180,7 +2180,7 @@ fn parse_parameters(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!(")"),
-                    msgtext!(" here, but got EOF."),
+                    msgtext!(" here, but reached the end of the file."),
                 ]),
             });
             break;
@@ -2255,7 +2255,7 @@ fn parse_struct_fields(
                 message: ErrorMessage(vec![
                     msgtext!("Expected a struct field name here, such as "),
                     msgcode!("age: Int"),
-                    msgtext!(", but got EOF."),
+                    msgtext!(", but reached the end of the file."),
                 ]),
             });
             break;
@@ -2290,7 +2290,7 @@ fn parse_struct_fields(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!("}}"),
-                    msgtext!(" here, but got EOF."),
+                    msgtext!(" here, but reached the end of the file."),
                 ]),
             });
             break;

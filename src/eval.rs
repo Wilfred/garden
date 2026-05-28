@@ -144,11 +144,11 @@ pub(crate) enum ExpressionState {
     /// Examples:
     ///
     /// * In `while foo() { bar() }` we have evaluated `foo()` but
-    /// not yet `bar()`.
+    ///   not yet `bar()`.
     /// * In `foo(bar)` we've evaluated `foo` but not yet `bar` nor
-    /// called the receiver function.
+    ///   called the receiver function.
     /// * In `assert(foo() == bar())` we've evaluated `foo()` and
-    /// `bar()` but not yet compared them.
+    ///   `bar()` but not yet compared them.
     PartiallyEvaluated,
     /// This expression has had its children evaluated, but hasn't
     /// been evaluated itself. For example, in `foo(bar())` we have

@@ -1,5 +1,5 @@
 import { evalSnippet, checkSnippet } from "./api";
-import { createGardenEditor } from "./editor";
+import { createGardenEditor, setEditorDiagnostics } from "./editor";
 import { setupSnippetButtons } from "./snippets";
 
 function setupPlayground(): void {
@@ -29,7 +29,9 @@ function setupPlayground(): void {
     if (playgroundCheckButton) {
       playgroundCheckButton.addEventListener("click", () => {
         const src = editorView.state.sliceDoc();
-        checkSnippet(src, playgroundOutput);
+        checkSnippet(src, playgroundOutput, (diagnostics) => {
+          setEditorDiagnostics(editorView, diagnostics);
+        });
       });
     }
 

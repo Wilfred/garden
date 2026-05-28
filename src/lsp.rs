@@ -35,6 +35,7 @@ use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::pos_to_id::find_item_at;
 use crate::temp_built_in_files::TempBuiltInFiles;
+use crate::wrap_in_dbg::wrap_in_dbg;
 
 #[derive(Debug, Deserialize)]
 struct Message {
@@ -719,6 +720,10 @@ fn handle_code_action(
         actions.push(CodeActionResponse::CodeAction(action));
     }
 
+    if let Some(action) = build_wrap_in_dbg_action(&src, &path, uri, &params.range) {
+        actions.push(CodeActionResponse::CodeAction(action));
+    }
+
     JsonRpcResponse::new(id, actions)
 }
 
@@ -854,6 +859,46 @@ fn build_destructure_action(
 
     Some(CodeAction {
         title: "Destructure enum".to_owned(),
+        kind: Some(CodeActionKind::RefactorRewrite),
+        edit: Some(workspace_edit),
+        ..Default::default()
+    })
+}
+
+/// Build a "Wrap in dbg()" code action for the selected range, if the
+/// selection covers a Garden expression.
+fn build_wrap_in_dbg_action(
+    src: &str,
+    path: &Path,
+    uri: &Uri,
+    range: &Range,
+) -> Option<CodeAction> {
+    let start_offset = line_char_to_offset(
+        src,
+        range.start.line as usize,
+        range.start.character as usize,
+    );
+    let end_offset =
+        line_char_to_offset(src, range.end.line as usize, range.end.character as usize);
+
+    let new_src = wrap_in_dbg(src, path, start_offset, end_offset).ok()?;
+
+    let full_range = whole_document_range(src);
+    let text_edit = TextEdit {
+        range: full_range,
+        new_text: new_src,
+    };
+
+    let mut changes = std::collections::HashMap::new();
+    changes.insert(uri.clone(), vec![text_edit]);
+
+    let workspace_edit = WorkspaceEdit {
+        changes: Some(changes),
+        ..Default::default()
+    };
+
+    Some(CodeAction {
+        title: "Wrap in dbg()".to_owned(),
         kind: Some(CodeActionKind::RefactorRewrite),
         edit: Some(workspace_edit),
         ..Default::default()

@@ -1,0 +1,10 @@
+fun bar() {
+  let x = 1 + 2
+//        ^^^^^
+}
+
+// args: reftest-wrap-in-dbg
+// expected stdout:
+// fun bar() {
+//   let x = dbg(1 + 2)
+// }

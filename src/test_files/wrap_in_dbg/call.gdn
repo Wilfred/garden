@@ -1,0 +1,19 @@
+fun foo(): Int {
+  42
+}
+
+fun bar() {
+  let x = foo()
+//        ^^^^^
+}
+
+// args: reftest-wrap-in-dbg
+// expected stdout:
+// fun foo(): Int {
+//   42
+// }
+// 
+// fun bar() {
+//   let x = dbg(foo())
+// }
+

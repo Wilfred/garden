@@ -138,9 +138,17 @@ pub(crate) enum ExpressionState {
     /// This expression has not been evaluated at all.
     NotEvaluated,
     /// We have evaluated some of the subexpressions, but not
-    /// all. This occurs in conditionally evaluated expressions,
-    /// e.g. in `while foo() { bar() }` we have evaluated `foo()` but
+    /// all. This occurs in conditionally evaluated expressions and
+    /// expressions where there's a specific order.
+    ///
+    /// Examples:
+    ///
+    /// * In `while foo() { bar() }` we have evaluated `foo()` but
     /// not yet `bar()`.
+    /// * In `foo(bar)` we've evaluated `foo` but not yet `bar` nor
+    /// called the receiver function.
+    /// * In `assert(foo() == bar())` we've evaluated `foo()` and
+    /// `bar()` but not yet compared them.
     PartiallyEvaluated,
     /// This expression has had its children evaluated, but hasn't
     /// been evaluated itself. For example, in `foo(bar())` we have

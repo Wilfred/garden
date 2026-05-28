@@ -1,0 +1,23 @@
+let xs: List<Int> = [1, 2, 3]
+if xs.len() == 0 {
+  println("empty")
+}
+if xs.len() != 0 {
+  println("non-empty")
+}
+if 0 == xs.len() {
+  println("also empty")
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// let xs: List<Int> = [1, 2, 3]
+// if xs.is_empty() {
+//   println("empty")
+// }
+// if xs.is_non_empty() {
+//   println("non-empty")
+// }
+// if xs.is_empty() {
+//   println("also empty")
+// }

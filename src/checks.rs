@@ -1,5 +1,6 @@
 mod duplicates;
 mod hints;
+mod list_len_compare;
 mod loops;
 mod recursion;
 mod recursion_variable;
@@ -25,6 +26,7 @@ use crate::eval::load_toplevel_items;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::ToplevelItem;
 use crate::parser::vfs::VfsPathBuf;
+use list_len_compare::check_list_len_compare;
 use loops::check_loops;
 use recursion::check_recursion;
 use recursion_variable::check_recursion_variables;
@@ -79,6 +81,7 @@ pub(crate) fn check_toplevel_items_in_env(
     let summary = check_types(vfs_path, items, env, namespace);
     diagnostics.extend(check_unused_defs(items, &summary));
     diagnostics.extend(check_unit_let(items, &summary));
+    diagnostics.extend(check_list_len_compare(items, &summary));
     diagnostics.extend(check_recursion(items, &summary));
 
     diagnostics.extend(summary.diagnostics);

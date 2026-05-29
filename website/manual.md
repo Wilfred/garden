@@ -30,6 +30,10 @@ __RANDOM_FUNS
 
 __REFLECT_FUNS
 
+## Shell `__shell.gdn`
+
+__SHELL_FUNS
+
 ## Time `__time.gdn`
 
 __TIME_FUNS

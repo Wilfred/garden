@@ -26,14 +26,8 @@ export function createGardenEditor(
       // pushed via setEditorDiagnostics after a /check call.
       linter(() => [], { delay: 0 }),
       EditorView.updateListener.of((update) => {
-        if (update.docChanged) {
-          // Clear stale diagnostics once the user edits.
-          queueMicrotask(() => {
-            update.view.dispatch(setDiagnostics(update.view.state, []));
-          });
-          if (onDocChanged) {
-            onDocChanged(update.state.sliceDoc());
-          }
+        if (update.docChanged && onDocChanged) {
+          onDocChanged(update.state.sliceDoc());
         }
       }),
     ],

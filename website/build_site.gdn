@@ -478,6 +478,11 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
   })
   let reflect_funs = join_with_commas_and(reflect_funs)
 
+  let shell_funs = reflect::namespace_functions(shell).map(fun(name: String) {
+    code_link(name ^ "()", "./fun:__shell.gdn::" ^ name ^ ".html")
+  })
+  let shell_funs = join_with_commas_and(shell_funs)
+
   let time_funs = reflect::namespace_functions(time).map(fun(name: String) {
     code_link(name ^ "()", "./fun:__time.gdn::" ^ name ^ ".html")
   })
@@ -519,6 +524,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
     .replace("__FS_FUNS", fs_funs)
     .replace("__RANDOM_FUNS", random_funs)
     .replace("__REFLECT_FUNS", reflect_funs)
+    .replace("__SHELL_FUNS", shell_funs)
     .replace("__TIME_FUNS", time_funs)
     .replace("__BLOG_LINKS", blog_links)
 }

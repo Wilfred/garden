@@ -134,10 +134,13 @@ impl Default for Bindings {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) enum IsBlock {
-    Block,
+pub(crate) enum BlockState {
+    WillRunBlock,
     // TODO: Clean up function calls and assertions, and we will
     // always be entering blocks for this expression state.
+    //
+    // Alternatively, keep using this, so we can support short-circuit
+    // evaluation of && and ||.
     NotBlock,
 }
 
@@ -157,7 +160,7 @@ pub(crate) enum ExpressionState {
     ///   called the receiver function.
     /// * In `assert(foo() == bar())` we've evaluated `foo()` and
     ///   `bar()` but not yet compared them.
-    PartiallyEvaluated(IsBlock),
+    PartiallyEvaluated(BlockState),
     /// This expression has had its children evaluated, but hasn't
     /// been evaluated itself. For example, in `foo(bar())` we have
     /// evaluated `bar()` but not yet called `foo()` with the result.
@@ -1751,7 +1754,7 @@ fn eval_for_in(
     // After an iteration the loop body, evaluate again. We don't
     // re-evaluate the iteree expression though.
     env.push_expr_to_eval(
-        ExpressionState::PartiallyEvaluated(IsBlock::Block),
+        ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
         outer_expr.clone(),
     );
 
@@ -6405,7 +6408,7 @@ fn eval_expr(
         Expression_::Match(scrutinee, cases) => match expr_state {
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(
-                    ExpressionState::PartiallyEvaluated(IsBlock::Block),
+                    ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
                     outer_expr.clone(),
                 );
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, scrutinee.clone());
@@ -6422,7 +6425,7 @@ fn eval_expr(
         Expression_::If(condition, ref then_body, ref else_body) => match expr_state {
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(
-                    ExpressionState::PartiallyEvaluated(IsBlock::Block),
+                    ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
                     outer_expr.clone(),
                 );
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, condition.clone());
@@ -6451,7 +6454,7 @@ fn eval_expr(
                 ExpressionState::NotEvaluated => {
                     // Once we've evaluated the condition, we can consider evaluating the body.
                     env.push_expr_to_eval(
-                        ExpressionState::PartiallyEvaluated(IsBlock::Block),
+                        ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
                         outer_expr.clone(),
                     );
                     // Evaluate the loop condition first.
@@ -6483,7 +6486,7 @@ fn eval_expr(
                     env.push_value(Value::new(Value_::Int(0)));
 
                     env.push_expr_to_eval(
-                        ExpressionState::PartiallyEvaluated(IsBlock::Block),
+                        ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
                         outer_expr.clone(),
                     );
 
@@ -6855,7 +6858,7 @@ fn eval_expr(
         Expression_::Call(receiver, paren_args) => match expr_state {
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(
-                    ExpressionState::PartiallyEvaluated(IsBlock::NotBlock),
+                    ExpressionState::PartiallyEvaluated(BlockState::NotBlock),
                     outer_expr.clone(),
                 );
 
@@ -6948,7 +6951,7 @@ fn eval_expr(
                         // assertion failure message.
 
                         env.push_expr_to_eval(
-                            ExpressionState::PartiallyEvaluated(IsBlock::NotBlock),
+                            ExpressionState::PartiallyEvaluated(BlockState::NotBlock),
                             outer_expr.clone(),
                         );
 

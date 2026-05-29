@@ -1095,6 +1095,13 @@ impl TypeCheckVisitor<'_> {
                 self.infer_namespace_access(recv, sym, type_bindings, expected_return_ty)
             }
             Expression_::FunLiteral(fun_info) => {
+                // Construct a Fun type and check that this literal has that type.
+                //
+                // Since check_expr_ may return a more precise (narrower) type, this effectively
+                // gives us some inference anyway.
+                //
+                // `fun(x: String) { x ^ "abc" }` is correctly inferred as a string ->
+                // string function.
                 let param_tys = fun_info
                     .params
                     .params

@@ -1,8 +1,8 @@
 import "__shell.gdn" as shell
 
 test shell_is_unsafe {
-    shell::run("ls", ["/"])
-    // ^
+  shell::run("ls", ["/"])
+  // ^
 }
 
 // args: sandboxed-test

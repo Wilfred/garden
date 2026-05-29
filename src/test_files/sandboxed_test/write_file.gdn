@@ -1,8 +1,8 @@
 import "__fs.gdn" as fs
 
 test write_file_is_unsafe {
-    fs::write_file("hello world", Path{ p: "/tmp/foo.txt" })
-    //   ^
+  fs::write_file("hello world", Path{ p: "/tmp/foo.txt" })
+  //   ^
 }
 
 // args: sandboxed-test

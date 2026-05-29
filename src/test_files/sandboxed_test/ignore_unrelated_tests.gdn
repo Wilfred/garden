@@ -1,10 +1,10 @@
 test write_file_is_unsafe {
-    fs::write_file("hello world", "/tmp/foo.txt")
+  fs::write_file("hello world", "/tmp/foo.txt")
 }
 
 test safe_test {
-    1 + 2
-    // ^
+  1 + 2
+  // ^
 }
 
 // args: sandboxed-test

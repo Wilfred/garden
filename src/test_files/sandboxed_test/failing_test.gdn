@@ -1,8 +1,8 @@
 test foo {
-    assert(1 == 2)
-    // ^
+  assert(1 == 2)
+  // ^
 }
 
 // args: sandboxed-test
 // expected stdout:
-// {"description":"failing","tests":{"foo":{"description":"Expected `2` but got `1`.","failure_start_offset":22,"failure_end_offset":28}}}
+// {"description":"failing","tests":{"foo":{"description":"Expected `2` but got `1`.","failure_start_offset":20,"failure_end_offset":26}}}

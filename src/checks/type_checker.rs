@@ -1129,7 +1129,7 @@ impl TypeCheckVisitor<'_> {
                     expected_return_ty,
                 )
             }
-            Expression_::Assert(expr) => {
+            Expression_::Assert(expr) | Expression_::AssertBinOp(expr) => {
                 self.check_expr(&Type::bool(), expr, type_bindings, expected_return_ty);
                 Type::unit()
             }

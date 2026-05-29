@@ -528,9 +528,16 @@ fn parse_assert(
     let expr = parse_expression(tokens, id_gen, diagnostics);
     let close_paren = require_token(tokens, diagnostics, ")");
 
+    let expr_rc = Rc::new(expr);
+    let expr_ = if matches!(expr_rc.expr_, Expression_::BinaryOperator(..)) {
+        Expression_::AssertBinOp(expr_rc)
+    } else {
+        Expression_::Assert(expr_rc)
+    };
+
     Expression::new(
         Position::merge(&assert_keyword.position, &close_paren.position),
-        Expression_::Assert(Rc::new(expr)),
+        expr_,
         id_gen.next(),
     )
 }

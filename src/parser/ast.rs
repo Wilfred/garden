@@ -542,6 +542,15 @@ pub(crate) enum Expression_ {
     /// assert(x)
     /// ```
     Assert(Rc<Expression>),
+    /// ```garden
+    /// assert(x == y)
+    /// ```
+    ///
+    /// The inner expression is always a [`Expression_::BinaryOperator`].
+    /// Asserts whose argument is a binary operator get this distinct
+    /// variant so we can show the operands' values in the failure
+    /// message.
+    AssertBinOp(Rc<Expression>),
     /// Parentheses used for grouping, particularly in nested binary operators.
     ///
     /// ```garden

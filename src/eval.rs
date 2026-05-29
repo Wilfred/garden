@@ -4801,54 +4801,14 @@ fn eval_assert(
         .pop_value()
         .expect("Popped an empty value stack for call receiver");
 
-    // Unconditionally pop the LHS and RHS values, even if the assert
-    // succeeds, so we maintain stack discipline.
-    let subexpr_values = match binop_for_assert(recv_expr) {
-        Some((_, kind, _)) => {
-            let rhs_value = env
-                .pop_value()
-                .expect("Popped an empty value stack in assert");
-            let lhs_value = env
-                .pop_value()
-                .expect("Popped an empty value stack in assert");
-
-            Some((lhs_value, kind, rhs_value))
-        }
-        None => None,
-    };
-
     if let Some(b) = receiver_value.as_rust_bool() {
         if !b {
-            let message = match subexpr_values {
-                Some((lhs_value, BinaryOperatorKind::Equal, rhs_value)) => {
-                    // Convention: we the expected value is the RHS,
-                    // so `assert(value == expected_value)`.
-                    vec![
-                        msgtext!("Expected "),
-                        msgcode!("{}", rhs_value.display(env),),
-                        msgtext!(" but got "),
-                        msgcode!("{}", lhs_value.display(env),),
-                        msgtext!("."),
-                    ]
-                }
-                Some((lhs_value, kind, rhs_value)) => {
-                    vec![
-                        msgtext!("Assertion failed: "),
-                        msgcode!(
-                            "{} {} {}",
-                            lhs_value.display(env),
-                            kind,
-                            rhs_value.display(env),
-                        ),
-                        msgtext!("."),
-                    ]
-                }
-                None => vec![msgtext!("Assertion failed.")],
-            };
-
             return Err((
                 RestoreValues(vec![receiver_value]),
-                EvalError::AssertionFailed(recv_expr.position.clone(), ErrorMessage(message)),
+                EvalError::AssertionFailed(
+                    recv_expr.position.clone(),
+                    ErrorMessage(vec![msgtext!("Assertion failed.")]),
+                ),
             ));
         }
     } else {
@@ -4865,6 +4825,86 @@ fn eval_assert(
                 position: recv_expr.position.clone(),
                 message,
             }),
+        ));
+    }
+
+    if expr_value_is_used {
+        env.push_value(Value::unit());
+    }
+
+    Ok(())
+}
+
+fn eval_assert_binop(
+    env: &mut Env,
+    expr_value_is_used: bool,
+    binop_expr: &Rc<Expression>,
+) -> Result<(), (RestoreValues, EvalError)> {
+    let Expression_::BinaryOperator(_, op, _) = &binop_expr.expr_ else {
+        unreachable!(
+            "AssertBinOp's inner expression is always a BinaryOperator by parser invariant"
+        );
+    };
+
+    let receiver_value = env
+        .pop_value()
+        .expect("Popped an empty value stack for call receiver");
+
+    // Unconditionally pop the LHS and RHS values, even if the assert
+    // succeeds, so we maintain stack discipline.
+    let rhs_value = env
+        .pop_value()
+        .expect("Popped an empty value stack in assert");
+    let lhs_value = env
+        .pop_value()
+        .expect("Popped an empty value stack in assert");
+
+    let position = binop_expr.position.clone();
+
+    if let Some(b) = receiver_value.as_rust_bool() {
+        if !b {
+            let message = match op.kind {
+                BinaryOperatorKind::Equal => {
+                    // Convention: the expected value is the RHS,
+                    // so `assert(value == expected_value)`.
+                    vec![
+                        msgtext!("Expected "),
+                        msgcode!("{}", rhs_value.display(env),),
+                        msgtext!(" but got "),
+                        msgcode!("{}", lhs_value.display(env),),
+                        msgtext!("."),
+                    ]
+                }
+                _ => {
+                    vec![
+                        msgtext!("Assertion failed: "),
+                        msgcode!(
+                            "{} {} {}",
+                            lhs_value.display(env),
+                            op.kind,
+                            rhs_value.display(env),
+                        ),
+                        msgtext!("."),
+                    ]
+                }
+            };
+
+            return Err((
+                RestoreValues(vec![receiver_value]),
+                EvalError::AssertionFailed(position, ErrorMessage(message)),
+            ));
+        }
+    } else {
+        let message = format_type_error(
+            &TypeName {
+                text: "Bool".into(),
+            },
+            &receiver_value,
+            env,
+        );
+        return Err((
+            RestoreValues(vec![receiver_value]),
+            EvalError::Exception(ExceptionInfo { position, message }),
         ));
     }
 
@@ -6957,34 +6997,40 @@ fn eval_expr(
             return Err((RestoreValues(vec![]),
                         (EvalError::Exception(ExceptionInfo { position: expr_position, message: ErrorMessage(vec![msgtext!("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.")]) }))));
         }
-        Expression_::Assert(expr) => {
+        Expression_::Assert(expr) => match expr_state {
+            ExpressionState::NotEvaluated => {
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
+
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
+            }
+            ExpressionState::PartiallyEvaluated(_) => unreachable!(),
+            ExpressionState::EvaluatedSubexpressions => {
+                eval_assert(env, expr_value_is_used, expr)?;
+            }
+        },
+        Expression_::AssertBinOp(inner) => {
+            let Expression_::BinaryOperator(lhs, _, rhs) = &inner.expr_ else {
+                unreachable!(
+                    "AssertBinOp's inner expression is always a BinaryOperator by parser invariant"
+                );
+            };
+
             match expr_state {
-                ExpressionState::NotEvaluated => match binop_for_assert(expr) {
-                    Some((lhs, _, rhs)) => {
-                        // Intercept evaluation of LHS and RHS, so we
-                        // can show their values if we show an
-                        // assertion failure message.
+                ExpressionState::NotEvaluated => {
+                    // Intercept evaluation of LHS and RHS, so we
+                    // can show their values if we show an
+                    // assertion failure message.
+                    env.push_expr_to_eval(
+                        ExpressionState::PartiallyEvaluated(BlockState::NotBlock),
+                        outer_expr.clone(),
+                    );
 
-                        env.push_expr_to_eval(
-                            ExpressionState::PartiallyEvaluated(BlockState::NotBlock),
-                            outer_expr.clone(),
-                        );
-
-                        env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
-                        env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
-                    }
-                    None => {
-                        env.push_expr_to_eval(
-                            ExpressionState::EvaluatedSubexpressions,
-                            outer_expr.clone(),
-                        );
-
-                        env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
-                    }
-                },
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
+                }
                 ExpressionState::PartiallyEvaluated(_) => {
-                    // Duplicate the LHS and RHS values.
-
+                    // Duplicate the LHS and RHS values so the assertion
+                    // failure message can refer to them.
                     let rhs_value = env
                         .pop_value()
                         .expect("Popped an empty value stack for RHS of binary operator");
@@ -7002,27 +7048,16 @@ fn eval_expr(
                         outer_expr.clone(),
                     );
 
-                    env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, expr.clone());
+                    env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, inner.clone());
                 }
                 ExpressionState::EvaluatedSubexpressions => {
-                    eval_assert(env, expr_value_is_used, expr)?;
+                    eval_assert_binop(env, expr_value_is_used, inner)?;
                 }
             }
         }
     }
 
     Ok(None)
-}
-
-fn binop_for_assert(
-    expr: &Rc<Expression>,
-) -> Option<(Rc<Expression>, BinaryOperatorKind, Rc<Expression>)> {
-    match &expr.expr_ {
-        Expression_::BinaryOperator(lhs, op_sym, rhs) => {
-            Some((lhs.clone(), op_sym.kind, rhs.clone()))
-        }
-        _ => None,
-    }
 }
 
 /// Start evaluation of the expressions in the current stack frame.

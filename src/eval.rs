@@ -1670,22 +1670,21 @@ fn eval_while_body(
 
     let stack_frame = env.current_frame_mut();
     if b {
-        stack_frame
-            .exprs_to_eval
-            .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
-
-        // After the loop body, we will want to evaluate the expression again.
-        stack_frame
-            .exprs_to_eval
-            .push((ExpressionState::NotEvaluated, expr.clone()));
+        // Once we've evaluated the body on this iteration, we might
+        // want to evaluate again.
+        stack_frame.exprs_to_eval.push((
+            ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock),
+            expr.clone(),
+        ));
 
         // Evaluate the body.
         eval_block(env, expr_value_is_used, body);
     } else {
-        // Push the result of the loop here, rather than in the
-        // EvaluatedSubexpressions branch, so we push it exactly
-        // once (the EvaluatedSubexpressions branch runs once per
-        // iteration, to pop the bindings block).
+        // Loop is done.
+        stack_frame
+            .exprs_to_eval
+            .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
+
         if expr_value_is_used {
             env.push_value(Value::unit());
         }
@@ -6466,22 +6465,32 @@ fn eval_expr(
                     // Evaluate the loop condition first.
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, condition.clone());
                 }
-                ExpressionState::PartiallyEvaluated(_) => {
-                    // Evaluated condition, can possibly evaluate body.
-                    eval_while_body(
-                        env,
-                        expr_value_is_used,
-                        &condition.position,
-                        outer_expr.clone(),
-                        body,
-                    )?;
+                ExpressionState::PartiallyEvaluated(block_state) => {
+                    match block_state {
+                        BlockState::WillRunBlock => {
+                            // Evaluated condition, can possibly evaluate body.
+                            eval_while_body(
+                                env,
+                                expr_value_is_used,
+                                &condition.position,
+                                outer_expr.clone(),
+                                body,
+                            )?;
+                        }
+                        BlockState::DoneRunBlock => {
+                            env.current_frame_mut().bindings.pop_block();
+
+                            env.push_expr_to_eval(
+                                ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
+                                outer_expr.clone(),
+                            );
+                            env.push_expr_to_eval(ExpressionState::NotEvaluated, condition.clone());
+                        }
+                        BlockState::NotBlock => unreachable!(),
+                    }
                 }
                 ExpressionState::EvaluatedSubexpressions => {
-                    // Pop the bindings block for this iteration (or
-                    // the terminal block pushed in `eval_while_body`).
-                    // The loop's overall value is pushed by
-                    // `eval_while_body` in the terminating branch.
-                    env.current_frame_mut().bindings.pop_block();
+                    // Done with loop.
                 }
             }
         }
@@ -7205,9 +7214,13 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
 fn eval_break(env: &mut Env, expr_value_is_used: bool) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
-    while let Some((_, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
+    while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
         match &expr.expr_ {
             Expression_::While(_, _) => {
+                env.current_frame_mut()
+                    .exprs_to_eval
+                    .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
+
                 break;
             }
             Expression_::ForIn(_, _, _) => {
@@ -7219,9 +7232,23 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
                 env.pop_value()
                     .expect("Index used by `for` should be present");
 
+                env.current_frame_mut()
+                    .exprs_to_eval
+                    .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
+
                 break;
             }
             _ => {
+                // We're exiting a block that wasn't part of a loop
+                // (i.e. a match case or an if/else block), so we
+                // should pop the bindings block here too.
+                if matches!(
+                    expr_state,
+                    ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock)
+                ) {
+                    env.current_frame_mut().bindings.pop_block();
+                }
+
                 // TODO: this needs to clean up any items pushed to the value stack.
                 // E.g. in `1 + break`.
             }

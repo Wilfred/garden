@@ -261,13 +261,8 @@ header a {
   margin: 10px;
 }
 
-#playground-run,
-#playground-check {
+#playground-run {
   margin-top: 10px;
-}
-
-#playground-check {
-  margin-left: 5px;
 }
 
 textarea {

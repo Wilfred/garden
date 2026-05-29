@@ -2,6 +2,12 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Fix precedence of `2 + 1 * 3.**
 
+## Standard Library
+
+Moved `source_directory()` from the prelude to `__reflect.gdn` and
+renamed it to `source_file()`, reflecting that it returns the path of
+the current source file.
+
 # 0.25 (released 29th May 2026)
 **Goal: Better REPL experience.**
 **Goal: Better runtime performance.**

@@ -3209,7 +3209,7 @@ fn eval_built_in_call(
                 env.push_value(value);
             }
         }
-        BuiltInFunctionKind::PreludeSourceDirectory => {
+        BuiltInFunctionKind::ReflectSourceFile => {
             check_arity(
                 &SymbolName {
                     text: format!("{kind}"),

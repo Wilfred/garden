@@ -398,7 +398,6 @@ pub(crate) enum BuiltInFunctionKind {
     PreludePrintln,
     PreludeReadLine,
     PreludeShellArguments,
-    PreludeSourceDirectory,
     PreludeStringRepr,
     PreludeThrow,
 
@@ -428,6 +427,7 @@ pub(crate) enum BuiltInFunctionKind {
     ReflectMethodsForType,
     ReflectNamespaceFunctions,
     ReflectPreludeTypes,
+    ReflectSourceFile,
     ReflectSourceForFun,
     ReflectSourceForMethod,
     ReflectSourceForType,
@@ -445,7 +445,6 @@ impl BuiltInFunctionKind {
             | BuiltInFunctionKind::PreludeEprint
             | BuiltInFunctionKind::PreludeEprintln
             | BuiltInFunctionKind::PreludeReadLine
-            | BuiltInFunctionKind::PreludeSourceDirectory
             | BuiltInFunctionKind::PreludeShellArguments => PathBuf::from("__prelude.gdn"),
             BuiltInFunctionKind::ShellRun
             | BuiltInFunctionKind::ShellGetEnv
@@ -461,7 +460,8 @@ impl BuiltInFunctionKind {
             | BuiltInFunctionKind::FsReadFile
             | BuiltInFunctionKind::FsReadFileBytes
             | BuiltInFunctionKind::FsRemoveFile => PathBuf::from("__fs.gdn"),
-            BuiltInFunctionKind::ReflectSourceForFun
+            BuiltInFunctionKind::ReflectSourceFile
+            | BuiltInFunctionKind::ReflectSourceForFun
             | BuiltInFunctionKind::ReflectSourceForMethod
             | BuiltInFunctionKind::ReflectSourceForType
             | BuiltInFunctionKind::ReflectPreludeTypes
@@ -493,7 +493,6 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::PreludeEprint => "eprint",
             BuiltInFunctionKind::PreludeEprintln => "eprintln",
             BuiltInFunctionKind::PreludeReadLine => "read_line",
-            BuiltInFunctionKind::PreludeSourceDirectory => "source_directory",
             BuiltInFunctionKind::PreludeShellArguments => "shell_arguments",
             BuiltInFunctionKind::FsSetWorkingDirectory => "set_working_directory",
             BuiltInFunctionKind::FsWorkingDirectory => "working_directory",
@@ -504,6 +503,7 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::ReflectDocComment => "doc_comment",
             BuiltInFunctionKind::ReflectDocCommentForType => "doc_comment_for_type",
             BuiltInFunctionKind::ReflectDocCommentForMethod => "doc_comment_for_method",
+            BuiltInFunctionKind::ReflectSourceFile => "source_file",
             BuiltInFunctionKind::ReflectSourceForFun => "source_for_fun",
             BuiltInFunctionKind::ReflectSourceForMethod => "source_for_method",
             BuiltInFunctionKind::ReflectSourceForType => "source_for_type",

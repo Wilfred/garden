@@ -215,6 +215,16 @@ public fun built_in_files(): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
 
+/// Return the path of the current source file. Returns None when run
+/// directly in a CLI or JSON session.
+///
+/// ```
+/// source_file() // Some(Path{ p: "/home/yourname/awesome_garden_project/main.gdn" })
+/// ```
+public fun source_file(): Option<Path> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
 test built_in_files {
   let files = built_in_files()
   assert(files.contains("__prelude.gdn"))

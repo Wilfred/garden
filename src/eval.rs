@@ -161,12 +161,12 @@ pub(crate) enum ExpressionState {
     /// This expression has had its children evaluated, but hasn't
     /// been evaluated itself. For example, in `foo(bar())` we have
     /// evaluated `bar()` but not yet called `foo()` with the result.
-    EvaluatedAllSubexpressions,
+    EvaluatedSubexpressions,
 }
 
 impl ExpressionState {
     pub(crate) fn done_subexpressions(&self) -> bool {
-        matches!(self, ExpressionState::EvaluatedAllSubexpressions)
+        matches!(self, ExpressionState::EvaluatedSubexpressions)
     }
 }
 
@@ -1306,10 +1306,7 @@ pub(crate) fn eval_toplevel_call(
         value_is_used: true,
         id: env.id_gen.next(),
     };
-    env.push_expr_to_eval(
-        ExpressionState::EvaluatedAllSubexpressions,
-        call_expr.into(),
-    );
+    env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, call_expr.into());
 
     eval(env, session)
 }
@@ -1367,10 +1364,7 @@ pub(crate) fn eval_toplevel_method_call(
         value_is_used: true,
         id: env.id_gen.next(),
     };
-    env.push_expr_to_eval(
-        ExpressionState::EvaluatedAllSubexpressions,
-        call_expr.into(),
-    );
+    env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, call_expr.into());
 
     eval(env, session)
 }
@@ -1669,7 +1663,7 @@ fn eval_while_body(
     if b {
         stack_frame
             .exprs_to_eval
-            .push((ExpressionState::EvaluatedAllSubexpressions, expr.clone()));
+            .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
 
         // After the loop body, we will want to evaluate the expression again.
         stack_frame
@@ -1742,10 +1736,7 @@ fn eval_for_in(
         // state so the loop expression evaluates to Unit and its
         // outer EvaluatedAllSubexpressions pops a balancing block.
         env.current_frame_mut().bindings.push_block();
-        env.push_expr_to_eval(
-            ExpressionState::EvaluatedAllSubexpressions,
-            outer_expr.clone(),
-        );
+        env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
         if expr_value_is_used {
             env.push_value(Value::unit());
         }
@@ -1755,10 +1746,7 @@ fn eval_for_in(
     // After each iteration's body, we want to pop the iteration's
     // bindings block (pushed by `eval_block`), so schedule an
     // EvaluatedAllSubexpressions state for this iteration.
-    env.push_expr_to_eval(
-        ExpressionState::EvaluatedAllSubexpressions,
-        outer_expr.clone(),
-    );
+    env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
     // After an iteration the loop body, evaluate again. We don't
     // re-evaluate the iteree expression though.
@@ -6423,14 +6411,11 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, scrutinee.clone());
             }
             ExpressionState::PartiallyEvaluated(_) => {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 eval_match_cases(env, expr_value_is_used, &scrutinee.position, cases)
                     .map_err(|e| (RestoreValues(vec![]), e))?;
             }
-            ExpressionState::EvaluatedAllSubexpressions => {
+            ExpressionState::EvaluatedSubexpressions => {
                 env.current_frame_mut().bindings.pop_block();
             }
         },
@@ -6443,10 +6428,7 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, condition.clone());
             }
             ExpressionState::PartiallyEvaluated(_) => {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 eval_if(
                     env,
@@ -6456,7 +6438,7 @@ fn eval_expr(
                     else_body.as_ref(),
                 )?;
             }
-            ExpressionState::EvaluatedAllSubexpressions => {
+            ExpressionState::EvaluatedSubexpressions => {
                 env.current_frame_mut().bindings.pop_block();
 
                 if expr_value_is_used && else_body.is_none() {
@@ -6485,7 +6467,7 @@ fn eval_expr(
                         body,
                     )?;
                 }
-                ExpressionState::EvaluatedAllSubexpressions => {
+                ExpressionState::EvaluatedSubexpressions => {
                     // Pop the bindings block for this iteration (or
                     // the terminal block pushed in `eval_while_body`).
                     // The loop's overall value is pushed by
@@ -6519,7 +6501,7 @@ fn eval_expr(
                         body,
                     )?;
                 }
-                ExpressionState::EvaluatedAllSubexpressions => {
+                ExpressionState::EvaluatedSubexpressions => {
                     // Pop the bindings block for this iteration (or
                     // the terminal block pushed in `eval_for_in`).
                     // The loop's overall value is pushed by
@@ -6530,16 +6512,13 @@ fn eval_expr(
         }
         Expression_::Try(try_body, _catch_sym, _catch_body) => match expr_state {
             ExpressionState::NotEvaluated => {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 eval_block(env, expr_value_is_used, try_body);
             }
             ExpressionState::PartiallyEvaluated(_) => {
                 unreachable!("Try should not be in PartiallyEvaluated state");
             }
-            ExpressionState::EvaluatedAllSubexpressions => {
+            ExpressionState::EvaluatedSubexpressions => {
                 env.current_frame_mut().bindings.pop_block();
             }
         },
@@ -6549,10 +6528,7 @@ fn eval_expr(
                 let stack_frame = env.current_frame_mut();
                 stack_frame.exprs_to_eval.clear();
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 if let Some(expr) = expr {
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
@@ -6566,10 +6542,7 @@ fn eval_expr(
             if expr_state.done_subexpressions() {
                 eval_assign(env, expr_value_is_used, variable)?;
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
             }
         }
@@ -6577,10 +6550,7 @@ fn eval_expr(
             if expr_state.done_subexpressions() {
                 eval_assign_update(env, expr_value_is_used, &expr_position, variable, *op)?;
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
             }
         }
@@ -6588,27 +6558,24 @@ fn eval_expr(
             if expr_state.done_subexpressions() {
                 eval_let(env, expr_value_is_used, destination, &expr.position, hint)?;
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
             }
         }
         Expression_::IntLiteral(i) => {
-            *expr_state = ExpressionState::EvaluatedAllSubexpressions;
+            *expr_state = ExpressionState::EvaluatedSubexpressions;
             if expr_value_is_used {
                 env.push_value(Value::new(Value_::Int(*i)));
             }
         }
         Expression_::FloatLiteral(f) => {
-            *expr_state = ExpressionState::EvaluatedAllSubexpressions;
+            *expr_state = ExpressionState::EvaluatedSubexpressions;
             if expr_value_is_used {
                 env.push_value(Value::new(Value_::Float(f.into_inner())));
             }
         }
         Expression_::StringLiteral(s) => {
-            *expr_state = ExpressionState::EvaluatedAllSubexpressions;
+            *expr_state = ExpressionState::EvaluatedSubexpressions;
             if expr_value_is_used {
                 env.push_value(Value::new(Value_::String(s.clone())));
             }
@@ -6635,10 +6602,7 @@ fn eval_expr(
                     }));
                 }
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for item in items.iter() {
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, item.expr.clone());
@@ -6679,10 +6643,7 @@ fn eval_expr(
                     env.push_value(Value::new(Value_::Dict { items, value_type }));
                 }
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for kv in item_exprs.iter() {
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, kv.value.clone());
@@ -6711,10 +6672,7 @@ fn eval_expr(
                     }));
                 }
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for item in items.iter() {
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, item.clone());
@@ -6731,10 +6689,7 @@ fn eval_expr(
                     field_exprs,
                 )?;
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for (_, field_expr) in field_exprs.iter() {
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, field_expr.clone());
@@ -6743,7 +6698,7 @@ fn eval_expr(
         }
         Expression_::Variable(name_sym) => {
             if let Some(value) = get_var(name_sym, env) {
-                *expr_state = ExpressionState::EvaluatedAllSubexpressions;
+                *expr_state = ExpressionState::EvaluatedSubexpressions;
 
                 if expr_value_is_used {
                     env.push_value(value);
@@ -6798,10 +6753,7 @@ fn eval_expr(
                     op,
                 )?;
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
             }
@@ -6828,10 +6780,7 @@ fn eval_expr(
                     op,
                 )?;
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
             }
@@ -6847,10 +6796,7 @@ fn eval_expr(
             if expr_state.done_subexpressions() {
                 eval_equality_binop(env, expr_value_is_used, op)
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
             }
@@ -6867,10 +6813,7 @@ fn eval_expr(
                 eval_boolean_binop(env, expr_value_is_used, &lhs.position, &rhs.position, op)?;
             } else {
                 // TODO: do short-circuit evaluation of && and ||.
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
             }
@@ -6887,16 +6830,13 @@ fn eval_expr(
                 eval_string_concat(env, expr_value_is_used, &lhs.position, &rhs.position)?;
             } else {
                 // TODO: do short-circuit evaluation of && and ||.
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
             }
         }
         Expression_::FunLiteral(fun_info) => {
-            *expr_state = ExpressionState::EvaluatedAllSubexpressions;
+            *expr_state = ExpressionState::EvaluatedSubexpressions;
 
             if expr_value_is_used {
                 let stack_frame = env.current_frame_mut();
@@ -6922,16 +6862,13 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, receiver.clone());
             }
             ExpressionState::PartiallyEvaluated(_) => {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for arg in &paren_args.arguments {
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.expr.clone());
                 }
             }
-            ExpressionState::EvaluatedAllSubexpressions => {
+            ExpressionState::EvaluatedSubexpressions => {
                 match eval_call(
                     env,
                     expr_value_is_used,
@@ -6961,10 +6898,7 @@ fn eval_expr(
                     None => {}
                 }
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for arg in &paren_args.arguments {
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.expr.clone());
@@ -6978,10 +6912,7 @@ fn eval_expr(
             if expr_state.done_subexpressions() {
                 eval_dot_access(env, expr_value_is_used, sym, &recv.position)?;
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, recv.clone());
             }
         }
@@ -6989,19 +6920,16 @@ fn eval_expr(
             if expr_state.done_subexpressions() {
                 eval_namespace_access(env, expr_value_is_used, sym, &recv.position)?;
             } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, recv.clone());
             }
         }
         Expression_::Break => {
-            *expr_state = ExpressionState::EvaluatedAllSubexpressions;
+            *expr_state = ExpressionState::EvaluatedSubexpressions;
             eval_break(env, expr_value_is_used);
         }
         Expression_::Continue => {
-            *expr_state = ExpressionState::EvaluatedAllSubexpressions;
+            *expr_state = ExpressionState::EvaluatedSubexpressions;
             eval_continue(env);
         }
         Expression_::Parentheses(paren) => {
@@ -7029,7 +6957,7 @@ fn eval_expr(
                     }
                     None => {
                         env.push_expr_to_eval(
-                            ExpressionState::EvaluatedAllSubexpressions,
+                            ExpressionState::EvaluatedSubexpressions,
                             outer_expr.clone(),
                         );
 
@@ -7052,16 +6980,13 @@ fn eval_expr(
                     env.push_value(rhs_value);
 
                     env.push_expr_to_eval(
-                        ExpressionState::EvaluatedAllSubexpressions,
+                        ExpressionState::EvaluatedSubexpressions,
                         outer_expr.clone(),
                     );
 
-                    env.push_expr_to_eval(
-                        ExpressionState::EvaluatedAllSubexpressions,
-                        expr.clone(),
-                    );
+                    env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, expr.clone());
                 }
-                ExpressionState::EvaluatedAllSubexpressions => {
+                ExpressionState::EvaluatedSubexpressions => {
                     eval_assert(env, expr_value_is_used, expr)?;
                 }
             }

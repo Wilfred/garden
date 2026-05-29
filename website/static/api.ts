@@ -79,7 +79,9 @@ export function evalSnippet(src: string, snippetDiv: HTMLElement): void {
 
       for (const item of data.results) {
         if ("printed" in item) {
-          outputParts.push(escapeHtml(item.printed.s));
+          outputParts.push(
+            `<span class="stdout">${escapeHtml(item.printed.s)}</span>`,
+          );
         } else if ("printed_stderr" in item) {
           outputParts.push(
             `<span class="stderr">${escapeHtml(item.printed_stderr.s)}</span>`,
@@ -94,7 +96,9 @@ export function evalSnippet(src: string, snippetDiv: HTMLElement): void {
           }
 
           if (result.value) {
-            valueParts.push(escapeHtml(result.value));
+            valueParts.push(
+              `<span class="playground-value">${escapeHtml(result.value)}</span>`,
+            );
           }
         }
       }

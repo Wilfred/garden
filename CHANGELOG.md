@@ -1,7 +1,11 @@
-# 0.25 (unreleased)
-**Goal: Better REPL experience.**
+# 0.26 (unreleased)
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Fix precedence of `2 + 1 * 3.**
+
+# 0.25 (released 29th May 2026)
+**Goal: Better REPL experience.**
+**Goal: Better runtime performance.**
+**Goal: Make the language more useful in practice.**
 
 ## Language
 

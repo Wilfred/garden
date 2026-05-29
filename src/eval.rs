@@ -133,9 +133,11 @@ impl Default for Bindings {
     }
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum BlockState {
     WillRunBlock,
+    DoneRunBlock,
     // TODO: Clean up function calls and assertions, and we will
     // always be entering blocks for this expression state.
     //

@@ -166,6 +166,10 @@ pub(crate) enum ExpressionState {
     /// This expression has had its children evaluated, but hasn't
     /// been evaluated itself. For example, in `foo(bar())` we have
     /// evaluated `bar()` but not yet called `foo()` with the result.
+    ///
+    /// Note that all expressions *must* enter the
+    /// EvaluatedSubexpressions state. We use it for eval-up-to to
+    /// track when the evaluation finishes.
     EvaluatedSubexpressions,
 }
 

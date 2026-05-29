@@ -120,15 +120,10 @@ export function evalSnippet(src: string, snippetDiv: HTMLElement): void {
     });
 }
 
-export function checkSnippet(
+export function fetchDiagnostics(
   src: string,
-  snippetDiv: HTMLElement,
-  onDiagnostics?: (diagnostics: CheckDiagnostic[]) => void,
+  onDiagnostics: (diagnostics: CheckDiagnostic[]) => void,
 ): void {
-  snippetDiv.hidden = false;
-
-  snippetDiv.innerHTML = '<div class="spinner"></div>';
-
   fetch(`${PLAYGROUND_HOST}/check`, {
     method: "POST",
     headers: {
@@ -139,32 +134,11 @@ export function checkSnippet(
     .then((response) => response.json())
     .then((data: CheckResponse) => {
       if (!data.success) {
-        snippetDiv.innerHTML = `Error: ${escapeHtml(data.error || "Unknown error")}`;
         return;
       }
-
-      const diagnostics = data.diagnostics || [];
-      if (onDiagnostics) {
-        onDiagnostics(diagnostics);
-      }
-      if (diagnostics.length === 0) {
-        snippetDiv.innerHTML = "No issues found.";
-        return;
-      }
-
-      const lines = diagnostics.map((d) => {
-        const label = d.severity === "error" ? "Error" : "Warning";
-        const cls = d.severity === "error" ? "stderr" : "";
-        const prefix = `${label} at line ${d.line_number}, column ${d.column}: `;
-        const text = `${prefix}${d.message}`;
-        return cls
-          ? `<span class="${cls}">${escapeHtml(text)}</span>`
-          : escapeHtml(text);
-      });
-      snippetDiv.innerHTML = lines.join("\n");
+      onDiagnostics(data.diagnostics || []);
     })
-    .catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      snippetDiv.innerHTML = `Fetch error: ${escapeHtml(message)}`;
+    .catch(() => {
+      // Ignore errors from background checks.
     });
 }

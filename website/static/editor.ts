@@ -8,7 +8,10 @@ import type { Diagnostic } from "@codemirror/lint";
 import { gardenLanguage, gardenHighlighting } from "./language";
 import type { CheckDiagnostic } from "./api";
 
-export function createGardenEditor(doc: string): EditorView {
+export function createGardenEditor(
+  doc: string,
+  onDocChanged?: (src: string) => void,
+): EditorView {
   const state = EditorState.create({
     doc,
     extensions: [
@@ -28,6 +31,9 @@ export function createGardenEditor(doc: string): EditorView {
           queueMicrotask(() => {
             update.view.dispatch(setDiagnostics(update.view.state, []));
           });
+          if (onDocChanged) {
+            onDocChanged(update.state.sliceDoc());
+          }
         }
       }),
     ],

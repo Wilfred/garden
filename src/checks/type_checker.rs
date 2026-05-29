@@ -586,12 +586,17 @@ impl TypeCheckVisitor<'_> {
                         msgtext!(" argument."),
                     ])
                 };
+                let position = if paren_args.arguments.is_empty() {
+                    Position::merge(&paren_args.open_paren, &paren_args.close_paren)
+                } else {
+                    paren_args.close_paren.clone()
+                };
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
                     fixes: vec![],
                     severity: Severity::Error,
                     message,
-                    position: paren_args.close_paren.clone(),
+                    position,
                 });
                 return;
             }

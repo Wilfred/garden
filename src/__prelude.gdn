@@ -953,16 +953,6 @@ public fun string_repr<T>(value: T): String {
   __BUILT_IN_IMPLEMENTATION
 }
 
-/// Return the path of the directory that contains the current source
-/// file. Returns None when run directly in a CLI or JSON session.
-///
-/// ```
-/// source_directory() // Some(Path{ p: "/home/yourname/awesome_garden_project" })
-/// ```
-public fun source_directory(): Option<Path> {
-  __BUILT_IN_IMPLEMENTATION
-}
-
 /// Return the number of characters (codepoints) in the string.
 ///
 /// ```

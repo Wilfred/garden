@@ -1,0 +1,9 @@
+import "__reflect.gdn" as reflect
+
+{
+  dbg(reflect::source_file().or_throw().file_name())
+}
+
+// args: run
+// expected stderr:
+// [src/test_files/runtime/source_file.gdn:4:3] reflect::source_file().or_throw().file_name() //-> Some("source_file.gdn")

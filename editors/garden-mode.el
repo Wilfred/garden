@@ -706,7 +706,7 @@ With a prefix argument, also save the stringified result to the kill ring."
          "eprint" "eprintln"
          "range" "read_line"
          "shell_arguments"
-         "sort_nums" "source_directory" "string_repr"
+         "sort_nums" "string_repr"
          "throw" "todo"
          )
        'symbols)

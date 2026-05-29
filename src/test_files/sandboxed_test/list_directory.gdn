@@ -1,8 +1,8 @@
 import "__fs.gdn" as fs
 
 test list_directory_is_unsafe {
-    fs::list_directory("/")
-    //   ^
+  fs::list_directory("/")
+  //   ^
 }
 
 // args: sandboxed-test

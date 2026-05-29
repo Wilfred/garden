@@ -56,7 +56,7 @@ jobs:
             if ! ./target/debug/garden format --check "$f"; then
               status=1
             fi
-          done < <(find src/test_files/runtime -name '*.gdn' -print0)
+          done < <(find src/test_files/runtime src/test_files/sandboxed_test src/test_files/test -name '*.gdn' -print0)
           exit "$status"
 
   typos:

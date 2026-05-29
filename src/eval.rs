@@ -165,7 +165,7 @@ pub(crate) enum ExpressionState {
 }
 
 impl ExpressionState {
-    pub(crate) fn done_children(&self) -> bool {
+    pub(crate) fn done_subexpressions(&self) -> bool {
         matches!(self, ExpressionState::EvaluatedAllSubexpressions)
     }
 }
@@ -6544,7 +6544,7 @@ fn eval_expr(
             }
         },
         Expression_::Return(expr) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 // No more expressions to evaluate in this function, we're returning.
                 let stack_frame = env.current_frame_mut();
                 stack_frame.exprs_to_eval.clear();
@@ -6563,7 +6563,7 @@ fn eval_expr(
             }
         }
         Expression_::Assign(variable, expr) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_assign(env, expr_value_is_used, variable)?;
             } else {
                 env.push_expr_to_eval(
@@ -6574,7 +6574,7 @@ fn eval_expr(
             }
         }
         Expression_::AssignUpdate(variable, op, expr) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_assign_update(env, expr_value_is_used, &expr_position, variable, *op)?;
             } else {
                 env.push_expr_to_eval(
@@ -6585,7 +6585,7 @@ fn eval_expr(
             }
         }
         Expression_::Let(destination, hint, expr) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_let(env, expr_value_is_used, destination, &expr.position, hint)?;
             } else {
                 env.push_expr_to_eval(
@@ -6614,7 +6614,7 @@ fn eval_expr(
             }
         }
         Expression_::ListLiteral(items) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 let mut list_values: rpds::Vector<Value> = rpds::Vector::new();
                 let mut element_type = Type::no_value();
 
@@ -6646,7 +6646,7 @@ fn eval_expr(
             }
         }
         Expression_::DictLiteral(item_exprs) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 let mut items: rpds::HashTrieMap<String, Value> = rpds::HashTrieMap::new();
                 let mut value_type = Type::no_value();
 
@@ -6691,7 +6691,7 @@ fn eval_expr(
             }
         }
         Expression_::TupleLiteral(items) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 let mut items_values: Vec<Value> = Vec::with_capacity(items.len());
                 let mut item_types: Vec<Type> = Vec::with_capacity(items.len());
 
@@ -6722,7 +6722,7 @@ fn eval_expr(
             }
         }
         Expression_::StructLiteral(type_sym, field_exprs) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_struct_value(
                     env,
                     &outer_expr.position,
@@ -6788,7 +6788,7 @@ fn eval_expr(
             },
             rhs,
         ) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_int_binop(
                     env,
                     expr_value_is_used,
@@ -6818,7 +6818,7 @@ fn eval_expr(
             },
             rhs,
         ) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_float_binop(
                     env,
                     expr_value_is_used,
@@ -6844,7 +6844,7 @@ fn eval_expr(
             },
             rhs,
         ) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_equality_binop(env, expr_value_is_used, op)
             } else {
                 env.push_expr_to_eval(
@@ -6863,7 +6863,7 @@ fn eval_expr(
             },
             rhs,
         ) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_boolean_binop(env, expr_value_is_used, &lhs.position, &rhs.position, op)?;
             } else {
                 // TODO: do short-circuit evaluation of && and ||.
@@ -6883,7 +6883,7 @@ fn eval_expr(
             },
             rhs,
         ) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_string_concat(env, expr_value_is_used, &lhs.position, &rhs.position)?;
             } else {
                 // TODO: do short-circuit evaluation of && and ||.
@@ -6947,7 +6947,7 @@ fn eval_expr(
             }
         },
         Expression_::MethodCall(receiver_expr, meth_name, paren_args) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 match eval_method_call(
                     env,
                     expr_value_is_used,
@@ -6975,7 +6975,7 @@ fn eval_expr(
             }
         }
         Expression_::DotAccess(recv, sym) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_dot_access(env, expr_value_is_used, sym, &recv.position)?;
             } else {
                 env.push_expr_to_eval(
@@ -6986,7 +6986,7 @@ fn eval_expr(
             }
         }
         Expression_::NamespaceAccess(recv, sym) => {
-            if expr_state.done_children() {
+            if expr_state.done_subexpressions() {
                 eval_namespace_access(env, expr_value_is_used, sym, &recv.position)?;
             } else {
                 env.push_expr_to_eval(
@@ -7156,7 +7156,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             //
             if env.stop_at_expr_id.is_some() && env.stop_at_expr_id.as_ref() == Some(&outer_expr.id)
             {
-                if expr_state.done_children() {
+                if expr_state.done_subexpressions() {
                     let v = if let Some(value) = env.current_frame().evalled_values.last().cloned()
                     {
                         value

@@ -1607,7 +1607,7 @@ fn eval_if(
         // When there's no else, the if always evaluates to Unit
         // regardless of the then block's type, so the branch's value
         // is not used. The Unit is pushed by the if's
-        // EvaluatedAllSubexpressions continuation.
+        // EvaluatedSubexpressions continuation.
         let branch_value_used = expr_value_is_used && else_body.is_some();
 
         if b {
@@ -1679,8 +1679,8 @@ fn eval_while_body(
         eval_block(env, expr_value_is_used, body);
     } else {
         // Push the result of the loop here, rather than in the
-        // EvaluatedAllSubexpressions branch, so we push it exactly
-        // once (the EvaluatedAllSubexpressions branch runs once per
+        // EvaluatedSubexpressions branch, so we push it exactly
+        // once (the EvaluatedSubexpressions branch runs once per
         // iteration, to pop the bindings block).
         if expr_value_is_used {
             env.push_value(Value::unit());
@@ -1737,9 +1737,9 @@ fn eval_for_in(
         // Normal loop termination. We've popped the iteree value, so
         // the value stack discipline is correct.
         //
-        // Push a bindings block and an EvaluatedAllSubexpressions
+        // Push a bindings block and an EvaluatedSubexpressions
         // state so the loop expression evaluates to Unit and its
-        // outer EvaluatedAllSubexpressions pops a balancing block.
+        // outer EvaluatedSubexpressions pops a balancing block.
         env.current_frame_mut().bindings.push_block();
         env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
         if expr_value_is_used {
@@ -1750,7 +1750,7 @@ fn eval_for_in(
 
     // After each iteration's body, we want to pop the iteration's
     // bindings block (pushed by `eval_block`), so schedule an
-    // EvaluatedAllSubexpressions state for this iteration.
+    // EvaluatedSubexpressions state for this iteration.
     env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
     // After an iteration the loop body, evaluate again. We don't

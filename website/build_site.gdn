@@ -1,6 +1,7 @@
 import "__fs.gdn" as fs
 import "__random.gdn" as random
 import "__reflect.gdn" as reflect
+import "__shell.gdn" as shell
 import "__time.gdn" as time
 import "__prelude.gdn" as prelude
 import "./markdown.gdn" as markdown
@@ -369,6 +370,7 @@ fun build_site(): Unit {
     ("__fs.gdn", fs),
     ("__random.gdn", random),
     ("__reflect.gdn", reflect),
+    ("__shell.gdn", shell),
     ("__time.gdn", time),
   ]
 
@@ -379,7 +381,7 @@ fun build_site(): Unit {
   }
   for built_in_file in reflect::built_in_files() {
     if documented_files.contains(built_in_file).not() {
-      log::warn("Builtin file " ^ built_in_file ^ " is not documented in the namespaces list")
+      log::warn("Builtin file " ^ built_in_file ^ " is not included in the namespaces list")
     }
   }
 

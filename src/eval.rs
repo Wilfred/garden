@@ -134,6 +134,14 @@ impl Default for Bindings {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub(crate) enum IsBlock {
+    Block,
+    // TODO: Clean up function calls and assertions, and we will
+    // always be entering blocks for this expression state.
+    NotBlock,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum ExpressionState {
     /// This expression has not been evaluated at all.
     NotEvaluated,
@@ -149,7 +157,7 @@ pub(crate) enum ExpressionState {
     ///   called the receiver function.
     /// * In `assert(foo() == bar())` we've evaluated `foo()` and
     ///   `bar()` but not yet compared them.
-    PartiallyEvaluated,
+    PartiallyEvaluated(IsBlock),
     /// This expression has had its children evaluated, but hasn't
     /// been evaluated itself. For example, in `foo(bar())` we have
     /// evaluated `bar()` but not yet called `foo()` with the result.
@@ -1754,7 +1762,10 @@ fn eval_for_in(
 
     // After an iteration the loop body, evaluate again. We don't
     // re-evaluate the iteree expression though.
-    env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
+    env.push_expr_to_eval(
+        ExpressionState::PartiallyEvaluated(IsBlock::Block),
+        outer_expr.clone(),
+    );
 
     // Push the iterated value and the index for the next time we call
     // this function.
@@ -6405,10 +6416,13 @@ fn eval_expr(
     match &outer_expr.expr_ {
         Expression_::Match(scrutinee, cases) => match expr_state {
             ExpressionState::NotEvaluated => {
-                env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
+                env.push_expr_to_eval(
+                    ExpressionState::PartiallyEvaluated(IsBlock::Block),
+                    outer_expr.clone(),
+                );
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, scrutinee.clone());
             }
-            ExpressionState::PartiallyEvaluated => {
+            ExpressionState::PartiallyEvaluated(_) => {
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedAllSubexpressions,
                     outer_expr.clone(),
@@ -6422,10 +6436,13 @@ fn eval_expr(
         },
         Expression_::If(condition, ref then_body, ref else_body) => match expr_state {
             ExpressionState::NotEvaluated => {
-                env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
+                env.push_expr_to_eval(
+                    ExpressionState::PartiallyEvaluated(IsBlock::Block),
+                    outer_expr.clone(),
+                );
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, condition.clone());
             }
-            ExpressionState::PartiallyEvaluated => {
+            ExpressionState::PartiallyEvaluated(_) => {
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedAllSubexpressions,
                     outer_expr.clone(),
@@ -6451,11 +6468,14 @@ fn eval_expr(
             match expr_state {
                 ExpressionState::NotEvaluated => {
                     // Once we've evaluated the condition, we can consider evaluating the body.
-                    env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
+                    env.push_expr_to_eval(
+                        ExpressionState::PartiallyEvaluated(IsBlock::Block),
+                        outer_expr.clone(),
+                    );
                     // Evaluate the loop condition first.
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, condition.clone());
                 }
-                ExpressionState::PartiallyEvaluated => {
+                ExpressionState::PartiallyEvaluated(_) => {
                     // Evaluated condition, can possibly evaluate body.
                     eval_while_body(
                         env,
@@ -6480,13 +6500,16 @@ fn eval_expr(
                     // The initial value of the loop index.
                     env.push_value(Value::new(Value_::Int(0)));
 
-                    env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
+                    env.push_expr_to_eval(
+                        ExpressionState::PartiallyEvaluated(IsBlock::Block),
+                        outer_expr.clone(),
+                    );
 
                     // First, we're going to evaluate the value
                     // that we want to iterate over.
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
                 }
-                ExpressionState::PartiallyEvaluated => {
+                ExpressionState::PartiallyEvaluated(_) => {
                     eval_for_in(
                         env,
                         expr_value_is_used,
@@ -6513,7 +6536,7 @@ fn eval_expr(
                 );
                 eval_block(env, expr_value_is_used, try_body);
             }
-            ExpressionState::PartiallyEvaluated => {
+            ExpressionState::PartiallyEvaluated(_) => {
                 unreachable!("Try should not be in PartiallyEvaluated state");
             }
             ExpressionState::EvaluatedAllSubexpressions => {
@@ -6891,11 +6914,14 @@ fn eval_expr(
         }
         Expression_::Call(receiver, paren_args) => match expr_state {
             ExpressionState::NotEvaluated => {
-                env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
+                env.push_expr_to_eval(
+                    ExpressionState::PartiallyEvaluated(IsBlock::NotBlock),
+                    outer_expr.clone(),
+                );
 
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, receiver.clone());
             }
-            ExpressionState::PartiallyEvaluated => {
+            ExpressionState::PartiallyEvaluated(_) => {
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedAllSubexpressions,
                     outer_expr.clone(),
@@ -6994,7 +7020,7 @@ fn eval_expr(
                         // assertion failure message.
 
                         env.push_expr_to_eval(
-                            ExpressionState::PartiallyEvaluated,
+                            ExpressionState::PartiallyEvaluated(IsBlock::NotBlock),
                             outer_expr.clone(),
                         );
 
@@ -7010,7 +7036,7 @@ fn eval_expr(
                         env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
                     }
                 },
-                ExpressionState::PartiallyEvaluated => {
+                ExpressionState::PartiallyEvaluated(_) => {
                     // Duplicate the LHS and RHS values.
 
                     let rhs_value = env
@@ -7148,7 +7174,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 // want to evaluate `y`, enter the block, then stop
                 // evaluation, so we know the first value of `x`.
                 if matches!(outer_expr.expr_, Expression_::ForIn(_, _, _))
-                    && matches!(expr_state, ExpressionState::PartiallyEvaluated)
+                    && matches!(expr_state, ExpressionState::PartiallyEvaluated(_))
                 {
                     return Ok(Value::unit());
                 }

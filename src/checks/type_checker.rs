@@ -352,7 +352,7 @@ impl TypeCheckVisitor<'_> {
             None => Type::Any,
         };
 
-        self.verify_block(&return_ty, &fun_info.body, &type_bindings, &return_ty);
+        self.check_block(&return_ty, &fun_info.body, &type_bindings, &return_ty);
 
         self.bindings.exit_block();
 
@@ -663,7 +663,7 @@ impl TypeCheckVisitor<'_> {
         ty
     }
 
-    fn verify_block(
+    fn check_block(
         &mut self,
         expected_ty: &Type,
         block: &Block,
@@ -675,7 +675,7 @@ impl TypeCheckVisitor<'_> {
         let mut ty = Type::unit();
         for (i, expr) in block.exprs.iter().enumerate() {
             if i == block.exprs.len() - 1 {
-                ty = self.verify_expr(expected_ty, expr, type_bindings, expected_return_ty);
+                ty = self.check_expr(expected_ty, expr, type_bindings, expected_return_ty);
             } else {
                 self.infer_expr(expr, type_bindings, expected_return_ty);
             }
@@ -715,7 +715,7 @@ impl TypeCheckVisitor<'_> {
         ty
     }
 
-    fn verify_match(
+    fn check_match(
         &mut self,
         expected_ty: &Type,
         type_bindings: &TypeVarEnv,
@@ -761,7 +761,7 @@ impl TypeCheckVisitor<'_> {
                     ));
                 }
                 _ => {
-                    self.verify_block(expected_ty, case_expr, type_bindings, expected_return_ty);
+                    self.check_block(expected_ty, case_expr, type_bindings, expected_return_ty);
                 }
             }
 
@@ -866,7 +866,7 @@ impl TypeCheckVisitor<'_> {
         expected_return_ty: &Type,
     ) -> Type {
         match expr_ {
-            Expression_::Match(scrutinee, cases) => self.verify_match(
+            Expression_::Match(scrutinee, cases) => self.check_match(
                 &Type::Any,
                 type_bindings,
                 expected_return_ty,
@@ -882,12 +882,12 @@ impl TypeCheckVisitor<'_> {
                 expected_return_ty,
             ),
             Expression_::While(cond_expr, block) => {
-                self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
+                self.check_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
                 self.infer_block(block, type_bindings, expected_return_ty);
                 Type::unit()
             }
             Expression_::ForIn(dest, expr, body) => {
-                let expr_ty = self.verify_expr(
+                let expr_ty = self.check_expr(
                     &Type::list(Type::Any),
                     expr,
                     type_bindings,
@@ -931,7 +931,7 @@ impl TypeCheckVisitor<'_> {
                 // TODO: also enforce the type of an assignment at runtime.
                 let expected_ty = self.get_var_for_assignment(sym);
 
-                self.verify_expr(&expected_ty, expr, type_bindings, expected_return_ty);
+                self.check_expr(&expected_ty, expr, type_bindings, expected_return_ty);
                 Type::unit()
             }
             Expression_::AssignUpdate(sym, op, expr) => {
@@ -957,7 +957,7 @@ impl TypeCheckVisitor<'_> {
                     });
                 }
 
-                self.verify_expr(&Type::int(), expr, type_bindings, expected_return_ty);
+                self.check_expr(&Type::int(), expr, type_bindings, expected_return_ty);
                 Type::unit()
             }
             Expression_::Let(dest, hint, expr) => {
@@ -967,7 +967,7 @@ impl TypeCheckVisitor<'_> {
                             .unwrap_or_err_ty();
                         self.save_hint_ty_id(hint, &hint_ty);
 
-                        self.verify_expr(&hint_ty, expr, type_bindings, expected_return_ty);
+                        self.check_expr(&hint_ty, expr, type_bindings, expected_return_ty);
 
                         hint_ty
                     }
@@ -981,7 +981,7 @@ impl TypeCheckVisitor<'_> {
                 let expr_ty = expected_return_ty;
                 match inner_expr {
                     Some(expr) => {
-                        self.verify_expr(expr_ty, expr, type_bindings, expected_return_ty);
+                        self.check_expr(expr_ty, expr, type_bindings, expected_return_ty);
                     }
                     None => {
                         if !is_subtype(&Type::unit(), expr_ty) {
@@ -1043,7 +1043,7 @@ impl TypeCheckVisitor<'_> {
             Expression_::DictLiteral(items) => {
                 let mut value_tys = vec![];
                 for kv in items {
-                    self.verify_expr(&Type::string(), &kv.key, type_bindings, expected_return_ty);
+                    self.check_expr(&Type::string(), &kv.key, type_bindings, expected_return_ty);
 
                     let inferred_value_ty =
                         self.infer_expr(&kv.value, type_bindings, expected_return_ty);
@@ -1120,7 +1120,7 @@ impl TypeCheckVisitor<'_> {
                     return_: Box::new(return_ty),
                     name_sym: None,
                 };
-                self.verify_expr_(
+                self.check_expr_(
                     &expected_ty,
                     expr_,
                     pos,
@@ -1130,7 +1130,7 @@ impl TypeCheckVisitor<'_> {
                 )
             }
             Expression_::Assert(expr) => {
-                self.verify_expr(&Type::bool(), expr, type_bindings, expected_return_ty);
+                self.check_expr(&Type::bool(), expr, type_bindings, expected_return_ty);
                 Type::unit()
             }
             Expression_::Parentheses(paren) => {
@@ -1695,8 +1695,8 @@ impl TypeCheckVisitor<'_> {
             | BinaryOperatorKind::LessThanOrEqual
             | BinaryOperatorKind::GreaterThan
             | BinaryOperatorKind::GreaterThanOrEqual => {
-                self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
-                self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
+                self.check_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
+                self.check_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
 
                 Type::bool()
             }
@@ -1723,14 +1723,14 @@ impl TypeCheckVisitor<'_> {
                 Type::bool()
             }
             BinaryOperatorKind::And | BinaryOperatorKind::Or => {
-                self.verify_expr(&Type::bool(), lhs, type_bindings, expected_return_ty);
-                self.verify_expr(&Type::bool(), rhs, type_bindings, expected_return_ty);
+                self.check_expr(&Type::bool(), lhs, type_bindings, expected_return_ty);
+                self.check_expr(&Type::bool(), rhs, type_bindings, expected_return_ty);
 
                 Type::bool()
             }
             BinaryOperatorKind::StringConcat => {
-                self.verify_expr(&Type::string(), lhs, type_bindings, expected_return_ty);
-                self.verify_expr(&Type::string(), rhs, type_bindings, expected_return_ty);
+                self.check_expr(&Type::string(), lhs, type_bindings, expected_return_ty);
+                self.check_expr(&Type::string(), rhs, type_bindings, expected_return_ty);
 
                 Type::string()
             }
@@ -1969,7 +1969,7 @@ impl TypeCheckVisitor<'_> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
-        self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
+        self.check_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
 
         match else_block {
             Some(else_block) => {
@@ -2068,7 +2068,7 @@ impl TypeCheckVisitor<'_> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
-        self.verify_expr(&Type::namespace(), recv, type_bindings, expected_return_ty);
+        self.check_expr(&Type::namespace(), recv, type_bindings, expected_return_ty);
 
         let Expression_::Variable(recv_symbol) = &recv.expr_ else {
             self.diagnostics.push(Diagnostic {
@@ -2325,17 +2325,17 @@ impl TypeCheckVisitor<'_> {
         }
     }
 
-    /// Verify that `expr` has a type that is a subtype of
+    /// Check that `expr` has a type that is a subtype of
     /// `expected_ty`. Return the inferred type.
     ///
     /// The inferred type may be a narrower subtype of `expected_ty`.
     /// For example, `[]` has an inferred type of `List<NoValue>`,
     /// which is a subtype of `List<Int>`.
     ///
-    /// For some expressions, verifying allows us to accept
+    /// For some expressions, checking allows us to accept
     /// expressions whose type cannot be inferred. For example,
     /// inference cannot handle `fun(x) { x.foo }` but
-    /// verifying/checking can when we know the expected lambda type.
+    /// checking can when we know the expected lambda type.
     ///
     /// When in doubt, try to add more cases to `infer_expr` when
     /// adding new types or expressions. The more we can infer, the
@@ -2345,14 +2345,14 @@ impl TypeCheckVisitor<'_> {
     /// additional type information is available. This gives us
     /// strictly more information to use in the typechecker (e.g. the
     /// lambda example above).
-    fn verify_expr(
+    fn check_expr(
         &mut self,
         expected_ty: &Type,
         expr: &Expression,
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
-        let inferred_ty = self.verify_expr_(
+        let inferred_ty = self.check_expr_(
             expected_ty,
             &expr.expr_,
             &expr.position,
@@ -2365,7 +2365,7 @@ impl TypeCheckVisitor<'_> {
         inferred_ty
     }
 
-    fn verify_expr_(
+    fn check_expr_(
         &mut self,
         expected_ty: &Type,
         expr_: &Expression_,
@@ -2402,7 +2402,7 @@ impl TypeCheckVisitor<'_> {
                     param_tys.push(param_ty);
                 }
 
-                let block_ty = self.verify_block(
+                let block_ty = self.check_block(
                     expected_return_ty,
                     &fun_info.body,
                     type_bindings,
@@ -2450,13 +2450,13 @@ impl TypeCheckVisitor<'_> {
             ) if name.text == "List" && args.len() == 1 => {
                 let expected_elem_ty = &args[0];
 
-                // Even if we verify, we should return the more
-                // specific type. E.g. if we're verifying List<Any>
+                // Even if we check, we should return the more
+                // specific type. E.g. if we're checking List<Any>
                 // and we infer List<Int>.
 
                 let mut item_tys = vec![];
                 for item in items {
-                    let item_ty = self.verify_expr(
+                    let item_ty = self.check_expr(
                         expected_elem_ty,
                         &item.expr,
                         type_bindings,
@@ -2468,7 +2468,7 @@ impl TypeCheckVisitor<'_> {
                 let elem_ty = unify_all(&item_tys).unwrap_or(Type::error("Could not unify list"));
                 Type::list(elem_ty)
             }
-            (Expression_::Match(scrutinee, cases), _) => self.verify_match(
+            (Expression_::Match(scrutinee, cases), _) => self.check_match(
                 expected_ty,
                 type_bindings,
                 expected_return_ty,
@@ -2477,17 +2477,17 @@ impl TypeCheckVisitor<'_> {
                 cases,
             ),
             (Expression_::If(cond_expr, then_block, else_block), _) => {
-                self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
+                self.check_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
 
                 match else_block {
                     Some(else_block) => {
-                        self.verify_block(
+                        self.check_block(
                             expected_ty,
                             then_block,
                             type_bindings,
                             expected_return_ty,
                         );
-                        self.verify_block(
+                        self.check_block(
                             expected_ty,
                             else_block,
                             type_bindings,
@@ -2502,11 +2502,11 @@ impl TypeCheckVisitor<'_> {
                 }
             }
             (Expression_::Try(try_body, catch_sym, catch_body), _) => {
-                self.verify_block(expected_ty, try_body, type_bindings, expected_return_ty);
+                self.check_block(expected_ty, try_body, type_bindings, expected_return_ty);
 
                 self.bindings.enter_block();
                 self.set_binding(catch_sym, Type::Any);
-                self.verify_block(expected_ty, catch_body, type_bindings, expected_return_ty);
+                self.check_block(expected_ty, catch_body, type_bindings, expected_return_ty);
                 self.bindings.exit_block();
 
                 expected_ty.clone()

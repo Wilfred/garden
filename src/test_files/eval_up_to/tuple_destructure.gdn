@@ -1,7 +1,7 @@
 {
-    let aa = (1, 2)
-    let (x, y) = aa
-    //   ^
+  let aa = (1, 2)
+  let (x, y) = aa
+  //   ^
 }
 
 // args: reftest-eval-up-to

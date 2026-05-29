@@ -1,10 +1,10 @@
 {
-    if True {
-//  ^
-        5
-    } else {
-        6
-    }
+  if True {
+//^
+    5
+  } else {
+    6
+  }
 }
 
 // args: reftest-eval-up-to

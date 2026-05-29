@@ -1,14 +1,16 @@
 {
-    123
-    let cond = True
-    while cond {
-    //  ^
-        5
-        break
-    }
+  123
+  let cond = True
 
-    6
+  // eval-up-to on the loop itself should show it evaluating to Unit.
+  while cond {
+  //  ^
+    5
+    break
+  }
+
+  6
 }
 
 // args: reftest-eval-up-to
-// expected stdout: src/test_files/eval_up_to/while.gdn:4: Unit
+// expected stdout: src/test_files/eval_up_to/while.gdn:6: Unit

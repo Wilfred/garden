@@ -1,8 +1,8 @@
 {
-    if 1 == 2 {
-        //^
-        print("yikes")
-    }
+  if 1 == 2 {
+    // ^
+    print("yikes")
+  }
 }
 
 // args: reftest-eval-up-to

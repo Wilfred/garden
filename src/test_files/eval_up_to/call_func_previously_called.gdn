@@ -1,11 +1,11 @@
 fun foo(aa: Int) {
-    let bb = aa + 2
-    bb * 2
-//  ^
+  let bb = aa + 2
+  bb * 2
+// ^
 }
 
 {
-    foo(10)
+  foo(10)
 }
 
 // args: reftest-eval-up-to

@@ -1,16 +1,16 @@
 fun fib(i: Int): Int {
-    if i == 0 {
-    // ^
-        return 0
-    } else if i == 1 {
-        return 1
-    } else {
-        return fib(i - 1) + fib(i - 2)
-    }
+  if i == 0 {
+  // ^
+    return 0
+  } else if i == 1 {
+    return 1
+  } else {
+    return fib(i - 1) + fib(i - 2)
+  }
 }
 
 {
-    fib(10)
+  fib(10)
 }
 
 // args: reftest-eval-up-to

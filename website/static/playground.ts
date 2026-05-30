@@ -1,5 +1,9 @@
-import { evalSnippet, fetchDiagnostics } from "./api";
-import { createGardenEditor, setEditorDiagnostics } from "./editor";
+import { evalSnippet, fetchDiagnostics, formatSnippet } from "./api";
+import {
+  createGardenEditor,
+  setEditorContent,
+  setEditorDiagnostics,
+} from "./editor";
 import { setupSnippetButtons } from "./snippets";
 
 // How long to wait after the last edit before checking the code.
@@ -7,10 +11,12 @@ const CHECK_DEBOUNCE_MS = 250;
 
 function setupPlayground(): void {
   const playgroundRunButton = document.querySelector("#playground-run");
+  const playgroundFormatButton = document.querySelector("#playground-format");
   const playgroundEditor = document.querySelector("#playground-editor");
   const playgroundOutput = document.querySelector("#playground-output");
   if (
     playgroundRunButton &&
+    playgroundFormatButton &&
     playgroundOutput &&
     playgroundOutput instanceof HTMLElement &&
     playgroundEditor &&
@@ -38,6 +44,20 @@ function setupPlayground(): void {
     playgroundRunButton.addEventListener("click", () => {
       const src = editorView.state.sliceDoc();
       evalSnippet(src, playgroundOutput);
+    });
+
+    playgroundFormatButton.addEventListener("click", () => {
+      const src = editorView.state.sliceDoc();
+      formatSnippet(
+        src,
+        (formatted) => {
+          setEditorContent(editorView, formatted);
+        },
+        (message) => {
+          playgroundOutput.hidden = false;
+          playgroundOutput.textContent = `Format error: ${message}`;
+        },
+      );
     });
 
     // Check the initial content so diagnostics show without an edit.

@@ -36,6 +36,12 @@ export function createGardenEditor(
   return new EditorView({ state });
 }
 
+export function setEditorContent(view: EditorView, content: string): void {
+  view.dispatch({
+    changes: { from: 0, to: view.state.doc.length, insert: content },
+  });
+}
+
 export function setEditorDiagnostics(
   view: EditorView,
   diagnostics: CheckDiagnostic[],

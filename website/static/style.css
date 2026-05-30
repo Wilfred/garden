@@ -261,8 +261,13 @@ header a {
   margin: 10px;
 }
 
-#playground-run {
+#playground-run,
+#playground-format {
   margin-top: 10px;
+}
+
+#playground-format {
+  margin-left: 5px;
 }
 
 textarea {

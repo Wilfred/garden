@@ -120,6 +120,38 @@ export function evalSnippet(src: string, snippetDiv: HTMLElement): void {
     });
 }
 
+type FormatResponse = {
+  success: boolean;
+  formatted?: string;
+  error?: string;
+};
+
+export function formatSnippet(
+  src: string,
+  onFormatted: (formatted: string) => void,
+  onError: (message: string) => void,
+): void {
+  fetch(`${PLAYGROUND_HOST}/format`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ src }),
+  })
+    .then((response) => response.json())
+    .then((data: FormatResponse) => {
+      if (!data.success || data.formatted === undefined) {
+        onError(data.error || "Unknown error");
+        return;
+      }
+      onFormatted(data.formatted);
+    })
+    .catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      onError(message);
+    });
+}
+
 export function fetchDiagnostics(
   src: string,
   onDiagnostics: (diagnostics: CheckDiagnostic[]) => void,

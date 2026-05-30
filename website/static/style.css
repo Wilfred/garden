@@ -378,6 +378,11 @@ ul li {
   margin-bottom: 1em;
 }
 
+.cm-tooltip-lint li,
+.cm-panel-lint li {
+  margin-bottom: 0;
+}
+
 /* Nested lists should still be indented. */
 ul ul {
   margin-left: 1em;

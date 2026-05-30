@@ -72,6 +72,13 @@ app.get('/', (req, res) => {
           src: 'Garden source code to check (string, required)'
         },
         returns: 'JSON object with success status and a list of diagnostics'
+      },
+      'POST /format': {
+        description: 'Format Garden code and return the re-indented source',
+        parameters: {
+          src: 'Garden source code to format (string, required)'
+        },
+        returns: 'JSON object with success status and the formatted source'
       }
     }
   });
@@ -214,6 +221,55 @@ app.post('/check', (req, res) => {
           rawOutput: stdout
         });
       }
+    });
+  });
+});
+
+app.post('/format', (req, res) => {
+  const { src } = req.body;
+
+  if (src === undefined || src === null) {
+    return res.status(400).json({
+      success: false,
+      error: 'src parameter is required'
+    });
+  }
+
+  const codePreview = src.length > 200 ? src.substring(0, 200) + '...' : src;
+  logger.info({
+    codeLength: src.length,
+    codePreview
+  }, 'Formatting code');
+
+  const tmpFile = path.join(os.tmpdir(), `garden-format-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.gdn`);
+
+  fs.writeFile(tmpFile, src, (writeError) => {
+    if (writeError) {
+      return res.json({
+        success: false,
+        error: writeError.message
+      });
+    }
+
+    exec(`garden format "${tmpFile}"`, (execError, stdout, stderr) => {
+      fs.unlink(tmpFile, (unlinkError) => {
+        if (unlinkError) {
+          logger.error({ error: unlinkError.message, tmpFile }, 'Failed to delete temp file');
+        }
+      });
+
+      if (execError) {
+        return res.json({
+          success: false,
+          error: `Format failed: ${execError.message}`,
+          stderr: stderr
+        });
+      }
+
+      res.json({
+        success: true,
+        formatted: stdout
+      });
     });
   });
 });

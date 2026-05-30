@@ -154,6 +154,120 @@ impl IndentationVisitor {
         }
     }
 
+    fn fix_space_before_block(&mut self, block: &Block) {
+        let open_start = block.open_brace.start_offset;
+        if open_start == 0 {
+            return;
+        }
+
+        let before = &self.src[..open_start];
+        let last_char = before.as_bytes()[before.len() - 1];
+        if last_char != b' ' && last_char != b'\n' && last_char != b'\r' && last_char != b'\t' {
+            self.span_edits.push(SpanEdit {
+                start_offset: open_start,
+                end_offset: open_start,
+                replacement: " ".to_owned(),
+            });
+        }
+    }
+
+    fn fix_binary_operator_spacing(
+        &mut self,
+        lhs: &Expression,
+        op: &crate::parser::ast::BinaryOperatorSymbol,
+        rhs: &Expression,
+    ) {
+        let lhs_end = lhs.position.end_offset;
+        let op_start = op.position.start_offset;
+        let op_end = op.position.end_offset;
+        let rhs_start = rhs.position.start_offset;
+
+        if lhs_end > op_start || op_end > rhs_start {
+            return;
+        }
+
+        let before_op = &self.src[lhs_end..op_start];
+        if before_op != " " && !before_op.contains('\n') {
+            self.span_edits.push(SpanEdit {
+                start_offset: lhs_end,
+                end_offset: op_start,
+                replacement: " ".to_owned(),
+            });
+        }
+
+        let after_op = &self.src[op_end..rhs_start];
+        if after_op != " " && !after_op.contains('\n') {
+            self.span_edits.push(SpanEdit {
+                start_offset: op_end,
+                end_offset: rhs_start,
+                replacement: " ".to_owned(),
+            });
+        }
+    }
+
+    fn fix_equals_spacing(&mut self, left_end: usize, expr_start: usize) {
+        if left_end >= expr_start {
+            return;
+        }
+
+        let between = &self.src[left_end..expr_start];
+        if let Some(eq_offset) = between.find('=') {
+            let eq_abs = left_end + eq_offset;
+
+            let before_eq = &self.src[left_end..eq_abs];
+            if before_eq != " " {
+                self.span_edits.push(SpanEdit {
+                    start_offset: left_end,
+                    end_offset: eq_abs,
+                    replacement: " ".to_owned(),
+                });
+            }
+
+            let after_eq = &self.src[eq_abs + 1..expr_start];
+            if after_eq != " " && !after_eq.contains('\n') {
+                self.span_edits.push(SpanEdit {
+                    start_offset: eq_abs + 1,
+                    end_offset: expr_start,
+                    replacement: " ".to_owned(),
+                });
+            }
+        }
+    }
+
+    fn fix_let_spacing(
+        &mut self,
+        dest: &crate::parser::ast::LetDestination,
+        hint: Option<&crate::parser::ast::TypeHint>,
+        expr: &Expression,
+    ) {
+        let dest_end = match dest {
+            crate::parser::ast::LetDestination::Symbol(sym) => sym.position.end_offset,
+            crate::parser::ast::LetDestination::Destructure(syms) => {
+                if let Some(last) = syms.last() {
+                    let after_last = last.position.end_offset;
+                    match self.src[after_last..].find(')') {
+                        Some(offset) => after_last + offset + 1,
+                        None => return,
+                    }
+                } else {
+                    return;
+                }
+            }
+        };
+
+        let after_dest = if let Some(h) = hint {
+            h.position.end_offset
+        } else {
+            dest_end
+        };
+
+        self.fix_equals_spacing(after_dest, expr.position.start_offset);
+    }
+
+    fn fix_assign_spacing(&mut self, sym: &crate::parser::ast::Symbol, expr: &Expression) {
+        self.fix_equals_spacing(sym.position.end_offset, expr.position.start_offset);
+    }
+
     /// Visit each argument expression in a call, increasing depth only
     /// while visiting nested expressions that don't carry their own
     /// block. A function literal argument's body is a `Block`, and
@@ -275,6 +389,8 @@ impl Visitor for IndentationVisitor {
     }
 
     fn visit_block(&mut self, block: &Block) {
+        self.fix_space_before_block(block);
+
         // Handle single-line blocks: enforce exactly one space inside
         if block.open_brace.line_number == block.close_brace.line_number {
             self.fix_single_line_block_spacing(block);
@@ -420,12 +536,14 @@ impl Visitor for IndentationVisitor {
                 Expression_::Break => {}
                 Expression_::Continue => {}
                 Expression_::Assign(sym, expr) => {
+                    self.fix_assign_spacing(sym, expr);
                     self.visit_expr_assign(sym, expr);
                 }
                 Expression_::AssignUpdate(sym, _, expr) => {
                     self.visit_expr_assign_update(sym, expr);
                 }
                 Expression_::Let(dest, hint, expr) => {
+                    self.fix_let_spacing(dest, hint.as_ref(), expr);
                     self.visit_expr_let(dest, hint.as_ref(), expr);
                 }
                 Expression_::Return(expr) => {
@@ -452,7 +570,8 @@ impl Visitor for IndentationVisitor {
                 Expression_::StructLiteral(name_sym, field_exprs) => {
                     self.visit_expr_struct_literal(name_sym, field_exprs);
                 }
-                Expression_::BinaryOperator(lhs, _, rhs) => {
+                Expression_::BinaryOperator(lhs, op, rhs) => {
+                    self.fix_binary_operator_spacing(lhs, op, rhs);
                     self.visit_expr(lhs);
                     self.visit_expr(rhs);
                 }

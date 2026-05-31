@@ -1,0 +1,51 @@
+// Condition is a local that's never reassigned: should warn.
+public fun infinite(x: Int) {
+    while x < 10 {
+        println("hi")
+    }
+}
+
+// Condition is reassigned in the body: should not warn.
+public fun terminates(x: Int): Int {
+    let y = x
+    while y < 10 {
+        y = y + 1
+    }
+    y
+}
+
+// Body has a `break`: should not warn.
+public fun has_break(x: Int) {
+    while x < 10 {
+        break
+    }
+}
+
+// Condition uses `True` (a global), not a local: should not warn.
+public fun while_true() {
+    while True {
+        break
+    }
+}
+
+// -| src/test_files/check/infinite_while.gdn:3:11
+// 1| // Condition is a local that's never reassigned: should warn.
+// 2| public fun infinite(x: Int) {
+// 3|     while x < 10 {
+//  |           ^^^^^^
+// 4|         println("hi")
+// 5|     }
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: This `while` loop's condition references only local variables, but none of them are modified in the body.
+// 
+// -| src/test_files/check/infinite_while.gdn:3:11
+// 1| // Condition is a local that's never reassigned: should warn.
+// 2| public fun infinite(x: Int) {
+// 3|     while x < 10 {
+//  |           ^^^^^^
+// 4|         println("hi")
+// 5|     }
+

@@ -1,5 +1,6 @@
 mod duplicates;
 mod hints;
+mod infinite_while;
 mod list_len_compare;
 mod loops;
 mod recursion;
@@ -26,6 +27,7 @@ use crate::eval::load_toplevel_items;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::ToplevelItem;
 use crate::parser::vfs::VfsPathBuf;
+use infinite_while::check_infinite_while;
 use list_len_compare::check_list_len_compare;
 use loops::check_loops;
 use recursion::check_recursion;
@@ -87,6 +89,7 @@ pub(crate) fn check_toplevel_items_in_env(
     diagnostics.extend(summary.diagnostics);
     diagnostics.extend(check_duplicates(items, env));
     diagnostics.extend(check_loops(items));
+    diagnostics.extend(check_infinite_while(items));
     diagnostics.extend(check_unreachable(items));
     diagnostics.extend(check_same_literal_returns(items));
     diagnostics.extend(check_recursion_variables(items));

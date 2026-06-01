@@ -16,7 +16,7 @@ match foo {
 //     },
 //     [
 //         (
-//             Pattern {
+//             Variant {
 //                 variant_sym: Symbol"Some",
 //                 payload: Some(
 //                     Symbol(
@@ -57,7 +57,7 @@ match foo {
 //             },
 //         ),
 //         (
-//             Pattern {
+//             Variant {
 //                 variant_sym: Symbol"None",
 //                 payload: None,
 //             },
@@ -95,3 +95,4 @@ match foo {
 //         ),
 //     ],
 // )
+

@@ -7535,6 +7535,16 @@ fn eval_match_cases(
         .pop_value()
         .expect("Popped an empty value stack for match");
 
+    if let Value_::String(scrutinee_str) = scrutinee_value.as_ref() {
+        return eval_string_match_cases(
+            env,
+            expr_value_is_used,
+            scrutinee_pos,
+            scrutinee_str,
+            cases,
+        );
+    }
+
     let Value_::EnumVariant {
         type_name: value_type_name,
         variant_idx: value_variant_idx,
@@ -7564,19 +7574,35 @@ fn eval_match_cases(
     };
 
     for (pattern, case_expr) in cases {
-        if pattern.variant_sym.name.is_underscore() {
+        let (variant_sym, pattern_payload) = match pattern {
+            Pattern::Variant {
+                variant_sym,
+                payload,
+            } => (variant_sym, payload),
+            Pattern::StringLiteral { position, .. } => {
+                let msg = ErrorMessage(vec![Text(
+                    "Cannot match a string pattern against an enum value.".to_owned(),
+                )]);
+                return Err(EvalError::Exception(ExceptionInfo {
+                    position: position.clone(),
+                    message: msg,
+                }));
+            }
+        };
+
+        if variant_sym.name.is_underscore() {
             eval_block(env, expr_value_is_used, case_expr);
             return Ok(());
         }
 
-        let Some(value) = get_var(&pattern.variant_sym, env) else {
+        let Some(value) = get_var(variant_sym, env) else {
             let msg = ErrorMessage(vec![
                 msgtext!("Expected an enum variant named "),
-                msgcode!("{}", pattern.variant_sym.name),
+                msgcode!("{}", variant_sym.name),
                 msgtext!(" but nothing is defined with that name."),
             ]);
             return Err(EvalError::Exception(ExceptionInfo {
-                position: pattern.variant_sym.position.clone(),
+                position: variant_sym.position.clone(),
                 message: msg,
             }));
         };
@@ -7599,7 +7625,7 @@ fn eval_match_cases(
                     value.display(env)
                 ))]);
                 return Err(EvalError::Exception(ExceptionInfo {
-                    position: pattern.variant_sym.position.clone(),
+                    position: variant_sym.position.clone(),
                     message: msg,
                 }));
             }
@@ -7607,7 +7633,7 @@ fn eval_match_cases(
 
         if value_type_name == pattern_type_name && *value_variant_idx == pattern_variant_idx {
             let mut bindings: Vec<(Symbol, Value)> = vec![];
-            match (&value_payload, &pattern.payload) {
+            match (&value_payload, pattern_payload) {
                 (Some(payload), Some(payload_dest)) => match payload_dest {
                     LetDestination::Symbol(symbol) => {
                         if !symbol.name.is_underscore() {
@@ -7627,7 +7653,7 @@ fn eval_match_cases(
                                     msgtext!("."),
                                 ]);
                                 return Err(EvalError::Exception(ExceptionInfo {
-                                    position: pattern.variant_sym.position.clone(),
+                                    position: variant_sym.position.clone(),
                                     message: msg,
                                 }));
                             }
@@ -7640,7 +7666,7 @@ fn eval_match_cases(
                                 items.len(),
                             )]);
                             return Err(EvalError::Exception(ExceptionInfo {
-                                position: pattern.variant_sym.position.clone(),
+                                position: variant_sym.position.clone(),
                                 message: msg,
                             }));
                         }
@@ -7666,6 +7692,54 @@ fn eval_match_cases(
             stack_frame.bindings_next_block = bindings;
             eval_block(env, expr_value_is_used, case_expr);
             return Ok(());
+        }
+    }
+
+    let msg = ErrorMessage(vec![Text(
+        "No cases in this `match` statement were reached.".to_owned(),
+    )]);
+    Err(EvalError::Exception(ExceptionInfo {
+        position: scrutinee_pos.clone(),
+        message: msg,
+    }))
+}
+
+fn eval_string_match_cases(
+    env: &mut Env,
+    expr_value_is_used: bool,
+    scrutinee_pos: &Position,
+    scrutinee_str: &str,
+    cases: &[(Pattern, Block)],
+) -> Result<(), EvalError> {
+    for (pattern, case_expr) in cases {
+        match pattern {
+            Pattern::Variant {
+                variant_sym,
+                payload: _,
+            } => {
+                if variant_sym.name.is_underscore() {
+                    let stack_frame = env.current_frame_mut();
+                    stack_frame.bindings_next_block = vec![];
+                    eval_block(env, expr_value_is_used, case_expr);
+                    return Ok(());
+                }
+
+                let msg = ErrorMessage(vec![Text(
+                    "Cannot match an enum variant pattern against a string value.".to_owned(),
+                )]);
+                return Err(EvalError::Exception(ExceptionInfo {
+                    position: variant_sym.position.clone(),
+                    message: msg,
+                }));
+            }
+            Pattern::StringLiteral { value, .. } => {
+                if value == scrutinee_str {
+                    let stack_frame = env.current_frame_mut();
+                    stack_frame.bindings_next_block = vec![];
+                    eval_block(env, expr_value_is_used, case_expr);
+                    return Ok(());
+                }
+            }
         }
     }
 

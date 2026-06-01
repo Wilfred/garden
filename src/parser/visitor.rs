@@ -268,9 +268,17 @@ pub(crate) trait Visitor {
     fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Block)]) {
         self.visit_expr(scrutinee);
         for (pattern, case_expr) in cases {
-            self.visit_symbol(&pattern.variant_sym);
-            if let Some(dest) = &pattern.payload {
-                self.visit_dest(dest);
+            match pattern {
+                Pattern::Variant {
+                    variant_sym,
+                    payload,
+                } => {
+                    self.visit_symbol(variant_sym);
+                    if let Some(dest) = payload {
+                        self.visit_dest(dest);
+                    }
+                }
+                Pattern::StringLiteral { .. } => {}
             }
 
             self.visit_block(case_expr);

@@ -261,7 +261,11 @@ impl Visitor for FreeVarsVisitor {
 
         for (pattern, block) in cases {
             self.local_bindings.push(FxHashSet::default());
-            if let Some(payload_dest) = &pattern.payload {
+            if let ast::Pattern::Variant {
+                payload: Some(payload_dest),
+                ..
+            } = pattern
+            {
                 self.insert_dest_bindings(payload_dest);
             }
 

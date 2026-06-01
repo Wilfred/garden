@@ -748,9 +748,13 @@ impl TypeCheckVisitor<'_> {
         for (pattern, case_expr) in cases {
             self.bindings.enter_block();
 
-            if let Some(payload_dest) = &pattern.payload {
-                let payload_ty = enum_payload_type(self.env, &scrutinee_ty, &pattern.variant_sym);
-                self.set_dest_binding(payload_dest, &pattern.variant_sym.position, payload_ty);
+            if let Pattern::Variant {
+                variant_sym,
+                payload: Some(payload_dest),
+            } = pattern
+            {
+                let payload_ty = enum_payload_type(self.env, &scrutinee_ty, variant_sym);
+                self.set_dest_binding(payload_dest, &variant_sym.position, payload_ty);
             }
 
             let case_value_pos = match case_expr.exprs.last() {
@@ -772,65 +776,95 @@ impl TypeCheckVisitor<'_> {
 
             self.bindings.exit_block();
 
-            // Matching `_` works for any type.
-            if pattern.variant_sym.name.is_underscore() {
-                continue;
-            }
-
-            let Some(value) = self.get_var(&pattern.variant_sym.name) else {
-                self.diagnostics.push(Diagnostic {
-                    notes: vec![],
-                    fixes: vec![],
-                    severity: Severity::Error,
-                    message: ErrorMessage(vec![
-                        msgtext!("No such type "),
-                        msgcode!("{}", pattern.variant_sym.name),
-                        msgtext!("."),
-                    ]),
-                    position: pattern.variant_sym.position.clone(),
-                });
-                continue;
-            };
-
-            let pattern_type_name = match value.as_ref() {
-                Value_::EnumVariant { type_name, .. } => type_name,
-                Value_::EnumConstructor { type_name, .. } => type_name,
-                _ => {
-                    self.diagnostics.push(Diagnostic {
-                        notes: vec![],
-                        fixes: vec![],
-                        severity: Severity::Error,
-                        message: ErrorMessage(vec![
-                            msgtext!("Expected an enum variant here, but got "),
-                            msgcode!("{}", value.display(self.env)),
-                            msgtext!("."),
-                        ]),
-                        position: pattern.variant_sym.position.clone(),
-                    });
-                    continue;
+            match pattern {
+                Pattern::StringLiteral { position, .. } => {
+                    let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
+                        continue;
+                    };
+                    if scrutinee_ty_name.is_no_value() {
+                        continue;
+                    }
+                    if scrutinee_ty_name.text != "String" {
+                        self.diagnostics.push(Diagnostic {
+                            notes: vec![],
+                            fixes: vec![],
+                            severity: Severity::Error,
+                            message: ErrorMessage(vec![
+                                msgtext!("This match case is for "),
+                                msgcode!("String"),
+                                msgtext!(", but you're matching on a "),
+                                msgcode!("{}", scrutinee_ty_name),
+                                msgtext!("."),
+                            ]),
+                            position: position.clone(),
+                        });
+                    }
                 }
-            };
+                Pattern::Variant {
+                    variant_sym,
+                    payload: _,
+                } => {
+                    // Matching `_` works for any type.
+                    if variant_sym.name.is_underscore() {
+                        continue;
+                    }
 
-            let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
-                continue;
-            };
-            if scrutinee_ty_name.is_no_value() {
-                continue;
-            }
-            if pattern_type_name != scrutinee_ty_name {
-                self.diagnostics.push(Diagnostic {
-                    notes: vec![],
-                    fixes: vec![],
-                    severity: Severity::Error,
-                    message: ErrorMessage(vec![
-                        msgtext!("This match case is for "),
-                        msgcode!("{}", pattern_type_name),
-                        msgtext!(", but you're matching on a "),
-                        msgcode!("{}", scrutinee_ty_name),
-                        msgtext!("."),
-                    ]),
-                    position: pattern.variant_sym.position.clone(),
-                });
+                    let Some(value) = self.get_var(&variant_sym.name) else {
+                        self.diagnostics.push(Diagnostic {
+                            notes: vec![],
+                            fixes: vec![],
+                            severity: Severity::Error,
+                            message: ErrorMessage(vec![
+                                msgtext!("No such type "),
+                                msgcode!("{}", variant_sym.name),
+                                msgtext!("."),
+                            ]),
+                            position: variant_sym.position.clone(),
+                        });
+                        continue;
+                    };
+
+                    let pattern_type_name = match value.as_ref() {
+                        Value_::EnumVariant { type_name, .. } => type_name,
+                        Value_::EnumConstructor { type_name, .. } => type_name,
+                        _ => {
+                            self.diagnostics.push(Diagnostic {
+                                notes: vec![],
+                                fixes: vec![],
+                                severity: Severity::Error,
+                                message: ErrorMessage(vec![
+                                    msgtext!("Expected an enum variant here, but got "),
+                                    msgcode!("{}", value.display(self.env)),
+                                    msgtext!("."),
+                                ]),
+                                position: variant_sym.position.clone(),
+                            });
+                            continue;
+                        }
+                    };
+
+                    let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
+                        continue;
+                    };
+                    if scrutinee_ty_name.is_no_value() {
+                        continue;
+                    }
+                    if pattern_type_name != scrutinee_ty_name {
+                        self.diagnostics.push(Diagnostic {
+                            notes: vec![],
+                            fixes: vec![],
+                            severity: Severity::Error,
+                            message: ErrorMessage(vec![
+                                msgtext!("This match case is for "),
+                                msgcode!("{}", pattern_type_name),
+                                msgtext!(", but you're matching on a "),
+                                msgcode!("{}", scrutinee_ty_name),
+                                msgtext!("."),
+                            ]),
+                            position: variant_sym.position.clone(),
+                        });
+                    }
+                }
             }
         }
 
@@ -2956,6 +2990,11 @@ fn check_match_exhaustive(
     patterns: &[Pattern],
     diagnostics: &mut Vec<Diagnostic>,
 ) {
+    if type_name.text == "String" {
+        check_string_match_exhaustive(scrutinee_pos, patterns, diagnostics);
+        return;
+    }
+
     let Some(type_def) = env.get_type_def(type_name) else {
         return;
     };
@@ -2971,12 +3010,18 @@ fn check_match_exhaustive(
     if !enum_info.variants.is_empty() {
         let mut seen_underscore = false;
         for pattern in patterns {
-            if pattern.variant_sym.name.is_underscore() {
+            let Pattern::Variant { variant_sym, .. } = pattern else {
+                // String patterns on an enum scrutinee are reported
+                // as a type error elsewhere.
+                continue;
+            };
+
+            if variant_sym.name.is_underscore() {
                 seen_underscore = true;
                 continue;
             }
 
-            match variants_remaining.remove(&pattern.variant_sym.name) {
+            match variants_remaining.remove(&variant_sym.name) {
                 Some(_) => {
                     // First time we've seen this variant.
                 }
@@ -2988,7 +3033,7 @@ fn check_match_exhaustive(
                         message: ErrorMessage(vec![Text(
                             "Duplicate case in pattern match.".to_owned(),
                         )]),
-                        position: pattern.variant_sym.position.clone(),
+                        position: variant_sym.position.clone(),
                     });
                 }
             }
@@ -3021,6 +3066,56 @@ fn check_match_exhaustive(
             });
             break;
         }
+    }
+}
+
+fn check_string_match_exhaustive(
+    scrutinee_pos: &Position,
+    patterns: &[Pattern],
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let mut seen_underscore = false;
+    let mut seen_values: FxHashMap<String, ()> = FxHashMap::default();
+
+    for pattern in patterns {
+        match pattern {
+            Pattern::Variant { variant_sym, .. } => {
+                if variant_sym.name.is_underscore() {
+                    seen_underscore = true;
+                }
+                // Non-wildcard variant patterns on a string scrutinee
+                // are reported as a type error elsewhere.
+            }
+            Pattern::StringLiteral { position, value } => {
+                if seen_values.insert(value.clone(), ()).is_some() {
+                    diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        fixes: vec![],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![Text(
+                            "Duplicate case in pattern match.".to_owned(),
+                        )]),
+                        position: position.clone(),
+                    });
+                }
+            }
+        }
+    }
+
+    if !seen_underscore {
+        diagnostics.push(Diagnostic {
+            notes: vec![],
+            fixes: vec![],
+            severity: Severity::Error,
+            message: ErrorMessage(vec![
+                msgtext!("This match expression on a "),
+                msgcode!("String"),
+                msgtext!(" is not exhaustive. Add a "),
+                msgcode!("_"),
+                msgtext!(" case to handle the remaining strings."),
+            ]),
+            position: scrutinee_pos.clone(),
+        });
     }
 }
 

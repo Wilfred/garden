@@ -1,0 +1,19 @@
+fun describe(s: String): String {
+  match s {
+    "hello" => "greeting",
+    "bye" => "farewell",
+    _ => "unknown",
+  }
+}
+
+{
+  println(describe("hello"))
+  println(describe("bye"))
+  println(describe("other"))
+}
+
+// args: run
+// expected stdout:
+// greeting
+// farewell
+// unknown

@@ -4,6 +4,10 @@
 
 ## Standard Library
 
+`__shell::run()` now returns `(Int, String, String)`, always providing
+the exit code, stdout and stderr. Previously it returned a `Result`
+with different tuple shapes for success and failure.
+
 Moved `source_directory()` from the prelude to `__reflect.gdn` and
 renamed it to `source_file()`, reflecting that it returns the path of
 the current source file.

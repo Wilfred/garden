@@ -43,6 +43,18 @@ as a fix/cleanup/refactor in evaluative terms. Do not repeat internal
 implementation details that are visible in the diff. Headings are
 rarely needed — a single short line is usually enough.
 
+# Pull Request Descriptions
+
+Keep PR descriptions short. The same principles as commit messages
+apply: state what changed, not why it's an improvement, and don't
+restate details visible in the diff. A sentence or two of plain prose
+is usually enough.
+
+Do not add headings like Summary, Changes, Note, or Verification, do
+not enumerate every changed file, and do not list the commands you ran
+to check the work. Mention test or build results only when they are
+genuinely noteworthy.
+
 # Writing Error Messages
 
 Error messages in Garden are extensively marked up so they can be

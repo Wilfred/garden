@@ -8,7 +8,7 @@ fun in_git_repo(): Bool {
 }
 
 fun check_out(branch_name: String): Unit {
-  let (stdout, _) = shell::run("git", ["checkout", branch_name]).or_throw()
+  let (_, stdout, _) = shell::run("git", ["checkout", branch_name])
   print(stdout)
 }
 
@@ -25,8 +25,7 @@ fun check_out(branch_name: String): Unit {
     return
   }
 
-  let (branches_output, _) = shell::run("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"])
-    .or_throw()
+  let (_, branches_output, _) = shell::run("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"])
   let all_branches = branches_output.lines()
   if all_branches.contains(needle) {
     // If there's a branch with this name exactly, use it.

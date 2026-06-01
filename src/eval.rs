@@ -4,7 +4,6 @@
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
-use std::fmt::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -2889,45 +2888,27 @@ fn eval_built_in_call(
                     let v = match command.output() {
                         Ok(output) => {
                             // TODO: complain if output is not UTF-8.
-                            if output.status.success() {
-                                let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
-                                let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+                            let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+                            let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+                            let exit_code = output.status.code().unwrap_or(-1);
 
-                                let tuple = Value::new(Value_::Tuple {
-                                    items: vec![
-                                        Value::new(Value_::String(stdout)),
-                                        Value::new(Value_::String(stderr)),
-                                    ],
-                                    item_types: vec![Type::string(), Type::string()],
-                                });
-                                Value::ok(tuple)
-                            } else {
-                                let mut s = String::new();
-                                s.write_str(&String::from_utf8_lossy(&output.stdout))
-                                    .unwrap();
-                                s.write_str(&String::from_utf8_lossy(&output.stderr))
-                                    .unwrap();
-                                let exit_code = output.status.code().unwrap_or(-1);
-                                let tuple = Value::new(Value_::Tuple {
-                                    items: vec![
-                                        Value::new(Value_::Int(exit_code as i64)),
-                                        Value::new(Value_::String(s)),
-                                    ],
-                                    item_types: vec![Type::int(), Type::string()],
-                                });
-                                Value::err(tuple)
-                            }
-                        }
-                        Err(e) => {
-                            let tuple = Value::new(Value_::Tuple {
+                            Value::new(Value_::Tuple {
                                 items: vec![
-                                    Value::new(Value_::Int(-1)),
-                                    Value::new(Value_::String(format!("{e}"))),
+                                    Value::new(Value_::Int(exit_code as i64)),
+                                    Value::new(Value_::String(stdout)),
+                                    Value::new(Value_::String(stderr)),
                                 ],
-                                item_types: vec![Type::int(), Type::string()],
-                            });
-                            Value::err(tuple)
+                                item_types: vec![Type::int(), Type::string(), Type::string()],
+                            })
                         }
+                        Err(e) => Value::new(Value_::Tuple {
+                            items: vec![
+                                Value::new(Value_::Int(-1)),
+                                Value::new(Value_::String(String::new())),
+                                Value::new(Value_::String(format!("{e}"))),
+                            ],
+                            item_types: vec![Type::int(), Type::string(), Type::string()],
+                        }),
                     };
 
                     if expr_value_is_used {

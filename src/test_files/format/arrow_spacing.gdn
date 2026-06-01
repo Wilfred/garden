@@ -1,0 +1,20 @@
+fun foo(x: Int): Int {
+  let d = Dict[1=>2, 3 =>4, 5=> 6]
+  match (x) {
+    1 =>10
+    2=> 20
+    _ => 30
+  }
+}
+
+// args: format
+// expected stdout:
+// fun foo(x: Int): Int {
+//   let d = Dict[1 => 2, 3 => 4, 5 => 6]
+//   match (x) {
+//     1 => 10
+//     2 => 20
+//     _ => 30
+//   }
+// }
+

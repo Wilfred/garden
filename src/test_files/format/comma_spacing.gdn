@@ -1,0 +1,18 @@
+fun foo(a:Int,b:Int): Int {
+  let xs = [1,2,3]
+  let t = (1 ,2 , 3)
+  bar(a,b,c)
+  baz(x , y)
+  a + b
+}
+
+// args: format
+// expected stdout:
+// fun foo(a: Int, b: Int): Int {
+//   let xs = [1, 2, 3]
+//   let t = (1, 2, 3)
+//   bar(a, b, c)
+//   baz(x, y)
+//   a + b
+// }
+

@@ -293,7 +293,12 @@ fn read_multiline_syntax(
     let mut src = first_line.to_owned();
 
     loop {
-        let path = Rc::new(PathBuf::from("__interactive_session__"));
+        // Parse interactive input under the same namespace path that
+        // definitions are loaded into (see `repl_session`), so that
+        // toplevel items defined in the session (e.g. functions) are
+        // visible to other items run in that namespace, such as tests
+        // invoked with `:test`.
+        let path = Rc::new(PathBuf::from("__user.gdn"));
         let vfs_path = vfs.insert(Rc::clone(&path), src.to_owned());
 
         let (items, errors) = parse_toplevel_items(&vfs_path, &src, id_gen);

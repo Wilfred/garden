@@ -6,5 +6,4 @@ import "__shell.gdn" as shell
 
 // args: run
 // expected stderr:
-// [src/test_files/runtime/shell_invalid_command.gdn:4:3] shell::run("no_such_command", []) //-> Err((-1, "No such file or directory (os error 2)"))
-
+// [src/test_files/runtime/shell_invalid_command.gdn:4:3] shell::run("no_such_command", []) //-> (-1, "", "No such file or directory (os error 2)")

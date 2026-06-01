@@ -1,13 +1,14 @@
 import "__shell.gdn" as shell
 
 {
-  let (stdout, stderr) = shell::run("sh", ["-c", "echo out; echo err 1>&2"]).or_throw()
+  let (exit_code, stdout, stderr) = shell::run("sh", ["-c", "echo out; echo err 1>&2"])
+  dbg(exit_code)
   dbg(stdout)
   dbg(stderr)
 }
 
 // args: run
 // expected stderr:
-// [src/test_files/runtime/shell_tuple.gdn:5:3] stdout //-> "out\n"
-// [src/test_files/runtime/shell_tuple.gdn:6:3] stderr //-> "err\n"
-
+// [src/test_files/runtime/shell_tuple.gdn:5:3] exit_code //-> 0
+// [src/test_files/runtime/shell_tuple.gdn:6:3] stdout //-> "out\n"
+// [src/test_files/runtime/shell_tuple.gdn:7:3] stderr //-> "err\n"

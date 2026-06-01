@@ -23,8 +23,8 @@ test add_one_to_two {
 }
 ```
 
-The built-in files available are `__fs`, `__random` and
-`__reflect`. You can import and use them like this:
+The built-in files available are `__fs`, `__random`, `__reflect`,
+`__shell` and `__time`. You can import and use them like this:
 
 ```
 import "__fs.gdn" as fs
@@ -66,7 +66,7 @@ use crate::{msgcode, msgtext};
 ErrorMessage(vec![
     msgtext!("Unknown built-in file "),
     msgcode!("{}", path.display()),
-    msgtext!(". Available files are: __fs, __random, __reflect."),
+    msgtext!(". Available files are: __fs, __random, __reflect, __shell, __time."),
 ])
 ```
 
@@ -183,6 +183,10 @@ output.
 - ./target/debug/garden run yourfile.gdn: Run the code in yourfile.gdn.
 - ./target/debug/garden run -c 'println("Hello")': Run a code snippet directly without a file.
 - ./target/debug/garden test yourfile.gdn: Run unit tests in yourfile.gdn.
+- ./target/debug/garden format yourfile.gdn: Print yourfile.gdn re-indented. Pass --check to exit non-zero when the file is not already formatted instead of printing.
+
+Garden source uses 2-space indentation. Run `garden format` on `.gdn`
+files you change to match the project convention.
 
 To generate target/debug/garden use `cargo build`. This separation
 allows Claude to set permissions on separate Garden subcommands.

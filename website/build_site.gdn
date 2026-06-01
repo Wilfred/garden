@@ -115,7 +115,7 @@ fun render_doc_comment(
 
   doc_comment = doc_comment.replace("\n\n```\n", "\n\n```title:Example\n")
 
-  let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src])
+  let md_src = "".join([heading, "\n\n", doc_comment, "\n\n", src])
   markdown::render(md_src, file, self_url)
 }
 
@@ -138,7 +138,7 @@ fun render_type_doc_comment(
     "\n\n## Methods\n\n" ^ "\n".join(method_list)
   }
 
-  let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src, methods_section])
+  let md_src = "".join([heading, "\n\n", doc_comment, "\n\n", src, methods_section])
   markdown::render(md_src, None, self_url)
 }
 

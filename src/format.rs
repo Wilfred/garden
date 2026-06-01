@@ -70,9 +70,13 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
     let src_after_blanks = normalize_blank_lines(&src_after_indent, &visitor.toplevel_start_lines);
 
     // Phase 7: Fix type annotation spacing
-    let mut result = fix_type_annotation_spacing(&src_after_blanks, &vfs_path);
+    let src_after_types = fix_type_annotation_spacing(&src_after_blanks, &vfs_path);
 
-    // Phase 8: Ensure non-empty output ends with exactly one newline.
+    // Phase 8: Normalize spacing around commas, `=>` arrows,
+    // compound-assignment operators, and control-flow keywords.
+    let mut result = normalize_token_spacing(&src_after_types, &vfs_path);
+
+    // Phase 9: Ensure non-empty output ends with exactly one newline.
     while result.ends_with("\n\n") {
         result.pop();
     }
@@ -881,6 +885,90 @@ fn fix_type_annotation_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPath
     }
 
     result
+}
+
+/// Control-flow keywords that should be separated from a following `(`
+/// by a single space, e.g. `if(x)` becomes `if (x)`. Function-call-style
+/// constructs such as `assert(...)` are deliberately excluded.
+const SPACED_BEFORE_PAREN: &[&str] = &["if", "while", "for", "match", "return"];
+
+/// Normalize whitespace around commas, `=>` arrows, compound-assignment
+/// operators (`+=`, `-=`), and control-flow keywords.
+///
+/// This works on the gaps between adjacent tokens produced by the lexer,
+/// so it never touches whitespace inside string literals. Gaps that span
+/// a newline or contain a comment are left untouched, which preserves
+/// intentional line breaks (such as wrapped argument lists with trailing
+/// commas) and comment placement.
+///
+/// The rules are:
+/// - No space before a comma (`a ,b` -> `a,b`).
+/// - Exactly one space after a comma, unless the comma is immediately
+///   followed by a closing delimiter (a trailing comma).
+/// - Exactly one space on each side of a `=>` arrow.
+/// - Exactly one space on each side of a `+=` or `-=` operator.
+/// - A single space between a control-flow keyword and a following `(`.
+fn normalize_token_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPathBuf) -> String {
+    let (mut token_stream, _) = lex_between(vfs_path, src, 0, src.len());
+
+    let mut tokens = vec![];
+    while let Some(token) = token_stream.pop() {
+        tokens.push(token);
+    }
+
+    let mut edits: Vec<SpanEdit> = vec![];
+
+    for pair in tokens.windows(2) {
+        let prev = &pair[0];
+        let next = &pair[1];
+
+        let gap_start = prev.position.end_offset;
+        let gap_end = next.position.start_offset;
+        if gap_start > gap_end {
+            continue;
+        }
+        let gap = &src[gap_start..gap_end];
+
+        // Preserve comments and intentional line breaks. A `/` in an
+        // inter-token gap can only be the start of a comment, since
+        // division operators are tokens in their own right.
+        if gap.contains('/') || gap.contains('\n') {
+            continue;
+        }
+
+        let desired: Option<&str> = if next.text == "," {
+            // No space before a comma.
+            Some("")
+        } else if prev.text == "," {
+            // One space after a comma, but not before a closing delimiter.
+            if matches!(next.text, ")" | "]" | "}") {
+                Some("")
+            } else {
+                Some(" ")
+            }
+        } else if prev.text == "=>"
+            || next.text == "=>"
+            || matches!(prev.text, "+=" | "-=")
+            || matches!(next.text, "+=" | "-=")
+            || (SPACED_BEFORE_PAREN.contains(&prev.text) && next.text == "(")
+        {
+            Some(" ")
+        } else {
+            None
+        };
+
+        if let Some(desired) = desired {
+            if gap != desired {
+                edits.push(SpanEdit {
+                    start_offset: gap_start,
+                    end_offset: gap_end,
+                    replacement: desired.to_owned(),
+                });
+            }
+        }
+    }
+
+    apply_span_edits(src, &mut edits)
 }
 
 /// Wrap function and method signatures that fit on a single line

@@ -1,0 +1,34 @@
+fun foo(a: Bool, b: Bool): Unit {
+  if(a) {
+    1
+  }
+  while(b) {
+    2
+  }
+  for(x, y) in [(1, 2)] {
+    3
+  }
+  match(a) {
+    _ => 4
+  }
+  assert(a)
+}
+
+// args: format
+// expected stdout:
+// fun foo(a: Bool, b: Bool): Unit {
+//   if (a) {
+//     1
+//   }
+//   while (b) {
+//     2
+//   }
+//   for (x, y) in [(1, 2)] {
+//     3
+//   }
+//   match (a) {
+//     _ => 4
+//   }
+//   assert(a)
+// }
+

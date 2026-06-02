@@ -712,6 +712,7 @@ fn reftest_eval_up_to(
             EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
             }
+            EvalError::Exited(_, code) => eprintln!("Code called `exit({code})`."),
         }
         return;
     }
@@ -734,6 +735,7 @@ fn reftest_eval_up_to(
             EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
             }
+            EvalError::Exited(_, code) => eprintln!("Code called `exit({code})`."),
         },
         Err(EvalUpToErr::NoExpressionFound) => eprintln!("Could not find anything to execute"),
         Err(EvalUpToErr::NoValueAvailable) => {
@@ -938,6 +940,9 @@ fn run_file(
                 "{}: Tried to execute unsafe code in sandboxed mode.",
                 position.as_ide_string(&env.project_root)
             );
+        }
+        Err(EvalError::Exited(_, code)) => {
+            std::process::exit(code.clamp(i32::MIN as i64, i32::MAX as i64) as i32);
         }
     }
 }

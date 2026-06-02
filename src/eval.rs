@@ -284,6 +284,8 @@ pub(crate) enum EvalError {
     /// Tried to execute a function that isn't permitted in the
     /// sandbox.
     ForbiddenInSandbox(Position),
+    /// User code called `exit()`.
+    Exited(Position, i64),
 }
 
 #[derive(Debug)]
@@ -898,7 +900,7 @@ pub(crate) fn eval_tests(
                 }
 
                 tests.push((test.name_sym.clone(), Some(e.clone()), test_body_err_pos));
-                if matches!(e, EvalError::Interrupted) {
+                if matches!(e, EvalError::Interrupted | EvalError::Exited(..)) {
                     break;
                 }
             }
@@ -2611,6 +2613,43 @@ fn eval_built_in_call(
                     position: position.clone(),
                     message,
                 }),
+            ));
+        }
+        BuiltInFunctionKind::PreludeExit => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            let code = match arg_values[0].as_ref() {
+                Value_::Int(i) => *i,
+                _ => {
+                    let message =
+                        format_type_error(&TypeName { text: "Int".into() }, &arg_values[0], env);
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: arg_positions[0].clone(),
+                            message,
+                        }),
+                    ));
+                }
+            };
+
+            return Err((
+                RestoreValues(saved_values),
+                EvalError::Exited(position.clone(), code),
             ));
         }
         BuiltInFunctionKind::PreludePrint => {

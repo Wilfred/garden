@@ -104,6 +104,10 @@ pub(crate) fn run_sandboxed_playground(
             error: Some("Tried to execute unsafe code in sandboxed mode".to_owned()),
             value: None,
         }],
+        Err(EvalError::Exited(_, code)) => vec![PlaygroundResponse {
+            error: Some(format!("Code called `exit({code})`")),
+            value: None,
+        }],
     };
 
     for response in responses {

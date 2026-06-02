@@ -600,7 +600,7 @@ impl Visitor for IndentationVisitor {
                     self.visit_symbol(sym);
                     self.visit_expr(recv);
                 }
-                Expression_::Assert(expr) => {
+                Expression_::Assert(expr) | Expression_::AssertBinOp(expr) => {
                     self.visit_expr(expr);
                 }
                 Expression_::Parentheses(paren) => {

@@ -4579,11 +4579,6 @@ fn eval_call(
                 ));
             }
 
-            let mut fun_subexprs = vec![];
-            for expr in fun_info.body.exprs.iter().rev() {
-                fun_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
-            }
-
             let mut fun_bindings = FxHashMap::default();
             for (param, value) in fun_info.params.params.iter().zip(arg_values.iter()) {
                 if !param.symbol.name.is_underscore() {
@@ -4604,21 +4599,27 @@ fn eval_call(
             let namespace_path = fun_info.pos.path.to_path_buf();
             let namespace = env.get_or_create_namespace(&namespace_path);
 
-            return Ok(Some(StackFrame {
-                namespace,
-                caller_pos: Some(caller_expr.position.clone()),
-                caller_expr_id: Some(caller_expr.id),
-                bindings: Bindings {
-                    block_bindings: bindings,
-                },
-                type_bindings,
-                bindings_next_block: vec![],
-                exprs_to_eval: fun_subexprs,
-                evalled_values: vec![Value::unit()],
-                return_hint: fun_info.return_hint.clone(),
-                enclosing_name: EnclosingSymbol::Closure,
-                caller_uses_value: expr_value_is_used,
-            }));
+            let mut frame = env.pooled_stack_frame(namespace);
+            frame.caller_pos = Some(caller_expr.position.clone());
+            frame.caller_expr_id = Some(caller_expr.id);
+            // A closure carries its captured bindings, so we can't reuse
+            // the pooled frame's single block scope here.
+            frame.bindings = Bindings {
+                block_bindings: bindings,
+            };
+            frame.type_bindings = type_bindings;
+            frame.return_hint = fun_info.return_hint.clone();
+            frame.enclosing_name = EnclosingSymbol::Closure;
+            frame.caller_uses_value = expr_value_is_used;
+
+            frame.evalled_values.push(Value::unit());
+            for expr in fun_info.body.exprs.iter().rev() {
+                frame
+                    .exprs_to_eval
+                    .push((ExpressionState::NotEvaluated, expr.clone()));
+            }
+
+            return Ok(Some(frame));
         }
         Value_::Fun {
             name_sym,
@@ -4669,34 +4670,32 @@ fn eval_call(
                 &type_bindings,
             )?;
 
-            let mut fun_subexprs = vec![];
+            let namespace_path = fi.pos.path.to_path_buf();
+            let namespace = env.get_or_create_namespace(&namespace_path);
+
+            let mut frame = env.pooled_stack_frame(namespace);
+            frame.return_hint = fi.return_hint.clone();
+            frame.caller_pos = Some(caller_expr.position.clone());
+            frame.caller_expr_id = Some(caller_expr.id);
+            frame.enclosing_name = enclosing_name;
+            frame.caller_uses_value = expr_value_is_used;
+            frame.type_bindings = type_bindings;
+
+            frame.evalled_values.push(Value::unit());
             for expr in body.exprs.iter().rev() {
-                fun_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
+                frame
+                    .exprs_to_eval
+                    .push((ExpressionState::NotEvaluated, expr.clone()));
             }
 
-            let mut fun_bindings = FxHashMap::default();
+            let fun_bindings = &mut frame.bindings.block_bindings[0].values;
             for (param, value) in params.iter().zip(arg_values.iter()) {
                 if !param.symbol.name.is_underscore() {
                     fun_bindings.insert(param.symbol.interned_id, value.clone());
                 }
             }
 
-            let namespace_path = fi.pos.path.to_path_buf();
-            let namespace = env.get_or_create_namespace(&namespace_path);
-
-            return Ok(Some(StackFrame {
-                namespace,
-                return_hint: fi.return_hint.clone(),
-                caller_pos: Some(caller_expr.position.clone()),
-                caller_expr_id: Some(caller_expr.id),
-                enclosing_name,
-                bindings: Bindings::new_with(fun_bindings),
-                type_bindings,
-                bindings_next_block: vec![],
-                exprs_to_eval: fun_subexprs,
-                evalled_values: vec![Value::unit()],
-                caller_uses_value: expr_value_is_used,
-            }));
+            return Ok(Some(frame));
         }
         Value_::BuiltInFunction(kind, _, _) => eval_built_in_call(
             env,
@@ -7142,14 +7141,18 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             if env.current_frame().caller_expr_id.is_some()
                 && env.stop_at_expr_id == env.current_frame().caller_expr_id
             {
-                env.stack.0.pop();
+                if let Some(frame) = env.stack.0.pop() {
+                    env.recycle_stack_frame(frame);
+                }
                 return Ok(return_value);
             }
 
             let caller_uses_value = env.current_frame().caller_uses_value;
 
             // Stack frame is now done.
-            env.stack.0.pop();
+            if let Some(frame) = env.stack.0.pop() {
+                env.recycle_stack_frame(frame);
+            }
 
             // The final evaluation result of the function
             // call should be used in the previous stack

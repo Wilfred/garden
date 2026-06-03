@@ -16,7 +16,7 @@ use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
 use crate::type_defs::{BuiltInType, TypeDef, TypeDefAndMethods};
-use crate::values::{BuiltInFunctionKind, Value, Value_};
+use crate::values::{BlockBindings, BuiltInFunctionKind, Value, Value_};
 use crate::VfsPathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -154,6 +154,10 @@ pub(crate) struct Env {
     /// If set, print the call stack every 10,000 ticks for basic
     /// profiling.
     pub(crate) profile: bool,
+
+    /// Finished stack frames whose collection allocations we keep for
+    /// reuse, to avoid reallocating them on every call.
+    pub(crate) frame_pool: Vec<StackFrame>,
 }
 
 impl Env {
@@ -201,6 +205,7 @@ impl Env {
             initial_state: None,
             cli_args: vec![],
             profile: false,
+            frame_pool: vec![],
         };
 
         let prelude_namespace = fresh_prelude(&mut env, &prelude_vfs_path);
@@ -598,6 +603,66 @@ pub(crate) struct StackFrame {
     pub(crate) exprs_to_eval: Vec<(ExpressionState, Rc<Expression>)>,
     /// The values of subexpressions that we've evaluated so far.
     pub(crate) evalled_values: Vec<Value>,
+}
+
+impl StackFrame {
+    /// Empty all the per-call collections, keeping their heap capacity
+    /// so this frame can be reused for a later call.
+    fn clear_for_reuse(&mut self) {
+        self.exprs_to_eval.clear();
+        self.evalled_values.clear();
+        self.bindings_next_block.clear();
+        self.type_bindings.clear();
+
+        // Keep a single block scope, with its hash map allocation, for
+        // reuse. Drop any further blocks left by the previous call.
+        self.bindings.block_bindings.truncate(1);
+        match self.bindings.block_bindings.first_mut() {
+            Some(block) => block.values.clear(),
+            None => self.bindings.block_bindings.push(BlockBindings::default()),
+        }
+    }
+}
+
+impl Env {
+    /// A stack frame with empty collections, reusing a pooled frame's
+    /// allocations when one is available. The caller is responsible for
+    /// setting the remaining fields and filling the collections.
+    pub(crate) fn pooled_stack_frame(
+        &mut self,
+        namespace: Rc<RefCell<NamespaceInfo>>,
+    ) -> StackFrame {
+        match self.frame_pool.pop() {
+            Some(mut frame) => {
+                frame.namespace = namespace;
+                frame
+            }
+            None => StackFrame {
+                namespace,
+                enclosing_name: EnclosingSymbol::Toplevel,
+                return_hint: None,
+                caller_pos: None,
+                caller_expr_id: None,
+                caller_uses_value: true,
+                bindings: Bindings::default(),
+                type_bindings: FxHashMap::default(),
+                bindings_next_block: vec![],
+                exprs_to_eval: vec![],
+                evalled_values: vec![],
+            },
+        }
+    }
+
+    /// Return a finished stack frame to the pool so its allocations can
+    /// be reused by a later call.
+    pub(crate) fn recycle_stack_frame(&mut self, mut frame: StackFrame) {
+        // Bound the pool so that deep recursion doesn't pin a large
+        // amount of memory indefinitely.
+        if self.frame_pool.len() < 64 {
+            frame.clear_for_reuse();
+            self.frame_pool.push(frame);
+        }
+    }
 }
 
 fn canonicalize_namespace_path(abs_path: &Path) -> PathBuf {

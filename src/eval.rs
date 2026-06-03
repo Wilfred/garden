@@ -4486,12 +4486,18 @@ fn eval_built_in_call(
     Ok(())
 }
 
-fn check_snippet(src: &str, path: PathBuf, env: &Env) -> Value {
-    let mut check_env = env
-        .initial_state
-        .as_ref()
-        .map(|e| e.as_ref().clone())
-        .unwrap_or_else(|| Env::new(IdGenerator::default(), Vfs::default()));
+fn check_snippet(src: &str, path: PathBuf, env: &mut Env) -> Value {
+    // Checking a snippet only reads the environment, so clone
+    // `initial_state` once and reuse it across calls rather than
+    // cloning the whole environment every time.
+    let mut check_env = env.snippet_check_env.take().unwrap_or_else(|| {
+        Box::new(
+            env.initial_state
+                .as_ref()
+                .map(|e| e.as_ref().clone())
+                .unwrap_or_else(|| Env::new(IdGenerator::default(), Vfs::default())),
+        )
+    });
 
     let vfs_path = check_env.vfs.insert(Rc::new(path.clone()), src.to_owned());
     let (items, syntax_errors) = parse_toplevel_items(&vfs_path, src, &mut check_env.id_gen);
@@ -4512,6 +4518,11 @@ fn check_snippet(src: &str, path: PathBuf, env: &Env) -> Value {
             }
         }
     }
+
+    // Keep the reused environment pristine so its `vfs` doesn't grow
+    // with every snippet we check.
+    check_env.vfs.remove_last(&path);
+    env.snippet_check_env = Some(check_env);
 
     if error_messages.is_empty() {
         Value::ok(Value::unit())

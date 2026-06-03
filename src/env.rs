@@ -147,6 +147,13 @@ pub(crate) struct Env {
     /// repeatedly.
     pub(crate) initial_state: Option<Box<Self>>,
 
+    /// A reusable environment for checking code snippets at runtime
+    /// (e.g. `reflect::check_snippet`). Checking a snippet only reads
+    /// the environment, so we can clone `initial_state` once and reuse
+    /// it across calls instead of cloning the whole environment every
+    /// time.
+    pub(crate) snippet_check_env: Option<Box<Self>>,
+
     /// Command line arguments used to invoke this Garden program,
     /// e.g. `vec!["--stuff"]`.
     pub(crate) cli_args: Vec<String>,
@@ -199,6 +206,7 @@ impl Env {
             id_gen,
             vfs,
             initial_state: None,
+            snippet_check_env: None,
             cli_args: vec![],
             profile: false,
         };

@@ -50,6 +50,18 @@ impl Vfs {
         VfsPathBuf { path, id: vfs_id }
     }
 
+    /// Remove the most recently inserted source for `path`. Used to
+    /// undo a temporary insertion, such as when checking a snippet in
+    /// a reusable environment.
+    pub(crate) fn remove_last(&mut self, path: &Path) {
+        if let Some(srcs) = self.file_srcs.get_mut(path) {
+            srcs.pop();
+            if srcs.is_empty() {
+                self.file_srcs.remove(path);
+            }
+        }
+    }
+
     pub(crate) fn file_src(&self, vfs_path: &VfsPathBuf) -> Option<&String> {
         match self.file_srcs.get(&*vfs_path.path) {
             Some(srcs) => srcs.get(vfs_path.id.0 as usize),

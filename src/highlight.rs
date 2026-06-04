@@ -2,6 +2,7 @@
 //! used for semantic highlighting in editors.
 
 use std::path::Path;
+use std::rc::Rc;
 
 use rustc_hash::FxHashMap;
 
@@ -27,7 +28,7 @@ pub(crate) fn highlight_occurrences(src: &str, path: &Path, offset: usize) -> Ve
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);
-    load_toplevel_items(&items, &mut env, ns.clone());
+    load_toplevel_items(&items, &mut env, Rc::clone(&ns));
 
     let summary = check_types(&vfs_path, &items, &env, ns);
 

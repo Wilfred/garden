@@ -167,11 +167,11 @@ impl Env {
             types: FxHashMap::default(),
         }));
 
-        namespaces.insert(PathBuf::from("__user.gdn"), user_namespace.clone());
+        namespaces.insert(PathBuf::from("__user.gdn"), Rc::clone(&user_namespace));
 
         let prelude_path = Rc::new(PathBuf::from("__prelude.gdn"));
         let prelude_src = include_str!("__prelude.gdn");
-        let prelude_vfs_path = vfs.insert(prelude_path.clone(), prelude_src.to_owned());
+        let prelude_vfs_path = vfs.insert(Rc::clone(&prelude_path), prelude_src.to_owned());
 
         let temp_prelude = Rc::new(RefCell::new(NamespaceInfo {
             abs_path: Rc::new(PathBuf::from("__prelude.gdn")),
@@ -190,7 +190,7 @@ impl Env {
             working_directory: current_dir,
             prev_call_args: FxHashMap::default(),
             prev_method_call_args: FxHashMap::default(),
-            stack: Stack::new(user_namespace.clone()),
+            stack: Stack::new(Rc::clone(&user_namespace)),
             ticks: 0,
             tick_limit: None,
             stack_limit: None,
@@ -204,7 +204,7 @@ impl Env {
         };
 
         let prelude_namespace = fresh_prelude(&mut env, &prelude_vfs_path);
-        insert_prelude(user_namespace.clone(), prelude_namespace.clone());
+        insert_prelude(Rc::clone(&user_namespace), Rc::clone(&prelude_namespace));
 
         env.prelude_namespace = prelude_namespace;
 
@@ -225,7 +225,7 @@ impl Env {
         let abs_path = canonicalize_namespace_path(abs_path);
 
         if let Some(ns) = self.namespaces.get(&abs_path) {
-            return ns.clone();
+            return Rc::clone(ns);
         }
 
         let mut values = FxHashMap::default();
@@ -249,9 +249,9 @@ impl Env {
             types: FxHashMap::default(),
         }));
 
-        insert_prelude(ns.clone(), self.prelude_namespace.clone());
+        insert_prelude(Rc::clone(&ns), Rc::clone(&self.prelude_namespace));
 
-        self.namespaces.insert(abs_path, ns.clone());
+        self.namespaces.insert(abs_path, Rc::clone(&ns));
         ns
     }
 
@@ -374,7 +374,7 @@ impl Env {
     }
 
     pub(crate) fn current_namespace(&self) -> Rc<RefCell<NamespaceInfo>> {
-        self.current_frame().namespace.clone()
+        Rc::clone(&self.current_frame().namespace)
     }
 
     pub(crate) fn current_frame(&self) -> &StackFrame {
@@ -482,7 +482,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     );
 
     let ns = Rc::new(RefCell::new(ns_info));
-    let (diags, _) = load_toplevel_items(&prelude_items, env, ns.clone());
+    let (diags, _) = load_toplevel_items(&prelude_items, env, Rc::clone(&ns));
     assert_eq!(
         diags.len(),
         0,

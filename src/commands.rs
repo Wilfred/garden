@@ -539,7 +539,7 @@ pub(crate) fn run_command<T: Write>(
         Command::Replace(src) => {
             if let Some(src) = src {
                 let path = Rc::new(PathBuf::from("__interactive_inline__"));
-                let vfs_path = env.vfs.insert(path.clone(), src.clone());
+                let vfs_path = env.vfs.insert(Rc::clone(&path), src.clone());
 
                 let (expr, errors) = parse_inline_expr_from_str(&vfs_path, &src, &mut env.id_gen);
 
@@ -656,7 +656,7 @@ pub(crate) fn run_command<T: Write>(
                         .first_mut()
                         .expect("Should always have at least one frame");
 
-                    let old_abs_path = stack_frame.namespace.borrow().abs_path.clone();
+                    let old_abs_path = Rc::clone(&stack_frame.namespace.borrow().abs_path);
                     stack_frame.namespace = ns;
 
                     write!(
@@ -823,7 +823,7 @@ pub(crate) fn run_command<T: Write>(
                 let mut id_gen = IdGenerator::default();
 
                 let path = Rc::new(PathBuf::from("__interactive__"));
-                let vfs_path = vfs.insert(path.clone(), src.to_owned());
+                let vfs_path = vfs.insert(Rc::clone(&path), src.to_owned());
 
                 let (items, errors) = parse_toplevel_items(&vfs_path, &src, &mut id_gen);
                 for error in errors {
@@ -852,7 +852,7 @@ pub(crate) fn run_command<T: Write>(
         Command::Type(src) => {
             if let Some(src) = src {
                 let path = Rc::new(PathBuf::from("__interactive_inline__"));
-                let vfs_path = env.vfs.insert(path.clone(), src.clone());
+                let vfs_path = env.vfs.insert(Rc::clone(&path), src.clone());
 
                 let (expr, errors) = parse_inline_expr_from_str(&vfs_path, &src, &mut env.id_gen);
 
@@ -919,7 +919,8 @@ pub(crate) fn run_command<T: Write>(
             let (items, errors) = parse_toplevel_items(&vfs_path, &src, &mut env.id_gen);
 
             let ns = env.get_or_create_namespace(&abs_path);
-            let (diagnostics, new_syms) = load_toplevel_items_with_stubs(&items, env, ns.clone());
+            let (diagnostics, new_syms) =
+                load_toplevel_items_with_stubs(&items, env, Rc::clone(&ns));
 
             let mut summary = format!(
                 "Loaded {} item{}",

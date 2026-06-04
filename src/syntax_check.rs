@@ -1,6 +1,7 @@
 use serde::Serialize;
 use std::io::IsTerminal;
 use std::path::Path;
+use std::rc::Rc;
 
 use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{format_diagnostic, Autofix, Diagnostic, Severity};
@@ -121,7 +122,7 @@ pub(crate) fn check(
     // needs fixing next.
     if diagnostics.is_empty() {
         let ns = env.get_or_create_namespace(path);
-        let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, ns.clone());
+        let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, Rc::clone(&ns));
         raw_diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, &env, ns));
 
         for Diagnostic {

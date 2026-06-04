@@ -338,7 +338,7 @@ fn eval_code_in_namespace(
         return responses;
     }
 
-    let (diagnostics, _) = load_toplevel_items_with_stubs(&items, env, namespace.clone());
+    let (diagnostics, _) = load_toplevel_items_with_stubs(&items, env, Rc::clone(&namespace));
 
     if !diagnostics.is_empty() {
         let warnings = diagnostics
@@ -353,7 +353,7 @@ fn eval_code_in_namespace(
     }
 
     let eval_start = Instant::now();
-    let eval_result = eval_toplevel_exprs_then_stop(&items, env, session, namespace.clone());
+    let eval_result = eval_toplevel_exprs_then_stop(&items, env, session, Rc::clone(&namespace));
     let eval_msec = eval_start.elapsed().as_millis() as i64;
 
     let captured_stdout = std::mem::take(&mut *stdout_buf.lock().expect("stdout buffer poisoned"));

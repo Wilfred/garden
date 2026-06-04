@@ -32,8 +32,8 @@ pub(crate) fn extract_function(
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);
 
-    load_toplevel_items(&items, &mut env, ns.clone());
-    let summary = check_types(&vfs_path, &items, &env, ns.clone());
+    load_toplevel_items(&items, &mut env, Rc::clone(&ns));
+    let summary = check_types(&vfs_path, &items, &env, Rc::clone(&ns));
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);
 
@@ -370,7 +370,7 @@ impl Visitor for BlockSelectionFinder {
             let inside = self.offset <= pos.start_offset && pos.end_offset <= self.end_offset;
             let partial = pos.start_offset < self.end_offset && self.offset < pos.end_offset;
             if inside {
-                selected.push(expr.clone());
+                selected.push(Rc::clone(expr));
             } else if partial {
                 // Selection cuts through an expression; reject.
                 return;

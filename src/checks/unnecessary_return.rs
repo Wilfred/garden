@@ -6,6 +6,7 @@ use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::position::Position;
 use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
+use std::rc::Rc;
 
 struct UnnecessaryReturnVisitor {
     diagnostics: Vec<Diagnostic>,
@@ -22,7 +23,7 @@ impl Visitor for UnnecessaryReturnVisitor {
                     end_line_number: inner_expr.position.line_number,
                     column: last_expr.position.column,
                     end_column: inner_expr.position.column,
-                    path: last_expr.position.path.clone(),
+                    path: Rc::clone(&last_expr.position.path),
                     vfs_path: last_expr.position.vfs_path.clone(),
                 };
 

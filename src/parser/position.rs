@@ -63,7 +63,7 @@ impl Position {
             column: 0,
             end_column: 0,
             end_line_number: 0,
-            path: vfs_path.path.clone(),
+            path: Rc::clone(&vfs_path.path),
             vfs_path: vfs_path.to_owned(),
         }
     }
@@ -81,7 +81,7 @@ impl Position {
             } else {
                 second.end_column
             },
-            path: first.path.clone(),
+            path: Rc::clone(&first.path),
             vfs_path: first.vfs_path.clone(),
         }
     }

@@ -167,7 +167,7 @@ fn eval_code_block(
         }
 
         let (file_load_diagnostics, _) =
-            load_toplevel_items(&file_items, &mut file_env, ns.clone());
+            load_toplevel_items(&file_items, &mut file_env, Rc::clone(&ns));
         print_diagnostics(project_root, &file_env.vfs, &file_load_diagnostics);
     }
 
@@ -179,7 +179,7 @@ fn eval_code_block(
         .0
         .first_mut()
         .expect("Should always have at least one frame");
-    stack_frame.namespace = ns.clone();
+    stack_frame.namespace = Rc::clone(&ns);
 
     let mut block_env = file_env.clone();
 
@@ -228,7 +228,7 @@ fn eval_code_block(
         return Err(error_messages.join("\n"));
     }
 
-    let (load_diagnostics, _) = load_toplevel_items(&items, &mut block_env, ns.clone());
+    let (load_diagnostics, _) = load_toplevel_items(&items, &mut block_env, Rc::clone(&ns));
     print_diagnostics(project_root, &block_env.vfs, &load_diagnostics);
 
     let session = Session {
@@ -253,7 +253,7 @@ fn eval_code_block(
         }
     }
 
-    let (load_diagnostics, _) = load_toplevel_items(&items, &mut block_env, ns.clone());
+    let (load_diagnostics, _) = load_toplevel_items(&items, &mut block_env, Rc::clone(&ns));
     print_diagnostics(project_root, &block_env.vfs, &load_diagnostics);
 
     // Evaluate definitions within the block.
@@ -420,7 +420,7 @@ fn run_blocks_in_file(
             &src,
             &markdown_src,
             file_path,
-            interrupted.clone(),
+            Arc::clone(&interrupted),
             project_root,
         ) {
             Ok(results) => {
@@ -488,7 +488,7 @@ pub(crate) fn run_code_blocks(paths: &[PathBuf], interrupted: Arc<AtomicBool>) {
     for path in paths {
         let abs_path = to_abs_path(path);
         let (success, block_count) =
-            run_blocks_in_file(&abs_path, interrupted.clone(), &project_root);
+            run_blocks_in_file(&abs_path, Arc::clone(&interrupted), &project_root);
         if !success {
             all_success = false;
         }

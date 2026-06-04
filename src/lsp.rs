@@ -14,6 +14,7 @@ use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::io::{self, BufRead, Read, Write};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use tracing::error;
 use url::Url;
 
@@ -197,7 +198,7 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<Diagnostic> {
     if diagnostics.is_empty() {
         let mut env = Env::new(id_gen, vfs);
         let ns = env.get_or_create_namespace(path);
-        let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, ns.clone());
+        let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, Rc::clone(&ns));
         raw_diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, &env, ns));
 
         for GardenDiagnostic {
@@ -235,7 +236,7 @@ fn get_fixes(src: &str, path: &PathBuf) -> Vec<Autofix> {
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);
-    let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, ns.clone());
+    let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, Rc::clone(&ns));
     raw_diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, &env, ns));
 
     for diagnostic in raw_diagnostics {
@@ -259,7 +260,7 @@ fn get_definition(src: &str, path: &PathBuf, offset: usize) -> Option<GardenPosi
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);
-    load_toplevel_items(&items, &mut env, ns.clone());
+    load_toplevel_items(&items, &mut env, Rc::clone(&ns));
 
     let summary = check_types(&vfs_path, &items, &env, ns);
 
@@ -287,7 +288,7 @@ fn get_hover(src: &str, path: &PathBuf, offset: usize) -> Option<Hover> {
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);
-    load_toplevel_items(&items, &mut env, ns.clone());
+    load_toplevel_items(&items, &mut env, Rc::clone(&ns));
 
     let summary = check_types(&vfs_path, &items, &env, ns);
 

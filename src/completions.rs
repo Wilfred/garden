@@ -26,7 +26,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);
-    load_toplevel_items(&items, &mut env, ns.clone());
+    load_toplevel_items(&items, &mut env, Rc::clone(&ns));
 
     // If a `(` already follows the cursor, the user has already
     // typed the call parentheses, so completion should not insert
@@ -40,7 +40,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) -> Vec<CompletionI
         ids_at_pos.extend(find_item_at(&items, offset - 1, offset - 1));
     }
     ids_at_pos.extend(find_item_at(&items, offset, offset));
-    let summary = check_types(&vfs_path, &items, &env, ns.clone());
+    let summary = check_types(&vfs_path, &items, &env, Rc::clone(&ns));
 
     let mut seen_expr_ids = FxHashSet::default();
     for id in ids_at_pos.iter().rev() {

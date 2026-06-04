@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::rc::Rc;
 
 use crate::checks::type_checker::check_types;
 use crate::env::Env;
@@ -16,7 +17,7 @@ pub fn reftest_hover(src: &str, path: &Path, offset: usize) {
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);
-    load_toplevel_items(&items, &mut env, ns.clone());
+    load_toplevel_items(&items, &mut env, Rc::clone(&ns));
 
     let summary = check_types(&vfs_path, &items, &env, ns);
 

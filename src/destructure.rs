@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::rc::Rc;
 
 use line_numbers::LinePositions;
 
@@ -25,7 +26,7 @@ pub(crate) fn destructure(
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);
-    load_toplevel_items(&items, &mut env, ns.clone());
+    load_toplevel_items(&items, &mut env, Rc::clone(&ns));
     let summary = check_types(&vfs_path, &items, &env, ns);
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);

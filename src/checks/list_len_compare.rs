@@ -11,6 +11,7 @@ use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::position::Position;
 use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
+use std::rc::Rc;
 
 use super::type_checker::TCSummary;
 
@@ -119,7 +120,7 @@ impl Visitor for ListLenCompareVisitor<'_> {
                                 end_line_number: zero_expr.position.end_line_number,
                                 column: args.close_paren.end_column,
                                 end_column: zero_expr.position.end_column,
-                                path: expr.position.path.clone(),
+                                path: Rc::clone(&expr.position.path),
                                 vfs_path: expr.position.vfs_path.clone(),
                             }
                         } else {
@@ -132,7 +133,7 @@ impl Visitor for ListLenCompareVisitor<'_> {
                                 end_line_number: call_expr.position.line_number,
                                 column: zero_expr.position.column,
                                 end_column: call_expr.position.column,
-                                path: expr.position.path.clone(),
+                                path: Rc::clone(&expr.position.path),
                                 vfs_path: expr.position.vfs_path.clone(),
                             }
                         };

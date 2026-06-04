@@ -289,7 +289,7 @@ fn read_multiline_syntax(
 
     loop {
         let path = Rc::new(PathBuf::from("__interactive_session__"));
-        let vfs_path = vfs.insert(path.clone(), src.to_owned());
+        let vfs_path = vfs.insert(Rc::clone(&path), src.to_owned());
 
         let (items, errors) = parse_toplevel_items(&vfs_path, &src, id_gen);
 

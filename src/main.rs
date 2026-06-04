@@ -36,6 +36,8 @@
 // This seems to give false positives and suggest changes that don't
 // compile.
 #![allow(clippy::cmp_owned)]
+// Prefer explicit Rc::clone/Arc::clone to make refcount bumps visible.
+#![warn(clippy::clone_on_ref_ptr)]
 
 mod caret_finder;
 mod checks;
@@ -283,7 +285,7 @@ enum CliCommands {
 fn main() {
     let interrupted = Arc::new(AtomicBool::new(false));
 
-    let i = interrupted.clone();
+    let i = Arc::clone(&interrupted);
     ctrlc::set_handler(move || {
         i.store(true, Ordering::SeqCst);
     })

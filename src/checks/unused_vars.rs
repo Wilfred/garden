@@ -1,4 +1,5 @@
 use rustc_hash::FxHashMap;
+use std::rc::Rc;
 
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::parser::ast::{
@@ -343,7 +344,7 @@ impl UnusedVariableVisitor {
                     end_line_number: last_tp.position.end_line_number,
                     column: first_tp.position.column.saturating_sub(1),
                     end_column: open_paren.column,
-                    path: tp.position.path.clone(),
+                    path: Rc::clone(&tp.position.path),
                     vfs_path: tp.position.vfs_path.clone(),
                 }
             } else if idx == 0 {
@@ -356,7 +357,7 @@ impl UnusedVariableVisitor {
                     end_line_number: next_tp.position.line_number,
                     column: tp.position.column,
                     end_column: next_tp.position.column,
-                    path: tp.position.path.clone(),
+                    path: Rc::clone(&tp.position.path),
                     vfs_path: tp.position.vfs_path.clone(),
                 }
             } else {
@@ -369,7 +370,7 @@ impl UnusedVariableVisitor {
                     end_line_number: tp.position.end_line_number,
                     column: prev_tp.position.end_column,
                     end_column: tp.position.end_column,
-                    path: tp.position.path.clone(),
+                    path: Rc::clone(&tp.position.path),
                     vfs_path: tp.position.vfs_path.clone(),
                 }
             };
@@ -543,7 +544,7 @@ impl Visitor for UnusedVariableVisitor {
                 end_line_number: value_expr.position.line_number,
                 column: expr.position.column,
                 end_column: value_expr.position.column,
-                path: expr.position.path.clone(),
+                path: Rc::clone(&expr.position.path),
                 vfs_path: expr.position.vfs_path.clone(),
             };
 

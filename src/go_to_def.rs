@@ -19,7 +19,7 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize, in_test_suite: bo
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);
-    load_toplevel_items(&items, &mut env, ns.clone());
+    load_toplevel_items(&items, &mut env, Rc::clone(&ns));
 
     // The type checker records where it found every value as it runs,
     // so we can use `summary` to find the relevant position of what

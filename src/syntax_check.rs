@@ -191,7 +191,7 @@ pub(crate) fn check(
         if !json && !all_fixes.is_empty() {
             let num_fixable = all_fixes.len();
             eprintln!(
-                "{} {} can be fixed automatically (use `--fix`).",
+                "\n{} {} can be fixed automatically (use `--fix`).",
                 num_fixable,
                 if num_fixable == 1 { "issue" } else { "issues" }
             );

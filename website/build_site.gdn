@@ -205,7 +205,7 @@ fun split_metadata(src: String): (Option<String>, String) {
   let metadata_start = "```metadata\n"
   let metadata_end = "\n```\n"
 
-  if src.starts_with(metadata_start).not() {
+  if not(src.starts_with(metadata_start)) {
     return (None, src)
   }
 
@@ -266,7 +266,7 @@ fun blog_posts(website_dir: Path): List<BlogPost> {
 
 fun build_blog(website_dir: Path, out_dir: Path, base_tmpl_src: String): Unit {
   for post in blog_posts(website_dir) {
-    if post.published.not() {
+    if not(post.published) {
       continue
     }
 
@@ -341,14 +341,14 @@ fun build_site(): Unit {
   }
 
   for keyword in reflect::keywords() {
-    if seen_keyword_pages.contains(keyword).not() {
+    if not(seen_keyword_pages.contains(keyword)) {
       log::warn("Expected a page documenting keyword: " ^ keyword)
     }
   }
 
   for operator in reflect::operators() {
     let page_name = ops::url_safe_name(operator)
-    if seen_operator_pages.contains(page_name).not() {
+    if not(seen_operator_pages.contains(page_name)) {
       log::warn("Expected a page documenting operator: " ^ operator)
     }
   }
@@ -356,7 +356,7 @@ fun build_site(): Unit {
   for type_name in reflect::prelude_types() {
     // We have a manually created type::Tuple.md file, so don't look
     // for a doc comment in that case.
-    if website_dir.join("type:" ^ type_name ^ ".md").exists().not() {
+    if not(website_dir.join("type:" ^ type_name ^ ".md").exists()) {
       write_type_page(type_name, out_dir, base_tmpl_src)
     }
 
@@ -380,7 +380,7 @@ fun build_site(): Unit {
     documented_files = documented_files.append(ns_name)
   }
   for built_in_file in reflect::built_in_files() {
-    if documented_files.contains(built_in_file).not() {
+    if not(documented_files.contains(built_in_file)) {
       log::warn("Builtin file " ^ built_in_file ^ " is not included in the namespaces list")
     }
   }
@@ -490,7 +490,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
 
   let blog_links: List<String> = []
   for post in blog_posts(website_dir) {
-    if post.published.not() {
+    if not(post.published) {
       continue
     }
 

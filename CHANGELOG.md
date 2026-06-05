@@ -12,6 +12,9 @@ Moved `source_directory()` from the prelude to `__reflect.gdn` and
 renamed it to `source_file()`, reflecting that it returns the path of
 the current source file.
 
+Replaced the `not` method on `Bool` with a `not()` function. Write
+`not(x)` instead of `x.not()`.
+
 # 0.25 (released 29th May 2026)
 **Goal: Better REPL experience.**
 **Goal: Better runtime performance.**

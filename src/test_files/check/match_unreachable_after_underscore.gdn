@@ -1,0 +1,30 @@
+enum Color { Red, Green, Blue }
+
+public fun describe(c: Color): String {
+  match c {
+    Red => "red"
+    _ => "other"
+    Green => "green"
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `match` cases after `_` are never executed.
+// 
+// -| src/test_files/check/match_unreachable_after_underscore.gdn:7:5
+// 5|     Red => "red"
+// 6|     _ => "other"
+// 7|     Green => "green"
+// 8|   } ^^^^^
+// 9| }
+// -| src/test_files/check/match_unreachable_after_underscore.gdn:6:5
+// 4|   match c {
+// 5|     Red => "red"
+// 6|     _ => "other"
+//  |     ^ Note: This `_` case matches everything.
+// 7|     Green => "green"
+// 8|   }
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

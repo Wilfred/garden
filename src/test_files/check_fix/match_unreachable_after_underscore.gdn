@@ -1,0 +1,22 @@
+enum Color { Red, Green, Blue }
+
+public fun describe(c: Color): String {
+  match c {
+    Red => "red"
+    _ => "other"
+    Green => "green"
+    Blue => "blue"
+  }
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// enum Color { Red, Green, Blue }
+// 
+// public fun describe(c: Color): String {
+//   match c {
+//     Red => "red"
+//     _ => "other"
+//   }
+// }
+

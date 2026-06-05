@@ -733,12 +733,11 @@ impl TypeCheckVisitor<'_> {
         let scrutinee_ty_name = scrutinee_ty.type_name();
 
         if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
-            let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
             check_match_exhaustive(
                 self.env,
                 &scrutinee.position,
                 scrutinee_ty_name,
-                &patterns,
+                cases,
                 &mut self.diagnostics,
             );
         }
@@ -2953,7 +2952,7 @@ fn check_match_exhaustive(
     env: &Env,
     scrutinee_pos: &Position,
     type_name: &TypeName,
-    patterns: &[Pattern],
+    cases: &[(Pattern, Block)],
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     let Some(type_def) = env.get_type_def(type_name) else {
@@ -2969,10 +2968,62 @@ fn check_match_exhaustive(
     }
 
     if !enum_info.variants.is_empty() {
-        let mut seen_underscore = false;
-        for pattern in patterns {
+        let mut underscore_pos: Option<&Position> = None;
+        // The end of the previous case's block, used to delete an
+        // unreachable case (including its leading separator).
+        let mut prev_case_end: Option<&Position> = None;
+
+        for (pattern, block) in cases {
+            // Once a `_` case has been seen, it matches everything, so
+            // any later case can never be reached.
+            if let Some(underscore_pos) = underscore_pos {
+                // Delete from the end of the previous case to the end
+                // of this one, removing the unreachable case.
+                let fixes = match prev_case_end {
+                    Some(prev_end) => vec![Autofix {
+                        description: "Remove unreachable case".to_owned(),
+                        position: Position {
+                            start_offset: prev_end.end_offset,
+                            end_offset: block.close_brace.end_offset,
+                            line_number: prev_end.end_line_number,
+                            end_line_number: block.close_brace.end_line_number,
+                            column: prev_end.end_column,
+                            end_column: block.close_brace.end_column,
+                            path: block.close_brace.path.clone(),
+                            vfs_path: block.close_brace.vfs_path.clone(),
+                        },
+                        new_text: String::new(),
+                    }],
+                    None => vec![],
+                };
+
+                diagnostics.push(Diagnostic {
+                    notes: vec![(
+                        ErrorMessage(vec![
+                            msgtext!("This "),
+                            msgcode!("_"),
+                            msgtext!(" case matches everything."),
+                        ]),
+                        underscore_pos.clone(),
+                    )],
+                    fixes,
+                    severity: Severity::Warning,
+                    message: ErrorMessage(vec![
+                        msgcode!("match"),
+                        msgtext!(" cases after "),
+                        msgcode!("_"),
+                        msgtext!(" are never executed."),
+                    ]),
+                    position: pattern.variant_sym.position.clone(),
+                });
+                prev_case_end = Some(&block.close_brace);
+                continue;
+            }
+
+            prev_case_end = Some(&block.close_brace);
+
             if pattern.variant_sym.name.is_underscore() {
-                seen_underscore = true;
+                underscore_pos = Some(&pattern.variant_sym.position);
                 continue;
             }
 
@@ -2995,7 +3046,7 @@ fn check_match_exhaustive(
         }
 
         // If any cases are _, this match is exhaustive.
-        if seen_underscore {
+        if underscore_pos.is_some() {
             return;
         }
     }

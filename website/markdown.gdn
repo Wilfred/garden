@@ -176,7 +176,7 @@ fun render_heading(src: String, self_url: Option<String>): String {
     content = content.strip_prefix("#")
   }
 
-  if (h_count > 6) || content.starts_with(" ").not() {
+  if (h_count > 6) || not(content.starts_with(" ")) {
     return "<p>" ^ src ^ "</p>"
   }
 
@@ -257,7 +257,7 @@ fun check_source(src: String, path: Option<Path>): Unit {
 }
 
 fun render_garden_code(snippet: Snippet, self_url: Option<String>): String {
-  if snippet.labels.contains("nocheck").not() {
+  if not(snippet.labels.contains("nocheck")) {
     check_source(snippet.content, snippet.file)
 
     // Check that the expected values comments type check too.
@@ -528,7 +528,7 @@ fun split_on_terminator(s: String, terminator: String): Option<(String, String)>
 /// split_markdown_link("[link text](url) rest") // Some(("[link text](url)", " rest"))
 /// ```
 fun split_markdown_link(s: String): Option<(String, String)> {
-  if s.starts_with("[").not() && s.starts_with("![").not() {
+  if not(s.starts_with("[")) && not(s.starts_with("![")) {
     return None
   }
 
@@ -640,7 +640,7 @@ fun render_inline_code(src: String, self_url: Option<String>): String {
 
   if reflect::operators().contains(inner) {
     let operator_url = "/operator:" ^ ops::url_safe_name(inner) ^ ".html"
-    if (inner.ends_with("=") && (inner.len() > 1)).not() {
+    if not(inner.ends_with("=") && (inner.len() > 1)) {
       // Don't linkify += or !=, as they redirect to + and == respectively.
       // TODO: track redirects properly.
       url = Some(operator_url)
@@ -851,5 +851,5 @@ fun looks_like_type(name: String): Bool {
 test looks_like_type {
   assert(looks_like_type("Abc"))
 
-  assert(looks_like_type("abc").not())
+  assert(not(looks_like_type("abc")))
 }

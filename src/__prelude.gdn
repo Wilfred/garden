@@ -10,18 +10,18 @@ enum Bool {
 /// Negate this value.
 ///
 /// ```
-/// True.not() //-> False
+/// not(True) //-> False
 /// ```
-public method not(this: Bool): Bool {
-  match this {
+public fun not(b: Bool): Bool {
+  match b {
     True => False,
     False => True,
   }
 }
 
 test not {
-  assert(True.not() == False)
-  assert(False.not() == True)
+  assert(not(True) == False)
+  assert(not(False) == True)
 }
 
 /// The unit type. Use this when your function doesn't have any useful
@@ -658,7 +658,7 @@ public method is_empty<T>(this: List<T>): Bool {
 
 test is_empty {
   assert([].is_empty())
-  assert([1].is_empty().not())
+  assert(not([1].is_empty()))
 }
 
 /// Is this list non-empty?
@@ -667,7 +667,7 @@ public method is_non_empty<T>(this: List<T>): Bool {
 }
 
 test is_non_empty {
-  assert([].is_non_empty().not())
+  assert(not([].is_non_empty()))
   assert([1].is_non_empty())
 }
 

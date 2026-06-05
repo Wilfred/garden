@@ -1,0 +1,37 @@
+public fun gt_zero(xs: List<Int>): Bool {
+  xs.len() > 0
+}
+
+public fun ge_one(xs: List<Int>): Bool {
+  xs.len() >= 1
+}
+
+public fun lt_one(xs: List<Int>): Bool {
+  xs.len() < 1
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Prefer `.is_non_empty()` over comparing `.len()` with `0`.
+// 
+// -| src/test_files/check/list_len_compare_ordering.gdn:2:3
+// 1| public fun gt_zero(xs: List<Int>): Bool {
+// 2|   xs.len() > 0
+// 3| } ^^^^^^^^^^^^
+// 
+// Warning: Prefer `.is_non_empty()` over comparing `.len()` with `1`.
+// 
+// -| src/test_files/check/list_len_compare_ordering.gdn:6:3
+// 5| public fun ge_one(xs: List<Int>): Bool {
+// 6|   xs.len() >= 1
+// 7| } ^^^^^^^^^^^^^
+// 
+// Warning: Prefer `.is_empty()` over comparing `.len()` with `1`.
+// 
+// --| src/test_files/check/list_len_compare_ordering.gdn:10:3
+//  9| public fun lt_one(xs: List<Int>): Bool {
+// 10|   xs.len() < 1
+// 11| } ^^^^^^^^^^^^
+
+// expected stderr: 6 issues can be fixed automatically (use `--fix`).

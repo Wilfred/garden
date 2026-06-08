@@ -56,7 +56,7 @@ fun write_fun_page(
       }
 
       let src = reflect::source_for_fun(ns, fun_name)
-      let page_src = render_doc_comment(heading, doc_comment, src, None, Some(self_url))
+      let page_src = render_doc_comment(heading, doc_comment, src, Some(Path{ p: ns_name }), Some(self_url))
 
       write_website_page(base_tmpl_src, page_src, dest_path, Some(fun_name))
     }

@@ -224,7 +224,8 @@ test source_for_fun {
   }
 }
 
-/// Get the source code for the function definition of `name`.
+/// Get the source code for the definition of method `method_name` on
+/// `type_name`.
 ///
 /// ```
 /// import "__reflect.gdn" as reflect
@@ -245,7 +246,7 @@ test source_for_method {
   }
 }
 
-/// All the `external` functions in `ns`.
+/// All the public functions in `ns`, sorted alphabetically.
 ///
 /// ```
 /// import "__reflect.gdn" as reflect

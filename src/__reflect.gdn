@@ -5,6 +5,11 @@ import "__fs.gdn" as fs
 /// Check the syntax of `src`. `path` is treated as the location of
 /// the file that the snippet represents, which is used to resolve
 /// relative imports.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::check_snippet("fun f() {}", Path{ p: "__snippet.gdn" }) //-> Ok(Unit)
+/// ```
 public fun check_snippet(src: String, path: Path): Result<Unit, List<String>> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -38,6 +43,11 @@ test check_snippet_bad_name {
 
 /// Split `src` into individual lexed tokens, along with their offsets
 /// in the original string.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::lex("1 + 2") //-> [(0, "1"), (2, "+"), (4, "2")]
+/// ```
 public fun lex(src: String): List<(Int, String)> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -58,6 +68,12 @@ test lex {
 
 /// Get the doc comment for `fun_name` in the namespace `ns`. The
 /// string does not include the leading `//` comment.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// import "__fs.gdn" as fs
+/// reflect::doc_comment(fs, "read_file").is_some() //-> True
+/// ```
 public fun doc_comment(ns: Namespace, fun_name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -70,6 +86,11 @@ test doc_comment {
 }
 
 /// Get the doc comment for type `type_name`.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::doc_comment_for_type("Int").is_some() //-> True
+/// ```
 public fun doc_comment_for_type(type_name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -87,6 +108,11 @@ test doc_comment_for_type {
 }
 
 /// Get the doc comment for the method `method_name` on `type_name`.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::doc_comment_for_method("List", "len").is_some() //-> True
+/// ```
 public fun doc_comment_for_method(type_name: String, method_name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -100,6 +126,11 @@ test doc_comment_for_method {
 
 /// A list of all the type names in the prelude, `String`, `Option` and
 /// so on. The list is sorted alphabetically.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::prelude_types().contains("String") //-> True
+/// ```
 public fun prelude_types(): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -113,6 +144,11 @@ test prelude_types {
 }
 
 /// All the keywords in Garden. Variables cannot use these as names.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::keywords().contains("if") //-> True
+/// ```
 public fun keywords(): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -122,6 +158,11 @@ test keywords {
 }
 
 /// All the operators in Garden.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::operators().contains("+") //-> True
+/// ```
 public fun operators(): List<String> {
   // See lex_between in lex.rs for all lexemes that can be operators.
   ["==", "!=", ">=", "<=", "&&", "||", "+=", "-=", "**", "+.", "-.", "*.", "/.",
@@ -130,6 +171,11 @@ public fun operators(): List<String> {
 }
 
 /// Get the source code for the type definition of `name`.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::source_for_type("Option").is_some() //-> True
+/// ```
 public fun source_for_type(name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -146,6 +192,12 @@ test source_for_type {
 }
 
 /// Get the source code for the function definition of `name`.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// import "__fs.gdn" as fs
+/// reflect::source_for_fun(fs, "read_file").is_some() //-> True
+/// ```
 public fun source_for_fun(ns: Namespace, name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -173,6 +225,11 @@ test source_for_fun {
 }
 
 /// Get the source code for the function definition of `name`.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::source_for_method("String", "len").is_some() //-> True
+/// ```
 public fun source_for_method(type_name: String, method_name): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -189,6 +246,12 @@ test source_for_method {
 }
 
 /// All the `external` functions in `ns`.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// import "__fs.gdn" as fs
+/// reflect::namespace_functions(fs).contains("list_directory") //-> True
+/// ```
 public fun namespace_functions(ns: Namespace): List<String> {
   // This is deliberately not a method on Namespace, so code
   // completion isn't confusing.
@@ -201,6 +264,11 @@ test namespace_functions {
 }
 
 /// Get all the methods defined on a given type.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::methods_for_type("List").contains("len") //-> True
+/// ```
 public fun methods_for_type(type_name: String): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -211,6 +279,11 @@ test methods_for_type {
 }
 
 /// Get all the built-in file names that can be imported.
+///
+/// ```
+/// import "__reflect.gdn" as reflect
+/// reflect::built_in_files().contains("__fs.gdn") //-> True
+/// ```
 public fun built_in_files(): List<String> {
   __BUILT_IN_IMPLEMENTATION
 }

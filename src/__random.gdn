@@ -2,6 +2,11 @@
 ///
 /// This is a pseudorandom number, and should not be used for
 /// cryptographic purposes.
+///
+/// ```
+/// import "__random.gdn" as random
+/// random::int() // e.g. -4044220887577020587
+/// ```
 public fun int(): Int {
   __BUILT_IN_IMPLEMENTATION
 }
@@ -11,6 +16,14 @@ test random_int {
 }
 
 /// Randomly choose an item from `items`.
+///
+/// ```
+/// import "__random.gdn" as random
+/// random::choose([1, 2, 3]) // e.g. Some(2)
+///
+/// let empty: List<Int> = []
+/// random::choose(empty) //-> None
+/// ```
 public fun choose<T>(items: List<T>): Option<T> {
   if items.is_empty() {
     return None

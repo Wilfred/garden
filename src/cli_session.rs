@@ -24,6 +24,7 @@ use crate::Vfs;
 use owo_colors::OwoColorize;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
+use xdg::BaseDirectories;
 
 enum ReadError {
     NeedsEval(EvalAction),
@@ -42,7 +43,10 @@ fn read_expr(
         match rl.readline(&prompt_symbol(is_stopped)) {
             Ok(input) => {
                 let _ = rl.add_history_entry(input.as_str());
-                let _ = rl.save_history(".history");
+                if let Ok(path) = BaseDirectories::with_prefix("garden").place_state_file("history")
+                {
+                    let _ = rl.save_history(&path);
+                }
 
                 match Command::from_string(&input) {
                     Ok(cmd) => match run_command(&mut std::io::stdout(), cmd, env, session) {
@@ -259,8 +263,9 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
 fn new_editor() -> Editor<GardenHighlighter, DefaultHistory> {
     let mut rl = Editor::new().unwrap();
     rl.set_helper(Some(GardenHighlighter::new()));
-    // TODO: put this in the home directory rather than the current directory.
-    let _ = rl.load_history(".history");
+    if let Some(path) = BaseDirectories::with_prefix("garden").get_state_file("history") {
+        let _ = rl.load_history(&path);
+    }
     rl
 }
 

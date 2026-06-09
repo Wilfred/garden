@@ -7,8 +7,6 @@ playground/node_modules
 perf.data*
 flamegraph.svg
 
-.history
-
 *.map
 *.d.ts
 website/static/playground.js

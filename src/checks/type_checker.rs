@@ -836,7 +836,7 @@ impl TypeCheckVisitor<'_> {
         let ty = match expected_ty {
             Type::Any => match unify_all(&case_tys) {
                 Ok(ty) => ty,
-                Err(position) => {
+                Err((_, _, position)) => {
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
                         fixes: vec![],
@@ -1028,14 +1028,19 @@ impl TypeCheckVisitor<'_> {
 
                 let elem_ty = match unify_all(&item_tys) {
                     Ok(ty) => ty,
-                    Err(position) => {
+                    Err((prev_ty, ty, position)) => {
+                        let mut message_parts =
+                            vec![msgtext!("List elements have different types: ")];
+                        message_parts.extend_from_slice(&prev_ty.as_message_parts());
+                        message_parts.push(msgtext!(" and "));
+                        message_parts.extend_from_slice(&ty.as_message_parts());
+                        message_parts.push(msgtext!("."));
+
                         self.diagnostics.push(Diagnostic {
                             notes: vec![],
                             fixes: vec![],
                             severity: Severity::Error,
-                            message: ErrorMessage(vec![Text(
-                                "List elements have different types.".to_owned(),
-                            )]),
+                            message: ErrorMessage(message_parts),
                             position,
                         });
                         Type::Any
@@ -1056,7 +1061,7 @@ impl TypeCheckVisitor<'_> {
 
                 let value_ty = match unify_all(&value_tys) {
                     Ok(ty) => ty,
-                    Err(position) => {
+                    Err((_, _, position)) => {
                         self.diagnostics.push(Diagnostic {
                             notes: vec![],
                             fixes: vec![],
@@ -2873,13 +2878,13 @@ fn unify_and_solve_hint(
 ///
 /// If we can't find a compatible type, return the position of the
 /// first type that didn't unify.
-fn unify_all(tys: &[(Type, Position)]) -> Result<Type, Position> {
+fn unify_all(tys: &[(Type, Position)]) -> Result<Type, (Type, Type, Position)> {
     let mut unified_ty = Type::no_value();
 
     // Unify the types pairwise.
     for (ty, position) in tys {
         let Some(new_unified_ty) = unify(&unified_ty, ty) else {
-            return Err(position.clone());
+            return Err((unified_ty, ty.clone(), position.clone()));
         };
         unified_ty = new_unified_ty;
     }

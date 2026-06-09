@@ -12,7 +12,7 @@ public fun returns_bools(): List<Bool> {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: List elements have different types.
+// Error: List elements have different types: an `Int` and a `Bool`.
 // 
 // -| src/test_files/check/list_mixed.gdn:4:17
 // 3| {
@@ -35,3 +35,4 @@ public fun returns_bools(): List<Bool> {
 //  8| public fun returns_bools(): List<Bool> {
 //  9|   [1, True]
 // 10| }  ^
+

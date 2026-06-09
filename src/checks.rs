@@ -8,6 +8,7 @@ mod recursion_variable;
 mod repeated_bool;
 mod same_literal_returns;
 mod self_assign_compare;
+mod simplify_bool;
 mod struct_fields;
 pub mod type_checker;
 mod unit_let;
@@ -35,6 +36,7 @@ use recursion_variable::check_recursion_variables;
 use repeated_bool::check_repeated_bool;
 use same_literal_returns::check_same_literal_returns;
 use self_assign_compare::check_self_assign_compare;
+use simplify_bool::check_simplify_bool;
 use unit_let::check_unit_let;
 use unnecessary_let::check_unnecessary_let;
 use unnecessary_return::check_unnecessary_return;
@@ -97,6 +99,7 @@ pub(crate) fn check_toplevel_items_in_env(
     diagnostics.extend(check_unnecessary_return(items));
     diagnostics.extend(check_self_assign_compare(items));
     diagnostics.extend(check_repeated_bool(items));
+    diagnostics.extend(check_simplify_bool(items));
 
     diagnostics
 }

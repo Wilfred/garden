@@ -35,6 +35,45 @@ fs::list_directory(Path{ p: "/"})
 Do not make changes to CHANGELOG.md unless the user explicitly
 requests it.
 
+# Doc Comment Examples
+
+Public functions in the built-in namespaces (`src/__fs.gdn`,
+`src/__random.gdn`, `src/__reflect.gdn`, `src/__shell.gdn`,
+`src/__time.gdn`) carry a runnable example inside a fenced code block in
+their `///` doc comment. These examples are rendered on the website
+(`website/build_site.gdn` builds a page per function), so every public
+function should have one. The convention is to show the import followed
+by a call:
+
+```
+/// Read the contents of file `path` as a string.
+///
+/// ```
+/// import "__fs.gdn" as fs
+/// fs::read_file(Path{ p: "/tmp/foo.txt" })
+/// ```
+```
+
+These blocks are executed and checked by the `run-code-blocks`
+subcommand (implemented in `src/run_code_blocks.rs`):
+
+- `./target/debug/garden run-code-blocks src/__fs.gdn` runs every code
+  block in a file's doc comments and reports failures. The reftests in
+  `src/test_files/run_code_blocks/` cover the machinery itself.
+- A `//->` trailing comment asserts the expression's displayed value,
+  e.g. `reflect::keywords().contains("if") //-> True`. The value must
+  match exactly, so prefer stable assertions (`.is_some()`,
+  `.contains(...)`) over brittle ones for large or non-deterministic
+  results.
+- Use `//->` `*exception*` to assert an expression throws.
+- A plain `//` comment (e.g. `// e.g. Some(2)`) is not asserted, which
+  suits non-deterministic results like `random::int()`.
+
+Garden has no turbofish; to get a typed empty list in an example, bind
+it first: `let empty: List<Int> = []`. Examples run in the file's own
+namespace, so importing a sibling built-in (or even the file itself) in
+a block is fine.
+
 # Commit Messages
 
 Keep commit messages concise and matter-of-fact. State what changed,

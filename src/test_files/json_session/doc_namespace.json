@@ -32,7 +32,7 @@
 // {
 //   "kind": {
 //     "run_command": {
-//       "message": "Split `src` into individual lexed tokens, along with their offsets\nin the original string.\n\n// Defined in __reflect.gdn:41\nfn lex(src: String): List<(Int, String)> { ... }",
+//       "message": "Split `src` into individual lexed tokens, along with their offsets\nin the original string.\n\n```\nimport \"__reflect.gdn\" as reflect\nreflect::lex(\"1 + 2\") //-> [(0, \"1\"), (2, \"+\"), (4, \"2\")]\n```\n\n// Defined in __reflect.gdn:51\nfn lex(src: String): List<(Int, String)> { ... }",
 //       "stack_frame_name": "__user.gdn"
 //     }
 //   },

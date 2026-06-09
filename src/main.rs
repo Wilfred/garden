@@ -37,7 +37,7 @@
 // compile.
 #![allow(clippy::cmp_owned)]
 // Prefer explicit Rc::clone/Arc::clone to make refcount bumps visible.
-#![warn(clippy::clone_on_ref_ptr)]
+#![deny(clippy::clone_on_ref_ptr)]
 
 mod caret_finder;
 mod checks;

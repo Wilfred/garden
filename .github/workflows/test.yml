@@ -18,6 +18,17 @@ jobs:
 
       - run: cargo test
 
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: clippy
+
+      - run: cargo clippy --all-targets
+
   formatting:
     name: Check formatting
     runs-on: ubuntu-24.04

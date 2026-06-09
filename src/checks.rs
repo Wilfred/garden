@@ -1,3 +1,4 @@
+mod builtin_annotations;
 mod duplicates;
 mod hints;
 mod infinite_while;
@@ -41,6 +42,7 @@ use unnecessary_return::check_unnecessary_return;
 use unreachable::check_unreachable;
 use unused_defs::check_unused_defs;
 
+use self::builtin_annotations::check_builtin_annotations;
 use self::duplicates::check_duplicates;
 use self::hints::check_hints;
 use self::struct_fields::check_struct_fields;
@@ -79,6 +81,7 @@ pub(crate) fn check_toplevel_items_in_env(
     diagnostics.extend(check_unused_literals(items, env));
     diagnostics.extend(check_struct_fields(items, env));
     diagnostics.extend(check_hints(items, env));
+    diagnostics.extend(check_builtin_annotations(vfs_path, items));
 
     let summary = check_types(vfs_path, items, env, namespace);
     diagnostics.extend(check_unused_defs(items, &summary));

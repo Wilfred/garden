@@ -173,7 +173,7 @@ test source_for_fun {
 }
 
 /// Get the source code for the function definition of `name`.
-public fun source_for_method(type_name: String, method_name): Option<String> {
+public fun source_for_method(type_name: String, method_name: String): Option<String> {
   __BUILT_IN_IMPLEMENTATION
 }
 

@@ -116,7 +116,7 @@ public fun list_directory(path: Path): Result<List<Path>, String> {
 
 /// Kludge to perform a runtime check that list_directory returns a
 /// list of paths.
-fun takes_list_of_paths(_: List<Path>) {}
+fun takes_list_of_paths(_: List<Path>): Unit {}
 
 test list_directory {
   match list_directory(Path{p: "/"}) {

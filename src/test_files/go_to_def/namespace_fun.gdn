@@ -5,4 +5,5 @@ reflect::lex("abc")
 
 // args: reftest-position
 // expected stdout:
-// {"start_offset":950,"end_offset":953,"line_number":40,"end_line_number":40,"column":11,"end_column":14,"path":"GDN_TEST_ROOT/__reflect.gdn"}
+// {"start_offset":1211,"end_offset":1214,"line_number":50,"end_line_number":50,"column":11,"end_column":14,"path":"GDN_TEST_ROOT/__reflect.gdn"}
+

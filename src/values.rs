@@ -236,29 +236,49 @@ impl Eq for Value_ {}
 impl Value {
     /// A helper for creating a unit value.
     pub(crate) fn unit() -> Self {
-        // We can assume that Unit is always defined because it's in the
-        // prelude.
-        Self::new(Value_::EnumVariant {
-            type_name: TypeName {
-                text: "Unit".to_owned(),
-            },
-            runtime_type: Type::unit(),
-            variant_idx: 0,
-            payload: None,
-        })
+        thread_local! {
+            // We can assume that Unit is always defined because it's in the
+            // prelude.
+            static UNIT: Value = Value::new(Value_::EnumVariant {
+                type_name: TypeName {
+                    text: "Unit".to_owned(),
+                },
+                runtime_type: Type::unit(),
+                variant_idx: 0,
+                payload: None,
+            });
+        }
+
+        UNIT.with(|v| v.clone())
     }
 
     pub(crate) fn bool(b: bool) -> Self {
-        // We can assume that Bool is always defined because it's in the
-        // prelude.
-        Self::new(Value_::EnumVariant {
-            type_name: TypeName {
-                text: "Bool".to_owned(),
-            },
-            runtime_type: Type::bool(),
-            variant_idx: if b { 0 } else { 1 },
-            payload: None,
-        })
+        thread_local! {
+            // We can assume that Bool is always defined because it's in the
+            // prelude.
+            static TRUE: Value = Value::new(Value_::EnumVariant {
+                type_name: TypeName {
+                    text: "Bool".to_owned(),
+                },
+                runtime_type: Type::bool(),
+                variant_idx: 0,
+                payload: None,
+            });
+            static FALSE: Value = Value::new(Value_::EnumVariant {
+                type_name: TypeName {
+                    text: "Bool".to_owned(),
+                },
+                runtime_type: Type::bool(),
+                variant_idx: 1,
+                payload: None,
+            });
+        }
+
+        if b {
+            TRUE.with(|v| v.clone())
+        } else {
+            FALSE.with(|v| v.clone())
+        }
     }
 
     pub(crate) fn as_rust_bool(&self) -> Option<bool> {

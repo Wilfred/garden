@@ -1388,8 +1388,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         exprs_to_eval.push((ExpressionState::NotEvaluated, Rc::clone(expr)));
     }
 
-    let namespace_path = test.name_sym.position.path.to_path_buf();
-    let namespace = env.get_or_create_namespace(&namespace_path);
+    let namespace = env.get_or_create_namespace_cached(&test.name_sym.position.path);
 
     let stack_frame = StackFrame {
         namespace,
@@ -4612,8 +4611,7 @@ fn eval_call(
                 values: fun_bindings,
             });
 
-            let namespace_path = fun_info.pos.path.to_path_buf();
-            let namespace = env.get_or_create_namespace(&namespace_path);
+            let namespace = env.get_or_create_namespace_cached(&fun_info.pos.path);
 
             return Ok(Some(StackFrame {
                 namespace,
@@ -4692,8 +4690,7 @@ fn eval_call(
                 }
             }
 
-            let namespace_path = fi.pos.path.to_path_buf();
-            let namespace = env.get_or_create_namespace(&namespace_path);
+            let namespace = env.get_or_create_namespace_cached(&fi.pos.path);
 
             return Ok(Some(StackFrame {
                 namespace,
@@ -5120,8 +5117,8 @@ fn eval_method_call(
 
     let return_hint = fun_info.return_hint.clone();
 
-    let namespace_path = fun_info.pos.path.to_path_buf();
-    let namespace = env.get_or_create_namespace(&namespace_path);
+    let namespace_path = Rc::clone(&fun_info.pos.path);
+    let namespace = env.get_or_create_namespace_cached(&namespace_path);
 
     Ok(Some(StackFrame {
         namespace,

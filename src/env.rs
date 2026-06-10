@@ -98,6 +98,15 @@ pub(crate) struct Env {
     /// file has been changed after loading.
     pub(crate) namespaces: FxHashMap<PathBuf, Rc<RefCell<NamespaceInfo>>>,
 
+    /// A cache of namespace lookups, keyed by the address of the
+    /// `Rc<PathBuf>` in a position. All the positions in a file share
+    /// a single `Rc<PathBuf>`, so this lets us skip canonicalizing
+    /// and hashing the whole path on every function call.
+    ///
+    /// Storing the `Rc<PathBuf>` in the value keeps the allocation
+    /// alive, so an address is never reused for a different path.
+    namespace_cache: FxHashMap<usize, (Rc<PathBuf>, Rc<RefCell<NamespaceInfo>>)>,
+
     /// File paths relative to this directory will be shown as
     /// relative paths in e.g. errors.
     pub(crate) project_root: PathBuf,
@@ -186,6 +195,7 @@ impl Env {
             types: built_in_types(),
             prelude_namespace: temp_prelude,
             namespaces,
+            namespace_cache: FxHashMap::default(),
             project_root: current_dir.clone(),
             working_directory: current_dir,
             prev_call_args: FxHashMap::default(),
@@ -252,6 +262,24 @@ impl Env {
         insert_prelude(Rc::clone(&ns), Rc::clone(&self.prelude_namespace));
 
         self.namespaces.insert(abs_path, Rc::clone(&ns));
+        ns
+    }
+
+    /// Like `get_or_create_namespace`, but cached on the address of
+    /// `path`, so repeated lookups (e.g. on every function call)
+    /// don't hash the whole path.
+    pub(crate) fn get_or_create_namespace_cached(
+        &mut self,
+        path: &Rc<PathBuf>,
+    ) -> Rc<RefCell<NamespaceInfo>> {
+        let key = Rc::as_ptr(path) as usize;
+        if let Some((_, ns)) = self.namespace_cache.get(&key) {
+            return Rc::clone(ns);
+        }
+
+        let ns = self.get_or_create_namespace(path);
+        self.namespace_cache
+            .insert(key, (Rc::clone(path), Rc::clone(&ns)));
         ns
     }
 

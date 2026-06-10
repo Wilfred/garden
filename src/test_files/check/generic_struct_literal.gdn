@@ -1,0 +1,9 @@
+struct Box<T> {
+  value: T,
+}
+
+public fun make_box(): Box<Int> {
+  Box{ value: 1234 }
+}
+
+// args: check

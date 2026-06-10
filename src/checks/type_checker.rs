@@ -1935,14 +1935,24 @@ impl TypeCheckVisitor<'_> {
                 sym_to_expected_ty.insert(field.sym.name.clone(), (field.sym.position.clone(), ty));
             }
 
+            // Solve the struct's type parameters from the field
+            // values, e.g. `Box{ value: 1 }` solves `T` to `Int` for
+            // `struct Box<T> { value: T }`.
+            for (sym, _, ty) in &field_tys {
+                if let Some((_, field_decl_ty)) = sym_to_expected_ty.get(&sym.name) {
+                    unify_and_solve_ty(field_decl_ty, ty, &mut ty_var_env);
+                }
+            }
+
             for (sym, expr_pos, ty) in field_tys {
-                let Some((field_pos, field_ty)) = sym_to_expected_ty.get(&sym.name) else {
+                let Some((field_pos, field_decl_ty)) = sym_to_expected_ty.get(&sym.name) else {
                     continue;
                 };
 
                 self.id_to_def_pos.insert(sym.id, field_pos.clone());
 
-                if !is_subtype(&ty, field_ty) {
+                let field_ty = substitute_ty_vars(field_decl_ty, &ty_var_env);
+                if !is_subtype(&ty, &field_ty) {
                     let mut message_parts = vec![msgtext!("Expected ")];
                     message_parts.extend_from_slice(&field_ty.as_message_parts());
                     message_parts.push(msgtext!(" for this field but got "));

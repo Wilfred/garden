@@ -1,0 +1,22 @@
+enum Wrap<T> {
+  Wrapped(List<T>),
+}
+
+public fun unwrap(w: Wrap<Int>): String {
+  match w {
+    Wrapped(xs) => xs
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected a `String` but got a `List<Int>`.
+// 
+// -| src/test_files/check/enum_generic_payload_mismatch.gdn:7:20
+// 5| public fun unwrap(w: Wrap<Int>): String {
+// 6|   match w {
+// 7|     Wrapped(xs) => xs
+// 8|   }                ^^
+// 9| }
+

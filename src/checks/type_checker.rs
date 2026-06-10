@@ -2637,17 +2637,15 @@ fn enum_payload_type(env: &Env, scrutinee_ty: &Type, variant_sym: &Symbol) -> Ty
         return Type::error("Match scrutinee value is not an enum.");
     };
 
-    // If the payload is a generic type from the enum definition, use
-    // the value for that generic from the value.
+    // Bind the enum's type parameters to the type arguments of the
+    // scrutinee, so a payload hint like `List<T>` resolves to
+    // `List<Int>` when matching on a `Wrap<Int>`.
+    let mut type_bindings = TypeVarEnv::default();
     for (type_def_param, value_type_param) in type_def.params().iter().zip(args) {
-        if payload_hint.sym.name == type_def_param.name {
-            return value_type_param.clone();
-        }
+        type_bindings.insert(type_def_param.name.clone(), Some(value_type_param.clone()));
     }
 
-    // The payload is not a generic type, so the type hint is
-    // referring to a defined type.
-    Type::from_hint(&payload_hint, &env.types, &FxHashMap::default()).unwrap_or_err_ty()
+    Type::from_hint(&payload_hint, &env.types, &type_bindings).unwrap_or_err_ty()
 }
 
 /// Solve the type variables in this method, and return the resolved

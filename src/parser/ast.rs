@@ -484,7 +484,10 @@ pub(crate) enum Expression_ {
     /// ```garden
     /// "foo"
     /// ```
-    StringLiteral(String),
+    ///
+    /// The `Rc` lets evaluation share the string buffer rather than
+    /// copying it every time the literal is evaluated.
+    StringLiteral(Rc<String>),
     /// ```garden
     /// [x, y]
     /// ```

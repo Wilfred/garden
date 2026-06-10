@@ -83,7 +83,7 @@ impl std::fmt::Display for LiteralValue {
 fn expr_as_constant(expr: &Expression) -> Option<LiteralValue> {
     match &expr.expr_ {
         Expression_::IntLiteral(n) => Some(LiteralValue::Int(*n)),
-        Expression_::StringLiteral(s) => Some(LiteralValue::String(s.clone())),
+        Expression_::StringLiteral(s) => Some(LiteralValue::String(s.as_ref().clone())),
         Expression_::Variable(sym) => {
             let name = &sym.name.text;
             if name.starts_with(|c: char| c.is_uppercase()) {

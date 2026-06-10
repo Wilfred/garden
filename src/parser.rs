@@ -830,7 +830,7 @@ fn parse_simple_expression(
 
             return Expression::new(
                 token.position,
-                Expression_::StringLiteral(unescaped),
+                Expression_::StringLiteral(Rc::new(unescaped)),
                 id_gen.next(),
             );
         }

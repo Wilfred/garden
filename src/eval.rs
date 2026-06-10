@@ -1278,11 +1278,12 @@ pub(crate) fn eval_toplevel_call(
 
     // TODO: return an Err() rather than kludging a runtime string and letting
     // eval_env() return a type error.
-    let recv_value = ns.borrow().values.get(name).cloned().unwrap_or_else(|| {
-        Value::new(Value_::String(
-            "ERROR: Tried to call a function that isn't defined".to_owned(),
-        ))
-    });
+    let recv_value = ns
+        .borrow()
+        .values
+        .get(name)
+        .cloned()
+        .unwrap_or_else(|| Value::string("ERROR: Tried to call a function that isn't defined"));
     env.push_value(recv_value);
 
     for value in args.iter().rev() {
@@ -1562,7 +1563,7 @@ fn as_string_list(value: &Value) -> Result<Vec<String>, Value> {
             for item in items {
                 match item.as_ref() {
                     Value_::String(s) => {
-                        res.push(s.clone());
+                        res.push(s.as_ref().clone());
                     }
                     _ => {
                         return Err(item.clone());
@@ -2482,7 +2483,7 @@ fn eval_string_concat(
         out_str.push_str(lhs_str);
         out_str.push_str(rhs_str);
 
-        let value = Value::new(Value_::String(out_str));
+        let value = Value::string(out_str);
 
         if expr_value_is_used {
             env.push_value(value);
@@ -2573,10 +2574,7 @@ fn check_string<'a>(
 }
 
 fn as_int_str_tuple(i: i64, s: &str) -> Value {
-    let items = vec![
-        Value::new(Value_::Int(i)),
-        Value::new(Value_::String(s.to_owned())),
-    ];
+    let items = vec![Value::new(Value_::Int(i)), Value::string(s.to_owned())];
 
     Value::new(Value_::Tuple {
         items,
@@ -2844,10 +2842,10 @@ fn eval_built_in_call(
                             line.pop();
                         }
                     }
-                    Value::ok(Value::new(Value_::String(line)))
+                    Value::ok(Value::string(line))
                 }
                 Err(e) => {
-                    let s = Value::new(Value_::String(format!("{e}")));
+                    let s = Value::string(format!("{e}"));
                     Value::err(s)
                 }
             };
@@ -2905,8 +2903,8 @@ fn eval_built_in_call(
                             Value::new(Value_::Tuple {
                                 items: vec![
                                     Value::new(Value_::Int(exit_code as i64)),
-                                    Value::new(Value_::String(stdout)),
-                                    Value::new(Value_::String(stderr)),
+                                    Value::string(stdout),
+                                    Value::string(stderr),
                                 ],
                                 item_types: vec![Type::int(), Type::string(), Type::string()],
                             })
@@ -2914,8 +2912,8 @@ fn eval_built_in_call(
                         Err(e) => Value::new(Value_::Tuple {
                             items: vec![
                                 Value::new(Value_::Int(-1)),
-                                Value::new(Value_::String(String::new())),
-                                Value::new(Value_::String(format!("{e}"))),
+                                Value::string(String::new()),
+                                Value::string(format!("{e}")),
                             ],
                             item_types: vec![Type::int(), Type::string(), Type::string()],
                         }),
@@ -2962,7 +2960,7 @@ fn eval_built_in_call(
             )?;
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::String(arg_values[0].display(env))));
+                env.push_value(Value::string(arg_values[0].display(env)));
             }
         }
         BuiltInFunctionKind::PreludeDbg => {
@@ -3072,7 +3070,7 @@ fn eval_built_in_call(
             fun_names.sort();
             let items = fun_names
                 .into_iter()
-                .map(|n| Value::new(Value_::String(n)))
+                .map(Value::string)
                 .collect::<rpds::Vector<_>>();
 
             if expr_value_is_used {
@@ -3113,7 +3111,7 @@ fn eval_built_in_call(
             method_names.sort();
             let items = method_names
                 .into_iter()
-                .map(|n| Value::new(Value_::String(n)))
+                .map(Value::string)
                 .collect::<rpds::Vector<_>>();
 
             if expr_value_is_used {
@@ -3189,9 +3187,7 @@ fn eval_built_in_call(
                     }))
                 }
                 Err(e) => {
-                    let s = Value::new(Value_::String(format!(
-                        "Could not read directory `{path_s}`. {e}"
-                    )));
+                    let s = Value::string(format!("Could not read directory `{path_s}`. {e}"));
                     Value::err(s)
                 }
             };
@@ -3237,7 +3233,7 @@ fn eval_built_in_call(
                 let items = env
                     .cli_args
                     .iter()
-                    .map(|arg| Value::new(Value_::String(arg.clone())))
+                    .map(|arg| Value::string(arg.clone()))
                     .collect::<rpds::Vector<_>>();
 
                 env.push_value(Value::new(Value_::List {
@@ -3267,7 +3263,7 @@ fn eval_built_in_call(
             let env_var_name = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
 
             let value = match std::env::var(env_var_name) {
-                Ok(val) => Value::some(Value::new(Value_::String(val))),
+                Ok(val) => Value::some(Value::string(val)),
                 Err(_) => Value::none(),
             };
 
@@ -3311,7 +3307,7 @@ fn eval_built_in_call(
                 keywords.sort();
                 let items = keywords
                     .into_iter()
-                    .map(|k| Value::new(Value_::String(k)))
+                    .map(Value::string)
                     .collect::<rpds::Vector<_>>();
                 env.push_value(Value::new(Value_::List {
                     items,
@@ -3438,7 +3434,7 @@ fn eval_built_in_call(
                 Ok(()) => Value::ok(Value::unit()),
                 Err(e) => {
                     let msg = format!("Could not write `{path_s}`. {e}");
-                    Value::err(Value::new(Value_::String(msg)))
+                    Value::err(Value::string(msg))
                 }
             };
 
@@ -3579,7 +3575,7 @@ fn eval_built_in_call(
                 Ok(()) => Value::ok(Value::unit()),
                 Err(e) => {
                     let msg = format!("Could not write `{path_s}`. {e}");
-                    Value::err(Value::new(Value_::String(msg)))
+                    Value::err(Value::string(msg))
                 }
             };
 
@@ -3640,7 +3636,7 @@ fn eval_built_in_call(
                 Ok(()) => Value::ok(Value::unit()),
                 Err(e) => {
                     let msg = format!("Could not create directory `{path_s}`. {e}");
-                    Value::err(Value::new(Value_::String(msg)))
+                    Value::err(Value::string(msg))
                 }
             };
 
@@ -3701,7 +3697,7 @@ fn eval_built_in_call(
                 Ok(()) => Value::ok(Value::unit()),
                 Err(e) => {
                     let msg = format!("Could not remove directory `{path_s}`. {e}");
-                    Value::err(Value::new(Value_::String(msg)))
+                    Value::err(Value::string(msg))
                 }
             };
 
@@ -3786,7 +3782,7 @@ fn eval_built_in_call(
                 Ok(_) => Value::ok(Value::unit()),
                 Err(e) => {
                     let msg = format!("Could not copy `{src_path_s}` to `{dest_path_s}`. {e}");
-                    Value::err(Value::new(Value_::String(msg)))
+                    Value::err(Value::string(msg))
                 }
             };
 
@@ -3845,7 +3841,7 @@ fn eval_built_in_call(
             };
 
             let v = match std::fs::read_to_string(&path) {
-                Ok(s) => Value::ok(Value::new(Value_::String(s))),
+                Ok(s) => Value::ok(Value::string(s)),
                 Err(e) => {
                     let reason = match e.kind() {
                         std::io::ErrorKind::NotFound => "No such file".to_owned(),
@@ -3861,7 +3857,7 @@ fn eval_built_in_call(
                     } else {
                         format!("Could not read `{path_s}`. {reason}.")
                     };
-                    Value::err(Value::new(Value_::String(msg)))
+                    Value::err(Value::string(msg))
                 }
             };
 
@@ -3945,7 +3941,7 @@ fn eval_built_in_call(
                     } else {
                         format!("Could not read `{path_s}`. {reason}.")
                     };
-                    Value::err(Value::new(Value_::String(msg)))
+                    Value::err(Value::string(msg))
                 }
             };
 
@@ -4006,7 +4002,7 @@ fn eval_built_in_call(
                 Ok(()) => Value::ok(Value::unit()),
                 Err(e) => {
                     let msg = format!("Could not remove file `{path_s}`. {e}");
-                    Value::err(Value::new(Value_::String(msg)))
+                    Value::err(Value::string(msg))
                 }
             };
 
@@ -4145,7 +4141,7 @@ fn eval_built_in_call(
             for (name, value) in &ns.values {
                 if name.text == *target_name {
                     if let Some(doc_comment_text) = value.doc_comment() {
-                        ret_value = Value::some(Value::new(Value_::String(doc_comment_text)));
+                        ret_value = Value::some(Value::string(doc_comment_text));
                     }
                     break;
                 }
@@ -4185,7 +4181,7 @@ fn eval_built_in_call(
                     };
 
                     match doc_comment {
-                        Some(s) => Value::some(Value::new(Value_::String(s))),
+                        Some(s) => Value::some(Value::string(s)),
                         None => Value::none(),
                     }
                 }
@@ -4225,7 +4221,7 @@ fn eval_built_in_call(
                     {
                         Some(method_info) => match method_info.fun_info() {
                             Some(fun_info) => match &fun_info.doc_comment {
-                                Some(s) => Value::some(Value::new(Value_::String(s.clone()))),
+                                Some(s) => Value::some(Value::string(s.clone())),
                                 None => Value::none(),
                             },
                             None => Value::none(),
@@ -4299,7 +4295,7 @@ fn eval_built_in_call(
                         fun_info.and_then(|fi| env.vfs.pos_src(&fi.pos).map(|s| s.to_owned()));
 
                     match src {
-                        Some(s) => Value::some(Value::new(Value_::String(s))),
+                        Some(s) => Value::some(Value::string(s)),
                         None => Value::none(),
                     }
                 }
@@ -4337,7 +4333,7 @@ fn eval_built_in_call(
                     text: method_name.to_owned(),
                 }) {
                     if let Some(src) = env.vfs.pos_src(&meth_info.pos) {
-                        v = Value::some(Value::new(Value_::String(src.to_owned())));
+                        v = Value::some(Value::string(src.to_owned()));
                     }
                 }
             }
@@ -4381,7 +4377,7 @@ fn eval_built_in_call(
                     };
 
                     match src {
-                        Some(s) => Value::some(Value::new(Value_::String(s))),
+                        Some(s) => Value::some(Value::string(s)),
                         None => Value::none(),
                     }
                 }
@@ -4415,7 +4411,7 @@ fn eval_built_in_call(
 
             let items = names
                 .into_iter()
-                .map(|n| Value::new(Value_::String(n)))
+                .map(Value::string)
                 .collect::<rpds::Vector<_>>();
 
             let v = Value::new(Value_::List {
@@ -4481,7 +4477,7 @@ fn eval_built_in_call(
 
             let items: rpds::Vector<Value> = BUILT_IN_FILES
                 .iter()
-                .map(|(name, _)| Value::new(Value_::String((*name).to_owned())))
+                .map(|(name, _)| Value::string((*name).to_owned()))
                 .collect();
 
             if expr_value_is_used {
@@ -4508,7 +4504,7 @@ fn check_snippet(src: &str, path: PathBuf, env: &Env) -> Value {
 
     let mut error_messages = rpds::Vector::new();
     for err in syntax_errors {
-        error_messages.push_back_mut(Value::new(Value_::String(err.message().as_string())));
+        error_messages.push_back_mut(Value::string(err.message().as_string()));
     }
 
     for Diagnostic {
@@ -4518,7 +4514,7 @@ fn check_snippet(src: &str, path: PathBuf, env: &Env) -> Value {
         match severity {
             Severity::Warning => {}
             Severity::Error => {
-                error_messages.push_back_mut(Value::new(Value_::String(message.as_string())));
+                error_messages.push_back_mut(Value::string(message.as_string()));
             }
         }
     }
@@ -5171,7 +5167,7 @@ fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
     }
 
     match field_value.as_ref() {
-        Value_::String(s) => Ok(s.clone()),
+        Value_::String(s) => Ok(s.as_ref().clone()),
         _ => Err(ErrorMessage(vec![Text(format!(
             "Malformed `Path` struct (expected `p` to contain a string, got `{}`).",
             field_value.display(env),
@@ -5261,7 +5257,7 @@ fn eval_built_in_method_call(
 
                     let mut list_items = rpds::Vector::new();
                     for (item_key, item_value) in list_items_rust.iter() {
-                        let key_str = Value::new(Value_::String(item_key.clone()));
+                        let key_str = Value::string(item_key.clone());
                         let tuple_items = vec![key_str, item_value.clone()];
 
                         let tuple = Value::new(Value_::Tuple {
@@ -5984,7 +5980,7 @@ fn eval_built_in_method_call(
                     } else {
                         format!("Could not read info for `{path_s}`. {reason}.")
                     };
-                    Value::err(Value::new(Value_::String(msg)))
+                    Value::err(Value::string(msg))
                 }
             };
 
@@ -6041,7 +6037,7 @@ fn eval_built_in_method_call(
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
             let mut items = rpds::Vector::new();
             for (_, c) in s.char_indices() {
-                items.push_back_mut(Value::new(Value_::String(format!("{c}"))));
+                items.push_back_mut(Value::string(format!("{c}")));
             }
             let chars_list = Value::new(Value_::List {
                 items,
@@ -6197,7 +6193,7 @@ fn eval_built_in_method_call(
             }
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::String(joined_str)));
+                env.push_value(Value::string(joined_str));
             }
         }
         BuiltInMethodKind::StringLen => {
@@ -6244,7 +6240,7 @@ fn eval_built_in_method_call(
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
             let lines = s
                 .lines()
-                .map(|line| Value::new(Value_::String(line.to_owned())))
+                .map(|line| Value::string(line.to_owned()))
                 .collect::<rpds::Vector<_>>();
 
             let elem_type = if lines.is_empty() {
@@ -6372,13 +6368,13 @@ fn eval_built_in_method_call(
             }
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::String(
+                env.push_value(Value::string(
                     s_arg
                         .chars()
                         .skip(*from_arg as usize)
                         .take((to_arg - from_arg) as usize)
-                        .collect(),
-                )));
+                        .collect::<String>(),
+                ));
             }
         }
     }
@@ -6608,7 +6604,7 @@ fn eval_expr(
         Expression_::StringLiteral(s) => {
             *expr_state = ExpressionState::EvaluatedSubexpressions;
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::String(s.clone())));
+                env.push_value(Value::new(Value_::String(Rc::clone(s))));
             }
         }
         Expression_::ListLiteral(items) => {
@@ -7160,9 +7156,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                         value
                     } else {
                         // TODO: this should probably be an Err() case.
-                        Value::new(Value_::String(
-                            "__ERROR: no expressions evaluated. This is a bug.".to_owned(),
-                        ))
+                        Value::string("__ERROR: no expressions evaluated. This is a bug.")
                     };
 
                     return Ok(v);
@@ -8090,7 +8084,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::String("bc".into())));
+        assert_eq!(value, Value::string("bc"));
     }
 
     #[test]

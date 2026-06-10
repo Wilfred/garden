@@ -82,8 +82,9 @@ pub(crate) enum Value_ {
     Closure(Vec<BlockBindings>, FunInfo, Type),
     /// A reference to a built-in function.
     BuiltInFunction(BuiltInFunctionKind, Option<FunInfo>, Option<Type>),
-    /// A string value.
-    String(String),
+    /// A string value. The `Rc` lets string operations share the
+    /// underlying buffer rather than copying it.
+    String(Rc<String>),
     /// A list value, along with the type of its elements.
     List {
         items: rpds::Vector<Value>,
@@ -374,12 +375,17 @@ impl Value {
         })
     }
 
+    /// A helper for creating a string value.
+    pub(crate) fn string(s: impl Into<String>) -> Self {
+        Self::new(Value_::String(Rc::new(s.into())))
+    }
+
     pub(crate) fn path(inner: String) -> Self {
         Self::new(Value_::Struct {
             type_name: TypeName {
                 text: "Path".to_owned(),
             },
-            fields: vec![(SymbolName::from("p"), Value::new(Value_::String(inner)))],
+            fields: vec![(SymbolName::from("p"), Value::string(inner))],
             runtime_type: Type::path(),
         })
     }
@@ -809,7 +815,7 @@ mod tests {
         let vfs = Vfs::default();
         let env = Env::new(id_gen, vfs);
 
-        let value = Value::new(Value_::String("foo \\ \" \n bar".into()));
+        let value = Value::string("foo \\ \" \n bar");
         assert_eq!(value.display(&env), "\"foo \\\\ \\\" \\n bar\"");
     }
 }

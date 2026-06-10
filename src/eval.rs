@@ -7254,13 +7254,13 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
     // Evaluate all the items in this block, but mark the values as
     // unused for all expressions except the last one.
     for expr in block.exprs.iter().rev() {
-        let mut expr = expr.as_ref().clone();
-
-        if !expr_value_is_used {
+        if !expr_value_is_used && expr.value_is_used {
+            let mut expr = expr.as_ref().clone();
             expr.value_is_used = false;
+            env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::new(expr));
+        } else {
+            env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(expr));
         }
-
-        env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::new(expr));
     }
 
     // If this is an empty block, it should evaluate to Unit.

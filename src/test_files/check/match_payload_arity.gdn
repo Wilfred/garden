@@ -1,0 +1,29 @@
+public fun unwrap_or_zero(o: Option<Int>): Int {
+  match o {
+    Some => 0
+    None(x) => x
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `Some` has a payload, so this pattern should be written as `Some(_)`.
+// 
+// -| src/test_files/check/match_payload_arity.gdn:3:5
+// 1| public fun unwrap_or_zero(o: Option<Int>): Int {
+// 2|   match o {
+// 3|     Some => 0
+//  |     ^^^^
+// 4|     None(x) => x
+// 5|   }
+// 
+// Error: `None` does not have a payload, so this pattern should be written as `None`.
+// 
+// -| src/test_files/check/match_payload_arity.gdn:4:5
+// 2|   match o {
+// 3|     Some => 0
+// 4|     None(x) => x
+// 5|   } ^^^^
+// 6| }
+

@@ -1,0 +1,11 @@
+enum Wrap<T> {
+  Wrapped(List<T>),
+}
+
+public fun first_wrapped(w: Wrap<Int>): Option<Int> {
+  match w {
+    Wrapped(xs) => xs.first()
+  }
+}
+
+// args: check

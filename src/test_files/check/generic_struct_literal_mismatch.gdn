@@ -1,0 +1,19 @@
+struct Pair<T> {
+  first: T,
+  second: T,
+}
+
+public fun make_pair(): Pair<String> {
+  Pair{ first: "foo", second: 1 }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected an `Int` for this field but got a `String`.
+// 
+// -| src/test_files/check/generic_struct_literal_mismatch.gdn:7:16
+// 6| public fun make_pair(): Pair<String> {
+// 7|   Pair{ first: "foo", second: 1 }
+// 8| }              ^^^^^
+

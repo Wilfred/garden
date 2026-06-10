@@ -6611,7 +6611,7 @@ fn eval_expr(
         Expression_::StringLiteral(s) => {
             *expr_state = ExpressionState::EvaluatedSubexpressions;
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::String(s.clone())));
+                env.push_value(Value::new(Value_::String((**s).clone())));
             }
         }
         Expression_::ListLiteral(items) => {

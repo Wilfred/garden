@@ -484,7 +484,7 @@ pub(crate) enum Expression_ {
     /// ```garden
     /// "foo"
     /// ```
-    StringLiteral(String),
+    StringLiteral(Rc<String>),
     /// ```garden
     /// [x, y]
     /// ```

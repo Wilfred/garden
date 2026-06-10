@@ -810,6 +810,38 @@ impl TypeCheckVisitor<'_> {
                 }
             };
 
+            // A pattern must bind the payload exactly when the
+            // variant has one, otherwise the case can never match at
+            // runtime.
+            let variant_has_payload = matches!(value.as_ref(), Value_::EnumConstructor { .. });
+            if pattern.payload.is_some() && !variant_has_payload {
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    fixes: vec![],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgcode!("{}", pattern.variant_sym.name),
+                        msgtext!(" does not have a payload, so this pattern should be written as "),
+                        msgcode!("{}", pattern.variant_sym.name),
+                        msgtext!("."),
+                    ]),
+                    position: pattern.variant_sym.position.clone(),
+                });
+            } else if pattern.payload.is_none() && variant_has_payload {
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    fixes: vec![],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgcode!("{}", pattern.variant_sym.name),
+                        msgtext!(" has a payload, so this pattern should be written as "),
+                        msgcode!("{}(_)", pattern.variant_sym.name),
+                        msgtext!("."),
+                    ]),
+                    position: pattern.variant_sym.position.clone(),
+                });
+            }
+
             let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
                 continue;
             };

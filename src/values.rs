@@ -83,7 +83,7 @@ pub(crate) enum Value_ {
     /// A reference to a built-in function.
     BuiltInFunction(BuiltInFunctionKind, Option<FunInfo>, Option<Type>),
     /// A string value.
-    String(String),
+    String(Rc<String>),
     /// A list value, along with the type of its elements.
     List {
         items: rpds::Vector<Value>,
@@ -359,7 +359,10 @@ impl Value {
             type_name: TypeName {
                 text: "Path".to_owned(),
             },
-            fields: vec![(SymbolName::from("p"), Value::new(Value_::String(inner)))],
+            fields: vec![(
+                SymbolName::from("p"),
+                Value::new(Value_::String(Rc::new(inner))),
+            )],
             runtime_type: Type::path(),
         })
     }
@@ -789,7 +792,7 @@ mod tests {
         let vfs = Vfs::default();
         let env = Env::new(id_gen, vfs);
 
-        let value = Value::new(Value_::String("foo \\ \" \n bar".into()));
+        let value = Value::new(Value_::String(Rc::new("foo \\ \" \n bar".into())));
         assert_eq!(value.display(&env), "\"foo \\\\ \\\" \\n bar\"");
     }
 }

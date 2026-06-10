@@ -27,7 +27,7 @@ jobs:
         with:
           components: clippy
 
-      - run: cargo clippy --all-targets
+      - run: cargo clippy --all-targets -- -D warnings
 
   formatting:
     name: Check formatting

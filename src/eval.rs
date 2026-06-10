@@ -4514,7 +4514,7 @@ fn check_snippet(src: &str, path: PathBuf, env: &Env) -> Value {
 
     for Diagnostic {
         message, severity, ..
-    } in check_toplevel_items(&vfs_path, &items, &check_env)
+    } in check_toplevel_items(&vfs_path, &items, check_env)
     {
         match severity {
             Severity::Warning => {}

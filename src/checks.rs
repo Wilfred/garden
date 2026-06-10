@@ -48,17 +48,15 @@ use self::type_checker::check_types;
 use self::unused_literals::check_unused_literals;
 use self::unused_vars::check_unused_variables;
 
-/// Check toplevel items in a fresh environment, without any
-/// definitions from the current session.
+/// Check toplevel items in `env`, loading the items into it first.
 ///
-/// Note that this creates a new Env and Vfs, so diagnostics returned
-/// may refer to files that aren't present in `env.vfs`.
+/// This takes ownership of `env` because loading the items modifies
+/// it. Pass a clone if you need the environment afterwards.
 pub(crate) fn check_toplevel_items(
     vfs_path: &VfsPathBuf,
     items: &[ToplevelItem],
-    env: &Env,
+    mut env: Env,
 ) -> Vec<Diagnostic> {
-    let mut env: Env = env.clone();
     let ns = env.get_or_create_namespace(&vfs_path.path);
     let (mut diagnostics, _) = load_toplevel_items(items, &mut env, Rc::clone(&ns));
 

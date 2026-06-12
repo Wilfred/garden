@@ -66,6 +66,7 @@ mod prompt;
 mod rename;
 mod run_code_blocks;
 mod sandboxed_playground;
+mod signature_help;
 mod syntax_check;
 mod syntax_highlighter;
 mod temp_built_in_files;

@@ -706,6 +706,12 @@ fun render_emphasis(src: String): String {
 }
 
 fun render_paragraph(src: String, self_url: Option<String>): String {
+  if src.starts_with("<div") {
+    // A raw HTML block. Don't wrap it in <p>, because <div> isn't
+    // allowed inside <p>.
+    return render_inline(src, self_url)
+  }
+
   "<p>" ^ render_inline(src, self_url) ^ "</p>"
 }
 
@@ -861,6 +867,10 @@ test render_thematic_break {
 
 test render_html {
   assert(render("<script></script>", None, None) == "<p><script></script></p>")
+}
+
+test render_html_div_block {
+  assert(render("<div class=\"foo\"><a href=\"#\">x</a></div>", None, None) == "<div class=\"foo\"><a href=\"#\">x</a></div>")
 }
 
 test render_html_comment {

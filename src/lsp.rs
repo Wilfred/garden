@@ -456,6 +456,27 @@ fn handle_did_change(
     diagnostics_notification(url, diagnostics)
 }
 
+/// Handle textDocument/didClose notification, returning the
+/// publishDiagnostics notification that clears diagnostics for the
+/// closed file.
+fn handle_did_close(
+    params: &serde_json::Value,
+    documents: &mut DocumentStore,
+) -> Option<serde_json::Value> {
+    let text_document = params.get("textDocument")?;
+    let uri = text_document.get("uri")?.as_str()?;
+
+    // Convert URI to path
+    let url = Url::parse(uri).ok()?;
+    let path = url.to_file_path().ok()?;
+
+    // Forget the document content now that the client has closed it.
+    documents.remove(&path);
+
+    // Clear any diagnostics we previously published for this file.
+    diagnostics_notification(url, vec![])
+}
+
 /// Handle a textDocument/completion request.
 fn handle_completion(
     id: serde_json::Value,
@@ -1148,6 +1169,10 @@ fn handle_message(
         Some("textDocument/didChange") => {
             let params = message.get("params").unwrap_or(&serde_json::Value::Null);
             outgoing.extend(handle_did_change(params, documents));
+        }
+        Some("textDocument/didClose") => {
+            let params = message.get("params").unwrap_or(&serde_json::Value::Null);
+            outgoing.extend(handle_did_close(params, documents));
         }
         Some("shutdown") => {
             if let Some(id) = parsed.id {

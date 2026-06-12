@@ -341,6 +341,26 @@ button:hover {
   background-color: #dfe2d5;
 }
 
+/* Run/Edit buttons on code snippets are quiet text buttons, so they
+   don't compete with the code itself. */
+.snippet button {
+  border: none;
+  border-radius: 3px;
+  min-width: 0;
+
+  padding: 2px 8px;
+  margin: 0 0 8px 8px;
+
+  background-color: transparent;
+  color: var(--green-primary);
+  font-size: 15px;
+  font-family: "Lora", serif;
+}
+
+.snippet button:hover {
+  background-color: #dfe2d5;
+}
+
 .code-title {
   display: block;
   padding: 6px 12px;

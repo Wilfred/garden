@@ -769,13 +769,34 @@ fun render_bullets(items: List<String>, self_url: Option<String>): String {
   "<ul>\n" ^ "\n".join(rendered_items) ^ "\n</ul>"
 }
 
+/// Render a sidebar table of contents from `toc_entries`, a list of
+/// rendered `<li>` items.
+fun render_toc(toc_entries: List<String>): String {
+  "".join([
+    "<nav class=\"toc\"><span class=\"toc-title\">On this page</span><ul>\n",
+    "\n".join(toc_entries),
+    "\n</ul></nav>"])
+}
+
 public fun render(src: String, file: Option<Path>, self_url: Option<String>): String {
   let html_parts: List<String> = []
+  let toc_entries: List<String> = []
 
   for part in parse_markdown(src, file) {
     match part {
       Heading(heading) => {
         html_parts = html_parts.append(render_heading(heading, self_url))
+
+        if heading.starts_with("## ") {
+          let content = heading.strip_prefix("##").trim()
+          let entry = "".join([
+            "<li><a href=\"#",
+            heading_slug(content),
+            "\">",
+            render_inline(content, self_url),
+            "</a></li>"])
+          toc_entries = toc_entries.append(entry)
+        }
       }
       Paragraph(paragraph) => {
         html_parts = html_parts.append(render_paragraph(paragraph, self_url))
@@ -790,6 +811,12 @@ public fun render(src: String, file: Option<Path>, self_url: Option<String>): St
         html_parts = html_parts.append("<hr />")
       }
     }
+  }
+
+  // Only show a table of contents on pages with enough sections for
+  // it to be useful.
+  if toc_entries.len() >= 3 {
+    html_parts = [render_toc(toc_entries)].concat(html_parts)
   }
 
   "\n".join(html_parts)
@@ -816,6 +843,21 @@ test render_paragraph {
 
 test render_paragraph_escape_angle_brackets {
   assert(render("foo bar<", None, None) == "<p>foo bar&lt;</p>")
+}
+
+test render_table_of_contents {
+  assert(render("## a\n\n## b\n\n## c", None, None) == "<nav class=\"toc\"><span class=\"toc-title\">On this page</span><ul>
+<li><a href=\"#a\">a</a></li>
+<li><a href=\"#b\">b</a></li>
+<li><a href=\"#c\">c</a></li>
+</ul></nav>
+<h2 id=\"a\">a</h2>
+<h2 id=\"b\">b</h2>
+<h2 id=\"c\">c</h2>")
+}
+
+test render_no_table_of_contents_for_few_headings {
+  assert(render("## a\n\n## b", None, None) == "<h2 id=\"a\">a</h2>\n<h2 id=\"b\">b</h2>")
 }
 
 test render_paragraph_after_heading {

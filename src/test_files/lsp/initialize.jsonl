@@ -28,6 +28,7 @@
 //       "documentHighlightProvider": true,
 //       "documentSymbolProvider": true,
 //       "hoverProvider": true,
+//       "positionEncoding": "utf-16",
 //       "renameProvider": true,
 //       "signatureHelpProvider": {
 //         "triggerCharacters": [

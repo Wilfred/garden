@@ -118,13 +118,17 @@ fn read_message() -> io::Result<Option<serde_json::Value>> {
             break;
         }
 
-        if let Some(length_str) = header.strip_prefix("Content-Length: ") {
-            content_length = Some(length_str.parse::<usize>().map_err(|e| {
-                io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    format!("Invalid Content-Length: {e}"),
-                )
-            })?);
+        // Header field names are case-insensitive per the LSP spec, and
+        // the amount of whitespace after the colon is not fixed.
+        if let Some((name, value)) = header.split_once(':') {
+            if name.trim().eq_ignore_ascii_case("Content-Length") {
+                content_length = Some(value.trim().parse::<usize>().map_err(|e| {
+                    io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        format!("Invalid Content-Length: {e}"),
+                    )
+                })?);
+            }
         }
     }
 
@@ -1022,15 +1026,26 @@ fn push_request_response<P: serde::de::DeserializeOwned, T: Serialize>(
     }
 }
 
+/// What the server should do after handling a message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Action {
+    /// Continue processing messages.
+    Continue,
+    /// A shutdown request was received.
+    Shutdown,
+    /// An exit notification was received; stop the loop.
+    Exit,
+}
+
 /// Handle a single message from the client. Returns the messages to
-/// send back, and whether the server should exit.
+/// send back, and the action the server should take next.
 fn handle_message(
     message: &serde_json::Value,
     documents: &mut DocumentStore,
     temp_built_in_files: Option<&TempBuiltInFiles>,
-) -> (Vec<serde_json::Value>, bool) {
+) -> (Vec<serde_json::Value>, Action) {
     let mut outgoing: Vec<serde_json::Value> = vec![];
-    let mut should_exit = false;
+    let mut action = Action::Continue;
 
     // Parse the message
     let parsed: Message = match serde_json::from_value(message.clone()) {
@@ -1047,7 +1062,7 @@ fn handle_message(
                     format!("Could not parse message: {e}"),
                 );
             }
-            return (outgoing, should_exit);
+            return (outgoing, action);
         }
     };
 
@@ -1149,11 +1164,11 @@ fn handle_message(
             if let Some(id) = parsed.id {
                 push_response(&mut outgoing, handle_shutdown(id));
             }
-            should_exit = true;
+            action = Action::Shutdown;
         }
         Some("exit") => {
             // Exit notification
-            should_exit = true;
+            action = Action::Exit;
         }
         Some(method) => {
             // Unknown notifications can be safely ignored, but
@@ -1174,7 +1189,7 @@ fn handle_message(
         }
     }
 
-    (outgoing, should_exit)
+    (outgoing, action)
 }
 
 /// Run the LSP server.
@@ -1189,6 +1204,8 @@ pub(crate) fn run_lsp() {
         }
     };
 
+    let mut shutdown_received = false;
+
     loop {
         let message = match read_message() {
             Ok(Some(msg)) => msg,
@@ -1202,7 +1219,7 @@ pub(crate) fn run_lsp() {
             }
         };
 
-        let (outgoing, should_exit) =
+        let (outgoing, action) =
             handle_message(&message, &mut documents, temp_built_in_files.as_ref());
 
         for msg in &outgoing {
@@ -1211,8 +1228,15 @@ pub(crate) fn run_lsp() {
             }
         }
 
-        if should_exit {
-            break;
+        match action {
+            Action::Continue => {}
+            Action::Shutdown => shutdown_received = true,
+            Action::Exit => {
+                // Per the LSP spec, the server exits with code 0 if an
+                // `exit` notification follows a `shutdown` request, and
+                // with code 1 otherwise.
+                std::process::exit(if shutdown_received { 0 } else { 1 });
+            }
         }
     }
 }
@@ -1249,7 +1273,7 @@ pub(crate) fn reftest_lsp(src: &str) {
 
         // Built-in files are not written to disk in reftests, so
         // definition positions in built-ins keep their relative paths.
-        let (outgoing, _should_exit) = handle_message(&message, &mut documents, None);
+        let (outgoing, _action) = handle_message(&message, &mut documents, None);
         for msg in outgoing {
             println!("{}", serde_json::to_string_pretty(&msg).unwrap());
         }

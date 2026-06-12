@@ -166,6 +166,49 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
   parts
 }
 
+/// Convert heading text to an HTML id, e.g. `Built-in Types` to
+/// `built-in-types`.
+fun heading_slug(content: String): String {
+  let lower = "abcdefghijklmnopqrstuvwxyz"
+  let upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  let digits = "0123456789"
+
+  let slug_chars: List<String> = []
+
+  // Treat the start as a dash, so we never emit a leading dash.
+  let prev_was_dash = True
+
+  for char in content.chars() {
+    let slug_char = if lower.contains(char) || digits.contains(char) {
+      char
+    } else {
+      match upper.index_of(char) {
+        Some(i) => lower.substring(i, i + 1)
+        None => "-"
+      }
+    }
+
+    if slug_char == "-" {
+      if prev_was_dash {
+        continue
+      }
+      prev_was_dash = True
+    } else {
+      prev_was_dash = False
+    }
+
+    slug_chars = slug_chars.append(slug_char)
+  }
+
+  "".join(slug_chars).strip_suffix("-")
+}
+
+test heading_slug {
+  assert(heading_slug("Built-in Types") == "built-in-types")
+  assert(heading_slug("`==` and `!=` Operators") == "and-operators")
+  assert(heading_slug("Shell `__shell.gdn`") == "shell-shell-gdn")
+}
+
 /// Render a "# Foo" heading.
 fun render_heading(src: String, self_url: Option<String>): String {
   let h_count = 0
@@ -180,10 +223,12 @@ fun render_heading(src: String, self_url: Option<String>): String {
     return "<p>" ^ src ^ "</p>"
   }
 
-  let open_tag = "<h" ^ string_repr(h_count) ^ ">"
+  let content = content.trim()
+
+  let open_tag = "<h" ^ string_repr(h_count) ^ " id=\"" ^ heading_slug(content) ^ "\">"
   let close_tag = "</h" ^ string_repr(h_count) ^ ">"
 
-  open_tag ^ render_inline(content.trim(), self_url) ^ close_tag
+  open_tag ^ render_inline(content, self_url) ^ close_tag
 }
 
 /// We want to find " < ", which requires trailing whitespace on the
@@ -755,11 +800,11 @@ test render_paragraph_newlines {
 }
 
 test render_headings {
-  assert(render("# foo", None, None) == "<h1>foo</h1>")
-  assert(render("#  foo ", None, None) == "<h1>foo</h1>")
+  assert(render("# foo", None, None) == "<h1 id=\"foo\">foo</h1>")
+  assert(render("#  foo ", None, None) == "<h1 id=\"foo\">foo</h1>")
 
-  assert(render("## foo", None, None) == "<h2>foo</h2>")
-  assert(render("###### foo", None, None) == "<h6>foo</h6>")
+  assert(render("## foo", None, None) == "<h2 id=\"foo\">foo</h2>")
+  assert(render("###### foo", None, None) == "<h6 id=\"foo\">foo</h6>")
 
   assert(render("#foo", None, None) == "<p>#foo</p>")
   assert(render("####### foo", None, None) == "<p>####### foo</p>")
@@ -774,7 +819,7 @@ test render_paragraph_escape_angle_brackets {
 }
 
 test render_paragraph_after_heading {
-  assert(render("# foo\n\nbar", None, None) == "<h1>foo</h1>\n<p>bar</p>")
+  assert(render("# foo\n\nbar", None, None) == "<h1 id=\"foo\">foo</h1>\n<p>bar</p>")
 }
 
 test render_backtick {
@@ -794,7 +839,7 @@ test render_strong_escape_angle_brackets {
 }
 
 test render_backtick_in_heading {
-  assert(render("# `foo`", None, None) == "<h1><code>foo</code></h1>")
+  assert(render("# `foo`", None, None) == "<h1 id=\"foo\"><code>foo</code></h1>")
 }
 
 test render_link {

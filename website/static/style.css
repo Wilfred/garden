@@ -390,6 +390,35 @@ button:hover {
   color: #3c4534;
 }
 
+/* Grids of related links, e.g. on the manual page. Inspired by the
+   category grid on lib.rs. */
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  margin: 16px 0 26px 0;
+}
+
+.link-grid a {
+  display: block;
+  padding: 5px 10px;
+  background-color: #f4f6ee;
+  border: 1px solid #00000022;
+  border-radius: 5px;
+  overflow-wrap: break-word;
+}
+
+.link-grid a:hover {
+  border-color: var(--green-primary);
+  border-bottom: 1px solid var(--green-primary);
+}
+
+.link-grid code {
+  border: none;
+  padding: 0;
+  font-size: 15px;
+}
+
 hr {
   border: none;
   border-top: 3px solid #00000030;

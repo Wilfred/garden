@@ -1,0 +1,39 @@
+// Opening a file with an unbound variable produces a diagnostic, and
+// fixing the file in didChange clears it.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///diagnostics.gdn", "languageId": "garden", "version": 1, "text": "println(no_such_var)\n"}}}
+{"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {"textDocument": {"uri": "file:///diagnostics.gdn", "version": 2}, "contentChanges": [{"text": "println(\"hello\")\n"}]}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "Unbound symbol: `no_such_var`",
+//         "range": {
+//           "end": {
+//             "character": 19,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 8,
+//             "line": 0
+//           }
+//         },
+//         "severity": 1
+//       }
+//     ],
+//     "uri": "file:///diagnostics.gdn"
+//   }
+// }
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///diagnostics.gdn"
+//   }
+// }
+

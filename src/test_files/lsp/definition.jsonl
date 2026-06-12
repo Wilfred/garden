@@ -1,0 +1,33 @@
+// Go-to-definition on a call to a user-defined function jumps to the
+// `fun` definition.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///definition.gdn", "languageId": "garden", "version": 1, "text": "fun add_one(i: Int): Int {\n  i + 1\n}\n\nadd_one(2)\n"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/definition", "params": {"textDocument": {"uri": "file:///definition.gdn"}, "position": {"line": 4, "character": 1}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///definition.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": {
+//     "range": {
+//       "end": {
+//         "character": 11,
+//         "line": 0
+//       },
+//       "start": {
+//         "character": 4,
+//         "line": 0
+//       }
+//     },
+//     "uri": "file:///definition.gdn"
+//   }
+// }
+

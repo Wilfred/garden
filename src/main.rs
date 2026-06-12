@@ -238,6 +238,13 @@ enum CliCommands {
     ///
     /// Lines starting `//` are ignored.
     ReftestJsonSession { path: PathBuf },
+    /// Replay LSP messages from a .jsonl file against the LSP message
+    /// handler and print the messages the server sends back.
+    ///
+    /// Each non-blank, non-comment line is a JSON object representing
+    /// a single LSP message from the client, without `Content-Length`
+    /// framing. Lines starting `//` are ignored.
+    ReftestLsp { path: PathBuf },
     /// Replay nREPL requests from a JSON file against an in-process
     /// nREPL connection and print the responses.
     ///
@@ -436,6 +443,11 @@ fn main() {
             for item in items {
                 println!("{}", serde_json::to_string(&item).unwrap());
             }
+        }
+        CliCommands::ReftestLsp { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            lsp::reftest_lsp(&src);
         }
         CliCommands::ReftestNrepl { path } => {
             let abs_path = to_abs_path(&path);
@@ -1046,6 +1058,11 @@ mod tests {
     #[test]
     fn reftest_json_session() -> TestResult<()> {
         run_reftests("json_session")
+    }
+
+    #[test]
+    fn reftest_lsp() -> TestResult<()> {
+        run_reftests("lsp")
     }
 
     #[test]

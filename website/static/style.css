@@ -253,8 +253,9 @@ header a {
 }
 
 #playground-wrapper {
-  border: 3px solid #00000030;
+  border: 1px solid #00000022;
   border-radius: 5px;
+  background-color: #f4f6ee;
 }
 
 #playground-wrapper .cm-editor {
@@ -279,14 +280,14 @@ textarea {
 
 #playground-output {
   padding: 10px;
-  border-top: 3px solid #00000030;
+  border-top: 1px solid #00000022;
   white-space: pre;
 }
 
 .snippet-output {
   white-space: pre;
   padding: 10px;
-  border-top: 3px solid #00000030;
+  border-top: 1px solid #00000022;
 }
 
 .snippet-output .stderr,
@@ -300,22 +301,21 @@ textarea {
 }
 
 .snippet {
-  border: 3px solid #00000030;
+  border: 1px solid #00000022;
   border-radius: 5px;
+  background-color: #f4f6ee;
 
   padding: 0;
   margin: 30px 0px 20px 0px;
 
   position: relative;
-  top: -2px;
-  left: -2px;
 
   z-index: 1;
 }
 
 .snippet pre {
-  font-weight: 700;
-  margin: 10px;
+  margin: 0;
+  padding: 12px;
 }
 
 .snippet .snippet-output {
@@ -403,7 +403,7 @@ ul ul {
   line-height: 20px;
   border: none;
   outline: none;
-  background-color: var(--cream);
+  background-color: transparent;
 }
 
 .cm-scroller {
@@ -428,8 +428,8 @@ ul ul {
 }
 
 .snippet .cm-editor {
-  font-weight: 700;
-  margin: 10px;
+  margin: 0;
+  padding: 2px;
 }
 
 .cm-line {
@@ -438,7 +438,7 @@ ul ul {
 
 /* Gutters (line numbers, etc) */
 .cm-gutters {
-  background-color: var(--cream);
+  background-color: transparent;
   border-right: 1px solid #00000030;
 }
 

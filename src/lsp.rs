@@ -8,10 +8,10 @@ use gen_lsp_types::{
     DocumentFormattingProvider, DocumentHighlight, DocumentHighlightParams,
     DocumentHighlightProvider, DocumentSymbol, DocumentSymbolParams, DocumentSymbolProvider,
     ErrorCodes, Hover, HoverParams, HoverProvider, InitializeParams, InitializeResult, Location,
-    MarkupContent, MarkupKind, Position, PublishDiagnosticsParams, Range, ReferenceParams,
-    ReferencesProvider, RenameParams, RenameProvider, ServerCapabilities, ServerInfo,
-    SignatureHelp, SignatureHelpOptions, SignatureHelpParams, SymbolKind, TextDocumentSync,
-    TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
+    MarkupContent, MarkupKind, Position, PositionEncodingKind, PublishDiagnosticsParams, Range,
+    ReferenceParams, ReferencesProvider, RenameParams, RenameProvider, ServerCapabilities,
+    ServerInfo, SignatureHelp, SignatureHelpOptions, SignatureHelpParams, SymbolKind,
+    TextDocumentSync, TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
 };
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
@@ -169,8 +169,34 @@ fn path_to_uri(path: &PathBuf) -> Uri {
     })
 }
 
-/// Convert a Garden position to an LSP range.
-fn garden_pos_to_lsp_range(pos: &GardenPosition) -> Range {
+/// Convert a byte offset in `src` to an LSP position on the line
+/// `line_number`. LSP positions count UTF-16 code units within the
+/// line.
+fn offset_to_lsp_position(src: &str, offset: usize, line_number: usize) -> Position {
+    let offset = offset.min(src.len());
+    let line_start = src[..offset].rfind('\n').map_or(0, |i| i + 1);
+    let character = src[line_start..offset].encode_utf16().count();
+
+    Position {
+        line: line_number as u32,
+        character: character as u32,
+    }
+}
+
+/// Convert a Garden position to an LSP range, using `src` (the source
+/// of the file the position is in) to convert byte offsets to UTF-16
+/// columns.
+fn garden_pos_to_lsp_range(src: &str, pos: &GardenPosition) -> Range {
+    Range {
+        start: offset_to_lsp_position(src, pos.start_offset, pos.line_number),
+        end: offset_to_lsp_position(src, pos.end_offset, pos.end_line_number),
+    }
+}
+
+/// Convert a Garden position to an LSP range when the source of the
+/// file is not available. Garden columns are measured in bytes, so
+/// this is only correct for lines of ASCII text.
+fn garden_pos_to_lsp_range_no_src(pos: &GardenPosition) -> Range {
     Range {
         start: Position {
             line: pos.line_number as u32,
@@ -204,7 +230,7 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<Diagnostic> {
         };
 
         diagnostics.push(Diagnostic {
-            range: garden_pos_to_lsp_range(&position),
+            range: garden_pos_to_lsp_range(src, &position),
             severity: Some(DiagnosticSeverity::Error),
             message,
             ..Default::default()
@@ -231,7 +257,7 @@ fn get_diagnostics(src: &str, path: &PathBuf) -> Vec<Diagnostic> {
             };
 
             diagnostics.push(Diagnostic {
-                range: garden_pos_to_lsp_range(&position),
+                range: garden_pos_to_lsp_range(src, &position),
                 severity: Some(lsp_severity),
                 message: message.as_string(),
                 ..Default::default()
@@ -358,29 +384,29 @@ fn get_hover(src: &str, path: &PathBuf, offset: usize) -> Option<Hover> {
 /// Build the document symbols for a single toplevel item, or `None`
 /// for items that don't introduce a named symbol (such as bare
 /// expressions or blocks).
-fn toplevel_item_symbol(item: &ToplevelItem) -> Option<DocumentSymbol> {
-    let range = garden_pos_to_lsp_range(&item.position());
+fn toplevel_item_symbol(src: &str, item: &ToplevelItem) -> Option<DocumentSymbol> {
+    let range = garden_pos_to_lsp_range(src, &item.position());
 
     match item {
         ToplevelItem::Fun(name_sym, _, _) => Some(document_symbol(
             name_sym.name.text.clone(),
             SymbolKind::Function,
             range,
-            garden_pos_to_lsp_range(&name_sym.position),
+            garden_pos_to_lsp_range(src, &name_sym.position),
             None,
         )),
         ToplevelItem::Method(method_info, _) => Some(document_symbol(
             method_info.full_name(),
             SymbolKind::Method,
             range,
-            garden_pos_to_lsp_range(&method_info.name_sym.position),
+            garden_pos_to_lsp_range(src, &method_info.name_sym.position),
             None,
         )),
         ToplevelItem::Test(test_info) => Some(document_symbol(
             test_info.name_sym.name.text.clone(),
             SymbolKind::Function,
             range,
-            garden_pos_to_lsp_range(&test_info.name_sym.position),
+            garden_pos_to_lsp_range(src, &test_info.name_sym.position),
             None,
         )),
         ToplevelItem::Enum(enum_info) => {
@@ -388,7 +414,7 @@ fn toplevel_item_symbol(item: &ToplevelItem) -> Option<DocumentSymbol> {
                 .variants
                 .iter()
                 .map(|variant| {
-                    let variant_range = garden_pos_to_lsp_range(&variant.name_sym.position);
+                    let variant_range = garden_pos_to_lsp_range(src, &variant.name_sym.position);
                     document_symbol(
                         variant.name_sym.name.text.clone(),
                         SymbolKind::EnumMember,
@@ -403,7 +429,7 @@ fn toplevel_item_symbol(item: &ToplevelItem) -> Option<DocumentSymbol> {
                 enum_info.name_sym.name.text.clone(),
                 SymbolKind::Enum,
                 range,
-                garden_pos_to_lsp_range(&enum_info.name_sym.position),
+                garden_pos_to_lsp_range(src, &enum_info.name_sym.position),
                 Some(variants),
             ))
         }
@@ -412,7 +438,7 @@ fn toplevel_item_symbol(item: &ToplevelItem) -> Option<DocumentSymbol> {
                 .fields
                 .iter()
                 .map(|field| {
-                    let field_range = garden_pos_to_lsp_range(&field.sym.position);
+                    let field_range = garden_pos_to_lsp_range(src, &field.sym.position);
                     document_symbol(
                         field.sym.name.text.clone(),
                         SymbolKind::Field,
@@ -427,7 +453,7 @@ fn toplevel_item_symbol(item: &ToplevelItem) -> Option<DocumentSymbol> {
                 struct_info.name_sym.name.text.clone(),
                 SymbolKind::Struct,
                 range,
-                garden_pos_to_lsp_range(&struct_info.name_sym.position),
+                garden_pos_to_lsp_range(src, &struct_info.name_sym.position),
                 Some(fields),
             ))
         }
@@ -437,7 +463,7 @@ fn toplevel_item_symbol(item: &ToplevelItem) -> Option<DocumentSymbol> {
                 name_sym.name.text.clone(),
                 SymbolKind::Namespace,
                 range,
-                garden_pos_to_lsp_range(&name_sym.position),
+                garden_pos_to_lsp_range(src, &name_sym.position),
                 None,
             ))
         }
@@ -475,7 +501,7 @@ fn get_document_symbols(src: &str, path: &PathBuf) -> Vec<DocumentSymbol> {
     items
         .iter()
         .filter(|item| !item.is_invalid_or_placeholder())
-        .filter_map(toplevel_item_symbol)
+        .filter_map(|item| toplevel_item_symbol(src, item))
         .collect()
 }
 
@@ -510,6 +536,7 @@ fn handle_initialize(
             })),
             references_provider: Some(ReferencesProvider::Bool(true)),
             rename_provider: Some(RenameProvider::Bool(true)),
+            position_encoding: Some(PositionEncodingKind::UTF16),
             ..Default::default()
         },
         server_info: Some(ServerInfo {
@@ -691,10 +718,26 @@ fn handle_definition(
         .and_then(|b| b.resolve(&def_pos.path))
         .unwrap_or_else(|| (*def_pos.path).clone());
 
+    // The definition may be in a different file, whose source we need
+    // to compute UTF-16 columns.
+    let def_src: Option<String> = if def_path == path {
+        Some(src)
+    } else {
+        documents
+            .get(&def_path)
+            .cloned()
+            .or_else(|| std::fs::read_to_string(&def_path).ok())
+    };
+
+    let range = match &def_src {
+        Some(def_src) => garden_pos_to_lsp_range(def_src, &def_pos),
+        None => garden_pos_to_lsp_range_no_src(&def_pos),
+    };
+
     // Convert to LSP Location format
     let location = Location {
         uri: path_to_uri(&def_path),
-        range: garden_pos_to_lsp_range(&def_pos),
+        range,
     };
 
     JsonRpcResponse::new(id, Some(location))
@@ -785,7 +828,7 @@ fn handle_document_highlight(
     let highlights = highlight_occurrences(&src, &path, offset)
         .into_iter()
         .map(|pos| DocumentHighlight {
-            range: garden_pos_to_lsp_range(&pos),
+            range: garden_pos_to_lsp_range(&src, &pos),
             kind: None,
         })
         .collect();
@@ -882,7 +925,7 @@ fn handle_code_action(
     // Convert fixes to code actions
     let mut actions: Vec<CodeActionResponse> = vec![];
     for fix in fixes {
-        let range = garden_pos_to_lsp_range(&fix.position);
+        let range = garden_pos_to_lsp_range(&src, &fix.position);
 
         // Only include fixes that overlap with the requested range
         if !ranges_overlap(&range, &params.range) {
@@ -968,7 +1011,7 @@ fn handle_references(
         .filter(|pos| params.context.include_declaration || *pos != def_pos)
         .map(|pos| Location {
             uri: uri.clone(),
-            range: garden_pos_to_lsp_range(&pos),
+            range: garden_pos_to_lsp_range(&src, &pos),
         })
         .collect();
 
@@ -1008,7 +1051,7 @@ fn handle_rename(
     let edits: Vec<TextEdit> = positions
         .into_iter()
         .map(|pos| TextEdit {
-            range: garden_pos_to_lsp_range(&pos),
+            range: garden_pos_to_lsp_range(&src, &pos),
             new_text: new_name.clone(),
         })
         .collect();
@@ -1247,7 +1290,7 @@ fn whole_document_range(src: &str) -> Range {
         (src.lines().count(), 0)
     } else {
         let line_count = src.lines().count();
-        let last_line_length = src.lines().last().map_or(0, |l| l.len());
+        let last_line_length = src.lines().last().map_or(0, |l| l.encode_utf16().count());
         (line_count.saturating_sub(1), last_line_length)
     };
 
@@ -1280,7 +1323,8 @@ fn ranges_overlap(a: &Range, b: &Range) -> bool {
     true
 }
 
-/// Convert line and character position to byte offset in the source.
+/// Convert an LSP line and character position to a byte offset in
+/// the source. LSP positions count UTF-16 code units within the line.
 ///
 /// A character position past the end of a line is clamped to the end
 /// of that line, and a line past the end of the source is clamped to
@@ -1295,13 +1339,15 @@ fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
         }
     }
 
-    // Walk forward `character` characters, stopping at the end of the
-    // line or the end of the source.
+    // Walk forward `character` UTF-16 code units, stopping at the end
+    // of the line or the end of the source.
+    let mut units = 0;
     let mut offset = line_start;
-    for (char_count, (char_idx, ch)) in src[line_start..].char_indices().enumerate() {
-        if char_count == character || ch == '\n' {
+    for (char_idx, ch) in src[line_start..].char_indices() {
+        if units >= character || ch == '\n' {
             return line_start + char_idx;
         }
+        units += ch.len_utf16();
         offset = line_start + char_idx + ch.len_utf8();
     }
 
@@ -1705,6 +1751,21 @@ mod tests {
         // A character position past the end of a line is clamped to
         // the end of that line, not the start.
         assert_eq!(line_char_to_offset("ab\ncd\n", 0, 10), 2);
+    }
+
+    #[test]
+    fn test_line_char_to_offset_utf16() {
+        // '😀' is two UTF-16 code units and four UTF-8 bytes, so the
+        // 'x' at UTF-16 character 5 is at byte offset 7.
+        let src = "\"😀\" x";
+        assert_eq!(line_char_to_offset(src, 0, 5), 7);
+    }
+
+    #[test]
+    fn test_offset_to_lsp_position_utf16() {
+        let src = "\"😀\" x";
+        let position = offset_to_lsp_position(src, 7, 0);
+        assert_eq!(position.character, 5);
     }
 
     #[test]

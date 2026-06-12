@@ -6,11 +6,12 @@ use gen_lsp_types::{
     CodeActionResponse, CompletionItem, CompletionOptions, CompletionParams, Contents,
     DefinitionParams, DefinitionProvider, Diagnostic, DiagnosticSeverity, DocumentFormattingParams,
     DocumentFormattingProvider, DocumentHighlight, DocumentHighlightParams,
-    DocumentHighlightProvider, ErrorCodes, Hover, HoverParams, HoverProvider, InitializeParams,
-    InitializeResult, Location, MarkupContent, MarkupKind, Position, PublishDiagnosticsParams,
-    Range, RenameParams, RenameProvider, ServerCapabilities, ServerInfo, SignatureHelp,
-    SignatureHelpOptions, SignatureHelpParams, TextDocumentSync, TextDocumentSyncKind, TextEdit,
-    Uri, WorkspaceEdit,
+    DocumentHighlightProvider, DocumentSymbol, DocumentSymbolParams, DocumentSymbolProvider,
+    ErrorCodes, Hover, HoverParams, HoverProvider, InitializeParams, InitializeResult, Location,
+    MarkupContent, MarkupKind, Position, PublishDiagnosticsParams, Range, RenameParams,
+    RenameProvider, ServerCapabilities, ServerInfo, SignatureHelp, SignatureHelpOptions,
+    SignatureHelpParams, SymbolKind, TextDocumentSync, TextDocumentSyncKind, TextEdit, Uri,
+    WorkspaceEdit,
 };
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
@@ -33,7 +34,7 @@ use crate::eval::load_toplevel_items;
 use crate::extract_function::extract_function;
 use crate::extract_variable::extract_variable;
 use crate::highlight::highlight_occurrences;
-use crate::parser::ast::IdGenerator;
+use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::position::Position as GardenPosition;
 use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
@@ -353,6 +354,130 @@ fn get_hover(src: &str, path: &PathBuf, offset: usize) -> Option<Hover> {
     })
 }
 
+/// Build the document symbols for a single toplevel item, or `None`
+/// for items that don't introduce a named symbol (such as bare
+/// expressions or blocks).
+fn toplevel_item_symbol(item: &ToplevelItem) -> Option<DocumentSymbol> {
+    let range = garden_pos_to_lsp_range(&item.position());
+
+    match item {
+        ToplevelItem::Fun(name_sym, _, _) => Some(document_symbol(
+            name_sym.name.text.clone(),
+            SymbolKind::Function,
+            range,
+            garden_pos_to_lsp_range(&name_sym.position),
+            None,
+        )),
+        ToplevelItem::Method(method_info, _) => Some(document_symbol(
+            method_info.full_name(),
+            SymbolKind::Method,
+            range,
+            garden_pos_to_lsp_range(&method_info.name_sym.position),
+            None,
+        )),
+        ToplevelItem::Test(test_info) => Some(document_symbol(
+            test_info.name_sym.name.text.clone(),
+            SymbolKind::Function,
+            range,
+            garden_pos_to_lsp_range(&test_info.name_sym.position),
+            None,
+        )),
+        ToplevelItem::Enum(enum_info) => {
+            let variants = enum_info
+                .variants
+                .iter()
+                .map(|variant| {
+                    let variant_range = garden_pos_to_lsp_range(&variant.name_sym.position);
+                    document_symbol(
+                        variant.name_sym.name.text.clone(),
+                        SymbolKind::EnumMember,
+                        variant_range,
+                        variant_range,
+                        None,
+                    )
+                })
+                .collect();
+
+            Some(document_symbol(
+                enum_info.name_sym.name.text.clone(),
+                SymbolKind::Enum,
+                range,
+                garden_pos_to_lsp_range(&enum_info.name_sym.position),
+                Some(variants),
+            ))
+        }
+        ToplevelItem::Struct(struct_info) => {
+            let fields = struct_info
+                .fields
+                .iter()
+                .map(|field| {
+                    let field_range = garden_pos_to_lsp_range(&field.sym.position);
+                    document_symbol(
+                        field.sym.name.text.clone(),
+                        SymbolKind::Field,
+                        field_range,
+                        field_range,
+                        None,
+                    )
+                })
+                .collect();
+
+            Some(document_symbol(
+                struct_info.name_sym.name.text.clone(),
+                SymbolKind::Struct,
+                range,
+                garden_pos_to_lsp_range(&struct_info.name_sym.position),
+                Some(fields),
+            ))
+        }
+        ToplevelItem::Import(import_info) => {
+            let name_sym = import_info.namespace_sym.as_ref()?;
+            Some(document_symbol(
+                name_sym.name.text.clone(),
+                SymbolKind::Namespace,
+                range,
+                garden_pos_to_lsp_range(&name_sym.position),
+                None,
+            ))
+        }
+        ToplevelItem::Expr(_) | ToplevelItem::Block(_) => None,
+    }
+}
+
+/// Construct a `DocumentSymbol` with no detail or tags.
+fn document_symbol(
+    name: String,
+    kind: SymbolKind,
+    range: Range,
+    selection_range: Range,
+    children: Option<Vec<DocumentSymbol>>,
+) -> DocumentSymbol {
+    DocumentSymbol::new(
+        name,
+        None,
+        kind,
+        None,
+        None,
+        range,
+        selection_range,
+        children,
+    )
+}
+
+/// Get the document symbols (outline) for a file.
+fn get_document_symbols(src: &str, path: &PathBuf) -> Vec<DocumentSymbol> {
+    let mut id_gen = IdGenerator::default();
+    let (_vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+
+    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+    items
+        .iter()
+        .filter(|item| !item.is_invalid_or_placeholder())
+        .filter_map(toplevel_item_symbol)
+        .collect()
+}
+
 /// Handle an initialize request.
 fn handle_initialize(
     id: serde_json::Value,
@@ -373,6 +498,7 @@ fn handle_initialize(
             text_document_sync: Some(TextDocumentSync::Kind(TextDocumentSyncKind::Full)),
             document_formatting_provider: Some(DocumentFormattingProvider::Bool(true)),
             document_highlight_provider: Some(DocumentHighlightProvider::Bool(true)),
+            document_symbol_provider: Some(DocumentSymbolProvider::Bool(true)),
             code_action_provider: Some(CodeActionProvider::CodeActionOptions(CodeActionOptions {
                 code_action_kinds: Some(vec![
                     CodeActionKind::QuickFix,
@@ -663,6 +789,32 @@ fn handle_document_highlight(
         .collect();
 
     JsonRpcResponse::new(id, highlights)
+}
+
+/// Handle a textDocument/documentSymbol request.
+fn handle_document_symbol(
+    id: serde_json::Value,
+    params: DocumentSymbolParams,
+    documents: &DocumentStore,
+) -> JsonRpcResponse<Vec<DocumentSymbol>> {
+    let uri = &params.text_document.uri;
+
+    let path = match uri.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return JsonRpcResponse::new(id, vec![]),
+    };
+
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, vec![]),
+        },
+    };
+
+    let symbols = get_document_symbols(&src, &path);
+
+    JsonRpcResponse::new(id, symbols)
 }
 
 /// Handle a textDocument/formatting request.
@@ -1234,6 +1386,17 @@ fn handle_message(
                     id,
                     "textDocument/documentHighlight",
                     |id, params| handle_document_highlight(id, params, documents),
+                );
+            }
+        }
+        Some("textDocument/documentSymbol") => {
+            if let Some(id) = parsed.id {
+                push_request_response(
+                    &mut outgoing,
+                    message,
+                    id,
+                    "textDocument/documentSymbol",
+                    |id, params| handle_document_symbol(id, params, documents),
                 );
             }
         }

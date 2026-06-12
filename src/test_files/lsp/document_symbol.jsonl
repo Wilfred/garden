@@ -1,0 +1,265 @@
+// Document symbols (outline) lists toplevel definitions, with struct
+// fields and enum variants nested as children.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///symbols.gdn", "languageId": "garden", "version": 1, "text": "struct Point {\n  x: Int,\n  y: Int,\n}\n\nenum Color {\n  Red,\n  Green,\n  Custom(String),\n}\n\npublic fun add_one(i: Int): Int {\n  i + 1\n}\n\npublic method magnitude(this: Point): Int {\n  this.x + this.y\n}\n\ntest add_one_works {\n  assert(add_one(2) == 3)\n}\n"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/documentSymbol", "params": {"textDocument": {"uri": "file:///symbols.gdn"}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///symbols.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "children": [
+//         {
+//           "kind": 8,
+//           "name": "x",
+//           "range": {
+//             "end": {
+//               "character": 3,
+//               "line": 1
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 1
+//             }
+//           },
+//           "selectionRange": {
+//             "end": {
+//               "character": 3,
+//               "line": 1
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 1
+//             }
+//           }
+//         },
+//         {
+//           "kind": 8,
+//           "name": "y",
+//           "range": {
+//             "end": {
+//               "character": 3,
+//               "line": 2
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 2
+//             }
+//           },
+//           "selectionRange": {
+//             "end": {
+//               "character": 3,
+//               "line": 2
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 2
+//             }
+//           }
+//         }
+//       ],
+//       "kind": 23,
+//       "name": "Point",
+//       "range": {
+//         "end": {
+//           "character": 1,
+//           "line": 3
+//         },
+//         "start": {
+//           "character": 0,
+//           "line": 0
+//         }
+//       },
+//       "selectionRange": {
+//         "end": {
+//           "character": 12,
+//           "line": 0
+//         },
+//         "start": {
+//           "character": 7,
+//           "line": 0
+//         }
+//       }
+//     },
+//     {
+//       "children": [
+//         {
+//           "kind": 22,
+//           "name": "Red",
+//           "range": {
+//             "end": {
+//               "character": 5,
+//               "line": 6
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 6
+//             }
+//           },
+//           "selectionRange": {
+//             "end": {
+//               "character": 5,
+//               "line": 6
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 6
+//             }
+//           }
+//         },
+//         {
+//           "kind": 22,
+//           "name": "Green",
+//           "range": {
+//             "end": {
+//               "character": 7,
+//               "line": 7
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 7
+//             }
+//           },
+//           "selectionRange": {
+//             "end": {
+//               "character": 7,
+//               "line": 7
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 7
+//             }
+//           }
+//         },
+//         {
+//           "kind": 22,
+//           "name": "Custom",
+//           "range": {
+//             "end": {
+//               "character": 8,
+//               "line": 8
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 8
+//             }
+//           },
+//           "selectionRange": {
+//             "end": {
+//               "character": 8,
+//               "line": 8
+//             },
+//             "start": {
+//               "character": 2,
+//               "line": 8
+//             }
+//           }
+//         }
+//       ],
+//       "kind": 10,
+//       "name": "Color",
+//       "range": {
+//         "end": {
+//           "character": 1,
+//           "line": 9
+//         },
+//         "start": {
+//           "character": 0,
+//           "line": 5
+//         }
+//       },
+//       "selectionRange": {
+//         "end": {
+//           "character": 10,
+//           "line": 5
+//         },
+//         "start": {
+//           "character": 5,
+//           "line": 5
+//         }
+//       }
+//     },
+//     {
+//       "kind": 12,
+//       "name": "add_one",
+//       "range": {
+//         "end": {
+//           "character": 1,
+//           "line": 13
+//         },
+//         "start": {
+//           "character": 0,
+//           "line": 11
+//         }
+//       },
+//       "selectionRange": {
+//         "end": {
+//           "character": 18,
+//           "line": 11
+//         },
+//         "start": {
+//           "character": 11,
+//           "line": 11
+//         }
+//       }
+//     },
+//     {
+//       "kind": 6,
+//       "name": "Point::magnitude",
+//       "range": {
+//         "end": {
+//           "character": 1,
+//           "line": 17
+//         },
+//         "start": {
+//           "character": 0,
+//           "line": 15
+//         }
+//       },
+//       "selectionRange": {
+//         "end": {
+//           "character": 23,
+//           "line": 15
+//         },
+//         "start": {
+//           "character": 14,
+//           "line": 15
+//         }
+//       }
+//     },
+//     {
+//       "kind": 12,
+//       "name": "add_one_works",
+//       "range": {
+//         "end": {
+//           "character": 1,
+//           "line": 21
+//         },
+//         "start": {
+//           "character": 0,
+//           "line": 19
+//         }
+//       },
+//       "selectionRange": {
+//         "end": {
+//           "character": 18,
+//           "line": 19
+//         },
+//         "start": {
+//           "character": 5,
+//           "line": 19
+//         }
+//       }
+//     }
+//   ]
+// }

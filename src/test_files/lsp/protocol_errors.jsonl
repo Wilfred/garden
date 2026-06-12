@@ -2,7 +2,7 @@
 // unsupported, the params are malformed, or the message itself
 // doesn't parse: a client that receives nothing will wait
 // indefinitely. Unknown notifications are ignored.
-{"jsonrpc": "2.0", "id": 1, "method": "textDocument/documentSymbol", "params": {"textDocument": {"uri": "file:///test.gdn"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/references", "params": {"textDocument": {"uri": "file:///test.gdn"}}}
 {"jsonrpc": "2.0", "method": "$/setTrace", "params": {"value": "off"}}
 {"jsonrpc": "2.0", "id": 2, "method": "textDocument/hover", "params": {"position": {"line": 0}}}
 {"id": 3, "method": "shutdown"}
@@ -12,7 +12,7 @@
 // {
 //   "error": {
 //     "code": -32601,
-//     "message": "Unsupported method textDocument/documentSymbol."
+//     "message": "Unsupported method textDocument/references."
 //   },
 //   "id": 1,
 //   "jsonrpc": "2.0"

@@ -26,6 +26,7 @@
 //       "definitionProvider": true,
 //       "documentFormattingProvider": true,
 //       "documentHighlightProvider": true,
+//       "documentSymbolProvider": true,
 //       "hoverProvider": true,
 //       "renameProvider": true,
 //       "signatureHelpProvider": {

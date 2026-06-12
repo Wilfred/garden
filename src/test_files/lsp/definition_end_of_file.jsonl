@@ -1,0 +1,36 @@
+// Go-to-definition with the cursor at the very end of the last line,
+// in a file with no trailing newline. The cursor is just after
+// `add_two`, which resolves via the previous character. The last line
+// is indented so that resolving against the start of the line (a
+// previous bug) cannot produce the same answer.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///eof.gdn", "languageId": "garden", "version": 1, "text": "fun add_two(i: Int): Int {\n  i + 2\n}\n\n  add_two"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/definition", "params": {"textDocument": {"uri": "file:///eof.gdn"}, "position": {"line": 4, "character": 9}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///eof.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": {
+//     "range": {
+//       "end": {
+//         "character": 11,
+//         "line": 0
+//       },
+//       "start": {
+//         "character": 4,
+//         "line": 0
+//       }
+//     },
+//     "uri": "file:///eof.gdn"
+//   }
+// }
+

@@ -28,6 +28,12 @@
 //       "documentHighlightProvider": true,
 //       "hoverProvider": true,
 //       "renameProvider": true,
+//       "signatureHelpProvider": {
+//         "triggerCharacters": [
+//           "(",
+//           ","
+//         ]
+//       },
 //       "textDocumentSync": 1
 //     },
 //     "serverInfo": {

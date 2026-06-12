@@ -8,8 +8,9 @@ use gen_lsp_types::{
     DocumentFormattingProvider, DocumentHighlight, DocumentHighlightParams,
     DocumentHighlightProvider, ErrorCodes, Hover, HoverParams, HoverProvider, InitializeParams,
     InitializeResult, Location, MarkupContent, MarkupKind, Position, PublishDiagnosticsParams,
-    Range, RenameParams, RenameProvider, ServerCapabilities, ServerInfo, TextDocumentSync,
-    TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
+    Range, RenameParams, RenameProvider, ServerCapabilities, ServerInfo, SignatureHelp,
+    SignatureHelpOptions, SignatureHelpParams, TextDocumentSync, TextDocumentSyncKind, TextEdit,
+    Uri, WorkspaceEdit,
 };
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
@@ -365,6 +366,10 @@ fn handle_initialize(
                 trigger_characters: Some(vec![".".to_owned(), "::".to_owned()]),
                 ..Default::default()
             }),
+            signature_help_provider: Some(SignatureHelpOptions {
+                trigger_characters: Some(vec!["(".to_owned(), ",".to_owned()]),
+                ..Default::default()
+            }),
             text_document_sync: Some(TextDocumentSync::Kind(TextDocumentSyncKind::Full)),
             document_formatting_provider: Some(DocumentFormattingProvider::Bool(true)),
             document_highlight_provider: Some(DocumentHighlightProvider::Bool(true)),
@@ -592,6 +597,35 @@ fn handle_hover(
     let hover = get_hover(&src, &path, offset);
 
     JsonRpcResponse::new(id, hover)
+}
+
+/// Handle a textDocument/signatureHelp request.
+fn handle_signature_help(
+    id: serde_json::Value,
+    params: SignatureHelpParams,
+    documents: &DocumentStore,
+) -> JsonRpcResponse<Option<SignatureHelp>> {
+    let uri = &params.text_document_position_params.text_document.uri;
+    let position = params.text_document_position_params.position;
+
+    let path = match uri.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return JsonRpcResponse::new(id, None),
+    };
+
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, None),
+        },
+    };
+
+    let offset = line_char_to_offset(&src, position.line as usize, position.character as usize);
+
+    let help = crate::signature_help::signature_help(&src, &path, offset);
+
+    JsonRpcResponse::new(id, help)
 }
 
 /// Handle a textDocument/documentHighlight request.
@@ -1176,6 +1210,17 @@ fn handle_message(
                     id,
                     "textDocument/hover",
                     |id, params| handle_hover(id, params, documents),
+                );
+            }
+        }
+        Some("textDocument/signatureHelp") => {
+            if let Some(id) = parsed.id {
+                push_request_response(
+                    &mut outgoing,
+                    message,
+                    id,
+                    "textDocument/signatureHelp",
+                    |id, params| handle_signature_help(id, params, documents),
                 );
             }
         }

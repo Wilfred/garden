@@ -1,0 +1,60 @@
+// Signature help on a call to a user-defined function shows the
+// function signature and highlights the active parameter.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///signature_help.gdn", "languageId": "garden", "version": 1, "text": "fun add(x: Int, y: Int): Int {\n  x + y\n}\n\nadd(1, 2)\n"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/signatureHelp", "params": {"textDocument": {"uri": "file:///signature_help.gdn"}, "position": {"line": 4, "character": 4}}}
+{"jsonrpc": "2.0", "id": 2, "method": "textDocument/signatureHelp", "params": {"textDocument": {"uri": "file:///signature_help.gdn"}, "position": {"line": 4, "character": 7}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///signature_help.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": {
+//     "activeParameter": 0,
+//     "activeSignature": 0,
+//     "signatures": [
+//       {
+//         "activeParameter": 0,
+//         "label": "add(x: Int, y: Int): Int",
+//         "parameters": [
+//           {
+//             "label": "x: Int"
+//           },
+//           {
+//             "label": "y: Int"
+//           }
+//         ]
+//       }
+//     ]
+//   }
+// }
+// {
+//   "id": 2,
+//   "jsonrpc": "2.0",
+//   "result": {
+//     "activeParameter": 1,
+//     "activeSignature": 0,
+//     "signatures": [
+//       {
+//         "activeParameter": 1,
+//         "label": "add(x: Int, y: Int): Int",
+//         "parameters": [
+//           {
+//             "label": "x: Int"
+//           },
+//           {
+//             "label": "y: Int"
+//           }
+//         ]
+//       }
+//     ]
+//   }
+// }

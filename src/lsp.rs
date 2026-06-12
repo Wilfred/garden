@@ -1,11 +1,12 @@
 //! LSP (Language Server Protocol) support for Garden.
 
+use gen_lsp_types::json_rpc::Error as JsonRpcError;
 use gen_lsp_types::{
     CodeAction, CodeActionKind, CodeActionOptions, CodeActionParams, CodeActionProvider,
     CodeActionResponse, CompletionItem, CompletionOptions, CompletionParams, Contents,
     DefinitionParams, DefinitionProvider, Diagnostic, DiagnosticSeverity, DocumentFormattingParams,
     DocumentFormattingProvider, DocumentHighlight, DocumentHighlightParams,
-    DocumentHighlightProvider, Hover, HoverParams, HoverProvider, InitializeParams,
+    DocumentHighlightProvider, ErrorCodes, Hover, HoverParams, HoverProvider, InitializeParams,
     InitializeResult, Location, MarkupContent, MarkupKind, Position, PublishDiagnosticsParams,
     Range, RenameParams, RenameProvider, ServerCapabilities, ServerInfo, TextDocumentSync,
     TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
@@ -86,27 +87,12 @@ impl<T: Serialize> JsonRpcNotification<T> {
     }
 }
 
-/// JSON-RPC error code for a request that could not be parsed.
-const ERROR_INVALID_REQUEST: i64 = -32600;
-/// JSON-RPC error code for a request method the server does not
-/// support.
-const ERROR_METHOD_NOT_FOUND: i64 = -32601;
-/// JSON-RPC error code for request parameters that could not be
-/// parsed.
-const ERROR_INVALID_PARAMS: i64 = -32602;
-
 /// JSON-RPC 2.0 error response structure.
 #[derive(Debug, Serialize)]
 struct JsonRpcErrorResponse {
     jsonrpc: &'static str,
     id: serde_json::Value,
     error: JsonRpcError,
-}
-
-#[derive(Debug, Serialize)]
-struct JsonRpcError {
-    code: i64,
-    message: String,
 }
 
 /// Read a single LSP message from stdin.
@@ -995,13 +981,17 @@ fn push_response<T: Serialize>(
 fn push_error(
     outgoing: &mut Vec<serde_json::Value>,
     id: serde_json::Value,
-    code: i64,
+    code: ErrorCodes,
     message: String,
 ) {
     let response = JsonRpcErrorResponse {
         jsonrpc: "2.0",
         id,
-        error: JsonRpcError { code, message },
+        error: JsonRpcError {
+            code,
+            message,
+            data: None,
+        },
     };
     match serde_json::to_value(&response) {
         Ok(v) => outgoing.push(v),
@@ -1029,7 +1019,7 @@ fn push_request_response<P: serde::de::DeserializeOwned, T: Serialize>(
             push_error(
                 outgoing,
                 id,
-                ERROR_INVALID_PARAMS,
+                ErrorCodes::InvalidParams,
                 format!("Could not parse parameters for {method}."),
             );
         }
@@ -1057,7 +1047,7 @@ fn handle_message(
                 push_error(
                     &mut outgoing,
                     id.clone(),
-                    ERROR_INVALID_REQUEST,
+                    ErrorCodes::InvalidRequest,
                     format!("Could not parse message: {e}"),
                 );
             }
@@ -1176,7 +1166,7 @@ fn handle_message(
                 push_error(
                     &mut outgoing,
                     id,
-                    ERROR_METHOD_NOT_FOUND,
+                    ErrorCodes::MethodNotFound,
                     format!("Unsupported method {method}."),
                 );
             }

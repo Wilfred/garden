@@ -1,0 +1,36 @@
+// Requests always get a response, even when the method is
+// unsupported, the params are malformed, or the message itself
+// doesn't parse: a client that receives nothing will wait
+// indefinitely. Unknown notifications are ignored.
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/documentSymbol", "params": {"textDocument": {"uri": "file:///test.gdn"}}}
+{"jsonrpc": "2.0", "method": "$/setTrace", "params": {"value": "off"}}
+{"jsonrpc": "2.0", "id": 2, "method": "textDocument/hover", "params": {"position": {"line": 0}}}
+{"id": 3, "method": "shutdown"}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "error": {
+//     "code": -32601,
+//     "message": "Unsupported method textDocument/documentSymbol."
+//   },
+//   "id": 1,
+//   "jsonrpc": "2.0"
+// }
+// {
+//   "error": {
+//     "code": -32602,
+//     "message": "Could not parse parameters for textDocument/hover."
+//   },
+//   "id": 2,
+//   "jsonrpc": "2.0"
+// }
+// {
+//   "error": {
+//     "code": -32600,
+//     "message": "Could not parse message: missing field `jsonrpc`"
+//   },
+//   "id": 3,
+//   "jsonrpc": "2.0"
+// }
+

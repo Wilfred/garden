@@ -30,6 +30,7 @@ use crate::diagnostics::{Autofix, Diagnostic as GardenDiagnostic, Severity};
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::extract_function::extract_function;
+use crate::extract_variable::extract_variable;
 use crate::highlight::highlight_occurrences;
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position as GardenPosition;
@@ -725,6 +726,10 @@ fn handle_code_action(
         actions.push(CodeActionResponse::CodeAction(action));
     }
 
+    if let Some(action) = build_extract_variable_action(&src, &path, uri, &params.range) {
+        actions.push(CodeActionResponse::CodeAction(action));
+    }
+
     if let Some(action) = build_destructure_action(&src, &path, uri, &params.range) {
         actions.push(CodeActionResponse::CodeAction(action));
     }
@@ -828,6 +833,51 @@ fn build_extract_function_action(
 
     Some(CodeAction {
         title: "Extract function".to_owned(),
+        kind: Some(CodeActionKind::RefactorExtract),
+        edit: Some(workspace_edit),
+        ..Default::default()
+    })
+}
+
+/// Build an "Extract variable" code action for the selected range, if the
+/// selection covers a Garden expression.
+fn build_extract_variable_action(
+    src: &str,
+    path: &Path,
+    uri: &Uri,
+    range: &Range,
+) -> Option<CodeAction> {
+    let start_offset = line_char_to_offset(
+        src,
+        range.start.line as usize,
+        range.start.character as usize,
+    );
+    let end_offset =
+        line_char_to_offset(src, range.end.line as usize, range.end.character as usize);
+
+    // Only offer extract variable for non-empty selections.
+    if start_offset >= end_offset {
+        return None;
+    }
+
+    let new_src = extract_variable(src, path, start_offset, end_offset, "extracted").ok()?;
+
+    let full_range = whole_document_range(src);
+    let text_edit = TextEdit {
+        range: full_range,
+        new_text: new_src,
+    };
+
+    let mut changes = std::collections::HashMap::new();
+    changes.insert(uri.clone(), vec![text_edit]);
+
+    let workspace_edit = WorkspaceEdit {
+        changes: Some(changes),
+        ..Default::default()
+    };
+
+    Some(CodeAction {
+        title: "Extract variable".to_owned(),
         kind: Some(CodeActionKind::RefactorExtract),
         edit: Some(workspace_edit),
         ..Default::default()

@@ -342,17 +342,17 @@ button:hover {
 }
 
 .code-title {
-  padding: 4px 8px;
-  position: absolute;
-  top: -24px;
-  right: 12px;
+  display: block;
+  padding: 6px 12px;
 
-  background: var(--cream);
-  border: 3px solid #00000038;
-  border-radius: 5px;
+  background: #dde3cd;
+  border-bottom: 1px solid #00000022;
+  border-radius: 4px 4px 0 0;
 
   font-family: "Lora", serif;
   font-weight: initial;
+  font-size: 15px;
+  color: #3c4534;
 }
 
 hr {

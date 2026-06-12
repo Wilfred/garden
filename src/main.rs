@@ -1216,6 +1216,90 @@ mod tests {
     }
 
     #[test]
+    fn test_lsp_exit_without_shutdown() {
+        use std::io::Write;
+        use std::process::Stdio;
+
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut child = Command::new(path)
+            .arg("lsp")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn command");
+
+        // An `exit` notification with no preceding `shutdown` request
+        // should make the server exit with a non-zero status.
+        let exit = r#"{"jsonrpc":"2.0","method":"exit"}"#;
+        let input = format!("Content-Length: {}\r\n\r\n{}", exit.len(), exit);
+
+        {
+            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+            stdin
+                .write_all(input.as_bytes())
+                .expect("Failed to write to stdin");
+        }
+
+        let output = child
+            .wait_with_output()
+            .expect("Failed to wait for command");
+
+        assert!(
+            !output.status.success(),
+            "exit without shutdown should fail"
+        );
+        assert_eq!(output.status.code(), Some(1));
+    }
+
+    #[test]
+    fn test_lsp_header_case_insensitive() {
+        use std::io::Write;
+        use std::process::Stdio;
+
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut child = Command::new(path)
+            .arg("lsp")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn command");
+
+        let init_request =
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#;
+        let shutdown_request = r#"{"jsonrpc":"2.0","id":2,"method":"shutdown"}"#;
+        let exit = r#"{"jsonrpc":"2.0","method":"exit"}"#;
+
+        // Use a lower-case header name and extra whitespace after the colon
+        // to exercise case-insensitive, whitespace-tolerant parsing.
+        let input =
+            format!(
+            "content-length:  {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}Content-Length: {}\r\n\r\n{}",
+            init_request.len(), init_request,
+            shutdown_request.len(), shutdown_request,
+            exit.len(), exit
+        );
+
+        {
+            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+            stdin
+                .write_all(input.as_bytes())
+                .expect("Failed to write to stdin");
+        }
+
+        let output = child
+            .wait_with_output()
+            .expect("Failed to wait for command");
+
+        assert!(output.status.success());
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            stdout.contains(r#""name":"garden-lsp""#),
+            "Should parse the lower-case Content-Length header and respond to initialize"
+        );
+    }
+
+    #[test]
     fn test_lsp_goto_definition() {
         use std::io::Write;
         use std::process::Stdio;

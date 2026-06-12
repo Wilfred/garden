@@ -931,32 +931,28 @@ fn ranges_overlap(a: &Range, b: &Range) -> bool {
 }
 
 /// Convert line and character position to byte offset in the source.
+///
+/// A character position past the end of a line is clamped to the end
+/// of that line, and a line past the end of the source is clamped to
+/// the end of the source.
 fn line_char_to_offset(src: &str, line: usize, character: usize) -> usize {
-    let mut current_line = 0;
-    let mut offset = 0;
-
-    for (idx, ch) in src.char_indices() {
-        if current_line == line {
-            if character == 0 {
-                return idx;
-            }
-            // Count characters on this line
-            let line_start = idx;
-            for (char_count, (char_idx, ch)) in src[line_start..].char_indices().enumerate() {
-                if char_count == character {
-                    return line_start + char_idx;
-                }
-                if ch == '\n' {
-                    break;
-                }
-            }
-            return idx;
+    // Find the byte offset of the start of the requested line.
+    let mut line_start = 0;
+    for _ in 0..line {
+        match src[line_start..].find('\n') {
+            Some(i) => line_start += i + 1,
+            None => return src.len(),
         }
+    }
 
-        if ch == '\n' {
-            current_line += 1;
+    // Walk forward `character` characters, stopping at the end of the
+    // line or the end of the source.
+    let mut offset = line_start;
+    for (char_count, (char_idx, ch)) in src[line_start..].char_indices().enumerate() {
+        if char_count == character || ch == '\n' {
+            return line_start + char_idx;
         }
-        offset = idx;
+        offset = line_start + char_idx + ch.len_utf8();
     }
 
     offset
@@ -1279,6 +1275,36 @@ mod tests {
         assert_eq!(line_char_to_offset(src, 1, 2), 21);
         // Line 1, character 3 is '.'
         assert_eq!(line_char_to_offset(src, 1, 3), 22);
+    }
+
+    #[test]
+    fn test_line_char_to_offset_end_of_file() {
+        // A position at the end of the last line, when the file has
+        // no trailing newline, is the end of the source.
+        assert_eq!(line_char_to_offset("abc", 0, 3), 3);
+        let src = "fun foo(p: Path) {\n  p.\n}";
+        assert_eq!(line_char_to_offset(src, 2, 1), 25);
+    }
+
+    #[test]
+    fn test_line_char_to_offset_after_trailing_newline() {
+        // The empty line after a trailing newline starts at the end
+        // of the source.
+        assert_eq!(line_char_to_offset("abc\n", 1, 0), 4);
+    }
+
+    #[test]
+    fn test_line_char_to_offset_clamps_to_line_end() {
+        // A character position past the end of a line is clamped to
+        // the end of that line, not the start.
+        assert_eq!(line_char_to_offset("ab\ncd\n", 0, 10), 2);
+    }
+
+    #[test]
+    fn test_line_char_to_offset_clamps_to_source_end() {
+        // A line past the end of the source is clamped to the end of
+        // the source.
+        assert_eq!(line_char_to_offset("ab\ncd", 7, 0), 5);
     }
 
     #[test]

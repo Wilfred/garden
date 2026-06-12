@@ -214,6 +214,8 @@ fun render_code_block(snippet: Snippet, self_url: Option<String>): String {
 
   let (inner, output_div) = if is_garden {
     (render_garden_code(snippet, self_url), "<div class=\"snippet-output\" hidden></div>")
+  } else if snippet.labels.contains("shell") {
+    (render_shell_code(snippet.content), "")
   } else {
     ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "")
   }
@@ -232,6 +234,28 @@ fun render_code_block(snippet: Snippet, self_url: Option<String>): String {
   }
 
   "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre>" ^ buttons ^ output_div ^ "</div>"
+}
+
+/// Render a shell session. Lines starting with `$ ` are commands,
+/// and other lines are program output.
+//
+/// The `$ ` prompt is marked up separately so CSS can make it
+/// unselectable, keeping commands easy to copy-paste.
+fun render_shell_code(content: String): String {
+  let rendered_lines: List<String> = []
+
+  for line in content.lines() {
+    let rendered_line = if line.starts_with("$ ") {
+      let command = escape_angle_brackets(line.strip_prefix("$ "))
+      "<span class=\"prompt\">$ </span><span class=\"command\">" ^ command ^ "</span>"
+    } else {
+      "<span class=\"shell-output\">" ^ escape_angle_brackets(line) ^ "</span>"
+    }
+
+    rendered_lines = rendered_lines.append(rendered_line)
+  }
+
+  "<code>" ^ "\n".join(rendered_lines) ^ "</code>"
 }
 
 fun check_source(src: String, path: Option<Path>): Unit {
@@ -801,6 +825,10 @@ test render_triple_backtick_keyword {
 
 test render_triple_backtick_comment {
   assert(render("```garden nocheck\nfoo // bar\n```", None, None) == "<div class=\"snippet\"><pre><code>foo <span class=\"comment\">// bar</span></code></pre><button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button><div class=\"snippet-output\" hidden></div></div>")
+}
+
+test render_shell_block {
+  assert(render("```shell\n$ garden run foo.gdn\nHello\n```", None, None) == "<div class=\"snippet\"><pre><code><span class=\"prompt\">$ </span><span class=\"command\">garden run foo.gdn</span>\n<span class=\"shell-output\">Hello</span></code></pre></div>")
 }
 
 test render_asterisk_bullet {

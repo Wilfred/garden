@@ -322,6 +322,21 @@ textarea {
   white-space: pre;
 }
 
+/* Shell sessions: the prompt is pale and unselectable so commands
+   copy-paste cleanly, and output is dimmer than commands. */
+.snippet .prompt {
+  color: #98a18c;
+  user-select: none;
+}
+
+.snippet .command {
+  font-weight: 700;
+}
+
+.snippet .shell-output {
+  color: #5c6553;
+}
+
 button {
   border: 3px solid #00000030;
   border-radius: 5px;

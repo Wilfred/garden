@@ -1,0 +1,39 @@
+// Opening a file with an unbound variable produces a diagnostic, and
+// closing the file clears it.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///did_close.gdn", "languageId": "garden", "version": 1, "text": "println(no_such_var)\n"}}}
+{"jsonrpc": "2.0", "method": "textDocument/didClose", "params": {"textDocument": {"uri": "file:///did_close.gdn"}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "Unbound symbol: `no_such_var`",
+//         "range": {
+//           "end": {
+//             "character": 19,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 8,
+//             "line": 0
+//           }
+//         },
+//         "severity": 1
+//       }
+//     ],
+//     "uri": "file:///did_close.gdn"
+//   }
+// }
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///did_close.gdn"
+//   }
+// }
+

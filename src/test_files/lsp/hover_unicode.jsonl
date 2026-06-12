@@ -1,0 +1,27 @@
+// Hover with a position on a line containing a multi-byte character.
+// The position counts UTF-16 code units: character 12 is the `4` of
+// `42`, after the emoji (two UTF-16 code units, four bytes).
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///hover_unicode.gdn", "languageId": "garden", "version": 1, "text": "fun first(_: String, i: Int): Int {\n  i\n}\n\nfirst(\"😀\", 42)\n"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/hover", "params": {"textDocument": {"uri": "file:///hover_unicode.gdn"}, "position": {"line": 4, "character": 12}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///hover_unicode.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": {
+//     "contents": {
+//       "kind": "markdown",
+//       "value": "```garden\nInt\n```"
+//     }
+//   }
+// }
+

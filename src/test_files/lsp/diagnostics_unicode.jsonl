@@ -1,0 +1,31 @@
+// Diagnostic ranges count UTF-16 code units, not bytes: the emoji is
+// two UTF-16 code units but four bytes, so `no_such_var` starts at
+// character 12 (it starts at byte 14).
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///diagnostics_unicode.gdn", "languageId": "garden", "version": 1, "text": "fun first(_: String, i: Int): Int {\n  i\n}\n\nfirst(\"😀\", no_such_var)\n"}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "Unbound symbol: `no_such_var`",
+//         "range": {
+//           "end": {
+//             "character": 23,
+//             "line": 4
+//           },
+//           "start": {
+//             "character": 12,
+//             "line": 4
+//           }
+//         },
+//         "severity": 1
+//       }
+//     ],
+//     "uri": "file:///diagnostics_unicode.gdn"
+//   }
+// }
+

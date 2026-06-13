@@ -13,7 +13,7 @@
 #![allow(clippy::too_many_arguments)]
 // Occurs in WIP code, and it's too obvious to be worth linting
 // against.
-#![allow(clippy::needless_if)]
+#![allow(clippy::needless_ifs)]
 // Occurs in WIP code when you plan to match on more cases later on.
 #![allow(clippy::single_match)]
 // Sometimes explicit if statements are clearer.

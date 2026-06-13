@@ -1,5 +1,6 @@
 public fun example() {
   42
+  3.14
   "hello"
   [1, 2, 3]
   Dict[]
@@ -17,44 +18,54 @@ public fun example() {
 // 1| public fun example() {
 // 2|   42
 //  |   ^^
-// 3|   "hello"
-// 4|   [1, 2, 3]
+// 3|   3.14
+// 4|   "hello"
 // 
 // Warning: Unused value.
 // 
 // -| src/test_files/check/unused_literal.gdn:3:3
 // 1| public fun example() {
 // 2|   42
-// 3|   "hello"
-//  |   ^^^^^^^
-// 4|   [1, 2, 3]
-// 5|   Dict[]
+// 3|   3.14
+//  |   ^^^^
+// 4|   "hello"
+// 5|   [1, 2, 3]
 // 
 // Warning: Unused value.
 // 
 // -| src/test_files/check/unused_literal.gdn:4:3
 // 2|   42
-// 3|   "hello"
-// 4|   [1, 2, 3]
-//  |   ^^^^^^^^^
-// 5|   Dict[]
+// 3|   3.14
+// 4|   "hello"
+//  |   ^^^^^^^
+// 5|   [1, 2, 3]
+// 6|   Dict[]
 // 
 // Warning: Unused value.
 // 
 // -| src/test_files/check/unused_literal.gdn:5:3
-// 3|   "hello"
-// 4|   [1, 2, 3]
-// 5|   Dict[]
-// 6|   ^^^^^^
-// 7|   let x = 10
+// 3|   3.14
+// 4|   "hello"
+// 5|   [1, 2, 3]
+//  |   ^^^^^^^^^
+// 6|   Dict[]
+// 
+// Warning: Unused value.
+// 
+// -| src/test_files/check/unused_literal.gdn:6:3
+// 4|   "hello"
+// 5|   [1, 2, 3]
+// 6|   Dict[]
+// 7|   ^^^^^^
+// 8|   let x = 10
 // 
 // Warning: Unnecessary `let`, this value is immediately returned.
 // 
-// -| src/test_files/check/unused_literal.gdn:7:11
-// 5|   Dict[]
-// 6| 
-// 7|   let x = 10
-// 8|   x       ^^
-// 9| }
+// --| src/test_files/check/unused_literal.gdn:8:11
+//  6|   Dict[]
+//  7| 
+//  8|   let x = 10
+//  9|   x       ^^
+// 10| }
 
-// expected stderr: 6 issues can be fixed automatically (use `--fix`).
+// expected stderr: 7 issues can be fixed automatically (use `--fix`).

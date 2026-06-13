@@ -1,3 +1,5 @@
+use ordered_float::OrderedFloat;
+
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parser::ast::{Block, Expression, Expression_, FunInfo, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
@@ -66,6 +68,7 @@ pub(crate) fn check_same_literal_returns(items: &[ToplevelItem]) -> Vec<Diagnost
 #[derive(Debug, Clone, PartialEq)]
 enum LiteralValue {
     Int(i64),
+    Float(OrderedFloat<f64>),
     String(String),
     EnumVariant(String),
 }
@@ -74,6 +77,7 @@ impl std::fmt::Display for LiteralValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             LiteralValue::Int(n) => write!(f, "{}", n),
+            LiteralValue::Float(n) => write!(f, "{}", n),
             LiteralValue::String(s) => write!(f, "\"{}\"", s),
             LiteralValue::EnumVariant(name) => write!(f, "{}", name),
         }
@@ -83,6 +87,7 @@ impl std::fmt::Display for LiteralValue {
 fn expr_as_constant(expr: &Expression) -> Option<LiteralValue> {
     match &expr.expr_ {
         Expression_::IntLiteral(n) => Some(LiteralValue::Int(*n)),
+        Expression_::FloatLiteral(n) => Some(LiteralValue::Float(*n)),
         Expression_::StringLiteral(s) => Some(LiteralValue::String(s.clone())),
         Expression_::Variable(sym) => {
             let name = &sym.name.text;

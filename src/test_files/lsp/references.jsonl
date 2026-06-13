@@ -1,0 +1,94 @@
+// Find all references to a user-defined function. The first request
+// includes the declaration, the second excludes it.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///references.gdn", "languageId": "garden", "version": 1, "text": "fun add_one(i: Int): Int {\n  i + 1\n}\n\nadd_one(2)\nadd_one(3)\n"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/references", "params": {"textDocument": {"uri": "file:///references.gdn"}, "position": {"line": 4, "character": 1}, "context": {"includeDeclaration": true}}}
+{"jsonrpc": "2.0", "id": 2, "method": "textDocument/references", "params": {"textDocument": {"uri": "file:///references.gdn"}, "position": {"line": 4, "character": 1}, "context": {"includeDeclaration": false}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [],
+//     "uri": "file:///references.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "range": {
+//         "end": {
+//           "character": 11,
+//           "line": 0
+//         },
+//         "start": {
+//           "character": 4,
+//           "line": 0
+//         }
+//       },
+//       "uri": "file:///references.gdn"
+//     },
+//     {
+//       "range": {
+//         "end": {
+//           "character": 7,
+//           "line": 4
+//         },
+//         "start": {
+//           "character": 0,
+//           "line": 4
+//         }
+//       },
+//       "uri": "file:///references.gdn"
+//     },
+//     {
+//       "range": {
+//         "end": {
+//           "character": 7,
+//           "line": 5
+//         },
+//         "start": {
+//           "character": 0,
+//           "line": 5
+//         }
+//       },
+//       "uri": "file:///references.gdn"
+//     }
+//   ]
+// }
+// {
+//   "id": 2,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "range": {
+//         "end": {
+//           "character": 7,
+//           "line": 4
+//         },
+//         "start": {
+//           "character": 0,
+//           "line": 4
+//         }
+//       },
+//       "uri": "file:///references.gdn"
+//     },
+//     {
+//       "range": {
+//         "end": {
+//           "character": 7,
+//           "line": 5
+//         },
+//         "start": {
+//           "character": 0,
+//           "line": 5
+//         }
+//       },
+//       "uri": "file:///references.gdn"
+//     }
+//   ]
+// }
+

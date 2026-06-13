@@ -11,8 +11,8 @@
 // expected stdout:
 // {
 //   "error": {
-//     "code": -32601,
-//     "message": "Unsupported method textDocument/references."
+//     "code": -32602,
+//     "message": "Could not parse parameters for textDocument/references."
 //   },
 //   "id": 1,
 //   "jsonrpc": "2.0"

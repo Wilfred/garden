@@ -2469,7 +2469,7 @@ impl TypeCheckVisitor<'_> {
 
                 if let Some(hint) = &fun_info.return_hint {
                     let hint_ty =
-                        Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or(Type::Any);
+                        Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty();
                     self.save_hint_ty_id(hint, &hint_ty);
 
                     if !is_subtype(&block_ty, &hint_ty) {

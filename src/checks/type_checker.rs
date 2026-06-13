@@ -765,7 +765,13 @@ impl TypeCheckVisitor<'_> {
                     ));
                 }
                 _ => {
-                    self.check_block(expected_ty, case_expr, type_bindings, expected_return_ty);
+                    // Even though we're checking against a concrete
+                    // expected type, keep the inferred case type so we
+                    // can record the more specific type below.
+                    case_tys.push((
+                        self.check_block(expected_ty, case_expr, type_bindings, expected_return_ty),
+                        case_value_pos,
+                    ));
                 }
             }
 
@@ -884,8 +890,16 @@ impl TypeCheckVisitor<'_> {
                 }
             },
             _ => {
-                debug_assert_eq!(case_tys.len(), 0);
-                expected_ty.clone()
+                // Return the inferred type of the cases rather than
+                // the widened expected type, so that hover and
+                // extract-function report the precise type. Any
+                // mismatches have already been reported by
+                // check_block above, so fall back to the expected type
+                // if the cases don't unify.
+                match unify_all(&case_tys) {
+                    Ok(ty) if !ty.is_no_value() => ty,
+                    _ => expected_ty.clone(),
+                }
             }
         };
 

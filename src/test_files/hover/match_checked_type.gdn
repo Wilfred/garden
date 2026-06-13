@@ -1,0 +1,15 @@
+fun foo(b: Bool): Option<Int> {
+  match b {
+//^
+    True => None
+    False => None
+  }
+}
+
+// The match is checked against the declared return type `Option<Int>`,
+// but every case evaluates to `None`, so the inferred type of the match
+// is `Option<NoValue>`. Hover should report the inferred type rather
+// than the widened expected type.
+
+// args: reftest-hover
+// expected stdout: Option<NoValue>

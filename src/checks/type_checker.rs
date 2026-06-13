@@ -726,6 +726,7 @@ impl TypeCheckVisitor<'_> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
         expr_id: SyntaxId,
+        match_pos: &Position,
         scrutinee: &Expression,
         cases: &[(Pattern, Block)],
     ) -> Type {
@@ -737,6 +738,7 @@ impl TypeCheckVisitor<'_> {
                 self.env,
                 &scrutinee.position,
                 scrutinee_ty_name,
+                match_pos,
                 cases,
                 &mut self.diagnostics,
             );
@@ -921,6 +923,7 @@ impl TypeCheckVisitor<'_> {
                 type_bindings,
                 expected_return_ty,
                 expr_id,
+                pos,
                 scrutinee,
                 cases,
             ),
@@ -2548,6 +2551,7 @@ impl TypeCheckVisitor<'_> {
                 type_bindings,
                 expected_return_ty,
                 expr_id,
+                pos,
                 scrutinee,
                 cases,
             ),
@@ -3014,6 +3018,7 @@ fn check_match_exhaustive(
     env: &Env,
     scrutinee_pos: &Position,
     type_name: &TypeName,
+    match_pos: &Position,
     cases: &[(Pattern, Block)],
     diagnostics: &mut Vec<Diagnostic>,
 ) {
@@ -3113,28 +3118,103 @@ fn check_match_exhaustive(
         }
     }
 
-    // If we're missing any variants, complain about the first one in
-    // source code order.
+    let missing_variants: Vec<&VariantInfo> = enum_info
+        .variants
+        .iter()
+        .filter(|v| variants_remaining.contains_key(&v.name_sym.name))
+        .collect();
+
+    if missing_variants.is_empty() {
+        return;
+    }
+
+    // Complain about the first missing variant in source code order.
     //
     // TODO: mention the other variants missing and/or the total.
-    for variant in &enum_info.variants {
-        if variants_remaining.contains_key(&variant.name_sym.name) {
-            diagnostics.push(Diagnostic {
-                notes: vec![],
-                fixes: vec![],
-                severity: Severity::Error,
-                message: ErrorMessage(vec![
-                    msgtext!("This match expression does not cover all the cases of ",),
-                    msgcode!("{}", type_name),
-                    msgtext!(". It's missing ",),
-                    msgcode!("{}", variant.name_sym.name.text),
-                    msgtext!("."),
-                ]),
-                position: scrutinee_pos.clone(),
-            });
-            break;
-        }
+    let first_missing = missing_variants[0];
+
+    let fixes = build_missing_cases_autofix(match_pos, cases, &missing_variants);
+
+    diagnostics.push(Diagnostic {
+        notes: vec![],
+        fixes,
+        severity: Severity::Error,
+        message: ErrorMessage(vec![
+            msgtext!("This match expression does not cover all the cases of ",),
+            msgcode!("{}", type_name),
+            msgtext!(". It's missing ",),
+            msgcode!("{}", first_missing.name_sym.name.text),
+            msgtext!("."),
+        ]),
+        position: scrutinee_pos.clone(),
+    });
+}
+
+/// Build an autofix that inserts cases for each missing variant just
+/// before the closing brace of the match expression.
+fn build_missing_cases_autofix(
+    match_pos: &Position,
+    cases: &[(Pattern, Block)],
+    missing_variants: &[&VariantInfo],
+) -> Vec<Autofix> {
+    // Skip the autofix for single-line matches: the closing `}` is on
+    // the same line as content, so a clean insertion is awkward.
+    if match_pos.end_line_number == match_pos.line_number {
+        return vec![];
     }
+
+    // The closing `}` of the match is on its own line. Insert at the
+    // start of that line, leaving the existing indent and `}`
+    // untouched.
+    if match_pos.end_offset < match_pos.end_column {
+        return vec![];
+    }
+    let insert_offset = match_pos.end_offset - match_pos.end_column;
+
+    // Use the column of the first existing case as our indentation.
+    // If there are no cases, fall back to the match expression's
+    // column + 4.
+    let case_indent = match cases.first() {
+        Some((pattern, _)) => pattern.variant_sym.position.column,
+        None => match_pos.column + 4,
+    };
+    let indent_str = " ".repeat(case_indent);
+
+    let mut new_text = String::new();
+    for variant in missing_variants {
+        let pattern_text = if variant.payload_hint.is_some() {
+            format!("{}(_)", variant.name_sym.name.text)
+        } else {
+            variant.name_sym.name.text.clone()
+        };
+        new_text.push_str(&format!("{}{} => {{}}\n", indent_str, pattern_text));
+    }
+
+    let insert_pos = Position {
+        start_offset: insert_offset,
+        end_offset: insert_offset,
+        line_number: match_pos.end_line_number,
+        end_line_number: match_pos.end_line_number,
+        column: 0,
+        end_column: 0,
+        path: Rc::clone(&match_pos.path),
+        vfs_path: match_pos.vfs_path.clone(),
+    };
+
+    let description = if missing_variants.len() == 1 {
+        format!(
+            "Add missing case `{}`",
+            missing_variants[0].name_sym.name.text
+        )
+    } else {
+        "Add missing match cases".to_owned()
+    };
+
+    vec![Autofix {
+        description,
+        position: insert_pos,
+        new_text,
+    }]
 }
 
 fn format_mismatch_text(expected_desc: &str, actual_ty: &Type) -> ErrorMessage {

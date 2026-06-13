@@ -53,3 +53,5 @@ public fun foo(x: Option<Int>) {
 // 22|         None => {}
 // 23|         None => {}
 // 24|     }   ^^^^
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

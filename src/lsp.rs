@@ -441,11 +441,13 @@ fn handle_did_change(
     let text_document = params.get("textDocument")?;
     let uri = text_document.get("uri")?.as_str()?;
 
-    // Get the new text from contentChanges (full document sync)
+    // Get the new text from contentChanges (full document sync). When a
+    // client batches multiple changes, the last one is the final document
+    // state.
     let text = params
         .get("contentChanges")?
         .as_array()?
-        .first()?
+        .last()?
         .get("text")?
         .as_str()?;
 

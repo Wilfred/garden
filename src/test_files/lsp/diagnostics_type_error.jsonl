@@ -1,0 +1,57 @@
+// Opening a file with a type error reports it as a diagnostic.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///diagnostics_type_error.gdn", "languageId": "garden", "version": 1, "text": "fun main() {\n  let x: Int = \"not an int\"\n}\n"}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "`x` is unused.",
+//         "range": {
+//           "end": {
+//             "character": 7,
+//             "line": 1
+//           },
+//           "start": {
+//             "character": 6,
+//             "line": 1
+//           }
+//         },
+//         "severity": 2
+//       },
+//       {
+//         "message": "`main` is never called. Garden does not treat `main` functions specially. To run code, write expressions directly in the file (e.g., `println(\"Hello\")`), or call `main()` from a top-level block.",
+//         "range": {
+//           "end": {
+//             "character": 8,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 4,
+//             "line": 0
+//           }
+//         },
+//         "severity": 2
+//       },
+//       {
+//         "message": "Expected an `Int` but got a `String`.",
+//         "range": {
+//           "end": {
+//             "character": 27,
+//             "line": 1
+//           },
+//           "start": {
+//             "character": 15,
+//             "line": 1
+//           }
+//         },
+//         "severity": 1
+//       }
+//     ],
+//     "uri": "file:///diagnostics_type_error.gdn"
+//   }
+// }
+

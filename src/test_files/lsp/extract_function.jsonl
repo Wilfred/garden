@@ -1,0 +1,82 @@
+// Selecting an expression offers an extract-function code action.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///extract_function.gdn", "languageId": "garden", "version": 1, "text": "fun foo() {\n  let _ = 1 + 2\n}\n"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/codeAction", "params": {"textDocument": {"uri": "file:///extract_function.gdn"}, "range": {"start": {"line": 1, "character": 10}, "end": {"line": 1, "character": 15}}, "context": {"diagnostics": []}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "`foo` is never called.",
+//         "range": {
+//           "end": {
+//             "character": 7,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 4,
+//             "line": 0
+//           }
+//         },
+//         "severity": 2
+//       }
+//     ],
+//     "uri": "file:///extract_function.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///extract_function.gdn": [
+//             {
+//               "newText": "fun extracted(): Int {\n  1 + 2\n}\n\nfun foo() {\n  let _ = extracted()\n}\n",
+//               "range": {
+//                 "end": {
+//                   "character": 0,
+//                   "line": 3
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.extract",
+//       "title": "Extract function"
+//     },
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///extract_function.gdn": [
+//             {
+//               "newText": "fun foo() {\n  let _ = dbg(1 + 2)\n}\n",
+//               "range": {
+//                 "end": {
+//                   "character": 0,
+//                   "line": 3
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.rewrite",
+//       "title": "Wrap in dbg()"
+//     }
+//   ]
+// }
+

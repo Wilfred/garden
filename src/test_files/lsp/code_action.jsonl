@@ -1,0 +1,120 @@
+// A misspelled method name offers a quickfix code action that
+// corrects it.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///code_action.gdn", "languageId": "garden", "version": 1, "text": "fun main() {\n  Path{ p: \"/foo\" }.existts()\n}\n"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/codeAction", "params": {"textDocument": {"uri": "file:///code_action.gdn"}, "range": {"start": {"line": 1, "character": 20}, "end": {"line": 1, "character": 27}}, "context": {"diagnostics": []}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "`main` is never called. Garden does not treat `main` functions specially. To run code, write expressions directly in the file (e.g., `println(\"Hello\")`), or call `main()` from a top-level block.",
+//         "range": {
+//           "end": {
+//             "character": 8,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 4,
+//             "line": 0
+//           }
+//         },
+//         "severity": 2
+//       },
+//       {
+//         "message": "`Path` has no method `existts`. Did you mean `exists`?",
+//         "range": {
+//           "end": {
+//             "character": 27,
+//             "line": 1
+//           },
+//           "start": {
+//             "character": 20,
+//             "line": 1
+//           }
+//         },
+//         "severity": 1
+//       }
+//     ],
+//     "uri": "file:///code_action.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///code_action.gdn": [
+//             {
+//               "newText": "exists",
+//               "range": {
+//                 "end": {
+//                   "character": 27,
+//                   "line": 1
+//                 },
+//                 "start": {
+//                   "character": 20,
+//                   "line": 1
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "quickfix",
+//       "title": "Use `exists` here."
+//     },
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///code_action.gdn": [
+//             {
+//               "newText": "fun extracted() {\n  Path{ p: \"/foo\" }.existts()\n}\n\nfun main() {\n  extracted()\n}\n",
+//               "range": {
+//                 "end": {
+//                   "character": 0,
+//                   "line": 3
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.extract",
+//       "title": "Extract function"
+//     },
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///code_action.gdn": [
+//             {
+//               "newText": "fun main() {\n  dbg(Path{ p: \"/foo\" }.existts())\n}\n",
+//               "range": {
+//                 "end": {
+//                   "character": 0,
+//                   "line": 3
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.rewrite",
+//       "title": "Wrap in dbg()"
+//     }
+//   ]
+// }
+

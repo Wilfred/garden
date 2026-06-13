@@ -3128,10 +3128,24 @@ fn check_match_exhaustive(
         return;
     }
 
-    // Complain about the first missing variant in source code order.
-    //
-    // TODO: mention the other variants missing and/or the total.
+    // Complain about the first missing variant in source code order,
+    // mentioning the count of any others.
     let first_missing = missing_variants[0];
+    let others = missing_variants.len() - 1;
+
+    let mut message_parts = vec![
+        msgtext!("This match expression does not cover all the cases of ",),
+        msgcode!("{}", type_name),
+        msgtext!(". It's missing ",),
+        msgcode!("{}", first_missing.name_sym.name.text),
+    ];
+    if others == 1 {
+        message_parts.push(msgtext!(" and 1 other."));
+    } else if others > 1 {
+        message_parts.push(msgtext!(" and {} others.", others));
+    } else {
+        message_parts.push(msgtext!("."));
+    }
 
     let fixes = build_missing_cases_autofix(match_pos, cases, &missing_variants);
 
@@ -3139,13 +3153,7 @@ fn check_match_exhaustive(
         notes: vec![],
         fixes,
         severity: Severity::Error,
-        message: ErrorMessage(vec![
-            msgtext!("This match expression does not cover all the cases of ",),
-            msgcode!("{}", type_name),
-            msgtext!(". It's missing ",),
-            msgcode!("{}", first_missing.name_sym.name.text),
-            msgtext!("."),
-        ]),
+        message: ErrorMessage(message_parts),
         position: scrutinee_pos.clone(),
     });
 }

@@ -6,6 +6,10 @@ public fun repeated_and(x: Bool, y: Bool): Bool {
     x && y && x
 }
 
+public fun repeated_paren(a: Bool, b: Bool): Bool {
+    (a || b) || a
+}
+
 // args: check --fix --stdout
 // expected stdout:
 // public fun repeated_or(x: Bool, y: Bool): Bool {
@@ -15,3 +19,8 @@ public fun repeated_and(x: Bool, y: Bool): Bool {
 // public fun repeated_and(x: Bool, y: Bool): Bool {
 //     x && y
 // }
+// 
+// public fun repeated_paren(a: Bool, b: Bool): Bool {
+//     (a || b)
+// }
+

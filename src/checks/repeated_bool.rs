@@ -35,32 +35,46 @@ fn is_pure_(expr: &Expression_) -> bool {
     }
 }
 
+/// An operand in a boolean chain, paired with the offset at which a
+/// deletion should start if this operand turns out to be a duplicate.
+///
+/// `delete_from` is the end offset of the operand's left sibling at the
+/// binary operator node, so deleting from there to the end of the
+/// operand removes ` <op> operand` without crossing a parenthesis
+/// boundary. It is `None` for the leftmost operand, which has no left
+/// sibling.
+struct Operand<'a> {
+    expr: &'a Expression,
+    delete_from: Option<usize>,
+}
+
 /// Collect operands from a boolean chain, returning them as references
 /// to the inner expressions. For `a || b || c`, this returns `[a, b, c]`.
-fn collect_operands<'a>(
-    expr: &'a Expression,
-    op_sym: &BinaryOperatorSymbol,
-) -> Vec<&'a Expression> {
+fn collect_operands<'a>(expr: &'a Expression, op_sym: &BinaryOperatorSymbol) -> Vec<Operand<'a>> {
     let mut result = Vec::new();
-    collect_operands_(expr, op_sym, &mut result);
+    collect_operands_(expr, op_sym, None, &mut result);
     result
 }
 
 fn collect_operands_<'a>(
     expr: &'a Expression,
     op_sym: &BinaryOperatorSymbol,
-    result: &mut Vec<&'a Expression>,
+    delete_from: Option<usize>,
+    result: &mut Vec<Operand<'a>>,
 ) {
     match &expr.expr_ {
         Expression_::BinaryOperator(lhs, op, rhs) if op == op_sym => {
-            collect_operands_(lhs, op_sym, result);
-            collect_operands_(rhs, op_sym, result);
+            collect_operands_(lhs, op_sym, delete_from, result);
+            // The right operand's left sibling is the whole left
+            // subtree, so deletions start at its end (after any closing
+            // parenthesis), not at the previous flattened operand.
+            collect_operands_(rhs, op_sym, Some(lhs.position.end_offset), result);
         }
         Expression_::Parentheses(paren) => {
-            collect_operands_(&paren.expr, op_sym, result);
+            collect_operands_(&paren.expr, op_sym, delete_from, result);
         }
         _ => {
-            result.push(expr);
+            result.push(Operand { expr, delete_from });
         }
     }
 }
@@ -86,17 +100,17 @@ impl Visitor for RepeatedBoolVisitor {
             if operands.len() >= 2 {
                 // Compare pure operands by structural equality.
                 let mut seen: Vec<&Expression> = Vec::new();
-                let mut prev_operand: Option<&Expression> = None;
 
                 for operand in &operands {
-                    if is_pure(operand) {
-                        if seen.contains(operand) {
+                    let expr = operand.expr;
+                    if is_pure(expr) {
+                        if seen.contains(&expr) {
                             // Build a fix that removes ` || operand` by
-                            // deleting from the previous operand's end
-                            // to this operand's end.
-                            let fixes = if let Some(prev) = prev_operand {
-                                let mut fix_pos = operand.position.clone();
-                                fix_pos.start_offset = prev.position.end_offset;
+                            // deleting from the end of the operand's left
+                            // sibling to the end of this operand.
+                            let fixes = if let Some(delete_from) = operand.delete_from {
+                                let mut fix_pos = expr.position.clone();
+                                fix_pos.start_offset = delete_from;
                                 vec![Autofix {
                                     description: "Remove this duplicate".to_owned(),
                                     position: fix_pos,
@@ -112,16 +126,15 @@ impl Visitor for RepeatedBoolVisitor {
                                     msgcode!("{}", op_sym.kind),
                                     msgtext!(" chain."),
                                 ]),
-                                position: operand.position.clone(),
+                                position: expr.position.clone(),
                                 notes: vec![],
                                 severity: Severity::Warning,
                                 fixes,
                             });
                         } else {
-                            seen.push(operand);
+                            seen.push(expr);
                         }
                     }
-                    prev_operand = Some(operand);
                 }
             }
         }

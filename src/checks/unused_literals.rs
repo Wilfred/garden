@@ -41,6 +41,7 @@ impl<'a> UnusedLiteralVisitor<'a> {
         let is_literal = matches!(
             &expr.expr_,
             Expression_::IntLiteral(_)
+                | Expression_::FloatLiteral(_)
                 | Expression_::StringLiteral(_)
                 | Expression_::ListLiteral(_)
                 | Expression_::DictLiteral(_)

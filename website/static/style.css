@@ -253,8 +253,9 @@ header a {
 }
 
 #playground-wrapper {
-  border: 3px solid #00000030;
+  border: 1px solid #00000022;
   border-radius: 5px;
+  background-color: #f4f6ee;
 }
 
 #playground-wrapper .cm-editor {
@@ -279,14 +280,14 @@ textarea {
 
 #playground-output {
   padding: 10px;
-  border-top: 3px solid #00000030;
+  border-top: 1px solid #00000022;
   white-space: pre;
 }
 
 .snippet-output {
   white-space: pre;
   padding: 10px;
-  border-top: 3px solid #00000030;
+  border-top: 1px solid #00000022;
 }
 
 .snippet-output .stderr,
@@ -300,26 +301,40 @@ textarea {
 }
 
 .snippet {
-  border: 3px solid #00000030;
+  border: 1px solid #00000022;
   border-radius: 5px;
+  background-color: #f4f6ee;
 
   padding: 0;
   margin: 30px 0px 20px 0px;
 
   position: relative;
-  top: -2px;
-  left: -2px;
 
   z-index: 1;
 }
 
 .snippet pre {
-  font-weight: 700;
-  margin: 10px;
+  margin: 0;
+  padding: 12px;
 }
 
 .snippet .snippet-output {
   white-space: pre;
+}
+
+/* Shell sessions: the prompt is pale and unselectable so commands
+   copy-paste cleanly, and output is dimmer than commands. */
+.snippet .prompt {
+  color: #98a18c;
+  user-select: none;
+}
+
+.snippet .command {
+  font-weight: 700;
+}
+
+.snippet .shell-output {
+  color: #5c6553;
 }
 
 button {
@@ -341,18 +356,67 @@ button:hover {
   background-color: #dfe2d5;
 }
 
-.code-title {
-  padding: 4px 8px;
-  position: absolute;
-  top: -24px;
-  right: 12px;
+/* Run/Edit buttons on code snippets are quiet text buttons, so they
+   don't compete with the code itself. */
+.snippet button {
+  border: none;
+  border-radius: 3px;
+  min-width: 0;
 
-  background: var(--cream);
-  border: 3px solid #00000038;
-  border-radius: 5px;
+  padding: 2px 8px;
+  margin: 0 0 8px 8px;
+
+  background-color: transparent;
+  color: var(--green-primary);
+  font-size: 15px;
+  font-family: "Lora", serif;
+}
+
+.snippet button:hover {
+  background-color: #dfe2d5;
+}
+
+.code-title {
+  display: block;
+  padding: 6px 12px;
+
+  background: #dde3cd;
+  border-bottom: 1px solid #00000022;
+  border-radius: 4px 4px 0 0;
 
   font-family: "Lora", serif;
   font-weight: initial;
+  font-size: 15px;
+  color: #3c4534;
+}
+
+/* Grids of related links, e.g. on the manual page. Inspired by the
+   category grid on lib.rs. */
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  margin: 16px 0 26px 0;
+}
+
+.link-grid a {
+  display: block;
+  padding: 5px 10px;
+  background-color: #f4f6ee;
+  border: 1px solid #00000022;
+  border-radius: 5px;
+  overflow-wrap: break-word;
+}
+
+.link-grid a:hover {
+  border-color: var(--green-primary);
+  border-bottom: 1px solid var(--green-primary);
+}
+
+.link-grid code {
+  border: none;
+  padding: 0;
+  font-size: 15px;
 }
 
 hr {
@@ -396,6 +460,57 @@ ul ul {
   }
 }
 
+/* "On this page" table of contents. Shown beside the content on
+   wide screens, like docs.astral.sh, and hidden otherwise. */
+.toc {
+  display: none;
+}
+
+@media (min-width: 1200px) {
+  .toc {
+    display: block;
+    position: fixed;
+    top: 110px;
+    left: calc(50% + 380px);
+    width: 210px;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+
+    font-size: 15px;
+  }
+
+  .toc .toc-title {
+    display: block;
+    margin-bottom: 10px;
+    font-family: "Protest Riot", sans-serif;
+  }
+
+  .toc ul {
+    list-style: none;
+    margin: 0;
+    padding-left: 0;
+  }
+
+  .toc ul li {
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+
+  .toc a {
+    border-bottom: none;
+  }
+
+  .toc a:hover {
+    border-bottom: 2px solid var(--green-primary);
+  }
+
+  .toc code {
+    border: none;
+    padding: 0;
+    font-size: 14px;
+  }
+}
+
 /* CodeMirror Integration */
 .cm-editor {
   font-family: monospace;
@@ -403,7 +518,7 @@ ul ul {
   line-height: 20px;
   border: none;
   outline: none;
-  background-color: var(--cream);
+  background-color: transparent;
 }
 
 .cm-scroller {
@@ -428,8 +543,8 @@ ul ul {
 }
 
 .snippet .cm-editor {
-  font-weight: 700;
-  margin: 10px;
+  margin: 0;
+  padding: 2px;
 }
 
 .cm-line {
@@ -438,7 +553,7 @@ ul ul {
 
 /* Gutters (line numbers, etc) */
 .cm-gutters {
-  background-color: var(--cream);
+  background-color: transparent;
   border-right: 1px solid #00000030;
 }
 

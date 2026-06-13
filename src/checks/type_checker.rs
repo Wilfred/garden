@@ -2994,7 +2994,7 @@ fn check_match_exhaustive(
                             end_line_number: block.close_brace.end_line_number,
                             column: prev_end.end_column,
                             end_column: block.close_brace.end_column,
-                            path: block.close_brace.path.clone(),
+                            path: Rc::clone(&block.close_brace.path),
                             vfs_path: block.close_brace.vfs_path.clone(),
                         },
                         new_text: String::new(),

@@ -1,5 +1,5 @@
 # Separate stage for building the Garden binary.
-FROM rust:1.85 AS garden-builder
+FROM rust:1.95 AS garden-builder
 WORKDIR /build
 COPY Cargo.toml Cargo.lock build.rs ./
 COPY src/ ./src/

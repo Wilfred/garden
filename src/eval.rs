@@ -7128,7 +7128,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 
             // Print the whole call stack every 10,000 ticks if
             // profiling is enabled, for basic profiling.
-            if env.ticks % 10_000 == 0 && env.profile {
+            if env.ticks.is_multiple_of(10_000) && env.profile {
                 for (i, frame) in env.stack.0.iter().enumerate() {
                     print!(
                         "{}{}",

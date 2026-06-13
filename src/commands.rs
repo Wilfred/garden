@@ -217,7 +217,7 @@ pub(crate) fn print_available_commands<T: Write>(
     let mut grouped_commands: FxHashMap<&'static str, Vec<String>> = FxHashMap::default();
     for command in Command::iter() {
         let group = command_group(&command);
-        let commands_in_group = grouped_commands.entry(group).or_insert(vec![]);
+        let commands_in_group = grouped_commands.entry(group).or_default();
         commands_in_group.push(command.to_string());
     }
 

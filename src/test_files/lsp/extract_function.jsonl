@@ -59,6 +59,29 @@
 //         "changes": {
 //           "file:///extract_function.gdn": [
 //             {
+//               "newText": "fun foo() {\n  let extracted = 1 + 2\n  let _ = extracted\n}\n",
+//               "range": {
+//                 "end": {
+//                   "character": 0,
+//                   "line": 3
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.extract",
+//       "title": "Extract variable"
+//     },
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///extract_function.gdn": [
+//             {
 //               "newText": "fun foo() {\n  let _ = dbg(1 + 2)\n}\n",
 //               "range": {
 //                 "end": {

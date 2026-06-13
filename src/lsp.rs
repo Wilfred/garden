@@ -249,7 +249,13 @@ fn get_fixes(src: &str, path: &PathBuf) -> Vec<Autofix> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
-    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+    let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+    for e in errors {
+        if let ParseError::Invalid { fixes: e_fixes, .. } = e {
+            fixes.extend(e_fixes);
+        }
+    }
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_or_create_namespace(path);

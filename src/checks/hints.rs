@@ -124,21 +124,22 @@ impl Visitor for HintVisitor<'_> {
                         }
 
                         if matches!(b, BuiltInType::Fun) {
-                            let first_arg = &type_hint.args[0];
-                            if first_arg.sym.name.text != "Tuple" {
-                                self.diagnostics.push(Diagnostic {
-                                    notes: vec![],
-                                    severity: Severity::Error,
-                                    message: ErrorMessage(vec![
-                                        msgtext!("Expected a tuple here, e.g. "),
-                                        msgcode!("Fun<(Int, Int), String>"),
-                                        msgtext!(" but got "),
-                                        msgcode!("{}", first_arg.sym.name),
-                                        msgtext!("."),
-                                    ]),
-                                    position: first_arg.position.clone(),
-                                    fixes: vec![],
-                                });
+                            if let Some(first_arg) = type_hint.args.first() {
+                                if first_arg.sym.name.text != "Tuple" {
+                                    self.diagnostics.push(Diagnostic {
+                                        notes: vec![],
+                                        severity: Severity::Error,
+                                        message: ErrorMessage(vec![
+                                            msgtext!("Expected a tuple here, e.g. "),
+                                            msgcode!("Fun<(Int, Int), String>"),
+                                            msgtext!(" but got "),
+                                            msgcode!("{}", first_arg.sym.name),
+                                            msgtext!("."),
+                                        ]),
+                                        position: first_arg.position.clone(),
+                                        fixes: vec![],
+                                    });
+                                }
                             }
                         }
                     }

@@ -1,0 +1,11 @@
+public fun apply(_g: Fun) {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Fun takes 2 type arguments, but got 0 arguments.
+// 
+// -| src/test_files/check/bare_fun_arity.gdn:1:22
+// 1| public fun apply(_g: Fun) {}
+// 2|                      ^^^
+

@@ -8,10 +8,10 @@ use gen_lsp_types::{
     DocumentFormattingProvider, DocumentHighlight, DocumentHighlightParams,
     DocumentHighlightProvider, DocumentSymbol, DocumentSymbolParams, DocumentSymbolProvider,
     ErrorCodes, Hover, HoverParams, HoverProvider, InitializeParams, InitializeResult, Location,
-    MarkupContent, MarkupKind, Position, PublishDiagnosticsParams, Range, RenameParams,
-    RenameProvider, ServerCapabilities, ServerInfo, SignatureHelp, SignatureHelpOptions,
-    SignatureHelpParams, SymbolKind, TextDocumentSync, TextDocumentSyncKind, TextEdit, Uri,
-    WorkspaceEdit,
+    MarkupContent, MarkupKind, Position, PublishDiagnosticsParams, Range, ReferenceParams,
+    ReferencesProvider, RenameParams, RenameProvider, ServerCapabilities, ServerInfo,
+    SignatureHelp, SignatureHelpOptions, SignatureHelpParams, SymbolKind, TextDocumentSync,
+    TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit,
 };
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
@@ -34,7 +34,7 @@ use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::extract_function::extract_function;
 use crate::extract_variable::extract_variable;
-use crate::highlight::highlight_occurrences;
+use crate::highlight::{highlight_occurrences, occurrences_with_def};
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::position::Position as GardenPosition;
 use crate::parser::vfs::Vfs;
@@ -508,6 +508,7 @@ fn handle_initialize(
                 ]),
                 ..Default::default()
             })),
+            references_provider: Some(ReferencesProvider::Bool(true)),
             rename_provider: Some(RenameProvider::Bool(true)),
             ..Default::default()
         },
@@ -932,6 +933,46 @@ fn handle_code_action(
     }
 
     JsonRpcResponse::new(id, actions)
+}
+
+/// Handle a textDocument/references request.
+fn handle_references(
+    id: serde_json::Value,
+    params: ReferenceParams,
+    documents: &DocumentStore,
+) -> JsonRpcResponse<Option<Vec<Location>>> {
+    let uri = &params.text_document_position_params.text_document.uri;
+    let position = params.text_document_position_params.position;
+
+    let path = match uri.to_file_path() {
+        Ok(p) => p,
+        Err(_) => return JsonRpcResponse::new(id, None),
+    };
+
+    let src = match documents.get(&path) {
+        Some(content) => content.clone(),
+        None => match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => return JsonRpcResponse::new(id, None),
+        },
+    };
+
+    let offset = line_char_to_offset(&src, position.line as usize, position.character as usize);
+
+    let Some((def_pos, positions)) = occurrences_with_def(&src, &path, offset) else {
+        return JsonRpcResponse::new(id, None);
+    };
+
+    let locations: Vec<Location> = positions
+        .into_iter()
+        .filter(|pos| params.context.include_declaration || *pos != def_pos)
+        .map(|pos| Location {
+            uri: uri.clone(),
+            range: garden_pos_to_lsp_range(&pos),
+        })
+        .collect();
+
+    JsonRpcResponse::new(id, Some(locations))
 }
 
 /// Handle a textDocument/rename request.
@@ -1465,6 +1506,17 @@ fn handle_message(
                     id,
                     "textDocument/codeAction",
                     |id, params| handle_code_action(id, params, documents),
+                );
+            }
+        }
+        Some("textDocument/references") => {
+            if let Some(id) = parsed.id {
+                push_request_response(
+                    &mut outgoing,
+                    message,
+                    id,
+                    "textDocument/references",
+                    |id, params| handle_references(id, params, documents),
                 );
             }
         }

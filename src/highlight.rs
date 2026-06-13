@@ -21,6 +21,21 @@ use crate::pos_to_id::find_item_at;
 ///
 /// Returns an empty vector if there is no variable at that offset.
 pub(crate) fn highlight_occurrences(src: &str, path: &Path, offset: usize) -> Vec<Position> {
+    match occurrences_with_def(src, path, offset) {
+        Some((_, positions)) => positions,
+        None => vec![],
+    }
+}
+
+/// Find the definition position of the symbol at `offset`, along with
+/// all occurrences of that symbol (including the definition site).
+///
+/// Returns `None` if there is no symbol at that offset.
+pub(crate) fn occurrences_with_def(
+    src: &str,
+    path: &Path,
+    offset: usize,
+) -> Option<(Position, Vec<Position>)> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -48,12 +63,10 @@ pub(crate) fn highlight_occurrences(src: &str, path: &Path, offset: usize) -> Ve
         }
     }
 
-    let Some(def_pos) = def_pos else {
-        return vec![];
-    };
+    let def_pos = def_pos?;
 
     let mut visitor = HighlightVisitor {
-        definition_pos: def_pos,
+        definition_pos: def_pos.clone(),
         id_to_pos: &summary.id_to_def_pos,
         positions: vec![],
     };
@@ -64,7 +77,7 @@ pub(crate) fn highlight_occurrences(src: &str, path: &Path, offset: usize) -> Ve
 
     let mut positions = visitor.positions;
     positions.sort_unstable_by_key(|p| p.start_offset);
-    positions
+    Some((def_pos, positions))
 }
 
 struct HighlightVisitor<'a> {

@@ -1,0 +1,11 @@
+fun calculate() {
+//  ^^^^^^^^^
+  1 + 2
+}
+
+// args: reftest-add-type-annotation
+// expected stdout:
+// fun calculate(): Int {
+//   1 + 2
+// }
+

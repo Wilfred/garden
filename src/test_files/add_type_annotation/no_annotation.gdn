@@ -1,0 +1,8 @@
+fun bar() {
+  let x: Int = 1 + 2
+//             ^^^^^
+}
+
+// args: reftest-add-type-annotation
+// expected exit status: 10
+// expected stderr: No local, parameter or return type to annotate at the selected position.

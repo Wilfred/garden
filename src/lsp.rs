@@ -23,6 +23,7 @@ use url::Url;
 /// Storage for open document contents, keyed by file path.
 type DocumentStore = FxHashMap<PathBuf, String>;
 
+use crate::add_type_annotation::add_type_annotation;
 use crate::checks::check_toplevel_items_in_env;
 use crate::checks::type_checker::check_types;
 use crate::completions;
@@ -774,6 +775,10 @@ fn handle_code_action(
         actions.push(CodeActionResponse::CodeAction(action));
     }
 
+    if let Some(action) = build_add_type_annotation_action(&src, &path, uri, &params.range) {
+        actions.push(CodeActionResponse::CodeAction(action));
+    }
+
     JsonRpcResponse::new(id, actions)
 }
 
@@ -994,6 +999,47 @@ fn build_wrap_in_dbg_action(
 
     Some(CodeAction {
         title: "Wrap in dbg()".to_owned(),
+        kind: Some(CodeActionKind::RefactorRewrite),
+        edit: Some(workspace_edit),
+        ..Default::default()
+    })
+}
+
+/// Build an "Add type annotation" code action for the selected range,
+/// if the selection covers a local, parameter or function return type
+/// that has no type annotation.
+fn build_add_type_annotation_action(
+    src: &str,
+    path: &Path,
+    uri: &Uri,
+    range: &Range,
+) -> Option<CodeAction> {
+    let start_offset = line_char_to_offset(
+        src,
+        range.start.line as usize,
+        range.start.character as usize,
+    );
+    let end_offset =
+        line_char_to_offset(src, range.end.line as usize, range.end.character as usize);
+
+    let new_src = add_type_annotation(src, path, start_offset, end_offset).ok()?;
+
+    let full_range = whole_document_range(src);
+    let text_edit = TextEdit {
+        range: full_range,
+        new_text: new_src,
+    };
+
+    let mut changes = std::collections::HashMap::new();
+    changes.insert(uri.clone(), vec![text_edit]);
+
+    let workspace_edit = WorkspaceEdit {
+        changes: Some(changes),
+        ..Default::default()
+    };
+
+    Some(CodeAction {
+        title: "Add type annotation".to_owned(),
         kind: Some(CodeActionKind::RefactorRewrite),
         edit: Some(workspace_edit),
         ..Default::default()

@@ -1,0 +1,11 @@
+fun bar() {
+  let total = 1 + 2
+//    ^^^^^
+}
+
+// args: reftest-add-type-annotation
+// expected stdout:
+// fun bar() {
+//   let total: Int = 1 + 2
+// }
+

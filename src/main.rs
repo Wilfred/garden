@@ -39,6 +39,7 @@
 // Prefer explicit Rc::clone/Arc::clone to make refcount bumps visible.
 #![warn(clippy::clone_on_ref_ptr)]
 
+mod add_type_annotation;
 mod caret_finder;
 mod checks;
 mod cli_session;
@@ -195,6 +196,13 @@ enum CliCommands {
     /// Parse the Garden program at the path specified and print the
     /// AST.
     ReftestAst { path: PathBuf },
+    /// Add a type annotation to the local, parameter or function
+    /// return type at the offset specified.
+    ReftestAddTypeAnnotation {
+        path: PathBuf,
+        offset: Option<usize>,
+        end_offset: Option<usize>,
+    },
     /// Show possible completions at the position given.
     ReftestComplete {
         path: PathBuf,
@@ -589,6 +597,35 @@ fn main() {
             };
 
             match destructure::destructure(&src, &abs_path, offset, end_offset) {
+                Ok(new_src) => {
+                    print!("{new_src}");
+                }
+                Err(msg) => {
+                    eprintln!("{msg}");
+                    std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+                }
+            }
+        }
+        CliCommands::ReftestAddTypeAnnotation {
+            path,
+            offset,
+            end_offset,
+        } => {
+            let abs_path = to_abs_path(&path);
+            let mut src = read_utf8_or_die(&abs_path);
+            let (offset, end_offset) = match (offset, end_offset) {
+                (Some(offset), Some(end_offset)) => (offset, end_offset),
+                _ => {
+                    src = remove_testing_footer(&src);
+                    let region = caret_finder::find_caret_region(&src)
+                        .expect("Could not find comment region containing `^^` in source.");
+                    src = caret_finder::remove_caret(&src);
+
+                    region
+                }
+            };
+
+            match add_type_annotation::add_type_annotation(&src, &abs_path, offset, end_offset) {
                 Ok(new_src) => {
                     print!("{new_src}");
                 }
@@ -1034,6 +1071,11 @@ mod tests {
     #[test]
     fn reftest_wrap_in_dbg() -> TestResult<()> {
         run_reftests("wrap_in_dbg")
+    }
+
+    #[test]
+    fn reftest_add_type_annotation() -> TestResult<()> {
+        run_reftests("add_type_annotation")
     }
 
     #[test]

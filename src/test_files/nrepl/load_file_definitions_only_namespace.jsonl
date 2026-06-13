@@ -1,0 +1,37 @@
+{ "op": "clone" }
+{ "op": "load-file", "session": "garden-1", "file": "fun helper(): Int { 42 }", "file-path": "/tmp/mylib.gdn" }
+{ "op": "eval", "session": "garden-1", "code": "helper()" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "mylib",
+//   "session": "garden-1",
+//   "value": "()"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "mylib",
+//   "session": "garden-1",
+//   "value": "42"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

@@ -1,0 +1,73 @@
+// A multi-line selection also offers an extract-function code action.
+{"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {"textDocument": {"uri": "file:///extract_function_multi_line.gdn", "languageId": "garden", "version": 1, "text": "fun foo() {\n  let x = 1\n  let y = 2\n  println(x + y)\n}\n"}}}
+{"jsonrpc": "2.0", "id": 1, "method": "textDocument/codeAction", "params": {"textDocument": {"uri": "file:///extract_function_multi_line.gdn"}, "range": {"start": {"line": 2, "character": 2}, "end": {"line": 3, "character": 16}}, "context": {"diagnostics": []}}}
+
+// args: reftest-lsp
+// expected stdout:
+// {
+//   "jsonrpc": "2.0",
+//   "method": "textDocument/publishDiagnostics",
+//   "params": {
+//     "diagnostics": [
+//       {
+//         "message": "`foo` is never called.",
+//         "range": {
+//           "end": {
+//             "character": 7,
+//             "line": 0
+//           },
+//           "start": {
+//             "character": 4,
+//             "line": 0
+//           }
+//         },
+//         "severity": 2
+//       },
+//       {
+//         "message": "Expected a `String` but got an `Int`.",
+//         "range": {
+//           "end": {
+//             "character": 15,
+//             "line": 3
+//           },
+//           "start": {
+//             "character": 10,
+//             "line": 3
+//           }
+//         },
+//         "severity": 1
+//       }
+//     ],
+//     "uri": "file:///extract_function_multi_line.gdn"
+//   }
+// }
+// {
+//   "id": 1,
+//   "jsonrpc": "2.0",
+//   "result": [
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///extract_function_multi_line.gdn": [
+//             {
+//               "newText": "fun extracted(x: Int): Unit {\n  let y = 2\n  println(x + y)\n}\n\nfun foo() {\n  let x = 1\n  extracted(x)\n}\n",
+//               "range": {
+//                 "end": {
+//                   "character": 0,
+//                   "line": 5
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.extract",
+//       "title": "Extract function"
+//     }
+//   ]
+// }
+

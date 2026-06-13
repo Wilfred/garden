@@ -1451,19 +1451,22 @@ impl TypeCheckVisitor<'_> {
                     .map(|param_decl_ty| substitute_ty_vars(param_decl_ty, &ty_var_env))
                     .collect::<Vec<_>>();
 
-                for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
-                    if !is_subtype(arg_ty, param_ty) {
-                        self.diagnostics.push(Diagnostic {
-                            notes: vec![],
-                            fixes: vec![],
-                            severity: Severity::Error,
-                            message: format_type_mismatch(param_ty, arg_ty),
-                            position: arg_pos.clone(),
-                        });
+                if fun_info.params.params.len() == paren_args.arguments.len() {
+                    // Only check argument types if we have the right number of
+                    // arguments. Otherwise, it's likely that the types are valid,
+                    // but there were missing previous arguments.
+                    for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
+                        if !is_subtype(arg_ty, param_ty) {
+                            self.diagnostics.push(Diagnostic {
+                                notes: vec![],
+                                fixes: vec![],
+                                severity: Severity::Error,
+                                message: format_type_mismatch(param_ty, arg_ty),
+                                position: arg_pos.clone(),
+                            });
+                        }
                     }
-                }
-
-                if fun_info.params.params.len() != paren_args.arguments.len() {
+                } else {
                     let name = format!("{}::{}", receiver_ty_name, sym.name);
                     self.arity_diagnostics(Some(&name), &params, &arg_tys, paren_args);
                 }

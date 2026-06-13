@@ -18,7 +18,7 @@ use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 use std::{fs, thread};
@@ -261,13 +261,23 @@ fn handle_eval(
     session: &Session,
     stdout_buf: &Arc<Mutex<String>>,
     stderr_buf: &Arc<Mutex<String>>,
+    response_tx: &Sender<Value>,
     base_msg: &HashMap<Vec<u8>, Value>,
     print_opts: &PrintOptions,
 ) -> Vec<Value> {
     let ns = env.current_namespace();
     let path = (*ns.borrow().abs_path).clone();
     eval_code_in_namespace(
-        code, path, ns, env, session, stdout_buf, stderr_buf, base_msg, print_opts,
+        code,
+        path,
+        ns,
+        env,
+        session,
+        stdout_buf,
+        stderr_buf,
+        response_tx,
+        base_msg,
+        print_opts,
     )
 }
 
@@ -283,6 +293,7 @@ fn handle_load_file(
     session: &Session,
     stdout_buf: &Arc<Mutex<String>>,
     stderr_buf: &Arc<Mutex<String>>,
+    response_tx: &Sender<Value>,
     base_msg: &HashMap<Vec<u8>, Value>,
     print_opts: &PrintOptions,
 ) -> Vec<Value> {
@@ -292,8 +303,66 @@ fn handle_load_file(
     };
     let ns = env.get_or_create_namespace(&path);
     eval_code_in_namespace(
-        code, path, ns, env, session, stdout_buf, stderr_buf, base_msg, print_opts,
+        code,
+        path,
+        ns,
+        env,
+        session,
+        stdout_buf,
+        stderr_buf,
+        response_tx,
+        base_msg,
+        print_opts,
     )
+}
+
+/// How often the output flusher drains the session's stdout and
+/// stderr buffers while an eval is running.
+const OUTPUT_FLUSH_INTERVAL: Duration = Duration::from_millis(100);
+
+/// Drain `buf` and, if it held anything, send it to the client as a
+/// single message keyed by `key` (`out` for stdout, `err` for
+/// stderr).
+fn flush_output_buffer(
+    buf: &Arc<Mutex<String>>,
+    key: &[u8],
+    response_tx: &Sender<Value>,
+    base_msg: &HashMap<Vec<u8>, Value>,
+) {
+    let captured = std::mem::take(&mut *buf.lock().expect("output buffer poisoned"));
+    if !captured.is_empty() {
+        let mut msg = base_msg.clone();
+        msg.insert(key.to_vec(), bstr(captured));
+        let _ = response_tx.send(Value::Dict(msg));
+    }
+}
+
+/// Spawn a thread that periodically drains the session's stdout and
+/// stderr buffers and streams them to the client while an eval runs.
+///
+/// The thread exits promptly once `stop_rx`'s sender is dropped; the
+/// caller performs the final drain after joining.
+fn spawn_output_flusher(
+    stdout_buf: Arc<Mutex<String>>,
+    stderr_buf: Arc<Mutex<String>>,
+    response_tx: Sender<Value>,
+    base_msg: HashMap<Vec<u8>, Value>,
+    stop_rx: Receiver<()>,
+) -> thread::JoinHandle<()> {
+    thread::Builder::new()
+        .name("nrepl-output-flusher".to_owned())
+        .spawn(move || loop {
+            match stop_rx.recv_timeout(OUTPUT_FLUSH_INTERVAL) {
+                Err(RecvTimeoutError::Timeout) => {
+                    flush_output_buffer(&stdout_buf, b"out", &response_tx, &base_msg);
+                    flush_output_buffer(&stderr_buf, b"err", &response_tx, &base_msg);
+                }
+                // Stop requested (sender dropped); the caller does the
+                // final drain.
+                Ok(()) | Err(RecvTimeoutError::Disconnected) => return,
+            }
+        })
+        .expect("Could not spawn nREPL output flusher thread")
 }
 
 /// Parse `code`, load its top-level items into `namespace`, evaluate
@@ -306,6 +375,7 @@ fn eval_code_in_namespace(
     session: &Session,
     stdout_buf: &Arc<Mutex<String>>,
     stderr_buf: &Arc<Mutex<String>>,
+    response_tx: &Sender<Value>,
     base_msg: &HashMap<Vec<u8>, Value>,
     print_opts: &PrintOptions,
 ) -> Vec<Value> {
@@ -349,26 +419,31 @@ fn eval_code_in_namespace(
 
         let mut warn_msg = base_msg.clone();
         warn_msg.insert(b"err".to_vec(), bstr(format!("{warnings}\n")));
-        responses.push(Value::Dict(warn_msg));
+        let _ = response_tx.send(Value::Dict(warn_msg));
     }
+
+    // Stream stdout/stderr to the client while the eval runs rather
+    // than buffering everything until it finishes. This keeps output
+    // flowing for a long-running eval and bounds the buffers for an
+    // eval that prints in an infinite loop.
+    let (flush_stop_tx, flush_stop_rx) = mpsc::channel::<()>();
+    let flusher = spawn_output_flusher(
+        Arc::clone(stdout_buf),
+        Arc::clone(stderr_buf),
+        response_tx.clone(),
+        base_msg.clone(),
+        flush_stop_rx,
+    );
 
     let eval_start = Instant::now();
     let eval_result = eval_toplevel_exprs_then_stop(&items, env, session, Rc::clone(&namespace));
     let eval_msec = eval_start.elapsed().as_millis() as i64;
 
-    let captured_stdout = std::mem::take(&mut *stdout_buf.lock().expect("stdout buffer poisoned"));
-    if !captured_stdout.is_empty() {
-        let mut out_msg = base_msg.clone();
-        out_msg.insert(b"out".to_vec(), bstr(captured_stdout));
-        responses.push(Value::Dict(out_msg));
-    }
-
-    let captured_stderr = std::mem::take(&mut *stderr_buf.lock().expect("stderr buffer poisoned"));
-    if !captured_stderr.is_empty() {
-        let mut err_msg = base_msg.clone();
-        err_msg.insert(b"err".to_vec(), bstr(captured_stderr));
-        responses.push(Value::Dict(err_msg));
-    }
+    // Stop the flusher and drain whatever printed since its last pass.
+    drop(flush_stop_tx);
+    let _ = flusher.join();
+    flush_output_buffer(stdout_buf, b"out", response_tx, base_msg);
+    flush_output_buffer(stderr_buf, b"err", response_tx, base_msg);
 
     match eval_result {
         Ok(value) => {
@@ -801,6 +876,7 @@ fn session_worker(
                 &session,
                 &stdout_buf,
                 &stderr_buf,
+                &response_tx,
                 &base_msg,
                 &print_opts,
             ),
@@ -816,6 +892,7 @@ fn session_worker(
                 &session,
                 &stdout_buf,
                 &stderr_buf,
+                &response_tx,
                 &base_msg,
                 &print_opts,
             ),
@@ -1700,6 +1777,64 @@ mod tests {
             !status.iter().any(|s| s == "eval-error"),
             "interrupt should not be reported as eval-error: {status:?}"
         );
+    }
+
+    #[test]
+    fn streams_output_during_eval() {
+        // An eval that prints in an infinite loop should stream `out`
+        // messages while it runs, rather than buffering everything
+        // until completion.
+        let (tx, rx) = mpsc::channel();
+        let mut conn = Connection::new(tx);
+
+        let clone_req: HashMap<Vec<u8>, Value> = HashMap::from([
+            (b"op".to_vec(), bstr("clone")),
+            (b"id".to_vec(), bstr("c1")),
+        ]);
+        handle_message(&mut conn, &clone_req);
+        let clone_resp = collect_until_done(&rx, "c1");
+        let new_session = clone_resp
+            .iter()
+            .find_map(|d| dict_get(d, "new-session").and_then(as_str))
+            .expect("clone produced a new-session id")
+            .to_owned();
+
+        let eval_req: HashMap<Vec<u8>, Value> = HashMap::from([
+            (b"op".to_vec(), bstr("eval")),
+            (b"id".to_vec(), bstr("e1")),
+            (b"session".to_vec(), bstr(new_session.clone())),
+            (b"code".to_vec(), bstr("while True { println(\"tick\") }")),
+        ]);
+        handle_message(&mut conn, &eval_req);
+
+        // We should receive at least one `out` message before the
+        // eval produces its terminal `done`, proving the output is
+        // streamed rather than buffered until the end.
+        loop {
+            let v = rx
+                .recv_timeout(Duration::from_secs(5))
+                .expect("timeout waiting for streamed output");
+            let Value::Dict(d) = v else {
+                continue;
+            };
+            assert!(
+                dict_get(&d, "status").is_none(),
+                "eval finished before any output was streamed"
+            );
+            if let Some(out) = dict_get(&d, "out").and_then(as_str) {
+                assert!(out.contains("tick"));
+                break;
+            }
+        }
+
+        // Stop the loop so the worker can shut down.
+        let int_req: HashMap<Vec<u8>, Value> = HashMap::from([
+            (b"op".to_vec(), bstr("interrupt")),
+            (b"id".to_vec(), bstr("i1")),
+            (b"session".to_vec(), bstr(new_session)),
+        ]);
+        handle_message(&mut conn, &int_req);
+        let _ = collect_until_done(&rx, "e1");
     }
 
     #[test]

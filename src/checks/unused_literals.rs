@@ -93,7 +93,7 @@ impl<'a> UnusedLiteralVisitor<'a> {
     }
 }
 
-impl<'a> Visitor for UnusedLiteralVisitor<'a> {
+impl Visitor for UnusedLiteralVisitor<'_> {
     fn visit_expr(&mut self, expr: &Expression) {
         self.check_expression(expr);
         self.visit_expr_(&expr.expr_);

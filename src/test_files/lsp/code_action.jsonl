@@ -97,6 +97,29 @@
 //         "changes": {
 //           "file:///code_action.gdn": [
 //             {
+//               "newText": "fun main() {\n  let extracted = Path{ p: \"/foo\" }.existts()\n  extracted\n}\n",
+//               "range": {
+//                 "end": {
+//                   "character": 0,
+//                   "line": 3
+//                 },
+//                 "start": {
+//                   "character": 0,
+//                   "line": 0
+//                 }
+//               }
+//             }
+//           ]
+//         }
+//       },
+//       "kind": "refactor.extract",
+//       "title": "Extract variable"
+//     },
+//     {
+//       "edit": {
+//         "changes": {
+//           "file:///code_action.gdn": [
+//             {
 //               "newText": "fun main() {\n  dbg(Path{ p: \"/foo\" }.existts())\n}\n",
 //               "range": {
 //                 "end": {

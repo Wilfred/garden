@@ -12,3 +12,8 @@ test foo {}
 // 2| 
 // 3| test foo {}
 // 4|      ^^^
+// -| src/test_files/check/duplicate_test.gdn:1:6
+// 1| test foo {}
+// 2|      ^^^ Note: Previous definition was here.
+// 3| test foo {}
+

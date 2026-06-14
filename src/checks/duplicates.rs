@@ -4,7 +4,6 @@
 //! mistake however.
 
 use std::collections::hash_map::Entry;
-use std::collections::HashSet;
 
 use rustc_hash::FxHashMap;
 
@@ -12,7 +11,6 @@ use crate::diagnostics::{Diagnostic, Severity};
 use crate::env::Env;
 use crate::parser::ast::{SymbolName, ToplevelItem, TypeName};
 use crate::parser::diagnostics::ErrorMessage;
-use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
 use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
@@ -20,8 +18,8 @@ use crate::{msgcode, msgtext};
 struct DuplicatesVisitor {
     funs_seen: FxHashMap<SymbolName, Position>,
     methods_seen: FxHashMap<TypeName, FxHashMap<SymbolName, Position>>,
-    types_seen: HashSet<TypeName>,
-    tests_seen: HashSet<SymbolName>,
+    types_seen: FxHashMap<TypeName, Position>,
+    tests_seen: FxHashMap<SymbolName, Position>,
     diagnostics: Vec<Diagnostic>,
 }
 
@@ -86,53 +84,68 @@ impl Visitor for DuplicatesVisitor {
             }
             ToplevelItem::Test(test_info) => {
                 let sym = &test_info.name_sym;
-                if self.tests_seen.contains(&sym.name) {
+                if let Some(prev_pos) = self.tests_seen.get(&sym.name) {
                     self.diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![Text(format!(
-                            "The test `{}` is already defined in this file.",
-                            sym.name
-                        ))]),
+                        message: ErrorMessage(vec![
+                            msgtext!("The test "),
+                            msgcode!("{}", sym.name),
+                            msgtext!(" is already defined in this file."),
+                        ]),
                         position: sym.position.clone(),
-                        notes: vec![],
+                        notes: vec![(
+                            ErrorMessage(vec![msgtext!("Previous definition was here.")]),
+                            prev_pos.clone(),
+                        )],
                         severity: Severity::Warning,
                         fixes: vec![],
                     });
                 } else {
-                    self.tests_seen.insert(sym.name.clone());
+                    self.tests_seen
+                        .insert(sym.name.clone(), sym.position.clone());
                 }
             }
             ToplevelItem::Enum(enum_info) => {
                 let name_sym = &enum_info.name_sym;
-                if self.types_seen.contains(&name_sym.name) {
+                if let Some(prev_pos) = self.types_seen.get(&name_sym.name) {
                     self.diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![Text(format!(
-                            "The type `{}` is already defined in this file.",
-                            name_sym.name
-                        ))]),
+                        message: ErrorMessage(vec![
+                            msgtext!("The type "),
+                            msgcode!("{}", name_sym.name),
+                            msgtext!(" is already defined in this file."),
+                        ]),
                         position: name_sym.position.clone(),
-                        notes: vec![],
+                        notes: vec![(
+                            ErrorMessage(vec![msgtext!("Previous definition was here.")]),
+                            prev_pos.clone(),
+                        )],
                         severity: Severity::Warning,
                         fixes: vec![],
                     });
                 } else {
-                    self.types_seen.insert(name_sym.name.clone());
+                    self.types_seen
+                        .insert(name_sym.name.clone(), name_sym.position.clone());
                 }
             }
             ToplevelItem::Struct(struct_info) => {
                 let name_sym = &struct_info.name_sym;
-                if self.types_seen.contains(&name_sym.name) {
+                if let Some(prev_pos) = self.types_seen.get(&name_sym.name) {
                     self.diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![Text(format!(
-                            "The type `{}` is already defined in this file.",
-                            name_sym.name
-                        ))]),
+                        message: ErrorMessage(vec![
+                            msgtext!("The type "),
+                            msgcode!("{}", name_sym.name),
+                            msgtext!(" is already defined in this file."),
+                        ]),
                         position: name_sym.position.clone(),
-                        notes: vec![],
+                        notes: vec![(
+                            ErrorMessage(vec![msgtext!("Previous definition was here.")]),
+                            prev_pos.clone(),
+                        )],
                         severity: Severity::Warning,
                         fixes: vec![],
                     });
                 } else {
-                    self.types_seen.insert(name_sym.name.clone());
+                    self.types_seen
+                        .insert(name_sym.name.clone(), name_sym.position.clone());
                 }
             }
             ToplevelItem::Expr(_) => {}
@@ -149,8 +162,8 @@ pub(crate) fn check_duplicates(items: &[ToplevelItem], _env: &Env) -> Vec<Diagno
         diagnostics: vec![],
         funs_seen: FxHashMap::default(),
         methods_seen: FxHashMap::default(),
-        types_seen: HashSet::default(),
-        tests_seen: HashSet::default(),
+        types_seen: FxHashMap::default(),
+        tests_seen: FxHashMap::default(),
     };
     for item in items {
         visitor.visit_toplevel_item(item);

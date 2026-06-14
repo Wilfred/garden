@@ -7,8 +7,9 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-use std::time::Instant;
+use std::sync::mpsc::{Receiver, RecvTimeoutError};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 use normalize_path::NormalizePath as _;
 use ordered_float::OrderedFloat;
@@ -246,12 +247,49 @@ pub(crate) enum StdoutStderrMode {
     DoNotWrite,
 }
 
+/// How `read_line()` obtains a line of input during evaluation.
+pub(crate) enum StdinMode {
+    /// Read a line from the process's standard input.
+    ReadFromStdin,
+    /// Request a line of input from the connected nREPL client and
+    /// block until it replies. Used by the nREPL server so that
+    /// `read_line()` does not read the server's own stdin.
+    NRepl(NReplStdin),
+}
+
+impl std::fmt::Debug for StdinMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StdinMode::ReadFromStdin => f.write_str("ReadFromStdin"),
+            StdinMode::NRepl(_) => f.write_str("NRepl(..)"),
+        }
+    }
+}
+
+/// Channels used to request a line of input from an nREPL client.
+///
+/// When `read_line()` runs it calls `request_input`, which tells the
+/// server to send a `need-input` status to the client, then blocks on
+/// `input_rx` until the client sends a line back via the `stdin` op.
+pub(crate) struct NReplStdin {
+    /// Called when an eval blocks on input. The server flushes any
+    /// buffered output and sends a `need-input` status to the client.
+    pub(crate) request_input: Box<dyn Fn() + Send>,
+    /// Lines sent by the client via the `stdin` op. `None` means the
+    /// client signalled end-of-input. Shared with the session worker,
+    /// which owns it for the lifetime of the session; only the worker
+    /// thread ever locks it.
+    pub(crate) input_rx: Arc<Mutex<Receiver<Option<String>>>>,
+}
+
 #[derive(Debug)]
 pub(crate) struct Session {
     pub(crate) interrupted: Arc<AtomicBool>,
     /// Whether `print()` should write to stdout directly, or if we
     /// should write a JSON message to stdout summarising the print.
     pub(crate) stdout_stderr_mode: StdoutStderrMode,
+    /// How `read_line()` obtains input.
+    pub(crate) stdin_mode: StdinMode,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
     /// Whether JSON should be pretty-printed. This applies to any
@@ -2590,6 +2628,71 @@ fn as_int_str_tuple(i: i64, s: &str) -> Value {
     })
 }
 
+/// Strip a single trailing newline (`\n` or `\r\n`) from `line`.
+fn strip_trailing_newline(mut line: String) -> String {
+    if line.ends_with('\n') {
+        line.pop();
+        if line.ends_with('\r') {
+            line.pop();
+        }
+    }
+    line
+}
+
+/// Implementation of `read_line()` that reads from the process's
+/// standard input.
+fn read_line_from_stdin() -> Value {
+    let mut line = String::new();
+    match std::io::stdin().read_line(&mut line) {
+        Ok(_) => Value::ok(Value::new(Value_::String(strip_trailing_newline(line)))),
+        Err(e) => Value::err(Value::new(Value_::String(format!("{e}")))),
+    }
+}
+
+/// Implementation of `read_line()` for an nREPL session. Asks the
+/// connected client for input and blocks until it replies, while
+/// still honouring interrupts so a blocked eval can be cancelled.
+fn read_line_from_nrepl(
+    nrepl_stdin: &NReplStdin,
+    session: &Session,
+    receiver_value: &Value,
+) -> Result<Value, (RestoreValues, EvalError)> {
+    // Tell the client we are waiting for a line of input.
+    (nrepl_stdin.request_input)();
+
+    loop {
+        // Poll rather than block forever so an `interrupt` (or the
+        // client disconnecting) can wake us up.
+        if session.interrupted.load(Ordering::SeqCst) {
+            session.interrupted.store(false, Ordering::SeqCst);
+            return Err((
+                RestoreValues(vec![receiver_value.clone()]),
+                EvalError::Interrupted,
+            ));
+        }
+
+        let recv_result = nrepl_stdin
+            .input_rx
+            .lock()
+            .expect("nREPL stdin receiver poisoned")
+            .recv_timeout(Duration::from_millis(50));
+        match recv_result {
+            Ok(Some(line)) => {
+                return Ok(Value::ok(Value::new(Value_::String(
+                    strip_trailing_newline(line),
+                ))));
+            }
+            Ok(None) | Err(RecvTimeoutError::Disconnected) => {
+                // The client signalled end-of-input, or the connection
+                // closed. Report EOF as an empty line, matching what
+                // `read_line` returns on stdin EOF.
+                return Ok(Value::ok(Value::new(Value_::String(String::new()))));
+            }
+            Err(RecvTimeoutError::Timeout) => continue,
+        }
+    }
+}
+
 fn eval_built_in_call(
     env: &mut Env,
     kind: BuiltInFunctionKind,
@@ -2840,21 +2943,10 @@ fn eval_built_in_call(
                 arg_values,
             )?;
 
-            let mut line = String::new();
-            let v = match std::io::stdin().read_line(&mut line) {
-                Ok(_) => {
-                    // Remove trailing newline if present
-                    if line.ends_with('\n') {
-                        line.pop();
-                        if line.ends_with('\r') {
-                            line.pop();
-                        }
-                    }
-                    Value::ok(Value::new(Value_::String(line)))
-                }
-                Err(e) => {
-                    let s = Value::new(Value_::String(format!("{e}")));
-                    Value::err(s)
+            let v = match &session.stdin_mode {
+                StdinMode::ReadFromStdin => read_line_from_stdin(),
+                StdinMode::NRepl(nrepl_stdin) => {
+                    read_line_from_nrepl(nrepl_stdin, session, receiver_value)?
                 }
             };
 
@@ -7883,6 +7975,7 @@ mod tests {
         let session = Session {
             interrupted,
             stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
+            stdin_mode: StdinMode::ReadFromStdin,
             start_time: Instant::now(),
             trace_exprs: false,
             pretty_print_json: true,
@@ -8392,6 +8485,7 @@ mod tests {
         let session = Session {
             interrupted,
             stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
+            stdin_mode: StdinMode::ReadFromStdin,
             start_time: Instant::now(),
             trace_exprs: false,
             pretty_print_json: true,

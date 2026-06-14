@@ -30,7 +30,7 @@ use crate::diagnostics::format_exception_with_stack;
 use crate::env::Env;
 use crate::eval::{
     eval_toplevel_exprs_then_stop, load_toplevel_items_with_stubs, EvalError, ExceptionInfo,
-    Session, StdoutStderrMode,
+    NReplStdin, Session, StdinMode, StdoutStderrMode,
 };
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{IdGenerator, SymbolName};
@@ -691,6 +691,10 @@ enum SessionRequest {
 struct SessionState {
     request_tx: Sender<SessionRequest>,
     interrupted: Arc<AtomicBool>,
+    /// Lines of input from the client, delivered to a `read_line()`
+    /// call blocked in the session's worker. `None` signals
+    /// end-of-input.
+    input_tx: Sender<Option<String>>,
 }
 
 /// State held for one client connection. Each connection may host
@@ -731,6 +735,7 @@ impl Connection {
     fn new_session(&mut self) -> String {
         let id = next_session_id(&mut self.next_id);
         let (request_tx, request_rx) = mpsc::channel();
+        let (input_tx, input_rx) = mpsc::channel::<Option<String>>();
         let interrupted = Arc::new(AtomicBool::new(false));
 
         self.interrupt_flags
@@ -751,6 +756,7 @@ impl Connection {
                     response_tx,
                     worker_interrupted,
                     temp_built_in_files,
+                    input_rx,
                 )
             })
             .expect("Could not spawn nREPL session worker");
@@ -760,6 +766,7 @@ impl Connection {
             SessionState {
                 request_tx,
                 interrupted,
+                input_tx,
             },
         );
         id
@@ -836,6 +843,62 @@ fn sigint_watchdog(
     }
 }
 
+/// Build the `Session` used while evaluating code for an nREPL
+/// request. Output is captured into `stdout_buf`/`stderr_buf` and
+/// `read_line()` requests input from the client.
+fn nrepl_session(
+    interrupted: &Arc<AtomicBool>,
+    stdout_buf: &Arc<Mutex<String>>,
+    stderr_buf: &Arc<Mutex<String>>,
+    response_tx: &Sender<Value>,
+    base_msg: &HashMap<Vec<u8>, Value>,
+    input_rx: &Arc<Mutex<Receiver<Option<String>>>>,
+) -> Session {
+    // Captured by the `request_input` closure so a blocked
+    // `read_line()` can flush pending output and ask the client for a
+    // line.
+    let input_response_tx = response_tx.clone();
+    let input_base_msg = base_msg.clone();
+    let input_stdout_buf = Arc::clone(stdout_buf);
+    let input_stderr_buf = Arc::clone(stderr_buf);
+
+    let request_input = Box::new(move || {
+        // Flush any buffered output (e.g. a prompt printed just before
+        // the read) so the user sees it before being asked for input.
+        flush_output_buffer(
+            &input_stdout_buf,
+            b"out",
+            &input_response_tx,
+            &input_base_msg,
+        );
+        flush_output_buffer(
+            &input_stderr_buf,
+            b"err",
+            &input_response_tx,
+            &input_base_msg,
+        );
+
+        let mut msg = input_base_msg.clone();
+        msg.insert(b"status".to_vec(), Value::List(vec![bstr("need-input")]));
+        let _ = input_response_tx.send(Value::Dict(msg));
+    });
+
+    Session {
+        interrupted: Arc::clone(interrupted),
+        stdout_stderr_mode: StdoutStderrMode::WriteToNReplBuffers {
+            stdout_buf: Arc::clone(stdout_buf),
+            stderr_buf: Arc::clone(stderr_buf),
+        },
+        stdin_mode: StdinMode::NRepl(NReplStdin {
+            request_input,
+            input_rx: Arc::clone(input_rx),
+        }),
+        start_time: Instant::now(),
+        trace_exprs: false,
+        pretty_print_json: false,
+    }
+}
+
 /// Worker thread that owns the `Env` for a session and handles each
 /// session-bound op sequentially.
 fn session_worker(
@@ -843,59 +906,76 @@ fn session_worker(
     response_tx: Sender<Value>,
     interrupted: Arc<AtomicBool>,
     temp_built_in_files: Arc<Option<TempBuiltInFiles>>,
+    input_rx: Receiver<Option<String>>,
 ) {
     let id_gen = IdGenerator::default();
     let vfs = Vfs::default();
     let mut env = Env::new(id_gen, vfs);
 
+    // The receiver lives for the whole session; each `read_line()`
+    // shares it via the per-eval `Session`. Only this worker thread
+    // ever locks it.
+    let input_rx = Arc::new(Mutex::new(input_rx));
+
     while let Ok(req) = request_rx.recv() {
         // Clear any stray interrupt set while the session was idle.
         interrupted.store(false, Ordering::SeqCst);
-
-        let stdout_buf = Arc::new(Mutex::new(String::new()));
-        let stderr_buf = Arc::new(Mutex::new(String::new()));
-        let session = Session {
-            interrupted: Arc::clone(&interrupted),
-            stdout_stderr_mode: StdoutStderrMode::WriteToNReplBuffers {
-                stdout_buf: Arc::clone(&stdout_buf),
-                stderr_buf: Arc::clone(&stderr_buf),
-            },
-            start_time: Instant::now(),
-            trace_exprs: false,
-            pretty_print_json: false,
-        };
 
         let responses = match req {
             SessionRequest::Eval {
                 code,
                 base_msg,
                 print_opts,
-            } => handle_eval(
-                &code,
-                &mut env,
-                &session,
-                &stdout_buf,
-                &stderr_buf,
-                &response_tx,
-                &base_msg,
-                &print_opts,
-            ),
+            } => {
+                let stdout_buf = Arc::new(Mutex::new(String::new()));
+                let stderr_buf = Arc::new(Mutex::new(String::new()));
+                let session = nrepl_session(
+                    &interrupted,
+                    &stdout_buf,
+                    &stderr_buf,
+                    &response_tx,
+                    &base_msg,
+                    &input_rx,
+                );
+                handle_eval(
+                    &code,
+                    &mut env,
+                    &session,
+                    &stdout_buf,
+                    &stderr_buf,
+                    &response_tx,
+                    &base_msg,
+                    &print_opts,
+                )
+            }
             SessionRequest::LoadFile {
                 code,
                 file_path,
                 base_msg,
                 print_opts,
-            } => handle_load_file(
-                &code,
-                file_path.as_deref(),
-                &mut env,
-                &session,
-                &stdout_buf,
-                &stderr_buf,
-                &response_tx,
-                &base_msg,
-                &print_opts,
-            ),
+            } => {
+                let stdout_buf = Arc::new(Mutex::new(String::new()));
+                let stderr_buf = Arc::new(Mutex::new(String::new()));
+                let session = nrepl_session(
+                    &interrupted,
+                    &stdout_buf,
+                    &stderr_buf,
+                    &response_tx,
+                    &base_msg,
+                    &input_rx,
+                );
+                handle_load_file(
+                    &code,
+                    file_path.as_deref(),
+                    &mut env,
+                    &session,
+                    &stdout_buf,
+                    &stderr_buf,
+                    &response_tx,
+                    &base_msg,
+                    &print_opts,
+                )
+            }
             SessionRequest::Completions { prefix, base_msg } => {
                 handle_completions(&env, &prefix, &base_msg)
             }
@@ -1067,6 +1147,21 @@ const SUPPORTED_OPS: &[(&str, OpDescriptor)] = &[
         },
     ),
     (
+        "stdin",
+        OpDescriptor {
+            doc: "Send a line of standard input to a session whose eval is blocked reading input.",
+            requires: &[
+                ("stdin", "The input to send. An empty string signals end-of-input."),
+                (
+                    "session",
+                    "The ID of the session to send the input to.",
+                ),
+            ],
+            optional: &[],
+            returns: &[],
+        },
+    ),
+    (
         "lookup",
         OpDescriptor {
             doc: "Lookup symbol info.",
@@ -1101,6 +1196,15 @@ fn op_descriptor_to_value(d: &OpDescriptor) -> Value {
         (b"optional".to_vec(), to_dict(d.optional)),
         (b"returns".to_vec(), to_dict(d.returns)),
     ])
+}
+
+/// Whether a response dict carries a terminal `status` containing
+/// `done`.
+fn status_contains_done(d: &HashMap<Vec<u8>, Value>) -> bool {
+    match dict_get(d, "status") {
+        Some(Value::List(items)) => items.iter().any(|item| as_str(item) == Some("done")),
+        _ => false,
+    }
 }
 
 fn truthy(v: &Value) -> bool {
@@ -1216,6 +1320,31 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
             match session_id.and_then(|s| conn.sessions.get(s)) {
                 Some(s) => {
                     s.interrupted.store(true, Ordering::SeqCst);
+                    let mut msg = base;
+                    msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
+                    conn.send(Value::Dict(msg));
+                }
+                None => {
+                    let mut msg = base;
+                    msg.insert(
+                        b"status".to_vec(),
+                        Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
+                    );
+                    conn.send(Value::Dict(msg));
+                }
+            }
+        }
+        "stdin" => {
+            let session_id = dict_get(request, "session").and_then(as_str);
+            // An empty `stdin` string signals end-of-input; any other
+            // value is a line of input for a blocked `read_line()`.
+            let input = match dict_get(request, "stdin").and_then(as_str) {
+                Some(s) if !s.is_empty() => Some(s.to_owned()),
+                _ => None,
+            };
+            match session_id.and_then(|s| conn.sessions.get(s)) {
+                Some(s) => {
+                    let _ = s.input_tx.send(input);
                     let mut msg = base;
                     msg.insert(b"status".to_vec(), Value::List(vec![bstr("done")]));
                     conn.send(Value::Dict(msg));
@@ -1514,21 +1643,19 @@ pub(crate) fn reftest_nrepl(src: &str) {
     }
 
     // Each request produces exactly one terminal response — a
-    // message carrying a `status` field. Drain the channel until
-    // we've seen one per request so the fixture captures
-    // asynchronous worker responses too.
+    // message whose `status` field contains `done`. Drain the channel
+    // until we've seen one per request so the fixture captures
+    // asynchronous worker responses too. Non-terminal status messages
+    // (e.g. `need-input`) are captured but do not count.
     let mut responses = Vec::new();
     let mut status_seen = 0;
     while status_seen < request_count {
         let Ok(response) = rx.recv_timeout(Duration::from_secs(5)) else {
             break;
         };
-        let has_status = matches!(
-            &response,
-            Value::Dict(d) if d.contains_key(b"status".as_slice())
-        );
+        let is_done = matches!(&response, Value::Dict(d) if status_contains_done(d));
         responses.push(response);
-        if has_status {
+        if is_done {
             status_seen += 1;
         }
     }

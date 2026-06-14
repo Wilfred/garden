@@ -1,0 +1,42 @@
+{ "op": "clone" }
+{ "op": "eval", "id": "e1", "session": "garden-1", "code": "read_line()" }
+// sleep 200
+{ "op": "stdin", "id": "s1", "session": "garden-1", "stdin": "Wilfred\n" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "id": "e1",
+//   "session": "garden-1",
+//   "status": [
+//     "need-input"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "id": "e1",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": "Ok(\"Wilfred\")"
+// }
+// {
+//   "id": "e1",
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "id": "s1",
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

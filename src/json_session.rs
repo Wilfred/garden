@@ -20,7 +20,7 @@ use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to,
     load_toplevel_items_with_stubs, push_test_stackframe, EvalError, EvalUpToErr, ExceptionInfo,
-    ExpressionState, Session, StdoutJsonFormat, StdoutStderrMode,
+    ExpressionState, Session, StdinMode, StdoutJsonFormat, StdoutStderrMode,
 };
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::IdGenerator;
@@ -890,6 +890,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let session = Session {
         interrupted: Arc::clone(&interrupted),
         stdout_stderr_mode: StdoutStderrMode::WriteJson(StdoutJsonFormat::ReplSession),
+        stdin_mode: StdinMode::ReadFromStdin,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json,

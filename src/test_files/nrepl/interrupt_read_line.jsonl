@@ -1,0 +1,42 @@
+{ "op": "clone" }
+{ "op": "eval", "id": "e1", "session": "garden-1", "code": "read_line()" }
+// sleep 200
+{ "op": "interrupt", "id": "i1", "session": "garden-1" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "id": "e1",
+//   "session": "garden-1",
+//   "status": [
+//     "need-input"
+//   ]
+// }
+// {
+//   "err": "Interrupted.\n",
+//   "id": "e1",
+//   "session": "garden-1"
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "id": "e1",
+//   "session": "garden-1",
+//   "status": [
+//     "done",
+//     "interrupted"
+//   ]
+// }
+// {
+//   "id": "i1",
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

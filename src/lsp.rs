@@ -161,12 +161,13 @@ fn write_message<T: Serialize>(message: &T) -> io::Result<()> {
     Ok(())
 }
 
-/// Convert a file path to an LSP URI.
-fn path_to_uri(path: &PathBuf) -> Uri {
-    Url::from_file_path(path).unwrap_or_else(|_| {
-        // Fallback to file:// scheme with display
-        Url::parse(&format!("file://{}", path.display())).unwrap()
-    })
+/// Convert an absolute file path to an LSP URI.
+///
+/// Returns `None` if the path is not absolute, since `Url::from_file_path`
+/// requires an absolute path and a relative path has no well-defined
+/// location to point the editor at.
+fn path_to_uri(path: &Path) -> Option<Uri> {
+    Url::from_file_path(path).ok()
 }
 
 /// Convert a byte offset in `src` to an LSP position on the line
@@ -734,11 +735,15 @@ fn handle_definition(
         None => garden_pos_to_lsp_range_no_src(&def_pos),
     };
 
-    // Convert to LSP Location format
-    let location = Location {
-        uri: path_to_uri(&def_path),
-        range,
+    // Convert to LSP Location format. A definition with no usable on-disk
+    // location (e.g. a built-in file that could not be resolved to a temp
+    // copy, leaving a relative path like `__prelude.gdn`) has no valid URI,
+    // so report no result rather than an unusable Location.
+    let uri = match path_to_uri(&def_path) {
+        Some(uri) => uri,
+        None => return JsonRpcResponse::new(id, None),
     };
+    let location = Location { uri, range };
 
     JsonRpcResponse::new(id, Some(location))
 }
@@ -1798,5 +1803,23 @@ mod tests {
         let range = whole_document_range("");
         assert_eq!(range.end.line, 0);
         assert_eq!(range.end.character, 0);
+    }
+
+    #[test]
+    fn test_path_to_uri_absolute() {
+        let uri = path_to_uri(&PathBuf::from("/tmp/foo.gdn"));
+        assert_eq!(
+            uri.map(|u| u.to_string()),
+            Some("file:///tmp/foo.gdn".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_path_to_uri_relative() {
+        // Relative paths (e.g. an unresolved built-in file like
+        // `__prelude.gdn`) have no valid file URI, so previously the
+        // fallback turned the filename into the URI authority
+        // (`file://__prelude.gdn`). We now return no URI instead.
+        assert_eq!(path_to_uri(&PathBuf::from("__prelude.gdn")), None);
     }
 }

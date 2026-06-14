@@ -131,7 +131,7 @@ pub(crate) fn lex_between<'a>(
                         line_number: line_number.as_usize(),
                         end_line_number: line_number.as_usize(),
                         column,
-                        end_column: i,
+                        end_column: column + i,
                         path: Rc::clone(&vfs_path.path),
                         vfs_path: vfs_path.clone(),
                     },
@@ -147,7 +147,7 @@ pub(crate) fn lex_between<'a>(
                         line_number: line_number.as_usize(),
                         end_line_number: line_number.as_usize(),
                         column,
-                        end_column: s.len(),
+                        end_column: column + s.len(),
                         path: Rc::clone(&vfs_path.path),
                         vfs_path: vfs_path.clone(),
                     },
@@ -532,6 +532,54 @@ mod tests {
                         end_line_number: 0,
                         column: 0,
                         end_column: 4,
+                        path: PathBuf::from("__test.gdn").into(),
+                        vfs_path: VfsPathBuf {
+                            path: Rc::new(PathBuf::from("__test.gdn")),
+                            id: VfsId(1)
+                        }
+                    },
+                    "// 2\n"
+                )],
+            })
+        );
+    }
+
+    #[test]
+    fn test_lex_indented_comment_end_column() {
+        let vfs_path = VfsPathBuf {
+            path: Rc::new(PathBuf::from("__test.gdn")),
+            id: VfsId(1),
+        };
+
+        // A comment that does not start at column 0 should have an
+        // end column relative to the start column, not the comment
+        // length.
+        let tokens = lex(&vfs_path, "  // 2\n1").0;
+        assert_eq!(
+            tokens.peek(),
+            Some(Token {
+                position: Position {
+                    start_offset: 7,
+                    end_offset: 8,
+                    line_number: 1,
+                    end_line_number: 1,
+                    column: 0,
+                    end_column: 1,
+                    path: PathBuf::from("__test.gdn").into(),
+                    vfs_path: VfsPathBuf {
+                        path: Rc::new(PathBuf::from("__test.gdn")),
+                        id: VfsId(1)
+                    }
+                },
+                text: "1",
+                preceding_comments: vec![(
+                    Position {
+                        start_offset: 2,
+                        end_offset: 6,
+                        line_number: 0,
+                        end_line_number: 0,
+                        column: 2,
+                        end_column: 6,
                         path: PathBuf::from("__test.gdn").into(),
                         vfs_path: VfsPathBuf {
                             path: Rc::new(PathBuf::from("__test.gdn")),

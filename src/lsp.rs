@@ -296,31 +296,8 @@ fn get_completions(src: &str, path: &Path, offset: usize) -> Vec<CompletionItem>
 }
 
 /// Get the definition position for a symbol at the given offset.
-fn get_definition(src: &str, path: &PathBuf, offset: usize) -> Option<GardenPosition> {
-    let mut id_gen = IdGenerator::default();
-    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
-
-    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
-
-    let mut env = Env::new(id_gen, vfs);
-    let ns = env.get_or_create_namespace(path);
-    load_toplevel_items(&items, &mut env, Rc::clone(&ns));
-
-    let summary = check_types(&vfs_path, &items, &env, ns);
-
-    let mut ids_at_query_pos = vec![];
-    if offset > 0 {
-        ids_at_query_pos.extend(find_item_at(&items, offset - 1, offset - 1));
-    }
-    ids_at_query_pos.extend(find_item_at(&items, offset, offset));
-
-    for id in ids_at_query_pos.iter().rev() {
-        if let Some(pos) = summary.id_to_def_pos.get(&id.id()) {
-            return Some(pos.clone());
-        }
-    }
-
-    None
+fn get_definition(src: &str, path: &Path, offset: usize) -> Option<GardenPosition> {
+    crate::go_to_def::find_def_pos(src, path, offset).0
 }
 
 /// Get hover information for a symbol at the given offset.

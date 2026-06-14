@@ -1,0 +1,21 @@
+{ "op": "close", "session": "garden-1" }
+{ "op": "close" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done",
+//     "error",
+//     "unknown-session"
+//   ]
+// }
+// {
+//   "status": [
+//     "done",
+//     "error",
+//     "unknown-session"
+//   ]
+// }
+

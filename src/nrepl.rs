@@ -765,13 +765,13 @@ impl Connection {
         id
     }
 
-    fn close_session(&mut self, id: &str) {
+    fn close_session(&mut self, id: &str) -> bool {
         // Wake any in-progress eval so the worker shuts down
         // promptly once we drop the request channel.
         if let Some(s) = self.sessions.get(id) {
             s.interrupted.store(true, Ordering::SeqCst);
         }
-        self.sessions.remove(id);
+        self.sessions.remove(id).is_some()
     }
 
     fn send(&self, msg: Value) {
@@ -1175,14 +1175,20 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
             conn.send(Value::Dict(msg));
         }
         "close" => {
-            if let Some(s) = dict_get(request, "session").and_then(as_str) {
-                conn.close_session(s);
-            }
+            let session_id = dict_get(request, "session").and_then(as_str);
+            let closed = session_id.map(|s| conn.close_session(s)).unwrap_or(false);
             let mut msg = base;
-            msg.insert(
-                b"status".to_vec(),
-                Value::List(vec![bstr("done"), bstr("session-closed")]),
-            );
+            if closed {
+                msg.insert(
+                    b"status".to_vec(),
+                    Value::List(vec![bstr("done"), bstr("session-closed")]),
+                );
+            } else {
+                msg.insert(
+                    b"status".to_vec(),
+                    Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
+                );
+            }
             conn.send(Value::Dict(msg));
         }
         "ls-sessions" => {

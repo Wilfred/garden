@@ -72,46 +72,162 @@ fn as_str(v: &Value) -> Option<&str> {
     }
 }
 
-/// Read a single bencode value from `reader`. Returns `None` on a
-/// clean EOF.
-///
-/// We feed bytes one at a time into `serde_bencode::from_bytes`. As
-/// soon as the buffer parses successfully we have exactly one
-/// complete message; any extra bytes the OS has buffered remain in
-/// the `BufReader` for the next call.
-fn read_message<R: Read>(reader: &mut R) -> io::Result<Option<Value>> {
-    let mut buf: Vec<u8> = Vec::new();
-    let mut byte = [0u8; 1];
+fn invalid_data(msg: &'static str) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, msg)
+}
 
-    loop {
-        match reader.read(&mut byte) {
-            Ok(0) => {
-                if buf.is_empty() {
-                    return Ok(None);
-                }
-                return Err(io::Error::new(
-                    io::ErrorKind::UnexpectedEof,
-                    "unexpected EOF in the middle of a bencode message",
-                ));
-            }
-            Ok(_) => {}
-            Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
-            Err(e) => return Err(e),
-        }
+/// Wraps a reader, tracking the total number of bytes consumed while
+/// parsing a single message so it cannot exceed `MAX_MESSAGE_BYTES`.
+struct CountingReader<'a, R: Read> {
+    reader: &'a mut R,
+    count: usize,
+}
 
-        buf.push(byte[0]);
-
-        if let Ok(value) = serde_bencode::from_bytes::<Value>(&buf) {
-            return Ok(Some(value));
-        }
-
-        if buf.len() > MAX_MESSAGE_BYTES {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
+impl<R: Read> CountingReader<'_, R> {
+    fn check_limit(&self) -> io::Result<()> {
+        if self.count > MAX_MESSAGE_BYTES {
+            return Err(invalid_data(
                 "bencode message exceeded the maximum allowed size",
             ));
         }
+        Ok(())
     }
+
+    /// Read a single byte. Retries on `Interrupted`. Returns `None`
+    /// on EOF.
+    fn read_byte(&mut self) -> io::Result<Option<u8>> {
+        let mut byte = [0u8; 1];
+        loop {
+            match self.reader.read(&mut byte) {
+                Ok(0) => return Ok(None),
+                Ok(_) => {
+                    self.count += 1;
+                    self.check_limit()?;
+                    return Ok(Some(byte[0]));
+                }
+                Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
+                Err(e) => return Err(e),
+            }
+        }
+    }
+
+    /// Read a single byte, treating EOF as an error.
+    fn read_byte_required(&mut self) -> io::Result<u8> {
+        self.read_byte()?.ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                "unexpected EOF in the middle of a bencode message",
+            )
+        })
+    }
+
+    /// Read exactly `len` bytes. EOF before `len` bytes is an error.
+    fn read_exact_counted(&mut self, len: usize) -> io::Result<Vec<u8>> {
+        // Account for the declared length before allocating so an
+        // over-large string cannot make us allocate without bound.
+        self.count = self.count.saturating_add(len);
+        self.check_limit()?;
+
+        let mut buf = vec![0u8; len];
+        self.reader.read_exact(&mut buf)?;
+        Ok(buf)
+    }
+}
+
+/// Read a single bencode value from `reader`. Returns `None` on a
+/// clean EOF.
+///
+/// Parses the bencode structure directly, reading exactly the bytes
+/// of one message. Any extra bytes the OS has buffered remain in the
+/// `BufReader` for the next call.
+fn read_message<R: Read>(reader: &mut R) -> io::Result<Option<Value>> {
+    let mut r = CountingReader { reader, count: 0 };
+    match r.read_byte()? {
+        None => Ok(None),
+        Some(first) => Ok(Some(parse_value(&mut r, first)?)),
+    }
+}
+
+/// Parse a bencode value whose first byte (`first`) has already been
+/// read.
+fn parse_value<R: Read>(r: &mut CountingReader<R>, first: u8) -> io::Result<Value> {
+    match first {
+        b'i' => parse_int(r),
+        b'l' => parse_list(r),
+        b'd' => parse_dict(r),
+        b'0'..=b'9' => parse_bytes(r, first),
+        _ => Err(invalid_data("unexpected byte in bencode stream")),
+    }
+}
+
+/// Parse the remainder of an integer (`i<digits>e`), the leading `i`
+/// having been consumed.
+fn parse_int<R: Read>(r: &mut CountingReader<R>) -> io::Result<Value> {
+    let mut digits = Vec::new();
+    loop {
+        let b = r.read_byte_required()?;
+        if b == b'e' {
+            break;
+        }
+        digits.push(b);
+    }
+    let n = std::str::from_utf8(&digits)
+        .ok()
+        .and_then(|s| s.parse::<i64>().ok())
+        .ok_or_else(|| invalid_data("invalid bencode integer"))?;
+    Ok(Value::Int(n))
+}
+
+/// Parse a byte string (`<len>:<bytes>`), the first length digit
+/// (`first`) having been consumed.
+fn parse_bytes<R: Read>(r: &mut CountingReader<R>, first: u8) -> io::Result<Value> {
+    let mut digits = vec![first];
+    loop {
+        let b = r.read_byte_required()?;
+        if b == b':' {
+            break;
+        }
+        digits.push(b);
+    }
+    let len = std::str::from_utf8(&digits)
+        .ok()
+        .and_then(|s| s.parse::<usize>().ok())
+        .ok_or_else(|| invalid_data("invalid bencode string length"))?;
+    Ok(Value::Bytes(r.read_exact_counted(len)?))
+}
+
+/// Parse the remainder of a list (`l<values>e`), the leading `l`
+/// having been consumed.
+fn parse_list<R: Read>(r: &mut CountingReader<R>) -> io::Result<Value> {
+    let mut items = Vec::new();
+    loop {
+        let b = r.read_byte_required()?;
+        if b == b'e' {
+            break;
+        }
+        items.push(parse_value(r, b)?);
+    }
+    Ok(Value::List(items))
+}
+
+/// Parse the remainder of a dict (`d<key><value>...e`), the leading
+/// `d` having been consumed. Keys are bencode byte strings.
+fn parse_dict<R: Read>(r: &mut CountingReader<R>) -> io::Result<Value> {
+    let mut map: HashMap<Vec<u8>, Value> = HashMap::new();
+    loop {
+        let b = r.read_byte_required()?;
+        if b == b'e' {
+            break;
+        }
+        let key = match parse_value(r, b)? {
+            Value::Bytes(k) => k,
+            _ => return Err(invalid_data("bencode dict key was not a string")),
+        };
+        let first = r.read_byte_required()?;
+        let value = parse_value(r, first)?;
+        map.insert(key, value);
+    }
+    Ok(Value::Dict(map))
 }
 
 /// Encode a bencode value and write it to `writer`.

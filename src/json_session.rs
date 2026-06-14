@@ -239,6 +239,7 @@ fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs, project_root: &Path) ->
                 position,
                 message,
                 notes,
+                ..
             } => {
                 let stack = Some(format_diagnostic(
                     &message,
@@ -299,6 +300,7 @@ fn handle_eval_up_to_request(
                 position,
                 message,
                 notes,
+                ..
             } => {
                 let stack = Some(format_diagnostic(
                     &message,

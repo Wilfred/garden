@@ -1267,7 +1267,10 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
         }
         "" => {
             let mut msg = base;
-            msg.insert(b"status".to_vec(), Value::List(vec![bstr("error")]));
+            msg.insert(
+                b"status".to_vec(),
+                Value::List(vec![bstr("done"), bstr("error")]),
+            );
             msg.insert(b"err".to_vec(), bstr("Missing 'op' in request.\n"));
             conn.send(Value::Dict(msg));
         }

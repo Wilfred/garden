@@ -1,0 +1,13 @@
+struct Point {
+    x: Int,
+    y: Int,
+    x: Int,
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// struct Point {
+//     x: Int,
+//     y: Int,
+// }
+

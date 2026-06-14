@@ -1592,7 +1592,48 @@ fn parse_enum_body(
         }
     }
 
-    variants
+    // Drop duplicate variants, reporting an error with an autofix that
+    // removes the later definition.
+    let variant_ends: Vec<Position> = variants
+        .iter()
+        .map(|v| match &v.comma {
+            Some(comma) => comma.clone(),
+            None => match &v.payload_hint {
+                Some(hint) => hint.position.clone(),
+                None => v.name_sym.position.clone(),
+            },
+        })
+        .collect();
+    let mut seen: FxHashMap<String, Position> = FxHashMap::default();
+    let mut deduped = Vec::with_capacity(variants.len());
+
+    for (i, variant) in variants.into_iter().enumerate() {
+        let name = variant.name_sym.name.text.clone();
+        if let Some(prev_pos) = seen.get(&name) {
+            diagnostics.push(ParseError::Invalid {
+                position: variant.name_sym.position.clone(),
+                message: ErrorMessage(vec![
+                    msgtext!("Duplicate enum variant "),
+                    msgcode!("{}", name),
+                    msgtext!("."),
+                ]),
+                notes: vec![(
+                    ErrorMessage(vec![msgtext!("The previous occurrence is here.")]),
+                    prev_pos.clone(),
+                )],
+                fixes: vec![Autofix {
+                    description: format!("Remove duplicate variant `{name}`"),
+                    position: removal_span(&variant_ends[i - 1], &variant_ends[i]),
+                    new_text: String::new(),
+                }],
+            });
+        } else {
+            seen.insert(name, variant.name_sym.position.clone());
+            deduped.push(variant);
+        }
+    }
+
+    deduped
 }
 
 /// Parse enum variant, e.g. `Some(T)`.
@@ -2244,6 +2285,24 @@ fn parse_parameters(
     }
 }
 
+/// A position spanning from the end of `prev` to the end of `last`.
+///
+/// When `prev` and `last` are the comma positions of two consecutive
+/// list items, deleting this span removes the second item along with
+/// its own trailing comma and the whitespace before it.
+fn removal_span(prev: &Position, last: &Position) -> Position {
+    Position {
+        start_offset: prev.end_offset,
+        end_offset: last.end_offset,
+        line_number: prev.end_line_number,
+        end_line_number: last.end_line_number,
+        column: prev.end_column,
+        end_column: last.end_column,
+        path: Rc::clone(&last.path),
+        vfs_path: last.vfs_path.clone(),
+    }
+}
+
 fn parse_struct_fields(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
@@ -2320,9 +2379,50 @@ fn parse_struct_fields(
         }
     }
 
-    // TODO: error on duplicate fields
+    // Drop duplicate fields, reporting an error with an autofix that
+    // removes the later definition.
+    let field_ends: Vec<Position> = fields
+        .iter()
+        .map(|f| match &f.comma {
+            Some(comma) => comma.clone(),
+            None => f.hint.position.clone(),
+        })
+        .collect();
+    let mut seen: FxHashMap<String, Position> = FxHashMap::default();
+    let mut deduped = Vec::with_capacity(fields.len());
 
-    fields
+    for (i, field) in fields.into_iter().enumerate() {
+        if field.sym.name.is_underscore() {
+            deduped.push(field);
+            continue;
+        }
+
+        let name = field.sym.name.text.clone();
+        if let Some(prev_pos) = seen.get(&name) {
+            diagnostics.push(ParseError::Invalid {
+                position: field.sym.position.clone(),
+                message: ErrorMessage(vec![
+                    msgtext!("Duplicate field "),
+                    msgcode!("{}", name),
+                    msgtext!("."),
+                ]),
+                notes: vec![(
+                    ErrorMessage(vec![msgtext!("The previous occurrence is here.")]),
+                    prev_pos.clone(),
+                )],
+                fixes: vec![Autofix {
+                    description: format!("Remove duplicate field `{name}`"),
+                    position: removal_span(&field_ends[i - 1], &field_ends[i]),
+                    new_text: String::new(),
+                }],
+            });
+        } else {
+            seen.insert(name, field.sym.position.clone());
+            deduped.push(field);
+        }
+    }
+
+    deduped
 }
 
 fn parse_block(

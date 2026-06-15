@@ -2795,7 +2795,18 @@ fn substitute_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
 fn unify_and_solve_ty(decl_ty: &Type, solved_ty: &Type, ty_var_env: &mut TypeVarEnv) {
     match (decl_ty, solved_ty) {
         (Type::TypeParameter(n), _) => {
-            ty_var_env.insert(n.clone(), Some(solved_ty.clone()));
+            // Keep the first solution we found for this type variable.
+            // This matches unify_and_solve_hint: a later occurrence that
+            // disagrees is then reported against the argument that's
+            // inconsistent, rather than silently overwriting the solution
+            // and blaming an earlier argument. Replace a previous NoValue
+            // solution, since a more specific type is more useful.
+            match ty_var_env.get(n) {
+                Some(Some(existing)) if !existing.is_no_value() => {}
+                _ => {
+                    ty_var_env.insert(n.clone(), Some(solved_ty.clone()));
+                }
+            }
         }
         (
             Type::Fun {

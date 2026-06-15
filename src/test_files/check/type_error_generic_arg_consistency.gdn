@@ -1,0 +1,18 @@
+fun pick<T>(x: T, _y: T): T {
+  x
+}
+
+{
+  pick(1, "hello")
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected an `Int` but got a `String`.
+// 
+// -| src/test_files/check/type_error_generic_arg_consistency.gdn:6:11
+// 5| {
+// 6|   pick(1, "hello")
+// 7| }         ^^^^^^^
+

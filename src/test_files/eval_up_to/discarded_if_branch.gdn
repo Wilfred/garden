@@ -1,0 +1,12 @@
+{
+  if True {
+    7
+  //^
+  } else {
+    8
+  }
+  0
+}
+
+// args: reftest-eval-up-to
+// expected stdout: src/test_files/eval_up_to/discarded_if_branch.gdn:3: 7

@@ -1,0 +1,12 @@
+fun value(): Int {
+  9
+}
+
+{
+  value()
+  //   ^
+  0
+}
+
+// args: reftest-eval-up-to
+// expected stdout: src/test_files/eval_up_to/discarded_call.gdn:6: 9

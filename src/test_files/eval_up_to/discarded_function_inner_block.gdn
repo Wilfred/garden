@@ -1,0 +1,16 @@
+fun add_two(i: Int): Int {
+  if True {
+    i + 2
+  //  ^
+  } else {
+    0
+  }
+  0
+}
+
+{
+  add_two(5)
+}
+
+// args: reftest-eval-up-to
+// expected stdout: src/test_files/eval_up_to/discarded_function_inner_block.gdn:3: 7

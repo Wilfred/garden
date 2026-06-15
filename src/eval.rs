@@ -1001,6 +1001,178 @@ pub(crate) enum EvalUpToErr {
     NoValueAvailable,
 }
 
+fn annotate_block_value_path(block: &mut Block, target_id: SyntaxId) -> bool {
+    let mut found = false;
+    for expr in &mut block.exprs {
+        let expr = Rc::make_mut(expr);
+        if annotate_expr_value_path(expr, target_id) {
+            expr.value_is_used = true;
+            found = true;
+        }
+    }
+
+    found
+}
+
+fn annotate_parenthesized_args_value_path(
+    args: &mut ParenthesizedArguments,
+    target_id: SyntaxId,
+) -> bool {
+    let mut found = false;
+    for arg in &mut args.arguments {
+        if annotate_expr_value_path(Rc::make_mut(&mut arg.expr), target_id) {
+            found = true;
+        }
+    }
+
+    found
+}
+
+fn annotate_expr_value_path(expr: &mut Expression, target_id: SyntaxId) -> bool {
+    if expr.id == target_id {
+        expr.value_is_used = true;
+        return true;
+    }
+
+    let found = match &mut expr.expr_ {
+        Expression_::Match(scrutinee, cases) => {
+            let mut found = annotate_expr_value_path(Rc::make_mut(scrutinee), target_id);
+            for (_, block) in cases {
+                if annotate_block_value_path(block, target_id) {
+                    found = true;
+                }
+            }
+            found
+        }
+        Expression_::If(condition, then_body, else_body) => {
+            let mut found = annotate_expr_value_path(Rc::make_mut(condition), target_id);
+            if annotate_block_value_path(then_body, target_id) {
+                found = true;
+            }
+            if let Some(else_body) = else_body {
+                if annotate_block_value_path(else_body, target_id) {
+                    found = true;
+                }
+            }
+            found
+        }
+        Expression_::While(condition, body) => {
+            annotate_expr_value_path(Rc::make_mut(condition), target_id)
+                || annotate_block_value_path(body, target_id)
+        }
+        Expression_::ForIn(_, iterable, body) => {
+            annotate_expr_value_path(Rc::make_mut(iterable), target_id)
+                || annotate_block_value_path(body, target_id)
+        }
+        Expression_::Try(try_body, _, catch_body) => {
+            annotate_block_value_path(try_body, target_id)
+                || annotate_block_value_path(catch_body, target_id)
+        }
+        Expression_::Assign(_, rhs)
+        | Expression_::AssignUpdate(_, _, rhs)
+        | Expression_::Let(_, _, rhs)
+        | Expression_::Assert(rhs) => annotate_expr_value_path(Rc::make_mut(rhs), target_id),
+        Expression_::Return(Some(return_expr)) => {
+            annotate_expr_value_path(Rc::make_mut(return_expr), target_id)
+        }
+        Expression_::Return(None) => false,
+        Expression_::ListLiteral(items) => {
+            let mut found = false;
+            for item in items {
+                if annotate_expr_value_path(Rc::make_mut(&mut item.expr), target_id) {
+                    found = true;
+                }
+            }
+            found
+        }
+        Expression_::DictLiteral(items) => {
+            let mut found = false;
+            for item in items {
+                if annotate_expr_value_path(Rc::make_mut(&mut item.key), target_id) {
+                    found = true;
+                }
+                if annotate_expr_value_path(Rc::make_mut(&mut item.value), target_id) {
+                    found = true;
+                }
+            }
+            found
+        }
+        Expression_::TupleLiteral(items) => {
+            let mut found = false;
+            for item in items {
+                if annotate_expr_value_path(Rc::make_mut(item), target_id) {
+                    found = true;
+                }
+            }
+            found
+        }
+        Expression_::StructLiteral(_, field_exprs) => {
+            let mut found = false;
+            for (_, field_expr) in field_exprs {
+                if annotate_expr_value_path(Rc::make_mut(field_expr), target_id) {
+                    found = true;
+                }
+            }
+            found
+        }
+        Expression_::BinaryOperator(lhs, _, rhs) => {
+            annotate_expr_value_path(Rc::make_mut(lhs), target_id)
+                || annotate_expr_value_path(Rc::make_mut(rhs), target_id)
+        }
+        Expression_::Call(receiver, args) => {
+            annotate_expr_value_path(Rc::make_mut(receiver), target_id)
+                || annotate_parenthesized_args_value_path(args, target_id)
+        }
+        Expression_::MethodCall(receiver, _, args) => {
+            annotate_expr_value_path(Rc::make_mut(receiver), target_id)
+                || annotate_parenthesized_args_value_path(args, target_id)
+        }
+        Expression_::DotAccess(receiver, _) | Expression_::NamespaceAccess(receiver, _) => {
+            annotate_expr_value_path(Rc::make_mut(receiver), target_id)
+        }
+        Expression_::FunLiteral(fun_info) => {
+            annotate_block_value_path(&mut fun_info.body, target_id)
+        }
+        Expression_::Parentheses(paren) => {
+            annotate_expr_value_path(Rc::make_mut(&mut paren.expr), target_id)
+        }
+        Expression_::Break
+        | Expression_::Continue
+        | Expression_::IntLiteral(_)
+        | Expression_::FloatLiteral(_)
+        | Expression_::StringLiteral(_)
+        | Expression_::Variable(_)
+        | Expression_::Invalid => false,
+    };
+
+    if found {
+        expr.value_is_used = true;
+    }
+
+    found
+}
+
+fn annotate_item_value_path(item: &mut ToplevelItem, target_id: SyntaxId) -> bool {
+    match item {
+        ToplevelItem::Fun(_, fun_info, _) => {
+            annotate_block_value_path(&mut fun_info.body, target_id)
+        }
+        ToplevelItem::Method(method_info, _) => match &mut method_info.kind {
+            MethodKind::BuiltinMethod(_, Some(fun_info))
+            | MethodKind::UserDefinedMethod(fun_info) => {
+                annotate_block_value_path(&mut fun_info.body, target_id)
+            }
+            MethodKind::BuiltinMethod(_, None) => false,
+        },
+        ToplevelItem::Test(test) => annotate_block_value_path(&mut test.body, target_id),
+        ToplevelItem::Expr(toplevel_expression) => {
+            annotate_expr_value_path(&mut toplevel_expression.0, target_id)
+        }
+        ToplevelItem::Block(block) => annotate_block_value_path(block, target_id),
+        ToplevelItem::Enum(_) | ToplevelItem::Struct(_) | ToplevelItem::Import(_) => false,
+    }
+}
+
 /// Try to evaluate items up to the syntax ID specified.
 ///
 /// Returns None if we couldn't find anything to evaluate (not an error).
@@ -1051,10 +1223,14 @@ pub(crate) fn eval_up_to(
     // destructuring tuple, we want to return the tuple element and
     // position.
 
+    let mut item = item.clone();
+    let found_target = annotate_item_value_path(&mut item, expr_id);
+    debug_assert!(found_target);
+
     let mut res: Result<_, EvalError> = match &item {
         ToplevelItem::Fun(name_sym, fun_info, _) => {
             let ns = env.current_namespace();
-            load_toplevel_items(std::slice::from_ref(item), env, ns);
+            load_toplevel_items(std::slice::from_ref(&item), env, ns);
 
             let args = match env
                 .prev_call_args
@@ -1076,7 +1252,7 @@ pub(crate) fn eval_up_to(
         }
         ToplevelItem::Method(method_info, _) => {
             let ns = env.current_namespace();
-            load_toplevel_items(std::slice::from_ref(item), env, ns);
+            load_toplevel_items(std::slice::from_ref(&item), env, ns);
 
             let type_name = &method_info.receiver_hint.sym.name;
 
@@ -1118,7 +1294,7 @@ pub(crate) fn eval_up_to(
         ToplevelItem::Expr(_) | ToplevelItem::Block(_) => {
             env.stop_at_expr_id = Some(expr_id);
 
-            let res = eval_toplevel_items(vfs_path, std::slice::from_ref(item), env, session);
+            let res = eval_toplevel_items(vfs_path, std::slice::from_ref(&item), env, session);
             env.stop_at_expr_id = None;
 
             match res {
@@ -6398,8 +6574,7 @@ fn eval_expr(
     expr_state: &mut ExpressionState,
 ) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
     let expr_position = outer_expr.position.clone();
-    let expr_value_is_used =
-        outer_expr.value_is_used || env.stop_at_expr_id.as_ref() == Some(&outer_expr.id);
+    let expr_value_is_used = outer_expr.value_is_used;
 
     match &outer_expr.expr_ {
         Expression_::Match(scrutinee, cases) => match expr_state {

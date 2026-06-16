@@ -1540,15 +1540,18 @@ fn parse_enum_body(
             break;
         }
 
-        let variant = parse_variant(tokens, id_gen, diagnostics);
-        variants.push(variant);
+        let mut variant = parse_variant(tokens, id_gen, diagnostics);
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {
+                variant.comma = Some(token.position);
+                variants.push(variant);
                 tokens.pop();
             } else if token.text == "}" {
+                variants.push(variant);
                 break;
             } else {
+                variants.push(variant);
                 diagnostics.push(ParseError::Invalid {
                     position: token.position,
                     message: ErrorMessage(vec![
@@ -1565,6 +1568,8 @@ fn parse_enum_body(
                 break;
             }
         } else {
+            variants.push(variant);
+
             let position = match tokens.prev() {
                 Some(prev_token) => prev_token.position.clone(),
                 None => Position::todo(&tokens.vfs_path),
@@ -1605,6 +1610,7 @@ fn parse_variant(
     VariantInfo {
         name_sym: name_symbol,
         payload_hint,
+        comma: None,
     }
 }
 
@@ -2239,16 +2245,17 @@ fn parse_struct_fields(
             break;
         }
 
-        if let Some(token) = tokens.peek() {
+        let mut field = if let Some(token) = tokens.peek() {
             let doc_comment = parse_doc_comment(&token);
             let sym = parse_symbol(tokens, id_gen, diagnostics, Some("struct name"));
             let hint = parse_colon_and(tokens, id_gen, diagnostics);
 
-            fields.push(FieldInfo {
+            FieldInfo {
                 sym,
                 hint,
                 doc_comment,
-            });
+                comma: None,
+            }
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(&tokens.vfs_path),
@@ -2259,14 +2266,18 @@ fn parse_struct_fields(
                 ]),
             });
             break;
-        }
+        };
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {
+                field.comma = Some(token.position);
+                fields.push(field);
                 tokens.pop();
             } else if token.text == "}" {
+                fields.push(field);
                 break;
             } else {
+                fields.push(field);
                 diagnostics.push(ParseError::Invalid {
                     position: token.position,
                     message: ErrorMessage(vec![
@@ -2283,6 +2294,7 @@ fn parse_struct_fields(
                 break;
             }
         } else {
+            fields.push(field);
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(&tokens.vfs_path),
                 message: ErrorMessage(vec![

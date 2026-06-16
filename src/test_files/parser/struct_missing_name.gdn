@@ -18,6 +18,7 @@ struct { x: Int }
 //                     position: Position { ... },
 //                 },
 //                 doc_comment: None,
+//                 comma: None,
 //             },
 //         ],
 //     },

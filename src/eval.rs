@@ -32,7 +32,7 @@ use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::diagnostics::{ErrorMessage, MessagePart};
 use crate::parser::position::Position;
 use crate::parser::vfs::{Vfs, VfsPathBuf};
-use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
+use crate::parser::{lex, parse_toplevel_items, placeholder_symbol, set_observed_expr_value_used};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::type_defs::TypeDef;
 use crate::values::{type_representation, BlockBindings, BuiltInFunctionKind, Value, Value_};
@@ -1040,6 +1040,11 @@ pub(crate) fn eval_up_to(
         return Err(EvalUpToErr::NoExpressionFound);
     };
 
+    // Treat the expression we're stopping at as having its value used,
+    // so stopping on a statement still produces a value to inspect.
+    let mut items = items.to_vec();
+    set_observed_expr_value_used(&mut items, expr_id);
+
     let Some(item) = items
         .iter()
         .find(|&item| item.position().contains_offset(offset))
@@ -1137,7 +1142,7 @@ pub(crate) fn eval_up_to(
     if let Ok((value, pos)) = &mut res {
         // If the user asked for a single position in a let or a let with
         // tuple destructuring, handle it here.
-        if let Some((var_value, var_pos)) = let_var_pos(value, items, &syn_ids) {
+        if let Some((var_value, var_pos)) = let_var_pos(value, &items, &syn_ids) {
             *value = var_value;
             *pos = var_pos;
         }
@@ -1146,7 +1151,7 @@ pub(crate) fn eval_up_to(
         // assigned value. E.g. for `foo += bar` we want the new value
         // for `foo`, not `Unit` (which is the value of the assignment
         // expression).
-        if let Some((var_value, var_pos)) = assign_var_pos(env, items, &syn_ids) {
+        if let Some((var_value, var_pos)) = assign_var_pos(env, &items, &syn_ids) {
             *value = var_value;
             *pos = var_pos;
         }
@@ -1681,8 +1686,8 @@ fn eval_while_body(
             Rc::clone(&expr),
         ));
 
-        // Evaluate the body.
-        eval_block(env, expr_value_is_used, body);
+        // Evaluate the body. A loop body's value is never used.
+        eval_block(env, false, body);
     } else {
         // Loop is done.
         stack_frame
@@ -7251,16 +7256,8 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
         stack_frame.bindings.add_new(&sym, expr);
     }
 
-    // Evaluate all the items in this block, but mark the values as
-    // unused for all expressions except the last one.
     for expr in block.exprs.iter().rev() {
-        let mut expr = expr.as_ref().clone();
-
-        if !expr_value_is_used {
-            expr.value_is_used = false;
-        }
-
-        env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::new(expr));
+        env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(expr));
     }
 
     // If this is an empty block, it should evaluate to Unit.

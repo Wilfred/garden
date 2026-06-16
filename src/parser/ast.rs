@@ -819,19 +819,48 @@ impl PartialEq for TestInfo {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct VariantInfo {
     pub(crate) name_sym: Symbol,
     /// If this variant is of the form `Foo(T)`, the type hint inside
     /// the parentheses.
     pub(crate) payload_hint: Option<TypeHint>,
+    /// The position of the comma after this variant, if present.
+    pub(crate) comma: Option<Position>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Structural equality: ignore comma position.
+impl PartialEq for VariantInfo {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            name_sym,
+            payload_hint,
+            comma: _,
+        } = self;
+        *name_sym == other.name_sym && *payload_hint == other.payload_hint
+    }
+}
+
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct FieldInfo {
     pub(crate) sym: Symbol,
     pub(crate) hint: TypeHint,
     pub(crate) doc_comment: Option<String>,
+    /// The position of the comma after this field, if present.
+    pub(crate) comma: Option<Position>,
+}
+
+/// Structural equality: ignore comma position.
+impl PartialEq for FieldInfo {
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            sym,
+            hint,
+            doc_comment,
+            comma: _,
+        } = self;
+        *sym == other.sym && *hint == other.hint && *doc_comment == other.doc_comment
+    }
 }
 
 #[derive(Debug, Clone, Eq)]

@@ -26,6 +26,9 @@ struct Foo<T> {
 //                 doc_comment: Some(
 //                     "Stuff.",
 //                 ),
+//                 comma: Some(
+//                     Position { ... },
+//                 ),
 //             },
 //             FieldInfo {
 //                 sym: Symbol"foo_bar_baz",
@@ -35,6 +38,9 @@ struct Foo<T> {
 //                     position: Position { ... },
 //                 },
 //                 doc_comment: None,
+//                 comma: Some(
+//                     Position { ... },
+//                 ),
 //             },
 //         ],
 //     },

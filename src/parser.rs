@@ -16,6 +16,7 @@ use diagnostics::MessagePart::*;
 use lex::{lex, lex_between, Token, TokenStream, FLOAT_RE, INTEGER_RE, SYMBOL_RE};
 use rustc_hash::FxHashMap;
 use vfs::VfsPathBuf;
+use visitor::MutVisitor;
 
 use crate::{msgcode, msglink, msgtext};
 
@@ -478,7 +479,7 @@ fn parse_lambda(
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
-    let body = parse_block(tokens, id_gen, diagnostics, false);
+    let body = parse_block(tokens, id_gen, diagnostics);
 
     let pos = Position::merge(&fun_keyword.position, &body.close_brace);
 
@@ -543,7 +544,7 @@ fn parse_if(
     let if_token = require_token(tokens, diagnostics, "if");
 
     let cond_expr = parse_expression(tokens, id_gen, diagnostics);
-    let mut then_body = parse_block(tokens, id_gen, diagnostics, false);
+    let then_body = parse_block(tokens, id_gen, diagnostics);
 
     let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
         tokens.pop();
@@ -559,26 +560,11 @@ fn parse_if(
                 exprs: vec![if_expr.into()],
             })
         } else {
-            Some(parse_block(tokens, id_gen, diagnostics, false))
+            Some(parse_block(tokens, id_gen, diagnostics))
         }
     } else {
         None
     };
-
-    if else_body.is_none() {
-        // We have no else block, so we're not using any values from
-        // the then block.
-        let then_body_exprs: Vec<_> = then_body
-            .exprs
-            .iter()
-            .map(|e| {
-                let mut e = e.as_ref().clone();
-                e.value_is_used = false;
-                Rc::new(e)
-            })
-            .collect();
-        then_body.exprs = then_body_exprs;
-    }
 
     let last_brace_pos = match &else_body {
         Some(else_body) => &else_body.close_brace,
@@ -600,7 +586,7 @@ fn parse_while(
     let while_token = require_token(tokens, diagnostics, "while");
 
     let cond_expr = parse_expression(tokens, id_gen, diagnostics);
-    let body = parse_block(tokens, id_gen, diagnostics, true);
+    let body = parse_block(tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&while_token.position, &body.close_brace),
@@ -616,14 +602,14 @@ fn parse_try(
 ) -> Expression {
     let try_token = require_token(tokens, diagnostics, "try");
 
-    let try_body = parse_block(tokens, id_gen, diagnostics, false);
+    let try_body = parse_block(tokens, id_gen, diagnostics);
 
     require_token(tokens, diagnostics, "catch");
     require_token(tokens, diagnostics, "(");
     let catch_sym = parse_symbol(tokens, id_gen, diagnostics, Some("catch variable name"));
     require_token(tokens, diagnostics, ")");
 
-    let catch_body = parse_block(tokens, id_gen, diagnostics, false);
+    let catch_body = parse_block(tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&try_token.position, &catch_body.close_brace),
@@ -644,7 +630,7 @@ fn parse_for_in(
 
     let expr = parse_expression(tokens, id_gen, diagnostics);
 
-    let body = parse_block(tokens, id_gen, diagnostics, true);
+    let body = parse_block(tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&for_token.position, &body.close_brace),
@@ -1029,7 +1015,7 @@ fn parse_case_block(
     diagnostics: &mut Vec<ParseError>,
 ) -> Block {
     let block = if peeked_symbol_is(tokens, "{") {
-        parse_block(tokens, id_gen, diagnostics, false)
+        parse_block(tokens, id_gen, diagnostics)
     } else {
         // To simplify evaluation, we treat case expressions as
         // blocks, because they can have new bindings.
@@ -1733,7 +1719,7 @@ fn parse_test(
         }
     }
 
-    let body = parse_block(tokens, id_gen, diagnostics, false);
+    let body = parse_block(tokens, id_gen, diagnostics);
     let position = Position::merge_token(&test_token, &body.close_brace);
 
     ToplevelItem::Test(TestInfo {
@@ -2318,7 +2304,6 @@ fn parse_block(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-    is_loop_body: bool,
 ) -> Block {
     let open_brace = require_token(tokens, diagnostics, "{");
     if open_brace.text != "{" {
@@ -2331,7 +2316,7 @@ fn parse_block(
         };
     }
 
-    let mut exprs: Vec<Expression> = vec![];
+    let mut exprs: Vec<Rc<Expression>> = vec![];
 
     while let Some(token) = tokens.peek() {
         if token.text == "}" {
@@ -2343,29 +2328,189 @@ fn parse_block(
         if expr.expr_.is_invalid_or_placeholder() {
             break;
         }
-        exprs.push(expr);
+        exprs.push(Rc::new(expr));
         assert!(
             tokens.idx > start_idx,
             "The parser should always make forward progress."
         );
     }
 
-    // Mark all expressions as not having their value used, except the
-    // last one. For loops, we don't use the last value either.
-    let exprs_len = exprs.len();
-    for (i, expr) in exprs.iter_mut().enumerate() {
-        if i < exprs_len - 1 || is_loop_body {
-            expr.value_is_used = false;
-        }
-    }
-
-    let exprs: Vec<Rc<Expression>> = exprs.into_iter().map(Rc::new).collect();
-
     let close_brace = require_token(tokens, diagnostics, "}");
     Block {
         open_brace: open_brace.position,
         exprs,
         close_brace: close_brace.position,
+    }
+}
+
+/// Set `value_is_used` on every block expression. A block's last
+/// expression is used exactly when the block's value is used; all
+/// other expressions are unused.
+///
+/// This runs as a second pass because whether a block's value is used
+/// depends on the enclosing context, which isn't known when the block
+/// is parsed.
+///
+fn set_is_used_toplevel_items(items: &mut [ToplevelItem]) {
+    for item in items {
+        set_is_used_toplevel_item(item);
+    }
+}
+
+fn set_is_used_toplevel_item(item: &mut ToplevelItem) {
+    match item {
+        ToplevelItem::Fun(_, fun_info, _) => set_is_used_fun_info(fun_info),
+        ToplevelItem::Method(method_info, _) => match &mut method_info.kind {
+            MethodKind::BuiltinMethod(_, fun_info) => {
+                if let Some(fun_info) = fun_info {
+                    set_is_used_fun_info(fun_info);
+                }
+            }
+            MethodKind::UserDefinedMethod(fun_info) => set_is_used_fun_info(fun_info),
+        },
+        ToplevelItem::Test(test_info) => set_is_used_block(&mut test_info.body, true),
+        ToplevelItem::Block(block) => set_is_used_block(block, true),
+        ToplevelItem::Expr(ToplevelExpression(expr)) => set_is_used_expr(expr, true),
+        ToplevelItem::Enum(_) | ToplevelItem::Struct(_) | ToplevelItem::Import(_) => {}
+    }
+}
+
+fn set_is_used_fun_info(fun_info: &mut FunInfo) {
+    // A function body's last expression is its return value.
+    set_is_used_block(&mut fun_info.body, true);
+}
+
+/// Set `value_is_used` on the expressions in `block`, where the block's
+/// own value is used iff `value_is_used`.
+fn set_is_used_block(block: &mut Block, value_is_used: bool) {
+    let exprs_len = block.exprs.len();
+    for (i, expr) in block.exprs.iter_mut().enumerate() {
+        let expr = Rc::make_mut(expr);
+        let used = value_is_used && i + 1 == exprs_len;
+        expr.value_is_used = used;
+        set_is_used_expr(expr, used);
+    }
+}
+
+/// Recurse into `expr`, setting `value_is_used` on the block
+/// expressions it contains. `value_is_used` is whether `expr`'s own
+/// value is used.
+fn set_is_used_expr(expr: &mut Expression, value_is_used: bool) {
+    match &mut expr.expr_ {
+        Expression_::If(condition, then_body, else_body) => {
+            set_is_used_expr(Rc::make_mut(condition), true);
+
+            // Without an `else`, an `if` always evaluates to Unit, so
+            // the `then` block's value is discarded.
+            let branch_value_used = value_is_used && else_body.is_some();
+            set_is_used_block(then_body, branch_value_used);
+            if let Some(else_body) = else_body {
+                set_is_used_block(else_body, branch_value_used);
+            }
+        }
+        Expression_::While(condition, body) => {
+            set_is_used_expr(Rc::make_mut(condition), true);
+            // A loop evaluates to Unit, so the body's value is unused.
+            set_is_used_block(body, false);
+        }
+        Expression_::ForIn(_, iteree, body) => {
+            set_is_used_expr(Rc::make_mut(iteree), true);
+            set_is_used_block(body, false);
+        }
+        Expression_::Match(scrutinee, cases) => {
+            set_is_used_expr(Rc::make_mut(scrutinee), true);
+            for (_, case_body) in cases {
+                set_is_used_block(case_body, value_is_used);
+            }
+        }
+        Expression_::Try(try_body, _, catch_body) => {
+            set_is_used_block(try_body, value_is_used);
+            set_is_used_block(catch_body, value_is_used);
+        }
+        Expression_::Let(_, _, inner)
+        | Expression_::Assign(_, inner)
+        | Expression_::AssignUpdate(_, _, inner)
+        | Expression_::Return(Some(inner))
+        | Expression_::Assert(inner)
+        | Expression_::DotAccess(inner, _)
+        | Expression_::NamespaceAccess(inner, _) => {
+            set_is_used_expr(Rc::make_mut(inner), true);
+        }
+        Expression_::BinaryOperator(lhs, _, rhs) => {
+            set_is_used_expr(Rc::make_mut(lhs), true);
+            set_is_used_expr(Rc::make_mut(rhs), true);
+        }
+        Expression_::Call(receiver, args) => {
+            set_is_used_expr(Rc::make_mut(receiver), true);
+            for arg in &mut args.arguments {
+                set_is_used_expr(Rc::make_mut(&mut arg.expr), true);
+            }
+        }
+        Expression_::MethodCall(receiver, _, args) => {
+            set_is_used_expr(Rc::make_mut(receiver), true);
+            for arg in &mut args.arguments {
+                set_is_used_expr(Rc::make_mut(&mut arg.expr), true);
+            }
+        }
+        Expression_::TupleLiteral(items) => {
+            for item in items {
+                set_is_used_expr(Rc::make_mut(item), true);
+            }
+        }
+        Expression_::ListLiteral(items) => {
+            for item in items {
+                set_is_used_expr(Rc::make_mut(&mut item.expr), true);
+            }
+        }
+        Expression_::DictLiteral(items) => {
+            for item in items {
+                set_is_used_expr(Rc::make_mut(&mut item.key), true);
+                set_is_used_expr(Rc::make_mut(&mut item.value), true);
+            }
+        }
+        Expression_::StructLiteral(_, fields) => {
+            for (_, field_expr) in fields {
+                set_is_used_expr(Rc::make_mut(field_expr), true);
+            }
+        }
+        Expression_::Parentheses(paren) => {
+            set_is_used_expr(Rc::make_mut(&mut paren.expr), true);
+        }
+        Expression_::FunLiteral(fun_info) => set_is_used_fun_info(fun_info),
+        Expression_::Break
+        | Expression_::Continue
+        | Expression_::Return(None)
+        | Expression_::IntLiteral(_)
+        | Expression_::FloatLiteral(_)
+        | Expression_::StringLiteral(_)
+        | Expression_::Variable(_)
+        | Expression_::Invalid => {}
+    }
+}
+
+/// Treat the expression with id `observed` as having its value used.
+/// The debugger uses this so that evaluating up to a statement still
+/// yields a value without rerunning the full-program block usage pass.
+pub(crate) fn set_observed_expr_value_used(items: &mut [ToplevelItem], observed: SyntaxId) {
+    let mut visitor = ObservedExprValueUsedVisitor { observed };
+    for item in items {
+        visitor.visit_toplevel_item(item);
+    }
+}
+
+struct ObservedExprValueUsedVisitor {
+    observed: SyntaxId,
+}
+
+impl MutVisitor for ObservedExprValueUsedVisitor {
+    fn visit_expr(&mut self, expr: &mut Expression) {
+        if expr.id == self.observed {
+            expr.value_is_used = true;
+            set_is_used_expr(expr, true);
+            return;
+        }
+
+        self.visit_expr_default(expr);
     }
 }
 
@@ -2529,7 +2674,7 @@ fn parse_method(
 
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
-    let body = parse_block(tokens, id_gen, diagnostics, false);
+    let body = parse_block(tokens, id_gen, diagnostics);
     let close_brace_pos = body.close_brace.clone();
 
     let position = Position::merge_token(&first_token, &close_brace_pos);
@@ -2576,7 +2721,7 @@ fn parse_function_(
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
-    let body = parse_block(tokens, id_gen, diagnostics, false);
+    let body = parse_block(tokens, id_gen, diagnostics);
     let close_brace_pos = body.close_brace.clone();
     let position = Position::merge_token(&first_token, &close_brace_pos);
 
@@ -2895,7 +3040,7 @@ fn parse_toplevel_block(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
-    let block = parse_block(tokens, id_gen, diagnostics, false);
+    let block = parse_block(tokens, id_gen, diagnostics);
     ToplevelItem::Block(block)
 }
 
@@ -2925,6 +3070,9 @@ fn parse_toplevel_items_from_tokens(
             None => break,
         }
     }
+
+    set_is_used_toplevel_items(&mut items);
+
     items
 }
 
@@ -2965,7 +3113,8 @@ pub(crate) fn parse_inline_expr_from_str(
         diagnostics.push(error);
     }
 
-    let expr = parse_expression(&mut tokens, id_gen, &mut diagnostics);
+    let mut expr = parse_expression(&mut tokens, id_gen, &mut diagnostics);
+    set_is_used_expr(&mut expr, true);
     (expr, diagnostics)
 }
 

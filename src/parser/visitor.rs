@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::parser::ast::ToplevelExpression;
 use crate::parser::{
     Block, EnumInfo, Expression, Expression_, FunInfo, ImportInfo, LetDestination, MethodInfo,
-    Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
+    MethodKind, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -353,4 +353,139 @@ pub(crate) trait Visitor {
     fn visit_symbol(&mut self, _: &Symbol) {}
 
     fn visit_type_symbol(&mut self, _: &TypeSymbol) {}
+}
+
+/// A visitor for mutating ASTs.
+///
+/// This is intentionally narrower than `Visitor`: it only traverses
+/// nodes that can contain expressions.
+pub(crate) trait MutVisitor {
+    fn visit_toplevel_item(&mut self, item: &mut ToplevelItem) {
+        self.visit_toplevel_item_default(item);
+    }
+
+    fn visit_toplevel_item_default(&mut self, item: &mut ToplevelItem) {
+        match item {
+            ToplevelItem::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
+            ToplevelItem::Method(method_info, _) => self.visit_method_info(method_info),
+            ToplevelItem::Test(test_info) => self.visit_block(&mut test_info.body),
+            ToplevelItem::Expr(toplevel_expression) => self.visit_expr(&mut toplevel_expression.0),
+            ToplevelItem::Block(block) => self.visit_block(block),
+            ToplevelItem::Enum(_) | ToplevelItem::Struct(_) | ToplevelItem::Import(_) => {}
+        }
+    }
+
+    fn visit_method_info(&mut self, method_info: &mut MethodInfo) {
+        match &mut method_info.kind {
+            MethodKind::BuiltinMethod(_, Some(fun_info)) => self.visit_fun_info(fun_info),
+            MethodKind::UserDefinedMethod(fun_info) => self.visit_fun_info(fun_info),
+            MethodKind::BuiltinMethod(_, None) => {}
+        }
+    }
+
+    fn visit_fun_info(&mut self, fun_info: &mut FunInfo) {
+        self.visit_block(&mut fun_info.body);
+    }
+
+    fn visit_block(&mut self, block: &mut Block) {
+        for expr in &mut block.exprs {
+            self.visit_expr(Rc::make_mut(expr));
+        }
+    }
+
+    fn visit_expr(&mut self, expr: &mut Expression) {
+        self.visit_expr_default(expr);
+    }
+
+    fn visit_expr_default(&mut self, expr: &mut Expression) {
+        self.visit_expr_(&mut expr.expr_);
+    }
+
+    fn visit_expr_(&mut self, expr_: &mut Expression_) {
+        match expr_ {
+            Expression_::If(condition, then_body, else_body) => {
+                self.visit_expr(Rc::make_mut(condition));
+                self.visit_block(then_body);
+                if let Some(else_body) = else_body {
+                    self.visit_block(else_body);
+                }
+            }
+            Expression_::While(condition, body) => {
+                self.visit_expr(Rc::make_mut(condition));
+                self.visit_block(body);
+            }
+            Expression_::ForIn(_, iteree, body) => {
+                self.visit_expr(Rc::make_mut(iteree));
+                self.visit_block(body);
+            }
+            Expression_::Match(scrutinee, cases) => {
+                self.visit_expr(Rc::make_mut(scrutinee));
+                for (_, case_body) in cases {
+                    self.visit_block(case_body);
+                }
+            }
+            Expression_::Try(try_body, _, catch_body) => {
+                self.visit_block(try_body);
+                self.visit_block(catch_body);
+            }
+            Expression_::Let(_, _, inner)
+            | Expression_::Assign(_, inner)
+            | Expression_::AssignUpdate(_, _, inner)
+            | Expression_::Return(Some(inner))
+            | Expression_::Assert(inner)
+            | Expression_::DotAccess(inner, _)
+            | Expression_::NamespaceAccess(inner, _) => {
+                self.visit_expr(Rc::make_mut(inner));
+            }
+            Expression_::BinaryOperator(lhs, _, rhs) => {
+                self.visit_expr(Rc::make_mut(lhs));
+                self.visit_expr(Rc::make_mut(rhs));
+            }
+            Expression_::Call(receiver, args) => {
+                self.visit_expr(Rc::make_mut(receiver));
+                for arg in &mut args.arguments {
+                    self.visit_expr(Rc::make_mut(&mut arg.expr));
+                }
+            }
+            Expression_::MethodCall(receiver, _, args) => {
+                self.visit_expr(Rc::make_mut(receiver));
+                for arg in &mut args.arguments {
+                    self.visit_expr(Rc::make_mut(&mut arg.expr));
+                }
+            }
+            Expression_::TupleLiteral(items) => {
+                for item in items {
+                    self.visit_expr(Rc::make_mut(item));
+                }
+            }
+            Expression_::ListLiteral(items) => {
+                for item in items {
+                    self.visit_expr(Rc::make_mut(&mut item.expr));
+                }
+            }
+            Expression_::DictLiteral(items) => {
+                for item in items {
+                    self.visit_expr(Rc::make_mut(&mut item.key));
+                    self.visit_expr(Rc::make_mut(&mut item.value));
+                }
+            }
+            Expression_::StructLiteral(_, fields) => {
+                for (_, field_expr) in fields {
+                    self.visit_expr(Rc::make_mut(field_expr));
+                }
+            }
+            Expression_::Parentheses(paren) => {
+                self.visit_expr(Rc::make_mut(&mut paren.expr));
+            }
+            Expression_::FunLiteral(fun_info) => self.visit_fun_info(fun_info),
+            Expression_::Break
+            | Expression_::Continue
+            | Expression_::Return(None)
+            | Expression_::IntLiteral(_)
+            | Expression_::FloatLiteral(_)
+            | Expression_::StringLiteral(_)
+            | Expression_::Variable(_)
+            | Expression_::Invalid => {}
+        }
+    }
 }

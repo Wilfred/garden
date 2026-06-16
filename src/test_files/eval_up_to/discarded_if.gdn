@@ -1,0 +1,16 @@
+// An `if` used as a statement has its value discarded at runtime, but
+// evaluating up to it in the debugger still reports the value of the
+// chosen branch.
+{
+  if True {
+//^
+    123
+  } else {
+    456
+  }
+
+  789
+}
+
+// args: reftest-eval-up-to
+// expected stdout: src/test_files/eval_up_to/discarded_if.gdn:5: 123

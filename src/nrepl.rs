@@ -662,28 +662,9 @@ fn format_eval_error(e: &EvalError, env: &Env) -> (String, Option<&'static str>)
     }
 }
 
-/// A state-changing request that was applied to a session, recorded
-/// so it can be replayed when the session is cloned.
-///
-/// A session's `Env` lives on its worker thread and contains `Rc`s, so
-/// it cannot be moved to the cloned session's thread. Instead, cloning
-/// re-runs the code the source session evaluated to rebuild equivalent
-/// state.
-#[derive(Clone)]
-enum ReplayEntry {
-    Eval {
-        code: String,
-    },
-    LoadFile {
-        code: String,
-        file_path: Option<String>,
-    },
-}
-
-/// A request handed off to a session worker thread. The worker
-/// owns the session's `Env`, so any op that needs to read or mutate
-/// it (eval, load-file, completions, lookup) is dispatched here.
-enum SessionRequest {
+/// A session-bound operation that needs to read or mutate a session's
+/// `Env` (eval, load-file, completions, lookup).
+enum SessionOp {
     Eval {
         code: String,
         base_msg: HashMap<Vec<u8>, Value>,
@@ -703,24 +684,39 @@ enum SessionRequest {
         sym: String,
         base_msg: HashMap<Vec<u8>, Value>,
     },
-    /// Rebuild this (freshly-created) session's state by re-running the
-    /// source session's recorded `eval`/`load-file` requests. Produces
-    /// no responses to the client; output is discarded.
-    Replay { entries: Vec<ReplayEntry> },
+}
+
+/// A request handed off to a worker thread.
+///
+/// A session's `Env` contains `Rc`s and so cannot be moved between
+/// threads. To clone a session we must copy its `Env` on the thread
+/// that owns it, so a worker hosts a session together with any sessions
+/// cloned from it (and their clones, recursively).
+enum WorkerRequest {
+    /// Run an op against the session with this id.
+    Op { session_id: String, op: SessionOp },
+    /// Create a copy of `source_id`'s environment under `new_id`,
+    /// hosted on this same worker.
+    Clone {
+        source_id: String,
+        new_id: String,
+        interrupted: Arc<AtomicBool>,
+    },
+    /// Drop a session hosted on this worker.
+    Close { session_id: String },
 }
 
 /// State for one logical nREPL session.
 struct SessionState {
-    request_tx: Sender<SessionRequest>,
+    /// Channel to the worker hosting this session. Sessions cloned from
+    /// one another share a worker, so they share this sender.
+    request_tx: Sender<WorkerRequest>,
     interrupted: Arc<AtomicBool>,
-    /// The state-changing requests applied to this session, in order.
-    /// Replayed into a new session when this one is cloned.
-    replay_log: Vec<ReplayEntry>,
 }
 
 /// State held for one client connection. Each connection may host
-/// many logical nREPL sessions, each running on its own worker
-/// thread.
+/// many logical nREPL sessions. A session and the sessions cloned from
+/// it share a worker thread; unrelated sessions each get their own.
 struct Connection {
     sessions: HashMap<String, SessionState>,
     next_id: u64,
@@ -753,28 +749,37 @@ impl Connection {
         }
     }
 
-    fn new_session(&mut self) -> String {
+    /// Allocate a session id and its interrupt flag, registering the
+    /// flag with the SIGINT watchdog.
+    fn register_session(&mut self) -> (String, Arc<AtomicBool>) {
         let id = next_session_id(&mut self.next_id);
-        let (request_tx, request_rx) = mpsc::channel();
         let interrupted = Arc::new(AtomicBool::new(false));
-
         self.interrupt_flags
             .lock()
             .unwrap()
             .push(Arc::downgrade(&interrupted));
+        (id, interrupted)
+    }
+
+    /// Create a fresh session running on a new worker thread.
+    fn new_session(&mut self) -> String {
+        let (id, interrupted) = self.register_session();
+        let (request_tx, request_rx) = mpsc::channel();
 
         let response_tx = self.response_tx.clone();
         let worker_interrupted = Arc::clone(&interrupted);
         let temp_built_in_files = Arc::clone(&self.temp_built_in_files);
         let thread_name = format!("nrepl-session-{id}");
 
+        let worker_id = id.clone();
         thread::Builder::new()
             .name(thread_name)
             .spawn(move || {
                 session_worker(
+                    worker_id,
+                    worker_interrupted,
                     request_rx,
                     response_tx,
-                    worker_interrupted,
                     temp_built_in_files,
                 )
             })
@@ -785,17 +790,42 @@ impl Connection {
             SessionState {
                 request_tx,
                 interrupted,
-                replay_log: Vec::new(),
+            },
+        );
+        id
+    }
+
+    /// Create a new session whose environment is a copy of `source`'s.
+    /// The clone is hosted on `source`'s worker thread, where its `Env`
+    /// can be copied. Assumes `source` exists.
+    fn clone_session_from(&mut self, source: &str) -> String {
+        let (id, interrupted) = self.register_session();
+        let request_tx = self.sessions[source].request_tx.clone();
+
+        let _ = request_tx.send(WorkerRequest::Clone {
+            source_id: source.to_owned(),
+            new_id: id.clone(),
+            interrupted: Arc::clone(&interrupted),
+        });
+
+        self.sessions.insert(
+            id.clone(),
+            SessionState {
+                request_tx,
+                interrupted,
             },
         );
         id
     }
 
     fn close_session(&mut self, id: &str) -> bool {
-        // Wake any in-progress eval so the worker shuts down
-        // promptly once we drop the request channel.
+        // Wake any in-progress eval and ask the worker to drop the
+        // session's environment.
         if let Some(s) = self.sessions.get(id) {
             s.interrupted.store(true, Ordering::SeqCst);
+            let _ = s.request_tx.send(WorkerRequest::Close {
+                session_id: id.to_owned(),
+            });
         }
         self.sessions.remove(id).is_some()
     }
@@ -805,17 +835,17 @@ impl Connection {
     }
 }
 
-/// Dispatch a session-bound request to the worker thread for
+/// Dispatch a session-bound op to the worker thread hosting
 /// `session_id`. Sends an `unknown-session` response on `base` if the
 /// session does not exist or its worker has exited.
 fn dispatch_to_session(
     conn: &Connection,
     session_id: Option<&str>,
     base: HashMap<Vec<u8>, Value>,
-    build_request: impl FnOnce(HashMap<Vec<u8>, Value>) -> SessionRequest,
+    build_op: impl FnOnce(HashMap<Vec<u8>, Value>) -> SessionOp,
 ) {
     let session = session_id.and_then(|s| conn.sessions.get(s));
-    let Some(session) = session else {
+    let (Some(session_id), Some(session)) = (session_id, session) else {
         let mut msg = base;
         msg.insert(
             b"status".to_vec(),
@@ -825,7 +855,10 @@ fn dispatch_to_session(
         return;
     };
 
-    let req = build_request(base.clone());
+    let req = WorkerRequest::Op {
+        session_id: session_id.to_owned(),
+        op: build_op(base.clone()),
+    };
     if session.request_tx.send(req).is_err() {
         let mut msg = base;
         msg.insert(
@@ -862,81 +895,64 @@ fn sigint_watchdog(
     }
 }
 
-/// Re-run a source session's recorded requests against `env` to
-/// rebuild equivalent state in a freshly-cloned session. Any printed
-/// output and response messages are discarded.
-fn replay_entries(entries: &[ReplayEntry], env: &mut Env) {
-    // The responses and streamed output produced while replaying are
-    // not sent to the client; drop them into a sink whose receiver we
-    // keep alive for the duration of the replay.
-    let (sink_tx, _sink_rx) = mpsc::channel();
-    let base_msg: HashMap<Vec<u8>, Value> = HashMap::new();
-    let print_opts = PrintOptions::default();
-
-    for entry in entries {
-        let stdout_buf = Arc::new(Mutex::new(String::new()));
-        let stderr_buf = Arc::new(Mutex::new(String::new()));
-        let session = Session {
-            interrupted: Arc::new(AtomicBool::new(false)),
-            stdout_stderr_mode: StdoutStderrMode::WriteToNReplBuffers {
-                stdout_buf: Arc::clone(&stdout_buf),
-                stderr_buf: Arc::clone(&stderr_buf),
-            },
-            start_time: Instant::now(),
-            trace_exprs: false,
-            pretty_print_json: false,
-        };
-
-        match entry {
-            ReplayEntry::Eval { code } => {
-                let _ = handle_eval(
-                    code,
-                    env,
-                    &session,
-                    &stdout_buf,
-                    &stderr_buf,
-                    &sink_tx,
-                    &base_msg,
-                    &print_opts,
-                );
-            }
-            ReplayEntry::LoadFile { code, file_path } => {
-                let _ = handle_load_file(
-                    code,
-                    file_path.as_deref(),
-                    env,
-                    &session,
-                    &stdout_buf,
-                    &stderr_buf,
-                    &sink_tx,
-                    &base_msg,
-                    &print_opts,
-                );
-            }
-        }
-    }
+/// A session hosted on a worker thread: the environment it evaluates
+/// in and the flag used to interrupt an in-progress eval.
+struct WorkerSession {
+    env: Env,
+    interrupted: Arc<AtomicBool>,
 }
 
-/// Worker thread that owns the `Env` for a session and handles each
-/// session-bound op sequentially.
+/// Worker thread that owns the `Env`s for a session and any sessions
+/// cloned from it, handling each op sequentially.
 fn session_worker(
-    request_rx: Receiver<SessionRequest>,
+    initial_id: String,
+    initial_interrupted: Arc<AtomicBool>,
+    request_rx: Receiver<WorkerRequest>,
     response_tx: Sender<Value>,
-    interrupted: Arc<AtomicBool>,
     temp_built_in_files: Arc<Option<TempBuiltInFiles>>,
 ) {
-    let id_gen = IdGenerator::default();
-    let vfs = Vfs::default();
-    let mut env = Env::new(id_gen, vfs);
+    let mut sessions: HashMap<String, WorkerSession> = HashMap::new();
+    sessions.insert(
+        initial_id,
+        WorkerSession {
+            env: Env::new(IdGenerator::default(), Vfs::default()),
+            interrupted: initial_interrupted,
+        },
+    );
 
     while let Ok(req) = request_rx.recv() {
+        let (session_id, op) = match req {
+            WorkerRequest::Op { session_id, op } => (session_id, op),
+            WorkerRequest::Clone {
+                source_id,
+                new_id,
+                interrupted,
+            } => {
+                if let Some(src) = sessions.get(&source_id) {
+                    let env = src.env.clone_session();
+                    sessions.insert(new_id, WorkerSession { env, interrupted });
+                }
+                continue;
+            }
+            WorkerRequest::Close { session_id } => {
+                sessions.remove(&session_id);
+                continue;
+            }
+        };
+
+        let Some(worker_session) = sessions.get_mut(&session_id) else {
+            continue;
+        };
+        let env = &mut worker_session.env;
+        let interrupted = &worker_session.interrupted;
+
         // Clear any stray interrupt set while the session was idle.
         interrupted.store(false, Ordering::SeqCst);
 
         let stdout_buf = Arc::new(Mutex::new(String::new()));
         let stderr_buf = Arc::new(Mutex::new(String::new()));
         let session = Session {
-            interrupted: Arc::clone(&interrupted),
+            interrupted: Arc::clone(interrupted),
             stdout_stderr_mode: StdoutStderrMode::WriteToNReplBuffers {
                 stdout_buf: Arc::clone(&stdout_buf),
                 stderr_buf: Arc::clone(&stderr_buf),
@@ -946,14 +962,14 @@ fn session_worker(
             pretty_print_json: false,
         };
 
-        let responses = match req {
-            SessionRequest::Eval {
+        let responses = match op {
+            SessionOp::Eval {
                 code,
                 base_msg,
                 print_opts,
             } => handle_eval(
                 &code,
-                &mut env,
+                env,
                 &session,
                 &stdout_buf,
                 &stderr_buf,
@@ -961,7 +977,7 @@ fn session_worker(
                 &base_msg,
                 &print_opts,
             ),
-            SessionRequest::LoadFile {
+            SessionOp::LoadFile {
                 code,
                 file_path,
                 base_msg,
@@ -969,7 +985,7 @@ fn session_worker(
             } => handle_load_file(
                 &code,
                 file_path.as_deref(),
-                &mut env,
+                env,
                 &session,
                 &stdout_buf,
                 &stderr_buf,
@@ -977,15 +993,11 @@ fn session_worker(
                 &base_msg,
                 &print_opts,
             ),
-            SessionRequest::Completions { prefix, base_msg } => {
-                handle_completions(&env, &prefix, &base_msg)
+            SessionOp::Completions { prefix, base_msg } => {
+                handle_completions(env, &prefix, &base_msg)
             }
-            SessionRequest::Lookup { sym, base_msg } => {
-                handle_lookup(&env, &sym, &base_msg, temp_built_in_files.as_ref().as_ref())
-            }
-            SessionRequest::Replay { entries } => {
-                replay_entries(&entries, &mut env);
-                Vec::new()
+            SessionOp::Lookup { sym, base_msg } => {
+                handle_lookup(env, &sym, &base_msg, temp_built_in_files.as_ref().as_ref())
             }
         };
         for r in responses {
@@ -1253,37 +1265,25 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
             conn.send(Value::Dict(msg));
         }
         "clone" => {
-            // When a source session is given, the clone inherits its
-            // state. An unknown source session is an error.
+            // With a source session, the clone inherits a copy of its
+            // environment. An unknown source session is an error.
             let source = dict_get(request, "session").and_then(as_str);
-            if let Some(src) = source {
-                if !conn.sessions.contains_key(src) {
-                    let mut msg = base;
-                    msg.insert(
-                        b"status".to_vec(),
-                        Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
-                    );
-                    conn.send(Value::Dict(msg));
-                    return;
+
+            let new_id = match source {
+                Some(src) => {
+                    if !conn.sessions.contains_key(src) {
+                        let mut msg = base;
+                        msg.insert(
+                            b"status".to_vec(),
+                            Value::List(vec![bstr("done"), bstr("error"), bstr("unknown-session")]),
+                        );
+                        conn.send(Value::Dict(msg));
+                        return;
+                    }
+                    conn.clone_session_from(src)
                 }
-            }
-
-            let replay = source
-                .and_then(|s| conn.sessions.get(s))
-                .map(|s| s.replay_log.clone())
-                .unwrap_or_default();
-
-            let new_id = conn.new_session();
-
-            if !replay.is_empty() {
-                if let Some(state) = conn.sessions.get_mut(&new_id) {
-                    // Seed the clone's log so it can in turn be cloned.
-                    state.replay_log = replay.clone();
-                    let _ = state
-                        .request_tx
-                        .send(SessionRequest::Replay { entries: replay });
-                }
-            }
+                None => conn.new_session(),
+            };
 
             let mut msg = base;
             msg.insert(b"new-session".to_vec(), bstr(new_id));
@@ -1321,12 +1321,7 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
                 .unwrap_or("")
                 .to_owned();
             let print_opts = parse_print_options(request);
-            if let Some(state) = session_id.and_then(|s| conn.sessions.get_mut(s)) {
-                state
-                    .replay_log
-                    .push(ReplayEntry::Eval { code: code.clone() });
-            }
-            dispatch_to_session(conn, session_id, base, |base_msg| SessionRequest::Eval {
+            dispatch_to_session(conn, session_id, base, |base_msg| SessionOp::Eval {
                 code,
                 base_msg,
                 print_opts,
@@ -1362,19 +1357,11 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
                 .or_else(|| dict_get(request, "file-name").and_then(as_str))
                 .map(|s| s.to_owned());
             let print_opts = parse_print_options(request);
-            if let Some(state) = session_id.and_then(|s| conn.sessions.get_mut(s)) {
-                state.replay_log.push(ReplayEntry::LoadFile {
-                    code: code.clone(),
-                    file_path: file_path.clone(),
-                });
-            }
-            dispatch_to_session(conn, session_id, base, |base_msg| {
-                SessionRequest::LoadFile {
-                    code,
-                    file_path,
-                    base_msg,
-                    print_opts,
-                }
+            dispatch_to_session(conn, session_id, base, |base_msg| SessionOp::LoadFile {
+                code,
+                file_path,
+                base_msg,
+                print_opts,
             });
         }
         "completions" => {
@@ -1383,8 +1370,9 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
                 .and_then(as_str)
                 .unwrap_or("")
                 .to_owned();
-            dispatch_to_session(conn, session_id, base, |base_msg| {
-                SessionRequest::Completions { prefix, base_msg }
+            dispatch_to_session(conn, session_id, base, |base_msg| SessionOp::Completions {
+                prefix,
+                base_msg,
             });
         }
         "lookup" => {
@@ -1393,7 +1381,7 @@ fn handle_message(conn: &mut Connection, request: &HashMap<Vec<u8>, Value>) {
                 .and_then(as_str)
                 .unwrap_or("")
                 .to_owned();
-            dispatch_to_session(conn, session_id, base, |base_msg| SessionRequest::Lookup {
+            dispatch_to_session(conn, session_id, base, |base_msg| SessionOp::Lookup {
                 sym,
                 base_msg,
             });

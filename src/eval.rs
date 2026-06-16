@@ -32,6 +32,7 @@ use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::diagnostics::{ErrorMessage, MessagePart};
 use crate::parser::position::Position;
 use crate::parser::vfs::{Vfs, VfsPathBuf};
+use crate::parser::visitor::{Visitor, VisitorMut};
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::type_defs::TypeDef;
@@ -1001,176 +1002,60 @@ pub(crate) enum EvalUpToErr {
     NoValueAvailable,
 }
 
-fn annotate_block_value_path(block: &mut Block, target_id: SyntaxId) -> bool {
-    let mut found = false;
-    for expr in &mut block.exprs {
-        let expr = Rc::make_mut(expr);
-        if annotate_expr_value_path(expr, target_id) {
-            expr.value_is_used = true;
-            found = true;
-        }
-    }
-
-    found
-}
-
-fn annotate_parenthesized_args_value_path(
-    args: &mut ParenthesizedArguments,
+struct EvalUpToValuePathFinder {
     target_id: SyntaxId,
-) -> bool {
-    let mut found = false;
-    for arg in &mut args.arguments {
-        if annotate_expr_value_path(Rc::make_mut(&mut arg.expr), target_id) {
-            found = true;
-        }
-    }
-
-    found
+    current_path: Vec<SyntaxId>,
+    target_path: Option<Vec<SyntaxId>>,
 }
 
-fn annotate_expr_value_path(expr: &mut Expression, target_id: SyntaxId) -> bool {
-    if expr.id == target_id {
-        expr.value_is_used = true;
-        return true;
+impl Visitor for EvalUpToValuePathFinder {
+    fn visit_expr(&mut self, expr: &Expression) {
+        if self.target_path.is_some() {
+            return;
+        }
+
+        self.current_path.push(expr.id);
+        if expr.id == self.target_id {
+            self.target_path = Some(self.current_path.clone());
+        } else {
+            self.visit_expr_(&expr.expr_);
+        }
+        self.current_path.pop();
     }
+}
 
-    let found = match &mut expr.expr_ {
-        Expression_::Match(scrutinee, cases) => {
-            let mut found = annotate_expr_value_path(Rc::make_mut(scrutinee), target_id);
-            for (_, block) in cases {
-                if annotate_block_value_path(block, target_id) {
-                    found = true;
-                }
-            }
-            found
-        }
-        Expression_::If(condition, then_body, else_body) => {
-            let mut found = annotate_expr_value_path(Rc::make_mut(condition), target_id);
-            if annotate_block_value_path(then_body, target_id) {
-                found = true;
-            }
-            if let Some(else_body) = else_body {
-                if annotate_block_value_path(else_body, target_id) {
-                    found = true;
-                }
-            }
-            found
-        }
-        Expression_::While(condition, body) => {
-            annotate_expr_value_path(Rc::make_mut(condition), target_id)
-                || annotate_block_value_path(body, target_id)
-        }
-        Expression_::ForIn(_, iterable, body) => {
-            annotate_expr_value_path(Rc::make_mut(iterable), target_id)
-                || annotate_block_value_path(body, target_id)
-        }
-        Expression_::Try(try_body, _, catch_body) => {
-            annotate_block_value_path(try_body, target_id)
-                || annotate_block_value_path(catch_body, target_id)
-        }
-        Expression_::Assign(_, rhs)
-        | Expression_::AssignUpdate(_, _, rhs)
-        | Expression_::Let(_, _, rhs)
-        | Expression_::Assert(rhs) => annotate_expr_value_path(Rc::make_mut(rhs), target_id),
-        Expression_::Return(Some(return_expr)) => {
-            annotate_expr_value_path(Rc::make_mut(return_expr), target_id)
-        }
-        Expression_::Return(None) => false,
-        Expression_::ListLiteral(items) => {
-            let mut found = false;
-            for item in items {
-                if annotate_expr_value_path(Rc::make_mut(&mut item.expr), target_id) {
-                    found = true;
-                }
-            }
-            found
-        }
-        Expression_::DictLiteral(items) => {
-            let mut found = false;
-            for item in items {
-                if annotate_expr_value_path(Rc::make_mut(&mut item.key), target_id) {
-                    found = true;
-                }
-                if annotate_expr_value_path(Rc::make_mut(&mut item.value), target_id) {
-                    found = true;
-                }
-            }
-            found
-        }
-        Expression_::TupleLiteral(items) => {
-            let mut found = false;
-            for item in items {
-                if annotate_expr_value_path(Rc::make_mut(item), target_id) {
-                    found = true;
-                }
-            }
-            found
-        }
-        Expression_::StructLiteral(_, field_exprs) => {
-            let mut found = false;
-            for (_, field_expr) in field_exprs {
-                if annotate_expr_value_path(Rc::make_mut(field_expr), target_id) {
-                    found = true;
-                }
-            }
-            found
-        }
-        Expression_::BinaryOperator(lhs, _, rhs) => {
-            annotate_expr_value_path(Rc::make_mut(lhs), target_id)
-                || annotate_expr_value_path(Rc::make_mut(rhs), target_id)
-        }
-        Expression_::Call(receiver, args) => {
-            annotate_expr_value_path(Rc::make_mut(receiver), target_id)
-                || annotate_parenthesized_args_value_path(args, target_id)
-        }
-        Expression_::MethodCall(receiver, _, args) => {
-            annotate_expr_value_path(Rc::make_mut(receiver), target_id)
-                || annotate_parenthesized_args_value_path(args, target_id)
-        }
-        Expression_::DotAccess(receiver, _) | Expression_::NamespaceAccess(receiver, _) => {
-            annotate_expr_value_path(Rc::make_mut(receiver), target_id)
-        }
-        Expression_::FunLiteral(fun_info) => {
-            annotate_block_value_path(&mut fun_info.body, target_id)
-        }
-        Expression_::Parentheses(paren) => {
-            annotate_expr_value_path(Rc::make_mut(&mut paren.expr), target_id)
-        }
-        Expression_::Break
-        | Expression_::Continue
-        | Expression_::IntLiteral(_)
-        | Expression_::FloatLiteral(_)
-        | Expression_::StringLiteral(_)
-        | Expression_::Variable(_)
-        | Expression_::Invalid => false,
-    };
+struct ValuePathAnnotator {
+    value_used_ids: FxHashSet<SyntaxId>,
+}
 
-    if found {
-        expr.value_is_used = true;
+impl VisitorMut for ValuePathAnnotator {
+    fn visit_expr_mut(&mut self, expr: &mut Expression) {
+        if self.value_used_ids.contains(&expr.id) {
+            expr.value_is_used = true;
+        }
+
+        self.visit_expr_mut_default(expr);
     }
-
-    found
 }
 
 fn annotate_item_value_path(item: &mut ToplevelItem, target_id: SyntaxId) -> bool {
-    match item {
-        ToplevelItem::Fun(_, fun_info, _) => {
-            annotate_block_value_path(&mut fun_info.body, target_id)
-        }
-        ToplevelItem::Method(method_info, _) => match &mut method_info.kind {
-            MethodKind::BuiltinMethod(_, Some(fun_info))
-            | MethodKind::UserDefinedMethod(fun_info) => {
-                annotate_block_value_path(&mut fun_info.body, target_id)
-            }
-            MethodKind::BuiltinMethod(_, None) => false,
-        },
-        ToplevelItem::Test(test) => annotate_block_value_path(&mut test.body, target_id),
-        ToplevelItem::Expr(toplevel_expression) => {
-            annotate_expr_value_path(&mut toplevel_expression.0, target_id)
-        }
-        ToplevelItem::Block(block) => annotate_block_value_path(block, target_id),
-        ToplevelItem::Enum(_) | ToplevelItem::Struct(_) | ToplevelItem::Import(_) => false,
-    }
+    let mut finder = EvalUpToValuePathFinder {
+        target_id,
+        current_path: vec![],
+        target_path: None,
+    };
+    finder.visit_toplevel_item(item);
+
+    let Some(target_path) = finder.target_path else {
+        return false;
+    };
+
+    let mut annotator = ValuePathAnnotator {
+        value_used_ids: target_path.into_iter().collect(),
+    };
+    annotator.visit_toplevel_item_mut(item);
+
+    true
 }
 
 /// Try to evaluate items up to the syntax ID specified.

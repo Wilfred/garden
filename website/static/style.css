@@ -54,6 +54,7 @@
 :root {
   --green-primary: #307d30;
   --cream: #ebeee3;
+  --pale-cream: #f4f6ee;
   --shadow-color: #44444457;
 }
 
@@ -302,6 +303,7 @@ textarea {
 .snippet {
   border: 3px solid #00000030;
   border-radius: 5px;
+  background-color: var(--pale-cream);
 
   padding: 0;
   margin: 30px 0px 20px 0px;
@@ -325,14 +327,14 @@ textarea {
 button {
   border: 3px solid #00000030;
   border-radius: 5px;
-  min-width: 60px;
+  min-width: 70px;
 
   padding: 10px 10px;
   margin-left: 10px;
-  margin-right: 10px;
+  margin-right: 0;
   margin-bottom: 10px;
 
-  background-color: var(--cream);
+  background-color: var(--pale-cream);
   cursor: pointer;
 }
 
@@ -347,7 +349,7 @@ button:hover {
   top: -24px;
   right: 12px;
 
-  background: var(--cream);
+  background-color: var(--pale-cream);
   border: 3px solid #00000038;
   border-radius: 5px;
 
@@ -403,7 +405,11 @@ ul ul {
   line-height: 20px;
   border: none;
   outline: none;
-  background-color: var(--cream);
+  background-color: var(--pale-cream);
+}
+
+.cm-focused {
+  outline: none !important;
 }
 
 .cm-scroller {

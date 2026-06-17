@@ -144,11 +144,6 @@ pre.block {
   padding: 8px;
 }
 
-.block::after {
-  /* TODO: Override --block-shadow-color variable instead. */
-  background: var(--shadow-color);
-}
-
 .container {
   margin-top: 100px;
   margin-left: 10px;

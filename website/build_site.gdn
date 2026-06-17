@@ -413,80 +413,60 @@ fun build_site(): Unit {
   }
 }
 
-/// Convert `["a", "b", "c"]` to `"a, b and c"`.
-fun join_with_commas_and(items: List<String>): String {
-  let last_item = match items.last() {
-    Some(item) => item,
-    None => return "",
-  }
-
-  let but_last = items.slice(0, -1)
-  if but_last.is_empty() {
-    return last_item
-  }
-
-  " and ".join([", ".join(but_last), last_item ^ "."])
+/// Escape `<` and `>` so operator names render correctly in HTML,
+/// and `*` so it isn't treated as markdown emphasis.
+fun escape_html(s: String): String {
+  s.replace("<", "&lt;").replace(">", "&gt;").replace("*", "&#42;")
 }
 
-/// Helper function to create markdown links of the form
-//
-/// ```text
-/// [`foo`](bar.html)
-/// ```
-fun code_link(text: String, url: String): String {
-  "[`" ^ text ^ "`](" ^ url ^ ")"
+/// An HTML link to `url`, with `text` rendered as code.
+fun grid_link(text: String, url: String): String {
+  "<a href=\"" ^ url ^ "\"><code>" ^ escape_html(text) ^ "</code></a>"
+}
+
+/// Render `links` as a single HTML grid block.
+fun link_grid(links: List<String>): String {
+  "<div class=\"link-grid\">" ^ "".join(links) ^ "</div>"
 }
 
 /// Replace all __FOO strings in markdown `src` with runtime values.
 fun substitute_shorthand(website_dir: Path, src: String): String {
-  let keyword_links = reflect::keywords().map(fun(keyword: String) {
-    code_link(keyword, "./keyword:" ^ keyword ^ ".html")
-  })
+  let keyword_links = link_grid(reflect::keywords().map(fun(keyword: String) {
+      grid_link(keyword, "./keyword:" ^ keyword ^ ".html")
+  }))
 
-  let keyword_links = join_with_commas_and(keyword_links)
+  let operator_links = link_grid(reflect::operators().map(fun(operator: String) {
+      let page_name = ops::url_safe_name(operator)
+      grid_link(operator, "./operator:" ^ page_name ^ ".html")
+  }))
 
-  let operator_links = reflect::operators().map(fun(operator: String) {
-    let page_name = ops::url_safe_name(operator)
-    code_link(operator, "./operator:" ^ page_name ^ ".html")
-  })
+  let type_links = link_grid(reflect::prelude_types().map(fun(name: String) {
+      grid_link(name, "./type:" ^ name ^ ".html")
+  }))
 
-  let operator_links = join_with_commas_and(operator_links)
+  let prelude_funs = link_grid(reflect::namespace_functions(prelude).map(fun(name: String) {
+      grid_link(name ^ "()", "./fun:__prelude.gdn::" ^ name ^ ".html")
+  }))
 
-  let type_links = reflect::prelude_types().map(fun(name: String) {
-    code_link(name, "./type:" ^ name ^ ".html")
-  })
+  let fs_funs = link_grid(reflect::namespace_functions(fs).map(fun(name: String) {
+      grid_link(name ^ "()", "./fun:__fs.gdn::" ^ name ^ ".html")
+  }))
 
-  let type_links = join_with_commas_and(type_links)
+  let random_funs = link_grid(reflect::namespace_functions(random).map(fun(name: String) {
+      grid_link(name ^ "()", "./fun:__random.gdn::" ^ name ^ ".html")
+  }))
 
-  let prelude_funs = reflect::namespace_functions(prelude).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__prelude.gdn::" ^ name ^ ".html")
-  })
-  let prelude_funs = join_with_commas_and(prelude_funs)
+  let reflect_funs = link_grid(reflect::namespace_functions(reflect).map(fun(name: String) {
+      grid_link(name ^ "()", "./fun:__reflect.gdn::" ^ name ^ ".html")
+  }))
 
-  let fs_funs = reflect::namespace_functions(fs).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__fs.gdn::" ^ name ^ ".html")
-  })
-  let fs_funs = join_with_commas_and(fs_funs)
+  let shell_funs = link_grid(reflect::namespace_functions(shell).map(fun(name: String) {
+      grid_link(name ^ "()", "./fun:__shell.gdn::" ^ name ^ ".html")
+  }))
 
-  let random_funs = reflect::namespace_functions(random).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__random.gdn::" ^ name ^ ".html")
-  })
-  let random_funs = join_with_commas_and(random_funs)
-
-  let reflect_funs = reflect::namespace_functions(reflect).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__reflect.gdn::" ^ name ^ ".html")
-  })
-  let reflect_funs = join_with_commas_and(reflect_funs)
-
-  let shell_funs = reflect::namespace_functions(shell).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__shell.gdn::" ^ name ^ ".html")
-  })
-  let shell_funs = join_with_commas_and(shell_funs)
-
-  let time_funs = reflect::namespace_functions(time).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__time.gdn::" ^ name ^ ".html")
-  })
-  let time_funs = join_with_commas_and(time_funs)
+  let time_funs = link_grid(reflect::namespace_functions(time).map(fun(name: String) {
+      grid_link(name ^ "()", "./fun:__time.gdn::" ^ name ^ ".html")
+  }))
 
   let blog_links: List<String> = []
   for post in blog_posts(website_dir) {

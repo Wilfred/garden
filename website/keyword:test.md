@@ -11,6 +11,6 @@ test arithmetic {
 To run all the tests in a file, run the `garden` interpreter with the
 `test` command.
 
-```text title:"Running tests"
+```shell title:"Running tests"
 $ garden test my_file.gdn
 ```

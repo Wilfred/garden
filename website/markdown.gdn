@@ -166,6 +166,49 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
   parts
 }
 
+/// Convert heading text to an HTML id, e.g. `Built-in Types` to
+/// `built-in-types`.
+fun heading_slug(content: String): String {
+  let lower = "abcdefghijklmnopqrstuvwxyz"
+  let upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  let digits = "0123456789"
+
+  let slug_chars: List<String> = []
+
+  // Treat the start as a dash, so we never emit a leading dash.
+  let prev_was_dash = True
+
+  for char in content.chars() {
+    let slug_char = if lower.contains(char) || digits.contains(char) {
+      char
+    } else {
+      match upper.index_of(char) {
+        Some(i) => lower.substring(i, i + 1)
+        None => "-"
+      }
+    }
+
+    if slug_char == "-" {
+      if prev_was_dash {
+        continue
+      }
+      prev_was_dash = True
+    } else {
+      prev_was_dash = False
+    }
+
+    slug_chars = slug_chars.append(slug_char)
+  }
+
+  "".join(slug_chars).strip_suffix("-")
+}
+
+test heading_slug {
+  assert(heading_slug("Built-in Types") == "built-in-types")
+  assert(heading_slug("`==` and `!=` Operators") == "and-operators")
+  assert(heading_slug("Shell `__shell.gdn`") == "shell-shell-gdn")
+}
+
 /// Render a "# Foo" heading.
 fun render_heading(src: String, self_url: Option<String>): String {
   let h_count = 0
@@ -180,10 +223,12 @@ fun render_heading(src: String, self_url: Option<String>): String {
     return "<p>" ^ src ^ "</p>"
   }
 
-  let open_tag = "<h" ^ string_repr(h_count) ^ ">"
+  let content = content.trim()
+
+  let open_tag = "<h" ^ string_repr(h_count) ^ " id=\"" ^ heading_slug(content) ^ "\">"
   let close_tag = "</h" ^ string_repr(h_count) ^ ">"
 
-  open_tag ^ render_inline(content.trim(), self_url) ^ close_tag
+  open_tag ^ render_inline(content, self_url) ^ close_tag
 }
 
 /// We want to find " < ", which requires trailing whitespace on the
@@ -214,6 +259,8 @@ fun render_code_block(snippet: Snippet, self_url: Option<String>): String {
 
   let (inner, output_div) = if is_garden {
     (render_garden_code(snippet, self_url), "<div class=\"snippet-output\" hidden></div>")
+  } else if snippet.labels.contains("shell") {
+    (render_shell_code(snippet.content), "")
   } else {
     ("<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>", "")
   }
@@ -232,6 +279,28 @@ fun render_code_block(snippet: Snippet, self_url: Option<String>): String {
   }
 
   "<div class=\"snippet\">" ^ header ^ "<pre>" ^ inner ^ "</pre>" ^ buttons ^ output_div ^ "</div>"
+}
+
+/// Render a shell session. Lines starting with `$ ` are commands,
+/// and other lines are program output.
+//
+/// The `$ ` prompt is marked up separately so CSS can make it
+/// unselectable, keeping commands easy to copy-paste.
+fun render_shell_code(content: String): String {
+  let rendered_lines: List<String> = []
+
+  for line in content.lines() {
+    let rendered_line = if line.starts_with("$ ") {
+      let command = escape_angle_brackets(line.strip_prefix("$ "))
+      "<span class=\"prompt\">$ </span><span class=\"command\">" ^ command ^ "</span>"
+    } else {
+      "<span class=\"shell-output\">" ^ escape_angle_brackets(line) ^ "</span>"
+    }
+
+    rendered_lines = rendered_lines.append(rendered_line)
+  }
+
+  "<code>" ^ "\n".join(rendered_lines) ^ "</code>"
 }
 
 fun check_source(src: String, path: Option<Path>): Unit {
@@ -682,6 +751,12 @@ fun render_emphasis(src: String): String {
 }
 
 fun render_paragraph(src: String, self_url: Option<String>): String {
+  if src.starts_with("<div") {
+    // A raw HTML block. Don't wrap it in <p>, because <div> isn't
+    // allowed inside <p>.
+    return render_inline(src, self_url)
+  }
+
   "<p>" ^ render_inline(src, self_url) ^ "</p>"
 }
 
@@ -694,13 +769,34 @@ fun render_bullets(items: List<String>, self_url: Option<String>): String {
   "<ul>\n" ^ "\n".join(rendered_items) ^ "\n</ul>"
 }
 
+/// Render a sidebar table of contents from `toc_entries`, a list of
+/// rendered `<li>` items.
+fun render_toc(toc_entries: List<String>): String {
+  "".join([
+    "<nav class=\"toc\"><span class=\"toc-title\">On this page</span><ul>\n",
+    "\n".join(toc_entries),
+    "\n</ul></nav>"])
+}
+
 public fun render(src: String, file: Option<Path>, self_url: Option<String>): String {
   let html_parts: List<String> = []
+  let toc_entries: List<String> = []
 
   for part in parse_markdown(src, file) {
     match part {
       Heading(heading) => {
         html_parts = html_parts.append(render_heading(heading, self_url))
+
+        if heading.starts_with("## ") {
+          let content = heading.strip_prefix("##").trim()
+          let entry = "".join([
+            "<li><a href=\"#",
+            heading_slug(content),
+            "\">",
+            render_inline(content, self_url),
+            "</a></li>"])
+          toc_entries = toc_entries.append(entry)
+        }
       }
       Paragraph(paragraph) => {
         html_parts = html_parts.append(render_paragraph(paragraph, self_url))
@@ -717,6 +813,12 @@ public fun render(src: String, file: Option<Path>, self_url: Option<String>): St
     }
   }
 
+  // Only show a table of contents on pages with enough sections for
+  // it to be useful.
+  if toc_entries.len() >= 3 {
+    html_parts = [render_toc(toc_entries)].concat(html_parts)
+  }
+
   "\n".join(html_parts)
 }
 
@@ -725,11 +827,11 @@ test render_paragraph_newlines {
 }
 
 test render_headings {
-  assert(render("# foo", None, None) == "<h1>foo</h1>")
-  assert(render("#  foo ", None, None) == "<h1>foo</h1>")
+  assert(render("# foo", None, None) == "<h1 id=\"foo\">foo</h1>")
+  assert(render("#  foo ", None, None) == "<h1 id=\"foo\">foo</h1>")
 
-  assert(render("## foo", None, None) == "<h2>foo</h2>")
-  assert(render("###### foo", None, None) == "<h6>foo</h6>")
+  assert(render("## foo", None, None) == "<h2 id=\"foo\">foo</h2>")
+  assert(render("###### foo", None, None) == "<h6 id=\"foo\">foo</h6>")
 
   assert(render("#foo", None, None) == "<p>#foo</p>")
   assert(render("####### foo", None, None) == "<p>####### foo</p>")
@@ -743,8 +845,23 @@ test render_paragraph_escape_angle_brackets {
   assert(render("foo bar<", None, None) == "<p>foo bar&lt;</p>")
 }
 
+test render_table_of_contents {
+  assert(render("## a\n\n## b\n\n## c", None, None) == "<nav class=\"toc\"><span class=\"toc-title\">On this page</span><ul>
+<li><a href=\"#a\">a</a></li>
+<li><a href=\"#b\">b</a></li>
+<li><a href=\"#c\">c</a></li>
+</ul></nav>
+<h2 id=\"a\">a</h2>
+<h2 id=\"b\">b</h2>
+<h2 id=\"c\">c</h2>")
+}
+
+test render_no_table_of_contents_for_few_headings {
+  assert(render("## a\n\n## b", None, None) == "<h2 id=\"a\">a</h2>\n<h2 id=\"b\">b</h2>")
+}
+
 test render_paragraph_after_heading {
-  assert(render("# foo\n\nbar", None, None) == "<h1>foo</h1>\n<p>bar</p>")
+  assert(render("# foo\n\nbar", None, None) == "<h1 id=\"foo\">foo</h1>\n<p>bar</p>")
 }
 
 test render_backtick {
@@ -764,7 +881,7 @@ test render_strong_escape_angle_brackets {
 }
 
 test render_backtick_in_heading {
-  assert(render("# `foo`", None, None) == "<h1><code>foo</code></h1>")
+  assert(render("# `foo`", None, None) == "<h1 id=\"foo\"><code>foo</code></h1>")
 }
 
 test render_link {
@@ -803,6 +920,10 @@ test render_triple_backtick_comment {
   assert(render("```garden nocheck\nfoo // bar\n```", None, None) == "<div class=\"snippet\"><pre><code>foo <span class=\"comment\">// bar</span></code></pre><button class=\"run-snippet\">Run</button><button class=\"edit-snippet\">Edit</button><div class=\"snippet-output\" hidden></div></div>")
 }
 
+test render_shell_block {
+  assert(render("```shell\n$ garden run foo.gdn\nHello\n```", None, None) == "<div class=\"snippet\"><pre><code><span class=\"prompt\">$ </span><span class=\"command\">garden run foo.gdn</span>\n<span class=\"shell-output\">Hello</span></code></pre></div>")
+}
+
 test render_asterisk_bullet {
   assert(render("* foo\n* bar", None, None) == "<ul>
 <li>foo</li>
@@ -833,6 +954,10 @@ test render_thematic_break {
 
 test render_html {
   assert(render("<script></script>", None, None) == "<p><script></script></p>")
+}
+
+test render_html_div_block {
+  assert(render("<div class=\"foo\"><a href=\"#\">x</a></div>", None, None) == "<div class=\"foo\"><a href=\"#\">x</a></div>")
 }
 
 test render_html_comment {

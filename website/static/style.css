@@ -349,6 +349,9 @@ button:hover {
   top: -24px;
   right: 12px;
 
+  height: 24px;
+  line-height: 24px;
+
   background-color: var(--pale-cream);
   border: 3px solid #00000038;
   border-radius: 5px;

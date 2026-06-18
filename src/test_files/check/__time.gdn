@@ -1,0 +1,32 @@
+fun missing_param_type(x): Unit {
+  println(string_repr(x))
+}
+
+fun missing_return_type(name: String) {
+  println(name)
+}
+
+missing_param_type(1)
+missing_return_type("hello")
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Parameters in built-in namespaces must have a type annotation, but `x` does not.
+// 
+// -| src/test_files/check/__time.gdn:1:24
+// 1| fun missing_param_type(x): Unit {
+//  |                        ^
+// 2|   println(string_repr(x))
+// 3| }
+// 
+// Error: Functions in built-in namespaces must have a return type annotation, but `missing_return_type` does not.
+// 
+// -| src/test_files/check/__time.gdn:5:5
+// 3| }
+// 4| 
+// 5| fun missing_return_type(name: String) {
+//  |     ^^^^^^^^^^^^^^^^^^^
+// 6|   println(name)
+// 7| }
+

@@ -213,6 +213,96 @@ impl Env {
         env
     }
 
+    /// Produce an independent copy of this environment for a cloned
+    /// nREPL session.
+    ///
+    /// Each namespace is duplicated so that definitions later added to
+    /// the clone do not leak back into the source session (and vice
+    /// versa). Garden values are immutable (`Rc<Value_>`), so they are
+    /// shared rather than copied; only the mutable namespace containers
+    /// are duplicated.
+    pub(crate) fn clone_session(&self) -> Self {
+        // Map each source namespace to its independent copy, keyed by
+        // pointer identity, so that every reference to a namespace (in
+        // the namespaces map, the prelude, the call stack, and
+        // imported-namespace values) resolves to the same copy.
+        let mut memo: FxHashMap<*const RefCell<NamespaceInfo>, Rc<RefCell<NamespaceInfo>>> =
+            FxHashMap::default();
+
+        let mut source_nss: Vec<Rc<RefCell<NamespaceInfo>>> =
+            self.namespaces.values().map(Rc::clone).collect();
+        source_nss.push(Rc::clone(&self.prelude_namespace));
+
+        // First pass: create an empty copy of every namespace so that
+        // cross-references resolved in the second pass have a target.
+        for src in &source_nss {
+            let ptr = Rc::as_ptr(src);
+            if memo.contains_key(&ptr) {
+                continue;
+            }
+            let src_ref = src.borrow();
+            let copy = NamespaceInfo {
+                abs_path: Rc::clone(&src_ref.abs_path),
+                values: FxHashMap::default(),
+                exported_syms: src_ref.exported_syms.clone(),
+                types: src_ref.types.clone(),
+            };
+            memo.insert(ptr, Rc::new(RefCell::new(copy)));
+        }
+
+        // Second pass: copy each namespace's values, remapping any
+        // imported-namespace values to the corresponding copy.
+        for src in &source_nss {
+            let ptr = Rc::as_ptr(src);
+            let values: FxHashMap<SymbolName, Value> = src
+                .borrow()
+                .values
+                .iter()
+                .map(|(name, value)| (name.clone(), remap_namespace_value(value, &memo)))
+                .collect();
+            memo[&ptr].borrow_mut().values = values;
+        }
+
+        let remap = |ns: &Rc<RefCell<NamespaceInfo>>| -> Rc<RefCell<NamespaceInfo>> {
+            memo.get(&Rc::as_ptr(ns))
+                .map(Rc::clone)
+                .unwrap_or_else(|| Rc::clone(ns))
+        };
+
+        let namespaces = self
+            .namespaces
+            .iter()
+            .map(|(path, ns)| (path.clone(), remap(ns)))
+            .collect();
+
+        let mut stack = self.stack.clone();
+        for frame in &mut stack.0 {
+            frame.namespace = remap(&frame.namespace);
+        }
+
+        Self {
+            tests: self.tests.clone(),
+            types: self.types.clone(),
+            prelude_namespace: remap(&self.prelude_namespace),
+            namespaces,
+            project_root: self.project_root.clone(),
+            working_directory: self.working_directory.clone(),
+            prev_call_args: self.prev_call_args.clone(),
+            prev_method_call_args: self.prev_method_call_args.clone(),
+            stack,
+            ticks: self.ticks,
+            tick_limit: self.tick_limit,
+            stack_limit: self.stack_limit,
+            stop_at_expr_id: self.stop_at_expr_id,
+            enforce_sandbox: self.enforce_sandbox,
+            id_gen: self.id_gen.clone(),
+            vfs: self.vfs.clone(),
+            initial_state: None,
+            cli_args: self.cli_args.clone(),
+            profile: self.profile,
+        }
+    }
+
     pub(crate) fn get_namespace(&self, abs_path: &Path) -> Option<Rc<RefCell<NamespaceInfo>>> {
         let abs_path = canonicalize_namespace_path(abs_path);
         self.namespaces.get(&abs_path).cloned()
@@ -393,6 +483,31 @@ impl Env {
             Ok(rel_path) => rel_path,
             Err(_) => path,
         }
+    }
+}
+
+/// Copy a namespace value, remapping an imported-namespace reference
+/// to its cloned counterpart. All other values are immutable and are
+/// shared via reference counting.
+fn remap_namespace_value(
+    value: &Value,
+    memo: &FxHashMap<*const RefCell<NamespaceInfo>, Rc<RefCell<NamespaceInfo>>>,
+) -> Value {
+    match value.as_ref() {
+        Value_::Namespace {
+            ns_info,
+            imported_name_sym,
+        } => {
+            let ns_info = memo
+                .get(&Rc::as_ptr(ns_info))
+                .map(Rc::clone)
+                .unwrap_or_else(|| Rc::clone(ns_info));
+            Value::new(Value_::Namespace {
+                ns_info,
+                imported_name_sym: imported_name_sym.clone(),
+            })
+        }
+        _ => value.clone(),
     }
 }
 

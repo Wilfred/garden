@@ -23,6 +23,7 @@ use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 use std::{fs, thread};
 
+use serde::Deserialize;
 use serde_bencode::value::Value;
 use tracing::{debug, error, info, warn};
 
@@ -72,45 +73,54 @@ fn as_str(v: &Value) -> Option<&str> {
     }
 }
 
+/// Wraps a reader, recording how many bytes have been read so we can
+/// distinguish a clean EOF (no bytes) from a truncated message.
+struct CountingReader<'a, R: Read> {
+    reader: &'a mut R,
+    count: usize,
+}
+
+impl<R: Read> Read for CountingReader<'_, R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        loop {
+            match self.reader.read(buf) {
+                Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
+                Ok(n) => {
+                    self.count += n;
+                    return Ok(n);
+                }
+                Err(e) => return Err(e),
+            }
+        }
+    }
+}
+
 /// Read a single bencode value from `reader`. Returns `None` on a
 /// clean EOF.
 ///
-/// We feed bytes one at a time into `serde_bencode::from_bytes`. As
-/// soon as the buffer parses successfully we have exactly one
-/// complete message; any extra bytes the OS has buffered remain in
-/// the `BufReader` for the next call.
+/// `serde_bencode`'s reader-based deserializer reads exactly the bytes
+/// of one message in a single pass, so any extra bytes the OS has
+/// buffered remain in the `BufReader` for the next call. We cap the
+/// reader at `MAX_MESSAGE_BYTES` so a malformed client can't make us
+/// allocate without bound.
 fn read_message<R: Read>(reader: &mut R) -> io::Result<Option<Value>> {
-    let mut buf: Vec<u8> = Vec::new();
-    let mut byte = [0u8; 1];
+    let mut counting = CountingReader { reader, count: 0 };
 
-    loop {
-        match reader.read(&mut byte) {
-            Ok(0) => {
-                if buf.is_empty() {
-                    return Ok(None);
-                }
-                return Err(io::Error::new(
-                    io::ErrorKind::UnexpectedEof,
-                    "unexpected EOF in the middle of a bencode message",
-                ));
-            }
-            Ok(_) => {}
-            Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
-            Err(e) => return Err(e),
-        }
+    let result = {
+        let limited = (&mut counting).take(MAX_MESSAGE_BYTES as u64 + 1);
+        let mut de = serde_bencode::de::Deserializer::new(limited);
+        Value::deserialize(&mut de)
+    };
 
-        buf.push(byte[0]);
-
-        if let Ok(value) = serde_bencode::from_bytes::<Value>(&buf) {
-            return Ok(Some(value));
-        }
-
-        if buf.len() > MAX_MESSAGE_BYTES {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "bencode message exceeded the maximum allowed size",
-            ));
-        }
+    match result {
+        Ok(value) => Ok(Some(value)),
+        // A decode error with no bytes consumed means the stream ended
+        // cleanly at a message boundary.
+        Err(_) if counting.count == 0 => Ok(None),
+        Err(e) => Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("bencode decode: {e}"),
+        )),
     }
 }
 

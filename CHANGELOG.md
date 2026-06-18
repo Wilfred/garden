@@ -85,6 +85,12 @@ Added warnings for:
 * All code paths in a function return the same value
 * Unnecessary `let` that's immediately returned
 
+## Parsing
+
+Fixed a parser panic on malformed tuple literals such as `(,{` where
+the parser failed to make forward progress after recovering from an
+invalid element.
+
 ## Commands
 
 Added :load to evaluate all definitions in a file and switch to that

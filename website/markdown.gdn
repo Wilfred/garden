@@ -209,6 +209,12 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
   items
 }
 
+/// The URL of the built-in source file `file` on GitHub. Built-in
+/// files live in the `src/` directory of the repository.
+fun github_source_url(file: Path): String {
+  "https://github.com/Wilfred/garden/blob/main/src/" ^ file.p
+}
+
 fun render_code_block(snippet: Snippet, self_url: Option<String>): String {
   let is_garden = snippet.labels.is_empty() || snippet.labels.contains("garden")
 
@@ -226,7 +232,17 @@ fun render_code_block(snippet: Snippet, self_url: Option<String>): String {
 
   let header = match snippet.title {
     Some(title) => {
-      "<span class=\"code-title\">" ^ title ^ "</span>"
+      let label = if title == "Source Code" {
+        match snippet.file {
+          Some(file) => {
+            "<a href=\"" ^ github_source_url(file) ^ "\">" ^ title ^ "</a>"
+          }
+          None => title
+        }
+      } else {
+        title
+      }
+      "<span class=\"code-title\">" ^ label ^ "</span>"
     }
     None => ""
   }

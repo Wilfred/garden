@@ -1,6 +1,6 @@
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::env::Env;
-use crate::parser::ast::{Block, Expression, Expression_, ToplevelItem};
+use crate::parser::ast::{Block, Expression, Expression_, LetDestination, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
@@ -104,5 +104,26 @@ impl Visitor for UnusedLiteralVisitor<'_> {
 
             self.visit_expr(expr);
         }
+    }
+
+    fn visit_expr_while(&mut self, cond: &Expression, body: &Block) {
+        // A loop evaluates to Unit, so its body's final value is also
+        // discarded.
+        if let Some(last) = body.exprs.last() {
+            self.check_expression(last);
+        }
+
+        self.visit_expr(cond);
+        self.visit_block(body);
+    }
+
+    fn visit_expr_for_in(&mut self, dest: &LetDestination, iteree: &Expression, body: &Block) {
+        if let Some(last) = body.exprs.last() {
+            self.check_expression(last);
+        }
+
+        self.visit_dest(dest);
+        self.visit_expr(iteree);
+        self.visit_block(body);
     }
 }

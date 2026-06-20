@@ -1,6 +1,6 @@
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::env::Env;
-use crate::parser::ast::{Expression, Expression_, ToplevelItem};
+use crate::parser::ast::{Block, Expression, Expression_, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
@@ -33,11 +33,6 @@ impl<'a> UnusedLiteralVisitor<'a> {
     }
 
     fn check_expression(&mut self, expr: &Expression) {
-        // Only check expressions whose values are not used
-        if expr.value_is_used {
-            return;
-        }
-
         let is_literal = matches!(
             &expr.expr_,
             Expression_::IntLiteral(_)
@@ -95,8 +90,19 @@ impl<'a> UnusedLiteralVisitor<'a> {
 }
 
 impl Visitor for UnusedLiteralVisitor<'_> {
-    fn visit_expr(&mut self, expr: &Expression) {
-        self.check_expression(expr);
-        self.visit_expr_(&expr.expr_);
+    fn visit_block(&mut self, block: &Block) {
+        let exprs_len = block.exprs.len();
+        for (i, expr) in block.exprs.iter().enumerate() {
+            // A literal written as a statement (any expression in a
+            // block except the last) has its value discarded, so it
+            // serves no purpose. The final expression is the block's
+            // value, so we leave it alone.
+            let is_last = i + 1 == exprs_len;
+            if !is_last {
+                self.check_expression(expr);
+            }
+
+            self.visit_expr(expr);
+        }
     }
 }

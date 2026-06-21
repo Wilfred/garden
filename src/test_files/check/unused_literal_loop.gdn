@@ -1,0 +1,32 @@
+public fun example() {
+  let i = 0
+  while i < 3 {
+    i += 1
+    42
+  }
+
+  for _ in [1, 2, 3] {
+    "hello"
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Unused value.
+// 
+// -| src/test_files/check/unused_literal_loop.gdn:5:5
+// 3|   while i < 3 {
+// 4|     i += 1
+// 5|     42
+// 6|   } ^^
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/unused_literal_loop.gdn:9:5
+//  8|   for _ in [1, 2, 3] {
+//  9|     "hello"
+// 10|   } ^^^^^^^
+// 11| }
+
+// expected stderr: 2 issues can be fixed automatically (use `--fix`).

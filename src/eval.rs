@@ -6403,8 +6403,7 @@ fn eval_expr(
     expr_state: &mut ExpressionState,
 ) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
     let expr_position = outer_expr.position.clone();
-    let expr_value_is_used =
-        outer_expr.value_is_used || env.stop_at_expr_id.as_ref() == Some(&outer_expr.id);
+    let expr_value_is_used = outer_expr.value_is_used;
 
     match &outer_expr.expr_ {
         Expression_::Match(scrutinee, cases) => match expr_state {

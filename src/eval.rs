@@ -6396,6 +6396,57 @@ fn eval_built_in_method_call(
 
 /// Evaluate `outer_expr`. If it's a function call, return the new
 /// stack frame.
+/// Evaluate `subexprs`, then combine the resulting values with
+/// `compute`. This captures the two-phase shape shared by the compound
+/// expression arms of the explicit-stack evaluator, keeping the
+/// operand-stack discipline correct by construction.
+///
+/// On the first visit (`expr_state` is not `EvaluatedSubexpressions`)
+/// this schedules each subexpression for evaluation, re-schedules
+/// `outer_expr` as `EvaluatedSubexpressions`, and returns `None`.
+///
+/// On the second visit it pops one value per subexpression, calls
+/// `compute` with those values (ordered to match `subexprs`), pushes
+/// the result iff `expr_value_is_used`, and returns `Some(())`.
+fn eval_subexprs_then(
+    env: &mut Env,
+    expr_state: &ExpressionState,
+    outer_expr: &Rc<Expression>,
+    subexprs: &[Rc<Expression>],
+    expr_value_is_used: bool,
+    compute: impl FnOnce(&mut Env, Vec<Value>) -> Result<Value, (RestoreValues, EvalError)>,
+) -> Result<Option<()>, (RestoreValues, EvalError)> {
+    if expr_state.done_subexpressions() {
+        // The subexpressions were scheduled in order, so they evaluate
+        // right-to-left and their values are popped left-to-right.
+        let mut values = Vec::with_capacity(subexprs.len());
+        for _ in 0..subexprs.len() {
+            values.push(
+                env.pop_value()
+                    .expect("Value stack should have sufficient items for the subexpressions"),
+            );
+        }
+
+        let result = compute(env, values)?;
+        if expr_value_is_used {
+            env.push_value(result);
+        }
+
+        Ok(Some(()))
+    } else {
+        env.push_expr_to_eval(
+            ExpressionState::EvaluatedSubexpressions,
+            Rc::clone(outer_expr),
+        );
+
+        for sub in subexprs {
+            env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(sub));
+        }
+
+        Ok(None)
+    }
+}
+
 fn eval_expr(
     env: &mut Env,
     session: &Session,
@@ -6620,112 +6671,98 @@ fn eval_expr(
             }
         }
         Expression_::ListLiteral(items) => {
-            if expr_state.done_subexpressions() {
-                let mut list_values: rpds::Vector<Value> = rpds::Vector::new();
-                let mut element_type = Type::no_value();
+            let subexprs: Vec<Rc<Expression>> =
+                items.iter().map(|item| Rc::clone(&item.expr)).collect();
 
-                for _ in 0..items.len() {
-                    let element = env
-                        .pop_value()
-                        .expect("Value stack should have sufficient items for the list literal");
-                    // TODO: check that all elements are of a compatible type.
-                    // [1, None] should be an error.
-                    element_type = Type::from_value(&element);
-                    list_values.push_back_mut(element);
-                }
+            eval_subexprs_then(
+                env,
+                expr_state,
+                &outer_expr,
+                &subexprs,
+                expr_value_is_used,
+                |_env, values| {
+                    let mut list_values: rpds::Vector<Value> = rpds::Vector::new();
+                    let mut element_type = Type::no_value();
 
-                if expr_value_is_used {
-                    env.push_value(Value::new(Value_::List {
+                    for element in values {
+                        // TODO: check that all elements are of a compatible type.
+                        // [1, None] should be an error.
+                        element_type = Type::from_value(&element);
+                        list_values.push_back_mut(element);
+                    }
+
+                    Ok(Value::new(Value_::List {
                         items: list_values,
                         elem_type: element_type,
-                    }));
-                }
-            } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedSubexpressions,
-                    Rc::clone(&outer_expr),
-                );
-
-                for item in items.iter() {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(&item.expr));
-                }
-            }
+                    }))
+                },
+            )?;
         }
         Expression_::DictLiteral(item_exprs) => {
-            if expr_state.done_subexpressions() {
-                let mut items: rpds::HashTrieMap<String, Value> = rpds::HashTrieMap::new();
-                let mut value_type = Type::no_value();
-
-                for kv in item_exprs {
-                    // The evaluated value of key-value pair.
-                    let value_value = env
-                        .pop_value()
-                        .expect("Value stack should have sufficient items for the dict literal");
-
-                    // TODO: check that all elements are of a compatible type.
-                    // Dict[1 => 1, 2 => ""] should be a runtime error.
-                    value_type = Type::from_value(&value_value);
-
-                    let key_value = env
-                        .pop_value()
-                        .expect("Value stack should have sufficient items for the dict literal");
-
-                    let key_str = check_string(
-                        &key_value,
-                        &kv.key.position,
-                        // TODO: set saved_values properly here.
-                        vec![],
-                        env,
-                    )?;
-
-                    items.insert_mut(key_str.clone(), value_value);
-                }
-
-                if expr_value_is_used {
-                    env.push_value(Value::new(Value_::Dict { items, value_type }));
-                }
-            } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedSubexpressions,
-                    Rc::clone(&outer_expr),
-                );
-
-                for kv in item_exprs.iter() {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(&kv.value));
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(&kv.key));
-                }
+            // Schedule the value before the key for each pair, matching
+            // the order the values are consumed below.
+            let mut subexprs: Vec<Rc<Expression>> = Vec::with_capacity(item_exprs.len() * 2);
+            for kv in item_exprs {
+                subexprs.push(Rc::clone(&kv.value));
+                subexprs.push(Rc::clone(&kv.key));
             }
+
+            eval_subexprs_then(
+                env,
+                expr_state,
+                &outer_expr,
+                &subexprs,
+                expr_value_is_used,
+                |env, values| {
+                    let mut items: rpds::HashTrieMap<String, Value> = rpds::HashTrieMap::new();
+                    let mut value_type = Type::no_value();
+
+                    let mut values = values.into_iter();
+                    for kv in item_exprs {
+                        // The evaluated value of key-value pair.
+                        let value_value = values.next().expect(
+                            "Value stack should have sufficient items for the dict literal",
+                        );
+
+                        // TODO: check that all elements are of a compatible type.
+                        // Dict[1 => 1, 2 => ""] should be a runtime error.
+                        value_type = Type::from_value(&value_value);
+
+                        let key_value = values.next().expect(
+                            "Value stack should have sufficient items for the dict literal",
+                        );
+
+                        let key_str = check_string(
+                            &key_value,
+                            &kv.key.position,
+                            // TODO: set saved_values properly here.
+                            vec![],
+                            env,
+                        )?;
+
+                        items.insert_mut(key_str.clone(), value_value);
+                    }
+
+                    Ok(Value::new(Value_::Dict { items, value_type }))
+                },
+            )?;
         }
         Expression_::TupleLiteral(items) => {
-            if expr_state.done_subexpressions() {
-                let mut items_values: Vec<Value> = Vec::with_capacity(items.len());
-                let mut item_types: Vec<Type> = Vec::with_capacity(items.len());
+            eval_subexprs_then(
+                env,
+                expr_state,
+                &outer_expr,
+                items,
+                expr_value_is_used,
+                |_env, values| {
+                    let item_types: Vec<Type> = values.iter().map(Type::from_value).collect();
 
-                for _ in 0..items.len() {
-                    let element = env
-                        .pop_value()
-                        .expect("Value stack should have sufficient items for the tuple literal");
-
-                    item_types.push(Type::from_value(&element));
-                    items_values.push(element);
-                }
-
-                if expr_value_is_used {
-                    env.push_value(Value::new(Value_::Tuple {
-                        items: items_values,
+                    Ok(Value::new(Value_::Tuple {
+                        items: values,
                         item_types,
-                    }));
-                }
-            } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedSubexpressions,
-                    Rc::clone(&outer_expr),
-                );
-
-                for item in items.iter() {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(item));
-                }
-            }
+                    }))
+                },
+            )?;
         }
         Expression_::StructLiteral(type_sym, field_exprs) => {
             if expr_state.done_subexpressions() {

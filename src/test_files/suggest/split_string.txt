@@ -1,0 +1,24 @@
+// Splitting a string on a separator should suggest the `split` method.
+input: "hello world"
+input: " "
+output: ["hello", "world"]
+
+// args: suggest
+// expected stdout:
+// {
+//   "error": null,
+//   "inputs": [
+//     "\"hello world\"",
+//     "\" \""
+//   ],
+//   "output": "[\"hello\", \"world\"]",
+//   "suggestions": [
+//     {
+//       "kind": "method",
+//       "name": "split",
+//       "call": "\"hello world\".split(\" \")",
+//       "signature": "(this: String, needle: String): List<String>"
+//     }
+//   ]
+// }
+

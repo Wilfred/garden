@@ -1,0 +1,12 @@
+input: 1 +
+output: 2
+
+// args: suggest
+// expected stdout:
+// {
+//   "error": "Could not evaluate input `1 +`: Expected an expression after this.",
+//   "inputs": [],
+//   "output": null,
+//   "suggestions": []
+// }
+

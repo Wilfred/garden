@@ -6758,24 +6758,22 @@ fn eval_expr(
             )?;
         }
         Expression_::StructLiteral(type_sym, field_exprs) => {
-            if expr_state.done_subexpressions() {
-                eval_struct_value(
-                    env,
-                    &outer_expr.position,
-                    expr_value_is_used,
-                    type_sym.clone(),
-                    field_exprs,
-                )?;
-            } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedSubexpressions,
-                    Rc::clone(&outer_expr),
-                );
-
-                for (_, field_expr) in field_exprs.iter() {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(field_expr));
-                }
-            }
+            eval_subexprs_then(
+                env,
+                expr_state,
+                &outer_expr,
+                field_exprs.iter().map(|(_, field_expr)| field_expr),
+                expr_value_is_used,
+                |env, values| {
+                    eval_struct_value(
+                        env,
+                        &outer_expr.position,
+                        type_sym.clone(),
+                        field_exprs,
+                        values,
+                    )
+                },
+            )?;
         }
         Expression_::Variable(name_sym) => {
             if let Some(value) = get_var(name_sym, env) {
@@ -7492,10 +7490,10 @@ fn eval_dot_access(
 fn eval_struct_value(
     env: &mut Env,
     outer_expr_pos: &Position,
-    expr_value_is_used: bool,
     type_symbol: TypeSymbol,
     field_exprs: &[(Symbol, Rc<Expression>)],
-) -> Result<(), (RestoreValues, EvalError)> {
+    field_values: Vec<Value>,
+) -> Result<Value, (RestoreValues, EvalError)> {
     let Some(type_info) = env.get_type_def(&type_symbol.name) else {
         return Err((
             RestoreValues(vec![]),
@@ -7534,11 +7532,7 @@ fn eval_struct_value(
     let mut fields = vec![];
 
     let type_bindings = env.current_frame().type_bindings.clone();
-    for (field_sym, field_expr) in field_exprs {
-        let field_value = env
-            .pop_value()
-            .expect("Value stack should have sufficient items for the struct literal");
-
+    for ((field_sym, field_expr), field_value) in field_exprs.iter().zip(field_values) {
         let Some(field_info) = expected_fields_by_name.remove(&field_sym.name) else {
             // TODO: this would be a good candidate for additional
             // positions, in this case the definition site of the
@@ -7618,15 +7612,11 @@ fn eval_struct_value(
         args: type_args,
     };
 
-    if expr_value_is_used {
-        env.push_value(Value::new(Value_::Struct {
-            type_name: type_symbol.name,
-            fields,
-            runtime_type,
-        }));
-    }
-
-    Ok(())
+    Ok(Value::new(Value_::Struct {
+        type_name: type_symbol.name,
+        fields,
+        runtime_type,
+    }))
 }
 
 fn eval_match_cases(

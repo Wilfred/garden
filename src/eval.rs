@@ -6394,31 +6394,28 @@ fn eval_built_in_method_call(
     Ok(())
 }
 
-/// Evaluate `outer_expr`. If it's a function call, return the new
-/// stack frame.
-/// Evaluate `subexprs`, then combine the resulting values with
-/// `compute`. This captures the two-phase shape shared by the compound
-/// expression arms of the explicit-stack evaluator, keeping the
-/// operand-stack discipline correct by construction.
+/// Evaluate `subexprs`, then build a result from their values with
+/// `compute`. This is the two-phase shape shared by the fold-like
+/// compound expression arms (list, tuple and dict literals), keeping
+/// the operand-stack bookkeeping correct by construction.
 ///
-/// On the first visit (`expr_state` is not `EvaluatedSubexpressions`)
-/// this schedules each subexpression for evaluation, re-schedules
-/// `outer_expr` as `EvaluatedSubexpressions`, and returns `None`.
+/// First visit: schedule `outer_expr` to run again once its
+/// subexpressions are evaluated, then schedule the subexpressions.
 ///
-/// On the second visit it pops one value per subexpression, calls
-/// `compute` with those values (ordered to match `subexprs`), pushes
-/// the result iff `expr_value_is_used`, and returns `Some(())`.
-fn eval_subexprs_then(
+/// Second visit: pop one value per subexpression (ordered to match
+/// `subexprs`), run `compute`, and push its result iff
+/// `expr_value_is_used`.
+fn eval_subexprs_then<'a>(
     env: &mut Env,
     expr_state: &ExpressionState,
     outer_expr: &Rc<Expression>,
-    subexprs: &[Rc<Expression>],
+    subexprs: impl ExactSizeIterator<Item = &'a Rc<Expression>>,
     expr_value_is_used: bool,
     compute: impl FnOnce(&mut Env, Vec<Value>) -> Result<Value, (RestoreValues, EvalError)>,
-) -> Result<Option<()>, (RestoreValues, EvalError)> {
+) -> Result<(), (RestoreValues, EvalError)> {
     if expr_state.done_subexpressions() {
-        // The subexpressions were scheduled in order, so they evaluate
-        // right-to-left and their values are popped left-to-right.
+        // The subexpressions were scheduled in order, so they evaluated
+        // right-to-left; popping yields their values left-to-right.
         let mut values = Vec::with_capacity(subexprs.len());
         for _ in 0..subexprs.len() {
             values.push(
@@ -6431,8 +6428,6 @@ fn eval_subexprs_then(
         if expr_value_is_used {
             env.push_value(result);
         }
-
-        Ok(Some(()))
     } else {
         env.push_expr_to_eval(
             ExpressionState::EvaluatedSubexpressions,
@@ -6442,11 +6437,13 @@ fn eval_subexprs_then(
         for sub in subexprs {
             env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(sub));
         }
-
-        Ok(None)
     }
+
+    Ok(())
 }
 
+/// Evaluate `outer_expr`. If it's a function call, return the new
+/// stack frame.
 fn eval_expr(
     env: &mut Env,
     session: &Session,
@@ -6671,14 +6668,11 @@ fn eval_expr(
             }
         }
         Expression_::ListLiteral(items) => {
-            let subexprs: Vec<Rc<Expression>> =
-                items.iter().map(|item| Rc::clone(&item.expr)).collect();
-
             eval_subexprs_then(
                 env,
                 expr_state,
                 &outer_expr,
-                &subexprs,
+                items.iter().map(|item| &item.expr),
                 expr_value_is_used,
                 |_env, values| {
                     let mut list_values: rpds::Vector<Value> = rpds::Vector::new();
@@ -6699,19 +6693,18 @@ fn eval_expr(
             )?;
         }
         Expression_::DictLiteral(item_exprs) => {
-            // Schedule the value before the key for each pair, matching
+            // Schedule the value before the key of each pair, matching
             // the order the values are consumed below.
-            let mut subexprs: Vec<Rc<Expression>> = Vec::with_capacity(item_exprs.len() * 2);
-            for kv in item_exprs {
-                subexprs.push(Rc::clone(&kv.value));
-                subexprs.push(Rc::clone(&kv.key));
-            }
+            let subexprs: Vec<&Rc<Expression>> = item_exprs
+                .iter()
+                .flat_map(|kv| [&kv.value, &kv.key])
+                .collect();
 
             eval_subexprs_then(
                 env,
                 expr_state,
                 &outer_expr,
-                &subexprs,
+                subexprs.into_iter(),
                 expr_value_is_used,
                 |env, values| {
                     let mut items: rpds::HashTrieMap<String, Value> = rpds::HashTrieMap::new();
@@ -6752,7 +6745,7 @@ fn eval_expr(
                 env,
                 expr_state,
                 &outer_expr,
-                items,
+                items.iter(),
                 expr_value_is_used,
                 |_env, values| {
                     let item_types: Vec<Type> = values.iter().map(Type::from_value).collect();

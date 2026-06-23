@@ -18,6 +18,7 @@ use rustc_hash::FxHashMap;
 use vfs::VfsPathBuf;
 use visitor::MutVisitor;
 
+use crate::diagnostics::Autofix;
 use crate::{msgcode, msglink, msgtext};
 
 // TODO: implement precedence using Pratt parsing, as discussed in
@@ -31,6 +32,8 @@ pub(crate) enum ParseError {
         /// Extra information that's relevant to why we have an error in the
         /// primary position.
         notes: Vec<(ErrorMessage, Position)>,
+        /// Autofixes that resolve this error, if any.
+        fixes: Vec<Autofix>,
     },
     Incomplete {
         message: ErrorMessage,
@@ -122,6 +125,7 @@ fn check_required_token<'a>(
                         msgtext!(" after this."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
                 ok = false;
 
@@ -186,6 +190,7 @@ fn parse_integer(
                         msgtext!("."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
 
                 Expression::new(
@@ -205,6 +210,7 @@ fn parse_integer(
                 msgtext!("."),
             ]),
             notes: vec![],
+            fixes: vec![],
         });
 
         // Choose an arbitrary value that's hopefully unlikely to
@@ -242,6 +248,7 @@ fn parse_float(
                 msgtext!("."),
             ]),
             notes: vec![],
+            fixes: vec![],
         });
 
         // Choose an arbitrary value that's hopefully unlikely to
@@ -313,6 +320,7 @@ fn parse_tuple_literal_or_parentheses(
                         msgtext!("."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
 
                 break;
@@ -420,6 +428,7 @@ fn parse_dict_literal_items(
                         msgtext!(" after this."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
 
                 continue;
@@ -521,6 +530,7 @@ fn parse_assert(
                 msgtext!("."),
             ]),
             notes: vec![],
+            fixes: vec![],
         });
 
         return Expression::new(position, Expression_::Invalid, id_gen.next());
@@ -742,6 +752,7 @@ fn unescape_string(token: &Token<'_>) -> (Vec<ParseError>, String) {
                             msgtext!(" are supported."),
                         ]),
                         notes: vec![],
+                        fixes: vec![],
                     });
 
                     // Treat \z as \\z.
@@ -838,6 +849,7 @@ fn parse_simple_expression(
             position: error_position,
             message: ErrorMessage(vec![msgtext!("Expected an expression after this.")]),
             notes: vec![],
+            fixes: vec![],
         });
 
         return Expression::new(token.position, Expression_::Invalid, id_gen.next());
@@ -1108,6 +1120,7 @@ fn parse_comma_separated_exprs(
                         msgtext!(" after this."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
 
                 // Attempt to recover a reasonable AST.
@@ -1263,6 +1276,7 @@ fn parse_expression(
                             "Expected a method or field name after this."
                         )]),
                         notes: vec![],
+                        fixes: vec![],
                     });
 
                     let variable = placeholder_symbol(token.position, id_gen);
@@ -1300,6 +1314,7 @@ fn parse_expression(
                             "Expected a namespace symbol after this."
                         )]),
                         notes: vec![],
+                        fixes: vec![],
                     });
 
                     let variable = placeholder_symbol(token.position, id_gen);
@@ -1499,6 +1514,7 @@ fn parse_definition(
             position: token.position,
             message: ErrorMessage(vec![Text("Expected a definition".to_owned())]),
             notes: vec![],
+            fixes: vec![],
         });
         return None;
     }
@@ -1550,6 +1566,7 @@ fn parse_enum_body(
                         msgtext!("."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
                 break;
             }
@@ -1575,7 +1592,48 @@ fn parse_enum_body(
         }
     }
 
-    variants
+    // Drop duplicate variants, reporting an error with an autofix that
+    // removes the later definition.
+    let variant_ends: Vec<Position> = variants
+        .iter()
+        .map(|v| match &v.comma {
+            Some(comma) => comma.clone(),
+            None => match &v.payload_hint {
+                Some(hint) => hint.position.clone(),
+                None => v.name_sym.position.clone(),
+            },
+        })
+        .collect();
+    let mut seen: FxHashMap<String, Position> = FxHashMap::default();
+    let mut deduped = Vec::with_capacity(variants.len());
+
+    for (i, variant) in variants.into_iter().enumerate() {
+        let name = variant.name_sym.name.text.clone();
+        if let Some(prev_pos) = seen.get(&name) {
+            diagnostics.push(ParseError::Invalid {
+                position: variant.name_sym.position.clone(),
+                message: ErrorMessage(vec![
+                    msgtext!("Duplicate enum variant "),
+                    msgcode!("{}", name),
+                    msgtext!("."),
+                ]),
+                notes: vec![(
+                    ErrorMessage(vec![msgtext!("The previous occurrence is here.")]),
+                    prev_pos.clone(),
+                )],
+                fixes: vec![Autofix {
+                    description: format!("Remove duplicate variant `{name}`"),
+                    position: removal_span(&variant_ends[i - 1], &variant_ends[i]),
+                    new_text: String::new(),
+                }],
+            });
+        } else {
+            seen.insert(name, variant.name_sym.position.clone());
+            deduped.push(variant);
+        }
+    }
+
+    deduped
 }
 
 /// Parse enum variant, e.g. `Some(T)`.
@@ -1715,6 +1773,7 @@ fn parse_test(
                     msgtext!("."),
                 ]),
                 notes: vec![],
+                fixes: vec![],
             });
         }
     }
@@ -1852,6 +1911,7 @@ fn parse_type_arguments(
                         msgtext!("."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
                 break token.position;
             }
@@ -1915,6 +1975,7 @@ fn parse_type_params(
                         msgtext!("."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
                 break;
             }
@@ -2046,6 +2107,7 @@ fn parse_type_hint(
                 msgtext!(" instead."),
             ]),
             notes: vec![],
+            fixes: vec![],
         });
     }
 
@@ -2088,6 +2150,7 @@ fn parse_colon_and_hint_opt(
                 msgtext!(" before this type hint."),
             ]),
             notes: vec![],
+            fixes: vec![],
         });
 
         let type_hint = parse_type_hint(tokens, id_gen, diagnostics);
@@ -2161,6 +2224,7 @@ fn parse_parameters(
                         msgtext!("."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
                 break;
             }
@@ -2207,6 +2271,7 @@ fn parse_parameters(
                     ErrorMessage(vec![msgtext!("The previous occurrence is here.")]),
                     (*prev_pos).clone(),
                 )],
+                fixes: vec![],
             });
         } else {
             seen.insert(param_name, &param.symbol.position);
@@ -2217,6 +2282,24 @@ fn parse_parameters(
         open_paren: open_paren.position.clone(),
         params,
         close_paren: close_paren.position.clone(),
+    }
+}
+
+/// A position spanning from the end of `prev` to the end of `last`.
+///
+/// When `prev` and `last` are the comma positions of two consecutive
+/// list items, deleting this span removes the second item along with
+/// its own trailing comma and the whitespace before it.
+fn removal_span(prev: &Position, last: &Position) -> Position {
+    Position {
+        start_offset: prev.end_offset,
+        end_offset: last.end_offset,
+        line_number: prev.end_line_number,
+        end_line_number: last.end_line_number,
+        column: prev.end_column,
+        end_column: last.end_column,
+        path: Rc::clone(&last.path),
+        vfs_path: last.vfs_path.clone(),
     }
 }
 
@@ -2276,6 +2359,7 @@ fn parse_struct_fields(
                         msgtext!("."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
                 break;
             }
@@ -2295,9 +2379,50 @@ fn parse_struct_fields(
         }
     }
 
-    // TODO: error on duplicate fields
+    // Drop duplicate fields, reporting an error with an autofix that
+    // removes the later definition.
+    let field_ends: Vec<Position> = fields
+        .iter()
+        .map(|f| match &f.comma {
+            Some(comma) => comma.clone(),
+            None => f.hint.position.clone(),
+        })
+        .collect();
+    let mut seen: FxHashMap<String, Position> = FxHashMap::default();
+    let mut deduped = Vec::with_capacity(fields.len());
 
-    fields
+    for (i, field) in fields.into_iter().enumerate() {
+        if field.sym.name.is_underscore() {
+            deduped.push(field);
+            continue;
+        }
+
+        let name = field.sym.name.text.clone();
+        if let Some(prev_pos) = seen.get(&name) {
+            diagnostics.push(ParseError::Invalid {
+                position: field.sym.position.clone(),
+                message: ErrorMessage(vec![
+                    msgtext!("Duplicate field "),
+                    msgcode!("{}", name),
+                    msgtext!("."),
+                ]),
+                notes: vec![(
+                    ErrorMessage(vec![msgtext!("The previous occurrence is here.")]),
+                    prev_pos.clone(),
+                )],
+                fixes: vec![Autofix {
+                    description: format!("Remove duplicate field `{name}`"),
+                    position: removal_span(&field_ends[i - 1], &field_ends[i]),
+                    new_text: String::new(),
+                }],
+            });
+        } else {
+            seen.insert(name, field.sym.position.clone());
+            deduped.push(field);
+        }
+    }
+
+    deduped
 }
 
 fn parse_block(
@@ -2624,6 +2749,7 @@ fn parse_method(
                 msgtext!("."),
             ]),
             notes: vec![],
+            fixes: vec![],
         });
 
         // Use placeholders so we can continue parsing.
@@ -2834,6 +2960,7 @@ fn parse_let_destination(
                         ErrorMessage(vec![msgtext!("The previous occurrence is here.")]),
                         (*prev_pos).clone(),
                     )],
+                    fixes: vec![],
                 });
             } else {
                 seen.insert(name, &symbol.position);
@@ -2878,12 +3005,14 @@ fn parse_symbol(
                     msgtext!("."),
                 ]),
                 notes: vec![],
+                fixes: vec![],
             });
         } else {
             diagnostics.push(ParseError::Invalid {
                 position: prev_token_pos,
                 message: ErrorMessage(vec![msgtext!("Expected a {description} after this.")]),
                 notes: vec![],
+                fixes: vec![],
             });
         }
         tokens.unpop();
@@ -2909,6 +3038,7 @@ fn parse_symbol(
                         msgtext!(" is a keyword and cannot be used as a variable name."),
                     ]),
                     notes: vec![],
+                    fixes: vec![],
                 });
             } else {
                 // We expected a name, but we just saw a keyword on a later
@@ -2925,6 +3055,7 @@ fn parse_symbol(
                     position: prev_token_pos,
                     message: ErrorMessage(vec![msgtext!("Expected a symbol after this.")]),
                     notes: vec![],
+                    fixes: vec![],
                 });
                 tokens.unpop();
             }
@@ -3012,6 +3143,7 @@ fn parse_assign_update(
                     msgtext!("."),
                 ]),
                 notes: vec![],
+                fixes: vec![],
             });
             AssignUpdateKind::Add
         }

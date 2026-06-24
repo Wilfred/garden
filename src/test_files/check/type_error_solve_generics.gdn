@@ -13,10 +13,11 @@ public fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected an `Option<Int>` but got an `Option<String>`.
+// Error: Expected an `Option<String>` but got an `Option<Int>`.
 // 
-// --| src/test_files/check/type_error_solve_generics.gdn:10:19
+// --| src/test_files/check/type_error_solve_generics.gdn:10:32
 //  8|     // takes_options(Some(123), None)
 //  9| 
 // 10|     takes_options(Some("foo"), Some(123))
-// 11| }                 ^^^^^^^^^^^
+// 11| }                              ^^^^^^^^^
+

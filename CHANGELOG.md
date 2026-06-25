@@ -2,6 +2,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Fix precedence of `2 + 1 * 3.**
 
+## Language
+
+Added `&` and `|` operators for bitwise AND and OR on `Int` values.
+
 ## Standard Library
 
 `__shell::run()` now returns `(Int, String, String)`, always providing

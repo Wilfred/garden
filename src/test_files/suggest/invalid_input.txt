@@ -1,5 +1,5 @@
-input: 1 +
-output: 2
+// An input that isn't a valid Garden expression produces an error.
+{"inputs": ["1 +"], "output": "2"}
 
 // args: suggest
 // expected stdout:

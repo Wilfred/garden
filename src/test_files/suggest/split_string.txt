@@ -1,7 +1,5 @@
 // Splitting a string on a separator should suggest the `split` method.
-input: "hello world"
-input: " "
-output: ["hello", "world"]
+{"inputs": ["\"hello world\"", "\" \""], "output": "[\"hello\", \"world\"]"}
 
 // args: suggest
 // expected stdout:
@@ -17,7 +15,8 @@ output: ["hello", "world"]
 //       "kind": "method",
 //       "name": "split",
 //       "call": "\"hello world\".split(\" \")",
-//       "signature": "(this: String, needle: String): List<String>"
+//       "signature": "(this: String, needle: String): List<String>",
+//       "constants": []
 //     }
 //   ]
 // }

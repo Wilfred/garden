@@ -288,13 +288,11 @@ enum CliCommands {
     /// Given example inputs and a desired output, find functions and
     /// methods whose call produces that output. Returns JSON.
     ///
-    /// The file lists one example per line, either `input: <expr>` or
-    /// `output: <expr>`. For example:
+    /// The file is a JSON request where each input and the output is a
+    /// Garden expression. For example:
     ///
     /// ```text
-    /// input: "hello world"
-    /// input: " "
-    /// output: ["hello", "world"]
+    /// {"inputs": ["\"hello world\"", "\" \""], "output": "[\"hello\", \"world\"]"}
     /// ```
     Suggest { path: PathBuf },
     /// Start the Language Server Protocol (LSP) server.

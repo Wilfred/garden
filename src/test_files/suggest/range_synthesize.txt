@@ -1,0 +1,25 @@
+// The output needs a `0` argument that isn't among the inputs, so it
+// is synthesized.
+{"inputs": ["5"], "output": "[0, 1, 2, 3, 4]"}
+
+// args: suggest
+// expected stdout:
+// {
+//   "error": null,
+//   "inputs": [
+//     "5"
+//   ],
+//   "output": "[0, 1, 2, 3, 4]",
+//   "suggestions": [
+//     {
+//       "kind": "function",
+//       "name": "range",
+//       "call": "range(0, 5)",
+//       "signature": "(i: Int, j: Int): List<Int>",
+//       "constants": [
+//         "0"
+//       ]
+//     }
+//   ]
+// }
+

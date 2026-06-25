@@ -1,7 +1,5 @@
 // The larger of two integers.
-input: 3
-input: 8
-output: 8
+{"inputs": ["3", "8"], "output": "8"}
 
 // args: suggest
 // expected stdout:
@@ -17,7 +15,8 @@ output: 8
 //       "kind": "function",
 //       "name": "max",
 //       "call": "max(3, 8)",
-//       "signature": "(x: Int, y: Int): Int"
+//       "signature": "(x: Int, y: Int): Int",
+//       "constants": []
 //     }
 //   ]
 // }

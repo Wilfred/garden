@@ -1,7 +1,6 @@
 // Nothing turns an integer into this string, so there are no
 // suggestions.
-input: 5
-output: "banana"
+{"inputs": ["5"], "output": "\"banana\""}
 
 // args: suggest
 // expected stdout:

@@ -3036,6 +3036,11 @@ fn check_match_exhaustive(
 
     if !enum_info.variants.is_empty() {
         let mut underscore_pos: Option<&Position> = None;
+        // The `_` case's block and the end of the case before it, used
+        // to delete a redundant `_` case (including its leading
+        // separator).
+        let mut underscore_block: Option<&Block> = None;
+        let mut underscore_prev_end: Option<&Position> = None;
         // The end of the previous case's block, used to delete an
         // unreachable case (including its leading separator).
         let mut prev_case_end: Option<&Position> = None;
@@ -3087,12 +3092,15 @@ fn check_match_exhaustive(
                 continue;
             }
 
-            prev_case_end = Some(&block.close_brace);
-
             if pattern.variant_sym.name.is_underscore() {
                 underscore_pos = Some(&pattern.variant_sym.position);
+                underscore_block = Some(block);
+                underscore_prev_end = prev_case_end;
+                prev_case_end = Some(&block.close_brace);
                 continue;
             }
+
+            prev_case_end = Some(&block.close_brace);
 
             match variants_remaining.remove(&pattern.variant_sym.name) {
                 Some(_) => {
@@ -3113,7 +3121,43 @@ fn check_match_exhaustive(
         }
 
         // If any cases are _, this match is exhaustive.
-        if underscore_pos.is_some() {
+        if let Some(underscore_pos) = underscore_pos {
+            // If every variant has already been matched explicitly, the
+            // `_` case can never be reached and is redundant.
+            if variants_remaining.is_empty() {
+                let fixes = match (underscore_prev_end, underscore_block) {
+                    (Some(prev_end), Some(block)) => vec![Autofix {
+                        description: "Remove redundant case".to_owned(),
+                        position: Position {
+                            start_offset: prev_end.end_offset,
+                            end_offset: block.close_brace.end_offset,
+                            line_number: prev_end.end_line_number,
+                            end_line_number: block.close_brace.end_line_number,
+                            column: prev_end.end_column,
+                            end_column: block.close_brace.end_column,
+                            path: Rc::clone(&block.close_brace.path),
+                            vfs_path: block.close_brace.vfs_path.clone(),
+                        },
+                        new_text: String::new(),
+                    }],
+                    _ => vec![],
+                };
+
+                diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    fixes,
+                    severity: Severity::Warning,
+                    message: ErrorMessage(vec![
+                        msgtext!("This "),
+                        msgcode!("_"),
+                        msgtext!(" case is redundant, as all the cases of "),
+                        msgcode!("{}", type_name),
+                        msgtext!(" are already matched."),
+                    ]),
+                    position: underscore_pos.clone(),
+                });
+            }
+
             return;
         }
     }

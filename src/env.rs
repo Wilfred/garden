@@ -154,6 +154,13 @@ pub(crate) struct Env {
     /// If set, print the call stack every 10,000 ticks for basic
     /// profiling.
     pub(crate) profile: bool,
+
+    /// The maximum number of bindings blocks present in any single
+    /// stack frame at any point during evaluation (a high-water mark).
+    /// It grows with lexical nesting. Used only by tests, see
+    /// `test_loops_do_not_leak_bindings_blocks`.
+    #[cfg(test)]
+    pub(crate) peak_binding_depth: usize,
 }
 
 impl Env {
@@ -201,6 +208,8 @@ impl Env {
             initial_state: None,
             cli_args: vec![],
             profile: false,
+            #[cfg(test)]
+            peak_binding_depth: 0,
         };
 
         let prelude_namespace = fresh_prelude(&mut env, &prelude_vfs_path);
@@ -383,6 +392,22 @@ impl Env {
 
     pub(crate) fn current_frame_mut(&mut self) -> &mut StackFrame {
         self.stack.0.last_mut().unwrap()
+    }
+
+    /// Push a new bindings block onto the current stack frame.
+    ///
+    /// All bindings blocks entered during evaluation should go through
+    /// here so that, in test builds, `peak_binding_depth` reflects the
+    /// true maximum nesting.
+    pub(crate) fn push_binding_block(&mut self) {
+        let frame = self.current_frame_mut();
+        frame.bindings.push_block();
+
+        #[cfg(test)]
+        {
+            let depth = frame.bindings.block_bindings.len();
+            self.peak_binding_depth = self.peak_binding_depth.max(depth);
+        }
     }
 
     /// If `path` is a subdirectory of the current project, convert it

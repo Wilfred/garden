@@ -68,6 +68,7 @@ mod rename;
 mod run_code_blocks;
 mod sandboxed_playground;
 mod signature_help;
+mod suggest;
 mod syntax_check;
 mod syntax_highlighter;
 mod temp_built_in_files;
@@ -284,6 +285,16 @@ enum CliCommands {
     /// Run a Garden snippet in a sandbox and return the output as
     /// JSON.
     PlaygroundRun { path: PathBuf },
+    /// Given example inputs and a desired output, find functions and
+    /// methods whose call produces that output. Returns JSON.
+    ///
+    /// The file is a JSON request where each input and the output is a
+    /// Garden expression. For example:
+    ///
+    /// ```text
+    /// {"inputs": ["\"hello world\"", "\" \""], "output": "[\"hello\", \"world\"]"}
+    /// ```
+    Suggest { path: PathBuf },
     /// Start the Language Server Protocol (LSP) server.
     Lsp,
     /// Start an nREPL server, listening for clients over TCP.
@@ -695,6 +706,11 @@ fn main() {
                 interrupted,
                 trace_exprs,
             );
+        }
+        CliCommands::Suggest { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            suggest::run_suggest(&src, &abs_path, interrupted, trace_exprs);
         }
         CliCommands::Lsp => {
             init_tracing();
@@ -1136,6 +1152,11 @@ mod tests {
     #[test]
     fn reftest_sandboxed_test() -> TestResult<()> {
         run_reftests("sandboxed_test")
+    }
+
+    #[test]
+    fn reftest_suggest() -> TestResult<()> {
+        run_reftests("suggest")
     }
 
     #[test]

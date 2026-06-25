@@ -1629,7 +1629,7 @@ fn eval_if(
             eval_block(env, branch_value_used, else_body);
         } else {
             // Ensure we always push a bindings block.
-            env.current_frame_mut().bindings.push_block();
+            env.push_binding_block();
         }
     } else {
         return Err((
@@ -1752,7 +1752,7 @@ fn eval_for_in(
         // Push a bindings block and an EvaluatedSubexpressions
         // state so the loop expression evaluates to Unit and its
         // outer EvaluatedSubexpressions pops a balancing block.
-        env.current_frame_mut().bindings.push_block();
+        env.push_binding_block();
         env.push_expr_to_eval(
             ExpressionState::EvaluatedSubexpressions,
             Rc::clone(&outer_expr),
@@ -1763,18 +1763,12 @@ fn eval_for_in(
         return Ok(());
     }
 
-    // After each iteration's body, we want to pop the iteration's
-    // bindings block (pushed by `eval_block`), so schedule an
-    // EvaluatedSubexpressions state for this iteration.
+    // After this iteration's body, run a DoneRunBlock step (see the
+    // `ForIn` dispatch) that pops this iteration's bindings block
+    // (pushed by `eval_block`) before scheduling the next iteration,
+    // mirroring while loops.
     env.push_expr_to_eval(
-        ExpressionState::EvaluatedSubexpressions,
-        Rc::clone(&outer_expr),
-    );
-
-    // After an iteration the loop body, evaluate again. We don't
-    // re-evaluate the iteree expression though.
-    env.push_expr_to_eval(
-        ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
+        ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock),
         Rc::clone(&outer_expr),
     );
 
@@ -6514,21 +6508,40 @@ fn eval_expr(
                     // that we want to iterate over.
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(expr));
                 }
-                ExpressionState::PartiallyEvaluated(_) => {
-                    eval_for_in(
-                        env,
-                        expr_value_is_used,
-                        sym,
-                        &expr.position,
-                        Rc::clone(&outer_expr),
-                        body,
-                    )?;
+                ExpressionState::PartiallyEvaluated(block_state) => {
+                    match block_state {
+                        BlockState::WillRunBlock => {
+                            // Run the next iteration: bind the loop
+                            // variable, push a bindings block, and
+                            // evaluate the body (or terminate).
+                            eval_for_in(
+                                env,
+                                expr_value_is_used,
+                                sym,
+                                &expr.position,
+                                Rc::clone(&outer_expr),
+                                body,
+                            )?;
+                        }
+                        BlockState::DoneRunBlock => {
+                            // Finished an iteration's body. Pop the
+                            // bindings block it pushed, then schedule
+                            // the next iteration.
+                            env.current_frame_mut().bindings.pop_block();
+
+                            env.push_expr_to_eval(
+                                ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
+                                Rc::clone(&outer_expr),
+                            );
+                        }
+                        BlockState::NotBlock => unreachable!(),
+                    }
                 }
                 ExpressionState::EvaluatedSubexpressions => {
-                    // Pop the bindings block for this iteration (or
-                    // the terminal block pushed in `eval_for_in`).
-                    // The loop's overall value is pushed by
-                    // `eval_for_in` in the terminating branch.
+                    // Pop the terminal bindings block pushed in
+                    // `eval_for_in` when the loop finished. The loop's
+                    // overall value is pushed by `eval_for_in` in the
+                    // terminating branch.
                     env.current_frame_mut().bindings.pop_block();
                 }
             }
@@ -7247,9 +7260,9 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 }
 
 fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
-    let stack_frame = env.current_frame_mut();
-    stack_frame.bindings.push_block();
+    env.push_binding_block();
 
+    let stack_frame = env.current_frame_mut();
     let bindings_next_block = std::mem::take(&mut stack_frame.bindings_next_block);
     for (sym, expr) in bindings_next_block {
         stack_frame.bindings.add_new(&sym, expr);
@@ -7937,6 +7950,36 @@ mod tests {
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::new(Value_::Int(3)));
+    }
+
+    /// Evaluate a `for` loop that accumulates into an enclosing-scope
+    /// variable and return the peak bindings-block depth reached.
+    fn peak_binding_depth_for_loop(iterations: i64) -> usize {
+        let mut id_gen = IdGenerator::default();
+        let mut vfs = Vfs::default();
+        let src =
+            format!("let total = 0\nfor i in range(0, {iterations}) {{\n  total = total + i\n}}");
+        let exprs = parse_exprs_from_str(&src, &mut vfs, &mut id_gen);
+
+        let mut env = Env::new(id_gen, vfs);
+        eval_exprs(&exprs, &mut env).unwrap();
+        env.peak_binding_depth
+    }
+
+    #[test]
+    fn test_loops_do_not_leak_bindings_blocks() {
+        // The peak bindings-block depth depends only on lexical
+        // nesting, so a short loop and a long loop reach the same
+        // depth.
+        let small = peak_binding_depth_for_loop(10);
+        let large = peak_binding_depth_for_loop(10000);
+
+        assert_eq!(
+            small, large,
+            "peak binding depth grew with iteration count ({small} vs {large}), \
+             a loop is leaking a bindings block per iteration"
+        );
+        assert!(large < 8, "unexpectedly deep bindings nesting: {large}");
     }
 
     #[test]

@@ -4,5 +4,6 @@ test arithmetic {
 
 // args: playground-run
 // expected stdout:
-// {"error":null,"value":"Ran 1 test: it passed.\n"}
-// {"error":null,"value":"Unit"}
+// {"error":null,"value":"Ran 1 test: it passed.\n","type":null}
+// {"error":null,"value":"Unit","type":"Unit"}
+

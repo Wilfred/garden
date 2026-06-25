@@ -5,4 +5,5 @@ x + 3
 // args: playground-run
 // expected stdout:
 // {"printed":{"s":"hello world\n"}}
-// {"error":null,"value":"4"}
+// {"error":null,"value":"4","type":"Int"}
+

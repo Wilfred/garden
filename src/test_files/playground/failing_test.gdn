@@ -8,5 +8,6 @@ test add_one {
 
 // args: playground-run
 // expected stdout:
-// {"error":null,"value":"Failed: add_one src/test_files/playground/failing_test.gdn:6\n  Expected `100` but got `3`.\n\nRan 1 test: 0 passed and 1 failed.\n"}
-// {"error":null,"value":"Unit"}
+// {"error":null,"value":"Failed: add_one src/test_files/playground/failing_test.gdn:6\n  Expected `100` but got `3`.\n\nRan 1 test: 0 passed and 1 failed.\n","type":null}
+// {"error":null,"value":"Unit","type":"Unit"}
+

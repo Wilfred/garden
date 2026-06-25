@@ -11,6 +11,7 @@ use crate::env::Env;
 use crate::eval::{
     eval_toplevel_items, EvalError, ExceptionInfo, Session, StdoutJsonFormat, StdoutStderrMode,
 };
+use crate::garden_type::Type;
 use crate::parser::ast::IdGenerator;
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
@@ -21,6 +22,8 @@ use crate::values::Value;
 struct PlaygroundResponse {
     error: Option<String>,
     value: Option<String>,
+    #[serde(rename = "type")]
+    type_: Option<String>,
 }
 
 /// Run a Garden program in sandboxed mode and print the result as JSON.
@@ -65,14 +68,17 @@ pub(crate) fn run_sandboxed_playground(
                 items.push(PlaygroundResponse {
                     error: None,
                     value: Some(describe_tests(&env, &summary)),
+                    type_: None,
                 });
             }
 
             let last_value = summary.values.last().cloned().unwrap_or_else(Value::unit);
             let value_display = last_value.display(&env);
+            let value_type = Type::from_value(&last_value).to_string();
             items.push(PlaygroundResponse {
                 error: None,
                 value: Some(value_display),
+                type_: Some(value_type),
             });
 
             items
@@ -83,26 +89,32 @@ pub(crate) fn run_sandboxed_playground(
         })) => vec![PlaygroundResponse {
             error: Some(msg.as_string()),
             value: None,
+            type_: None,
         }],
         Err(EvalError::AssertionFailed(_, msg)) => vec![PlaygroundResponse {
             error: Some(msg.as_string()),
             value: None,
+            type_: None,
         }],
         Err(EvalError::Interrupted) => vec![PlaygroundResponse {
             error: Some("Interrupted".to_owned()),
             value: None,
+            type_: None,
         }],
         Err(EvalError::ReachedTickLimit(_)) => vec![PlaygroundResponse {
             error: Some("Reached the tick limit".to_owned()),
             value: None,
+            type_: None,
         }],
         Err(EvalError::ReachedStackLimit(_)) => vec![PlaygroundResponse {
             error: Some("Reached the stack limit".to_owned()),
             value: None,
+            type_: None,
         }],
         Err(EvalError::ForbiddenInSandbox(_)) => vec![PlaygroundResponse {
             error: Some("Tried to execute unsafe code in sandboxed mode".to_owned()),
             value: None,
+            type_: None,
         }],
     };
 

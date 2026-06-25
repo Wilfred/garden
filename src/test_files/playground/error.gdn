@@ -1,4 +1,4 @@
 no_such_var
 
 // args: playground-run
-// expected stdout: {"error":"No such variable `no_such_var`.","value":null}
+// expected stdout: {"error":"No such variable `no_such_var`.","value":null,"type":null}

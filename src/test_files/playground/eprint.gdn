@@ -3,4 +3,5 @@ eprintln("hello stderr")
 // args: playground-run
 // expected stdout:
 // {"printed_stderr":{"s":"hello stderr\n"}}
-// {"error":null,"value":"Unit"}
+// {"error":null,"value":"Unit","type":"Unit"}
+

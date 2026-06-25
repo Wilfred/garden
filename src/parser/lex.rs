@@ -27,7 +27,7 @@ const TWO_CHAR_TOKENS: &[&str] = &["=>", "::"];
 /// Single character binary operators. Note that some of these
 /// operators can occur in other syntactic positions, specifically `<`
 /// and `>` can be used in type annotations.
-const ONE_CHAR_OPERATORS: &[char] = &['+', '-', '*', '/', '%', '^', '=', '<', '>'];
+const ONE_CHAR_OPERATORS: &[char] = &['+', '-', '*', '/', '%', '^', '=', '<', '>', '&', '|'];
 
 // Lexemes that aren't infix operators.
 const ONE_CHAR_TOKENS: &[char] = &['(', ')', '{', '}', ',', '[', ']', '.', ':'];

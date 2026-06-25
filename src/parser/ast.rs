@@ -266,6 +266,8 @@ pub(crate) enum BinaryOperatorKind {
     GreaterThanOrEqual,
     And,
     Or,
+    BitwiseAnd,
+    BitwiseOr,
     StringConcat,
 }
 
@@ -290,6 +292,8 @@ impl Display for BinaryOperatorKind {
             BinaryOperatorKind::GreaterThanOrEqual => ">=",
             BinaryOperatorKind::And => "&&",
             BinaryOperatorKind::Or => "||",
+            BinaryOperatorKind::BitwiseAnd => "&",
+            BinaryOperatorKind::BitwiseOr => "|",
             BinaryOperatorKind::StringConcat => "^",
         };
         write!(f, "{s}")

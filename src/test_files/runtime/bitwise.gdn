@@ -1,0 +1,13 @@
+{
+  dbg(12 & 10)
+  dbg(12 | 10)
+  dbg(6 & 3)
+  dbg(6 | 1)
+}
+
+// args: run
+// expected stderr:
+// [src/test_files/runtime/bitwise.gdn:2:3] 12 & 10 //-> 8
+// [src/test_files/runtime/bitwise.gdn:3:3] 12 | 10 //-> 14
+// [src/test_files/runtime/bitwise.gdn:4:3] 6 & 3 //-> 2
+// [src/test_files/runtime/bitwise.gdn:5:3] 6 | 1 //-> 7

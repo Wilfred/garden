@@ -8,7 +8,14 @@
 //! name, you describe the data you have and the data you want, and the
 //! tool enumerates calls that bridge the two.
 //!
-//! The result is emitted as JSON so it can drive a web UI.
+//! The request and result are both JSON, so this can drive a web UI.
+//! A request looks like:
+//!
+//! ```json
+//! {"inputs": ["\"hello world\"", "\" \""], "output": "[\"hello\", \"world\"]"}
+//! ```
+//!
+//! where each input and the output is a Garden expression.
 
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -16,7 +23,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Instant;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::env::Env;
 use crate::eval::{
@@ -29,6 +36,15 @@ use crate::parser::ast::{
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::values::{type_representation, Value};
+
+/// A request to find functions and methods that turn `inputs` into
+/// `output`. Each entry is a Garden expression, e.g. `"hello"` or
+/// `[1, 2, 3]`.
+#[derive(Deserialize)]
+struct SuggestRequest {
+    inputs: Vec<String>,
+    output: String,
+}
 
 #[derive(Serialize)]
 struct SuggestResponse {
@@ -56,17 +72,22 @@ struct Suggestion {
     /// The signature of the function or method, e.g.
     /// `(this: String, needle: String): List<String>`.
     signature: String,
+    /// Constant arguments that were synthesized to make the call,
+    /// rather than taken from the example inputs, e.g. `["0"]` for
+    /// `[1, 2, 3].get(0)`. Empty when the call uses only the inputs.
+    constants: Vec<String>,
 }
+
+/// Constant expressions tried as additional arguments when the
+/// example inputs alone don't fill a function's parameters. Mirrors
+/// the constant synthesis in suggest.el.
+const SYNTHESIZED_CONSTANTS: &[&str] = &["0", "1", "2", "-1", "\"\"", "\" \"", "[]"];
 
 /// Find functions and methods that turn the example inputs into the
 /// desired output, and print the result as JSON.
 pub(crate) fn run_suggest(src: &str, path: &Path, interrupted: Arc<AtomicBool>, trace_exprs: bool) {
-    let (input_srcs, output_src) = match parse_examples(src) {
-        Ok((inputs, Some(output))) => (inputs, output),
-        Ok((_, None)) => {
-            print_error("No `output:` line found in the examples.");
-            return;
-        }
+    let (input_srcs, output_src) = match parse_request(src) {
+        Ok(request) => (request.inputs, request.output),
         Err(message) => {
             print_error(&message);
             return;
@@ -129,7 +150,22 @@ pub(crate) fn run_suggest(src: &str, path: &Path, interrupted: Arc<AtomicBool>, 
         }
     };
 
-    let suggestions = find_suggestions(&mut env, &session, &call_vfs_path, &inputs, &output_value);
+    // Evaluate the constants we may synthesize as extra arguments.
+    let mut constants: Vec<(String, Value)> = vec![];
+    for constant_src in SYNTHESIZED_CONSTANTS {
+        if let Ok(value) = eval_snippet(&mut env, &session, constant_src) {
+            constants.push(((*constant_src).to_owned(), value));
+        }
+    }
+
+    let suggestions = find_suggestions(
+        &mut env,
+        &session,
+        &call_vfs_path,
+        &inputs,
+        &constants,
+        &output_value,
+    );
 
     let response = SuggestResponse {
         error: None,
@@ -143,37 +179,18 @@ pub(crate) fn run_suggest(src: &str, path: &Path, interrupted: Arc<AtomicBool>, 
     );
 }
 
-/// Parse the example file into input expressions and an output
-/// expression.
+/// Parse a JSON request describing the example inputs and output.
 ///
-/// The format is line-based. Blank lines and lines starting with `//`
-/// are ignored. Every other line must be either `input: <expr>` or
-/// `output: <expr>`.
-fn parse_examples(src: &str) -> Result<(Vec<String>, Option<String>), String> {
-    let mut inputs = vec![];
-    let mut output = None;
+/// Lines starting with `//` are stripped before parsing, so the same
+/// file can carry the `// args:` footer that reftests use.
+fn parse_request(src: &str) -> Result<SuggestRequest, String> {
+    let json = src
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n");
 
-    for line in src.lines() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with("//") {
-            continue;
-        }
-
-        if let Some(rest) = line.strip_prefix("input:") {
-            inputs.push(rest.trim().to_owned());
-        } else if let Some(rest) = line.strip_prefix("output:") {
-            if output.is_some() {
-                return Err("Found more than one `output:` line.".to_owned());
-            }
-            output = Some(rest.trim().to_owned());
-        } else {
-            return Err(format!(
-                "Expected a line starting with `input:` or `output:`, but got: {line}"
-            ));
-        }
-    }
-
-    Ok((inputs, output))
+    serde_json::from_str(&json).map_err(|err| format!("Invalid JSON request: {err}"))
 }
 
 /// Evaluate a single Garden expression to a value.
@@ -200,6 +217,67 @@ fn eval_snippet(env: &mut Env, session: &Session, src: &str) -> Result<Value, St
     }
 }
 
+/// What a function or method parameter will accept as an argument.
+enum ParamType {
+    /// Any value, e.g. an unannotated parameter or a generic type
+    /// variable like `T`.
+    Any,
+    /// Only values whose runtime type has this name, e.g. `Int`.
+    Concrete(String),
+}
+
+/// Classify each parameter of `fun_info` by the kind of argument it
+/// accepts. A parameter whose type is one of the function's own
+/// generic type variables accepts anything.
+fn param_types(fun_info: &FunInfo) -> Vec<ParamType> {
+    let generics: Vec<&str> = fun_info
+        .type_params
+        .iter()
+        .map(|type_param| type_param.name.text.as_str())
+        .collect();
+
+    fun_info
+        .params
+        .params
+        .iter()
+        .map(|param| match &param.hint {
+            None => ParamType::Any,
+            Some(hint) => {
+                let name = &hint.sym.name.text;
+                if generics.contains(&name.as_str()) {
+                    ParamType::Any
+                } else {
+                    ParamType::Concrete(name.clone())
+                }
+            }
+        })
+        .collect()
+}
+
+/// Whether `args` are acceptable arguments for parameters of these
+/// types.
+fn args_match_params(params: &[ParamType], args: &[Value]) -> bool {
+    if params.len() != args.len() {
+        return false;
+    }
+
+    params.iter().zip(args).all(|(param, arg)| match param {
+        ParamType::Any => true,
+        ParamType::Concrete(type_name) => type_representation(arg).text == *type_name,
+    })
+}
+
+/// One way of arranging the example inputs (and possibly some
+/// synthesized constants) into a list of arguments.
+struct Arrangement {
+    /// The argument values, in order.
+    values: Vec<Value>,
+    /// The source text of each argument, in order.
+    srcs: Vec<String>,
+    /// The source text of any synthesized constants used.
+    constants: Vec<String>,
+}
+
 /// Try every function and method against the example inputs, and
 /// collect the calls that produce the desired output.
 fn find_suggestions(
@@ -207,15 +285,16 @@ fn find_suggestions(
     session: &Session,
     call_vfs_path: &VfsPathBuf,
     inputs: &[(String, Value)],
+    constants: &[(String, Value)],
     output: &Value,
 ) -> Vec<Suggestion> {
     let mut suggestions = vec![];
     let n = inputs.len();
-    let perms = permutations(n);
 
-    // Functions in scope. A function with `n` parameters is a
-    // candidate when we have `n` inputs.
-    let mut fn_candidates: Vec<(SymbolName, String)> = vec![];
+    // Functions in scope. A function is a candidate when its arity
+    // matches the number of inputs, or is one greater (so we can
+    // synthesize a single constant argument).
+    let mut fn_candidates: Vec<(SymbolName, Vec<ParamType>, String)> = vec![];
     {
         let ns = env.current_namespace();
         let ns = ns.borrow();
@@ -225,83 +304,175 @@ fn find_suggestions(
             let Some(fun_info) = value.fun_info() else {
                 continue;
             };
-            if fun_info.params.params.len() != n {
+            let arity = fun_info.params.params.len();
+            if arity != n && arity != n + 1 {
                 continue;
             }
 
-            fn_candidates.push((name.clone(), fun_signature(fun_info)));
+            fn_candidates.push((name.clone(), param_types(fun_info), fun_signature(fun_info)));
         }
     }
-    fn_candidates.sort_by(|(a, _), (b, _)| a.text.cmp(&b.text));
+    fn_candidates.sort_by(|(a, _, _), (b, _, _)| a.text.cmp(&b.text));
 
-    for (name, signature) in fn_candidates {
-        for perm in &perms {
-            let args: Vec<Value> = perm.iter().map(|i| inputs[*i].1.clone()).collect();
-
-            reset_eval_state(env);
-            let Ok(value) = eval_toplevel_call(&name, &args, env, session, call_vfs_path) else {
-                continue;
-            };
-            if &value != output {
-                continue;
-            }
-
-            let arg_srcs: Vec<String> = perm.iter().map(|i| inputs[*i].0.clone()).collect();
-            suggestions.push(Suggestion {
-                kind: "function".to_owned(),
-                name: name.text.clone(),
-                call: format!("{}({})", name.text, arg_srcs.join(", ")),
-                signature: signature.clone(),
-            });
-            // One example call per function is enough.
-            break;
+    for (name, params, signature) in fn_candidates {
+        if let Some(suggestion) = try_function(
+            env,
+            session,
+            call_vfs_path,
+            &name,
+            &params,
+            &signature,
+            inputs,
+            constants,
+            output,
+        ) {
+            suggestions.push(suggestion);
         }
     }
 
-    // Methods in scope. A method with `n - 1` parameters (in addition
-    // to the receiver) is a candidate when we have `n` inputs.
-    let mut method_candidates: Vec<(TypeName, SymbolName, String)> = vec![];
+    // Methods in scope. As with functions, the method is a candidate
+    // when the receiver plus its parameters match the number of
+    // inputs, or is one greater.
+    let mut method_candidates: Vec<(TypeName, SymbolName, Vec<ParamType>, String)> = vec![];
     if n >= 1 {
         for (type_name, type_and_methods) in env.types.iter() {
             for (method_name, method_info) in type_and_methods.methods.iter() {
                 let Some(fun_info) = method_info.fun_info() else {
                     continue;
                 };
-                if fun_info.params.params.len() + 1 != n {
+                let arity = fun_info.params.params.len() + 1;
+                if arity != n && arity != n + 1 {
                     continue;
                 }
 
                 method_candidates.push((
                     type_name.clone(),
                     method_name.clone(),
+                    param_types(fun_info),
                     method_signature(method_info, fun_info),
                 ));
             }
         }
     }
-    method_candidates.sort_by(|(a_ty, a_name, _), (b_ty, b_name, _)| {
+    method_candidates.sort_by(|(a_ty, a_name, _, _), (b_ty, b_name, _, _)| {
         a_ty.text
             .cmp(&b_ty.text)
             .then_with(|| a_name.text.cmp(&b_name.text))
     });
 
-    for (type_name, method_name, signature) in method_candidates {
-        for perm in &perms {
-            let (recv_src, recv_value) = &inputs[perm[0]];
+    for (type_name, method_name, params, signature) in method_candidates {
+        if let Some(suggestion) = try_method(
+            env,
+            session,
+            call_vfs_path,
+            &type_name,
+            &method_name,
+            &params,
+            &signature,
+            inputs,
+            constants,
+            output,
+        ) {
+            suggestions.push(suggestion);
+        }
+    }
 
-            // Methods are dispatched on the runtime type of the
-            // receiver, so only try receivers of the right type.
-            if type_representation(recv_value) != type_name {
+    suggestions
+}
+
+/// Try calling `name` with the inputs (and possibly a synthesized
+/// constant) until we find an arrangement that produces `output`.
+fn try_function(
+    env: &mut Env,
+    session: &Session,
+    call_vfs_path: &VfsPathBuf,
+    name: &SymbolName,
+    params: &[ParamType],
+    signature: &str,
+    inputs: &[(String, Value)],
+    constants: &[(String, Value)],
+    output: &Value,
+) -> Option<Suggestion> {
+    let extra = params.len() - inputs.len();
+
+    for arrangement in arrangements(inputs, constants, extra) {
+        // Skip arrangements whose argument types don't fit the
+        // parameters, both to avoid pointless calls and because some
+        // built-in functions assume their arguments are well-typed.
+        if !args_match_params(params, &arrangement.values) {
+            continue;
+        }
+
+        reset_eval_state(env);
+        let Ok(value) = eval_toplevel_call(name, &arrangement.values, env, session, call_vfs_path)
+        else {
+            continue;
+        };
+        if &value != output {
+            continue;
+        }
+
+        return Some(Suggestion {
+            kind: "function".to_owned(),
+            name: name.text.clone(),
+            call: format!("{}({})", name.text, arrangement.srcs.join(", ")),
+            signature: signature.to_owned(),
+            constants: arrangement.constants,
+        });
+    }
+
+    None
+}
+
+/// Try calling the method `method_name` on each input of the right
+/// type, with the remaining inputs (and possibly a synthesized
+/// constant) as arguments, until we find a call that produces
+/// `output`.
+fn try_method(
+    env: &mut Env,
+    session: &Session,
+    call_vfs_path: &VfsPathBuf,
+    type_name: &TypeName,
+    method_name: &SymbolName,
+    params: &[ParamType],
+    signature: &str,
+    inputs: &[(String, Value)],
+    constants: &[(String, Value)],
+    output: &Value,
+) -> Option<Suggestion> {
+    // The receiver is always one of the inputs, never a synthesized
+    // constant: the user has some data and wants to know what to call
+    // on it.
+    for (recv_idx, (recv_src, recv_value)) in inputs.iter().enumerate() {
+        // Methods are dispatched on the runtime type of the receiver,
+        // so only try receivers of the right type.
+        if type_representation(recv_value) != *type_name {
+            continue;
+        }
+
+        let other_inputs: Vec<(String, Value)> = inputs
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| *i != recv_idx)
+            .map(|(_, input)| input.clone())
+            .collect();
+
+        // The receiver fills one slot, so the remaining slots are the
+        // method's parameters.
+        let extra = params.len() - other_inputs.len();
+
+        for arrangement in arrangements(&other_inputs, constants, extra) {
+            // Skip arrangements whose argument types don't fit the
+            // parameters (see `try_function`).
+            if !args_match_params(params, &arrangement.values) {
                 continue;
             }
-
-            let args: Vec<Value> = perm[1..].iter().map(|i| inputs[*i].1.clone()).collect();
 
             reset_eval_state(env);
             let Ok(value) = eval_toplevel_method_call(
                 recv_value,
-                &method_name,
-                &args,
+                method_name,
+                &arrangement.values,
                 env,
                 session,
                 call_vfs_path,
@@ -312,19 +483,67 @@ fn find_suggestions(
                 continue;
             }
 
-            let arg_srcs: Vec<String> = perm[1..].iter().map(|i| inputs[*i].0.clone()).collect();
-            suggestions.push(Suggestion {
+            return Some(Suggestion {
                 kind: "method".to_owned(),
                 name: method_name.text.clone(),
-                call: format!("{}.{}({})", recv_src, method_name.text, arg_srcs.join(", ")),
-                signature: signature.clone(),
+                call: format!(
+                    "{}.{}({})",
+                    recv_src,
+                    method_name.text,
+                    arrangement.srcs.join(", ")
+                ),
+                signature: signature.to_owned(),
+                constants: arrangement.constants,
             });
-            // One example call per method is enough.
-            break;
         }
     }
 
-    suggestions
+    None
+}
+
+/// All the ways to arrange `items` into an argument list, optionally
+/// inserting `extra` synthesized constants.
+///
+/// We only synthesize a single constant at a time (`extra` is 0 or
+/// 1), mirroring suggest.el. With one constant, we try each constant
+/// at each position around every permutation of the inputs.
+fn arrangements(
+    items: &[(String, Value)],
+    constants: &[(String, Value)],
+    extra: usize,
+) -> Vec<Arrangement> {
+    let mut result = vec![];
+
+    for perm in permutations(items.len()) {
+        let base_values: Vec<Value> = perm.iter().map(|i| items[*i].1.clone()).collect();
+        let base_srcs: Vec<String> = perm.iter().map(|i| items[*i].0.clone()).collect();
+
+        if extra == 0 {
+            result.push(Arrangement {
+                values: base_values,
+                srcs: base_srcs,
+                constants: vec![],
+            });
+            continue;
+        }
+
+        for (constant_src, constant_value) in constants {
+            for pos in 0..=base_values.len() {
+                let mut values = base_values.clone();
+                let mut srcs = base_srcs.clone();
+                values.insert(pos, constant_value.clone());
+                srcs.insert(pos, constant_src.clone());
+
+                result.push(Arrangement {
+                    values,
+                    srcs,
+                    constants: vec![constant_src.clone()],
+                });
+            }
+        }
+    }
+
+    result
 }
 
 /// Build the displayed signature of a function, e.g.

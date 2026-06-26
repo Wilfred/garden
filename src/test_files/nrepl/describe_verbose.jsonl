@@ -101,6 +101,15 @@
 //       "returns": {
 //         "sessions": "A list of all available session IDs."
 //       }
+//     },
+//     "stdin": {
+//       "doc": "Send a line of standard input to a session whose eval is blocked reading input.",
+//       "optional": {},
+//       "requires": {
+//         "session": "The ID of the session to send the input to.",
+//         "stdin": "The input to send. An empty string signals end-of-input."
+//       },
+//       "returns": {}
 //     }
 //   },
 //   "status": [

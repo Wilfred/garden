@@ -95,7 +95,8 @@ use test_runner::{run_sandboxed_tests_in_file, run_tests_in_files};
 use crate::diagnostics::{format_diagnostic, format_exception_with_stack, Severity};
 use crate::env::Env;
 use crate::eval::{
-    eval_toplevel_items, load_toplevel_items, EvalError, ExceptionInfo, Session, StdoutJsonFormat,
+    eval_toplevel_items, load_toplevel_items, EvalError, ExceptionInfo, Session, StdinMode,
+    StdoutJsonFormat,
 };
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
@@ -470,6 +471,7 @@ fn main() {
             let session = Session {
                 interrupted: Arc::clone(&interrupted),
                 stdout_stderr_mode: StdoutStderrMode::WriteJson(StdoutJsonFormat::ReplSession),
+                stdin_mode: StdinMode::ReadFromStdin,
                 start_time: Instant::now(),
                 trace_exprs,
                 pretty_print_json: true,
@@ -746,6 +748,7 @@ fn reftest_eval_up_to(
     let session = Session {
         interrupted,
         stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
+        stdin_mode: StdinMode::ReadFromStdin,
         start_time: Instant::now(),
         trace_exprs,
         pretty_print_json: true,
@@ -939,6 +942,7 @@ fn run_file(
     let session = Session {
         interrupted,
         stdout_stderr_mode: StdoutStderrMode::WriteDirectly,
+        stdin_mode: StdinMode::ReadFromStdin,
         start_time: Instant::now(),
         trace_exprs,
         pretty_print_json: false,

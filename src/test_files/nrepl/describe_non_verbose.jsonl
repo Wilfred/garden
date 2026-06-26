@@ -13,7 +13,8 @@
 //     "interrupt": {},
 //     "load-file": {},
 //     "lookup": {},
-//     "ls-sessions": {}
+//     "ls-sessions": {},
+//     "stdin": {}
 //   },
 //   "status": [
 //     "done"

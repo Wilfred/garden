@@ -1750,7 +1750,9 @@ impl TypeCheckVisitor<'_> {
             | BinaryOperatorKind::Multiply
             | BinaryOperatorKind::Divide
             | BinaryOperatorKind::Modulo
-            | BinaryOperatorKind::Exponent => {
+            | BinaryOperatorKind::Exponent
+            | BinaryOperatorKind::BitwiseAnd
+            | BinaryOperatorKind::BitwiseOr => {
                 self.infer_int_binop(lhs, rhs, op, type_bindings, expected_return_ty)
             }
             BinaryOperatorKind::AddFloat

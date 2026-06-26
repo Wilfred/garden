@@ -2309,6 +2309,8 @@ fn eval_int_binop(
                 }
             }
         }
+        BinaryOperatorKind::BitwiseAnd => Value::new(Value_::Int(lhs_num & rhs_num)),
+        BinaryOperatorKind::BitwiseOr => Value::new(Value_::Int(lhs_num | rhs_num)),
         BinaryOperatorKind::LessThan => Value::bool(lhs_num < rhs_num),
         BinaryOperatorKind::GreaterThan => Value::bool(lhs_num > rhs_num),
         BinaryOperatorKind::LessThanOrEqual => Value::bool(lhs_num <= rhs_num),
@@ -6785,6 +6787,8 @@ fn eval_expr(
                     | BinaryOperatorKind::Divide
                     | BinaryOperatorKind::Modulo
                     | BinaryOperatorKind::Exponent
+                    | BinaryOperatorKind::BitwiseAnd
+                    | BinaryOperatorKind::BitwiseOr
                     | BinaryOperatorKind::LessThan
                     | BinaryOperatorKind::LessThanOrEqual
                     | BinaryOperatorKind::GreaterThan

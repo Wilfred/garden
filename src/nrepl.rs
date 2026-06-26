@@ -659,6 +659,7 @@ fn format_eval_error(e: &EvalError, env: &Env) -> (String, Option<&'static str>)
             "Tried to execute unsafe code in sandboxed mode.".to_owned(),
             Some("sandbox"),
         ),
+        EvalError::Exited(_, code) => (format!("Code called `exit({code})`."), Some("exited")),
     }
 }
 

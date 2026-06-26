@@ -256,6 +256,13 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
                 );
                 is_stopped = false;
             }
+            Err(EvalError::Exited(pos, code)) => {
+                println!(
+                    "{}: Code called `exit({code})`.",
+                    pos.as_ide_string(&env.project_root)
+                );
+                is_stopped = false;
+            }
         }
     }
 }

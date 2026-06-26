@@ -471,6 +471,19 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             position: None,
             id,
         },
+        EvalError::Exited(position, code) => Response {
+            kind: ResponseKind::Evaluate {
+                warnings: vec![],
+                value: Err(vec![ResponseError {
+                    position: Some(position.clone()),
+                    message: format!("Code called `exit({code})`."),
+                    stack: None,
+                }]),
+                stack_frame_name: Some(env.top_frame_name()),
+            },
+            position: Some(position),
+            id,
+        },
     }
 }
 
@@ -859,6 +872,19 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 stack_frame_name: Some(env.top_frame_name()),
             },
             position: None,
+            id: None,
+        },
+        Err(EvalError::Exited(position, code)) => Response {
+            kind: ResponseKind::Evaluate {
+                warnings: vec![],
+                value: Err(vec![ResponseError {
+                    position: Some(position.clone()),
+                    message: format!("Code called `exit({code})`."),
+                    stack: None,
+                }]),
+                stack_frame_name: Some(env.top_frame_name()),
+            },
+            position: Some(position),
             id: None,
         },
     }

@@ -321,14 +321,30 @@ impl AssignUpdateKind {
 /// ```garden
 /// match x {
 ///   Foo(bar) => {}
+///   "hello" => {}
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Pattern {
-    /// E.g. `Some` or `None`.
-    pub(crate) variant_sym: Symbol,
-    /// E.g. `foo` in `Some(foo) => `.
-    pub(crate) payload: Option<LetDestination>,
+pub(crate) enum Pattern {
+    /// An enum variant pattern, such as `Some(x)` or `None`, or the
+    /// wildcard pattern `_`.
+    Variant {
+        /// E.g. `Some` or `None`.
+        variant_sym: Symbol,
+        /// E.g. `foo` in `Some(foo) => `.
+        payload: Option<LetDestination>,
+    },
+    /// A string literal pattern, such as `"hello"`.
+    StringLiteral { position: Position, value: String },
+}
+
+impl Pattern {
+    pub(crate) fn position(&self) -> &Position {
+        match self {
+            Pattern::Variant { variant_sym, .. } => &variant_sym.position,
+            Pattern::StringLiteral { position, .. } => position,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq)]

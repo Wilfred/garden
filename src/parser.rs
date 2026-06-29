@@ -1041,6 +1041,19 @@ fn parse_pattern(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Pattern {
+    if let Some(token) = tokens.peek() {
+        if token.text.starts_with('\"') {
+            let token = tokens.pop().unwrap();
+            let (errors, unescaped) = unescape_string(&token);
+            diagnostics.extend(errors);
+
+            return Pattern::StringLiteral {
+                position: token.position,
+                value: unescaped,
+            };
+        }
+    }
+
     let variant_sym = parse_symbol(tokens, id_gen, diagnostics, Some("variant name"));
 
     let payload = if peeked_symbol_is(tokens, "(") {
@@ -1052,7 +1065,7 @@ fn parse_pattern(
         None
     };
 
-    Pattern {
+    Pattern::Variant {
         variant_sym,
         payload,
     }

@@ -1441,6 +1441,8 @@ fn token_as_binary_op(token: &Token<'_>) -> Option<BinaryOperatorSymbol> {
         "!=" => Some(BinaryOperatorKind::NotEqual),
         "&&" => Some(BinaryOperatorKind::And),
         "||" => Some(BinaryOperatorKind::Or),
+        "&" => Some(BinaryOperatorKind::BitwiseAnd),
+        "|" => Some(BinaryOperatorKind::BitwiseOr),
         "<" => Some(BinaryOperatorKind::LessThan),
         "<=" => Some(BinaryOperatorKind::LessThanOrEqual),
         ">" => Some(BinaryOperatorKind::GreaterThan),

@@ -1,0 +1,8 @@
+test carriage_return_escape {
+  // `\r` is unescaped to a single carriage return character.
+  assert("\r".len() == 1)
+  assert("line1\rline2".split("\r") == ["line1", "line2"])
+}
+
+// args: test
+// expected stdout: Ran 1 test: it passed.

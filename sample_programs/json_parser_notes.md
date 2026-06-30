@@ -24,7 +24,7 @@ Everything was reproduced with `garden` built from this checkout
 | 9 | Diagnostics | The "use a float operator" hint appears where no float operator exists | Low |
 | 10 | Stdlib | No `is_ok` / `is_err` on `Result` | Low |
 | 11 | Parser | A binary operator cannot start a continuation line | Low |
-| 12 | Diagnostics | The `**` operator prints as `^` in messages | Low |
+| 12 | Code quality | `Exponent`'s `Display` is `^` (wrong, and collides with concat); latent | Low |
 | 13 | Docs | The required Rust toolchain (1.95.0) is not documented | Low |
 
 The parser works around every issue above, so `garden check`, `garden
@@ -293,13 +293,23 @@ design, but it is an easy gotcha when formatting long lines.
 
 ---
 
-## 12. The `**` operator prints as `^` in messages (Low)
+## 12. The exponent operator has the wrong `Display` (Low, latent)
 
 In `src/parser/ast.rs`, `Display for BinaryOperatorKind` maps
 `Exponent => "^"`, but the source operator for exponent is `**` (`^` is
-string concatenation). Any diagnostic that prints the exponent operator
-will show the wrong symbol, and it collides with `StringConcat`, which
-also prints as `^`.
+string concatenation, which also maps to `"^"`). So the `Display` for
+`Exponent` is both wrong and indistinguishable from `StringConcat`.
+
+This is latent rather than user-visible: I could not find a code path
+that renders this `Display` to a user, and `garden format` preserves
+`2 ** 3` correctly (it formats from source spans, not from this
+`Display`). It would only bite if this `Display` were wired into a
+diagnostic or pretty-printer in the future.
+
+| `BinaryOperatorKind` | source token (`parser.rs`) | `Display` (`ast.rs`) |
+|----------------------|----------------------------|----------------------|
+| `Exponent`           | `**`                       | `^`                  |
+| `StringConcat`       | `^`                        | `^`                  |
 
 ---
 

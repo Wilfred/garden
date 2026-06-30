@@ -81,7 +81,9 @@ struct Suggestion {
 /// Constant expressions tried as additional arguments when the
 /// example inputs alone don't fill a function's parameters. Mirrors
 /// the constant synthesis in suggest.el.
-const SYNTHESIZED_CONSTANTS: &[&str] = &["0", "1", "2", "-1", "\"\"", "\" \"", "[]"];
+const SYNTHESIZED_CONSTANTS: &[&str] = &[
+    "0", "1", "2", "-1", "\"\"", "\" \"", "[]", "True", "False", "None",
+];
 
 /// Find functions and methods that turn the example inputs into the
 /// desired output, and print the result as JSON.

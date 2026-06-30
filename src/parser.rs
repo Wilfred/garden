@@ -717,6 +717,10 @@ fn unescape_string(token: &Token<'_>) -> (Vec<ParseError>, String) {
                     res.push('\t');
                     i += 2;
                 }
+                Some('r') => {
+                    res.push('\r');
+                    i += 2;
+                }
                 Some('\\') => {
                     res.push('\\');
                     i += 2;
@@ -737,8 +741,10 @@ fn unescape_string(token: &Token<'_>) -> (Vec<ParseError>, String) {
                             msgcode!("\\\""),
                             msgtext!(", "),
                             msgcode!("\\n"),
-                            msgtext!(" and "),
+                            msgtext!(", "),
                             msgcode!("\\t"),
+                            msgtext!(" and "),
+                            msgcode!("\\r"),
                             msgtext!(" are supported."),
                         ]),
                         notes: vec![],

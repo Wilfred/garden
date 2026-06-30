@@ -6,6 +6,11 @@
 
 Added `&` and `|` operators for bitwise AND and OR on `Int` values.
 
+Added the `\r` (carriage return) escape sequence in string literals.
+
+Fixed parsing of string literals ending in an escaped backslash, such
+as `"\\"`, where the closing quote was incorrectly treated as escaped.
+
 ## Standard Library
 
 `__shell::run()` now returns `(Int, String, String)`, always providing

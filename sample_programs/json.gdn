@@ -1,0 +1,544 @@
+// A basic JSON parser, written in Garden.
+//
+// `parse` turns a JSON document into a `Json` value, and `stringify`
+// turns a `Json` value back into a compact JSON string.
+//
+// Supported: objects, arrays, strings, numbers (including a fractional
+// part and exponent), `true`, `false` and `null`.
+//
+// Known limitations, caused by current language and standard library
+// gaps (see the accompanying issues report):
+//
+//   * String escapes are limited to \" \\ \/ \n and \t. The escapes
+//     \r, \b, \f and \uXXXX are rejected, because Garden cannot
+//     construct those characters (there is no codepoint-to-string
+//     function, and "\r" is not a valid string literal).
+//   * Carriage returns are not treated as whitespace, for the same
+//     reason.
+
+/// A parsed JSON value.
+enum Json {
+  JsonNull,
+  JsonBool(Bool),
+  JsonNumber(Float),
+  JsonString(String),
+  JsonArray(List<Json>),
+  JsonObject(Dict<Json>),
+}
+
+// --- Small helpers ---------------------------------------------------
+
+/// A string containing a single backslash.
+///
+/// We cannot write the literal `"\\"`: Garden's tokenizer mis-reads a
+/// string whose contents end in a backslash and reports it as
+/// unclosed. Instead we slice one character out of `"\x"`, which
+/// tokenizes correctly.
+fun backslash(): String {
+  "\\x".substring(0, 1)
+}
+
+/// Is this single-character string an ASCII digit?
+fun is_digit(c: String): Bool {
+  c.as_int().is_some()
+}
+
+test is_digit {
+  assert(is_digit("0"))
+  assert(is_digit("9"))
+  assert(not(is_digit("a")))
+  assert(not(is_digit("-")))
+  assert(not(is_digit(" ")))
+}
+
+/// Return 10 raised to the power `n` as a float, handling negative
+/// exponents.
+fun pow10(n: Int): Float {
+  let result = 1.0
+  let i = 0
+
+  if n >= 0 {
+    while i < n {
+      result = result *. 10.0
+      i += 1
+    }
+  } else {
+    let magnitude = 0 - n
+    while i < magnitude {
+      result = result /. 10.0
+      i += 1
+    }
+  }
+
+  result
+}
+
+test pow10 {
+  assert(string_repr(pow10(0)) == "1.0")
+  assert(string_repr(pow10(3)) == "1000.0")
+  assert(string_repr(pow10(-2)) == "0.01")
+}
+
+/// Parse a numeric string such as `"-12.5"` or `"1e3"` into a float.
+///
+/// Garden's standard library can parse a string to an `Int` with
+/// `as_int`, but has no equivalent for `Float`, so we do it by hand.
+fun str_to_float(s: String): Option<Float> {
+  // Split off the exponent, if any.
+  let mantissa = s.replace("E", "e")
+  let exponent = 0
+  match mantissa.split_once("e") {
+    Some((before, after)) => {
+      mantissa = before
+      match after.strip_prefix("+").as_int() {
+        Some(value) => { exponent = value }
+        None => { return None }
+      }
+    }
+    None => {}
+  }
+
+  // Split off a leading minus sign.
+  let negative = False
+  if mantissa.starts_with("-") {
+    negative = True
+    mantissa = mantissa.strip_prefix("-")
+  }
+
+  // Split into integer and fractional parts.
+  let int_part = mantissa
+  let frac_part = ""
+  match mantissa.split_once(".") {
+    Some((before, after)) => {
+      int_part = before
+      frac_part = after
+    }
+    None => {}
+  }
+
+  let result = 0.0
+
+  if int_part != "" {
+    match int_part.as_int() {
+      Some(value) => { result = value.as_float() }
+      None => { return None }
+    }
+  }
+
+  // Treat the fractional digits as an integer divided by a power of
+  // ten, so that "25" becomes 25 / 100 = 0.25.
+  if frac_part != "" {
+    match frac_part.as_int() {
+      Some(value) => {
+        result = result +. (value.as_float() /. pow10(frac_part.len()))
+      }
+      None => { return None }
+    }
+  }
+
+  result = result *. pow10(exponent)
+  if negative {
+    result = 0.0 -. result
+  }
+
+  Some(result)
+}
+
+test str_to_float {
+  assert(string_repr(str_to_float("0")) == "Some(0.0)")
+  assert(string_repr(str_to_float("12")) == "Some(12.0)")
+  assert(string_repr(str_to_float("-12")) == "Some(-12.0)")
+  assert(string_repr(str_to_float("2.5")) == "Some(2.5)")
+  assert(string_repr(str_to_float("-0.25")) == "Some(-0.25)")
+  assert(string_repr(str_to_float("1e3")) == "Some(1000.0)")
+  assert(string_repr(str_to_float("1.5e2")) == "Some(150.0)")
+  assert(string_repr(str_to_float("5e-1")) == "Some(0.5)")
+}
+
+/// Skip spaces, tabs and newlines, returning the index of the next
+/// non-whitespace character.
+///
+/// Note: carriage returns are not skipped, because Garden cannot
+/// represent a carriage return character.
+fun skip_whitespace(chars: List<String>, pos: Int): Int {
+  let p = pos
+  while p < chars.len() {
+    let c = chars.get(p).or_value("")
+    if (c == " ") || (c == "\n") || (c == "\t") {
+      p += 1
+    } else {
+      return p
+    }
+  }
+
+  p
+}
+
+/// Does the keyword `kw` appear in `chars` starting at `pos`?
+fun matches_at(chars: List<String>, pos: Int, kw: String): Bool {
+  let kw_chars = kw.chars()
+  let i = 0
+  while i < kw_chars.len() {
+    if chars.get(pos + i) != kw_chars.get(i) {
+      return False
+    }
+    i += 1
+  }
+
+  True
+}
+
+// --- The parser ------------------------------------------------------
+//
+// Each `parse_*` function takes the full character list and the
+// current position, and returns either `Ok((value, next_position))` or
+// `Err(message)`. The position is threaded through by hand because
+// Garden values are immutable.
+
+/// Parse a single JSON value, skipping any leading whitespace.
+fun parse_value(chars: List<String>, pos: Int): Result<(Json, Int), String> {
+  let p = skip_whitespace(chars, pos)
+
+  match chars.get(p) {
+    None => Err("Unexpected end of input")
+    Some(c) => {
+      if c == "{" {
+        parse_object(chars, p)
+      } else if c == "[" {
+        parse_array(chars, p)
+      } else if c == "\"" {
+        match parse_string_raw(chars, p) {
+          Ok((s, n)) => Ok((JsonString(s), n))
+          Err(e) => Err(e)
+        }
+      } else if (c == "t") || (c == "f") {
+        parse_bool(chars, p)
+      } else if c == "n" {
+        parse_null(chars, p)
+      } else if (c == "-") || is_digit(c) {
+        parse_number(chars, p)
+      } else {
+        Err("Unexpected character `" ^ c ^ "` at position " ^ string_repr(p))
+      }
+    }
+  }
+}
+
+fun parse_bool(chars: List<String>, pos: Int): Result<(Json, Int), String> {
+  if matches_at(chars, pos, "true") {
+    Ok((JsonBool(True), pos + 4))
+  } else if matches_at(chars, pos, "false") {
+    Ok((JsonBool(False), pos + 5))
+  } else {
+    Err("Invalid literal at position " ^ string_repr(pos))
+  }
+}
+
+fun parse_null(chars: List<String>, pos: Int): Result<(Json, Int), String> {
+  if matches_at(chars, pos, "null") {
+    Ok((JsonNull, pos + 4))
+  } else {
+    Err("Invalid literal at position " ^ string_repr(pos))
+  }
+}
+
+/// Scan a number token and convert it to a `JsonNumber`.
+fun parse_number(chars: List<String>, pos: Int): Result<(Json, Int), String> {
+  let start = pos
+  let p = pos
+
+  if chars.get(p) == Some("-") {
+    p += 1
+  }
+
+  let int_start = p
+  while (p < chars.len()) && is_digit(chars.get(p).or_value("")) {
+    p += 1
+  }
+  if p == int_start {
+    return Err("Invalid number at position " ^ string_repr(start))
+  }
+
+  if chars.get(p) == Some(".") {
+    p += 1
+    let frac_start = p
+    while (p < chars.len()) && is_digit(chars.get(p).or_value("")) {
+      p += 1
+    }
+    if p == frac_start {
+      return Err("Expected digits after decimal point at position " ^ string_repr(p))
+    }
+  }
+
+  if (chars.get(p) == Some("e")) || (chars.get(p) == Some("E")) {
+    p += 1
+    if (chars.get(p) == Some("+")) || (chars.get(p) == Some("-")) {
+      p += 1
+    }
+    let exp_start = p
+    while (p < chars.len()) && is_digit(chars.get(p).or_value("")) {
+      p += 1
+    }
+    if p == exp_start {
+      return Err("Expected digits in exponent at position " ^ string_repr(p))
+    }
+  }
+
+  let token = "".join(chars.slice(start, p))
+  match str_to_float(token) {
+    Some(f) => Ok((JsonNumber(f), p))
+    None => Err("Invalid number `" ^ token ^ "`")
+  }
+}
+
+/// Parse a string literal, returning the decoded contents (without the
+/// surrounding quotes). Assumes `chars.get(pos)` is a double quote.
+fun parse_string_raw(chars: List<String>, pos: Int): Result<(String, Int), String> {
+  let bs = backslash()
+  let p = pos + 1
+  let result = ""
+
+  while p < chars.len() {
+    let c = chars.get(p).or_value("")
+    if c == "\"" {
+      return Ok((result, p + 1))
+    } else if c == bs {
+      let esc = chars.get(p + 1).or_value("")
+      if esc == "\"" {
+        result = result ^ "\""
+      } else if esc == bs {
+        result = result ^ bs
+      } else if esc == "/" {
+        result = result ^ "/"
+      } else if esc == "n" {
+        result = result ^ "\n"
+      } else if esc == "t" {
+        result = result ^ "\t"
+      } else {
+        return Err("Unsupported escape sequence " ^ bs ^ esc ^ " at position " ^ string_repr(p))
+      }
+      p += 2
+    } else {
+      result = result ^ c
+      p += 1
+    }
+  }
+
+  Err("Unterminated string starting at position " ^ string_repr(pos))
+}
+
+/// Parse an array. Assumes `chars.get(pos)` is `[`.
+fun parse_array(chars: List<String>, pos: Int): Result<(Json, Int), String> {
+  let p = skip_whitespace(chars, pos + 1)
+  let items: List<Json> = []
+
+  if chars.get(p) == Some("]") {
+    return Ok((JsonArray(items), p + 1))
+  }
+
+  while p < chars.len() {
+    match parse_value(chars, p) {
+      Err(e) => { return Err(e) }
+      Ok((value, after_value)) => {
+        items = items.append(value)
+
+        let sep_pos = skip_whitespace(chars, after_value)
+        let sep = chars.get(sep_pos).or_value("")
+        if sep == "," {
+          p = skip_whitespace(chars, sep_pos + 1)
+        } else if sep == "]" {
+          return Ok((JsonArray(items), sep_pos + 1))
+        } else {
+          return Err("Expected `,` or `]` in array at position " ^ string_repr(sep_pos))
+        }
+      }
+    }
+  }
+
+  Err("Unterminated array starting at position " ^ string_repr(pos))
+}
+
+/// Parse an object. Assumes `chars.get(pos)` is `{`.
+fun parse_object(chars: List<String>, pos: Int): Result<(Json, Int), String> {
+  let p = skip_whitespace(chars, pos + 1)
+  let obj: Dict<Json> = Dict[]
+
+  if chars.get(p) == Some("}") {
+    return Ok((JsonObject(obj), p + 1))
+  }
+
+  while p < chars.len() {
+    let key_pos = skip_whitespace(chars, p)
+    if chars.get(key_pos) != Some("\"") {
+      return Err("Expected string key in object at position " ^ string_repr(key_pos))
+    }
+
+    match parse_string_raw(chars, key_pos) {
+      Err(e) => { return Err(e) }
+      Ok((key, after_key)) => {
+        let colon_pos = skip_whitespace(chars, after_key)
+        if chars.get(colon_pos) != Some(":") {
+          return Err("Expected `:` after key in object at position " ^ string_repr(colon_pos))
+        }
+
+        match parse_value(chars, colon_pos + 1) {
+          Err(e) => { return Err(e) }
+          Ok((value, after_value)) => {
+            obj = obj.set(key, value)
+
+            let sep_pos = skip_whitespace(chars, after_value)
+            let sep = chars.get(sep_pos).or_value("")
+            if sep == "," {
+              p = sep_pos + 1
+            } else if sep == "}" {
+              return Ok((JsonObject(obj), sep_pos + 1))
+            } else {
+              return Err("Expected `,` or `}` in object at position " ^ string_repr(sep_pos))
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Err("Unterminated object starting at position " ^ string_repr(pos))
+}
+
+/// Parse a complete JSON document. Returns `Err` if the input is not
+/// valid JSON, or if there is leftover text after the value.
+public fun parse(input: String): Result<Json, String> {
+  let chars = input.chars()
+
+  match parse_value(chars, 0) {
+    Err(e) => Err(e)
+    Ok((value, after_value)) => {
+      let end = skip_whitespace(chars, after_value)
+      if end < chars.len() {
+        Err("Unexpected trailing characters at position " ^ string_repr(end))
+      } else {
+        Ok(value)
+      }
+    }
+  }
+}
+
+// --- Serialization ---------------------------------------------------
+
+/// Quote and escape a string for inclusion in JSON output.
+fun stringify_string(s: String): String {
+  let bs = backslash()
+  let result = "\""
+  for c in s.chars() {
+    if c == "\"" {
+      result = result ^ bs ^ "\""
+    } else if c == bs {
+      result = result ^ bs ^ bs
+    } else if c == "\n" {
+      result = result ^ bs ^ "n"
+    } else if c == "\t" {
+      result = result ^ bs ^ "t"
+    } else {
+      result = result ^ c
+    }
+  }
+
+  result ^ "\""
+}
+
+/// Serialize a `Json` value to a compact JSON string.
+///
+/// Numbers are rendered using Garden's float formatting, so whole
+/// numbers appear as e.g. `1.0` rather than `1`.
+public fun stringify(value: Json): String {
+  match value {
+    JsonNull => "null"
+    JsonBool(b) => {
+      match b {
+        True => "true"
+        False => "false"
+      }
+    }
+    JsonNumber(f) => string_repr(f)
+    JsonString(s) => stringify_string(s)
+    JsonArray(items) => {
+      let parts = items.map(fun(item: Json) { stringify(item) })
+      "[" ^ ",".join(parts) ^ "]"
+    }
+    JsonObject(entries) => {
+      let parts: List<String> = []
+      // `items()` returns entries in alphabetical key order, so the
+      // output is deterministic.
+      for (key, item) in entries.items() {
+        parts = parts.append(stringify_string(key) ^ ":" ^ stringify(item))
+      }
+      "{" ^ ",".join(parts) ^ "}"
+    }
+  }
+}
+
+// --- Tests -----------------------------------------------------------
+//
+// Note: we compare parser output by serializing it back to a string,
+// rather than comparing `Json` values directly with `==`. Garden's
+// `==` currently returns False for any two distinct `Float` values
+// (even `1.0 == 1.0`), which would make value comparison of numbers
+// unreliable.
+
+/// Did parsing this input fail?
+public fun is_parse_error(input: String): Bool {
+  match parse(input) {
+    Ok(_) => False
+    Err(_) => True
+  }
+}
+
+test parse_atoms {
+  assert(stringify(parse("null").or_throw()) == "null")
+  assert(stringify(parse("true").or_throw()) == "true")
+  assert(stringify(parse("false").or_throw()) == "false")
+  assert(stringify(parse("  42 ").or_throw()) == "42.0")
+  assert(stringify(parse("-3.5").or_throw()) == "-3.5")
+  assert(stringify(parse("\"hello\"").or_throw()) == "\"hello\"")
+}
+
+test parse_arrays {
+  assert(stringify(parse("[]").or_throw()) == "[]")
+  assert(stringify(parse("[ ]").or_throw()) == "[]")
+  assert(stringify(parse("[1, 2, 3]").or_throw()) == "[1.0,2.0,3.0]")
+  assert(stringify(parse("[1, [2, 3], null]").or_throw()) == "[1.0,[2.0,3.0],null]")
+}
+
+test parse_objects {
+  assert(stringify(parse("{}").or_throw()) == "{}")
+  assert(stringify(parse("{\"b\": 1, \"a\": 2}").or_throw()) == "{\"a\":2.0,\"b\":1.0}")
+
+  let nested = stringify(parse("{\"nested\": {\"x\": [true, false]}}").or_throw())
+  assert(nested == "{\"nested\":{\"x\":[true,false]}}")
+}
+
+test parse_string_escapes {
+  assert(stringify(parse("\"a\\nb\"").or_throw()) == "\"a\\nb\"")
+  assert(stringify(parse("\"a\\\"b\"").or_throw()) == "\"a\\\"b\"")
+  assert(stringify(parse("\"a\\/b\"").or_throw()) == "\"a/b\"")
+}
+
+test parse_failures {
+  assert(is_parse_error(""))
+  assert(is_parse_error("[1, 2"))
+  assert(is_parse_error("{\"a\": }"))
+  assert(is_parse_error("nul"))
+  assert(is_parse_error("[1] extra"))
+  assert(is_parse_error("\"unterminated"))
+  assert(is_parse_error("{\"a\" 1}"))
+}
+
+// --- Demo ------------------------------------------------------------
+
+let example = "{\"name\": \"garden\", \"versions\": [0.1, 0.2], \"stable\": false}"
+match parse(example) {
+  Ok(value) => {
+    println("Parsed successfully. Re-serialized:")
+    println(stringify(value))
+  }
+  Err(e) => { println("Parse error: " ^ e) }
+}

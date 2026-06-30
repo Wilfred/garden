@@ -62,7 +62,7 @@ impl Visitor for SelfAssignCompareVisitor {
                         self.diagnostics.push(Diagnostic {
                             message: ErrorMessage(vec![
                                 msgtext!("Both sides of "),
-                                msgcode!("{}", op.kind),
+                                msgcode!("{}", op.kind.as_src()),
                                 msgtext!(" are identical."),
                             ]),
                             position: expr.position.clone(),

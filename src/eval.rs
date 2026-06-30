@@ -4829,7 +4829,7 @@ fn eval_assert(
                         msgcode!(
                             "{} {} {}",
                             lhs_value.display(env),
-                            kind,
+                            kind.as_src(),
                             rhs_value.display(env),
                         ),
                         msgtext!("."),

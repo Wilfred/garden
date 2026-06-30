@@ -271,9 +271,9 @@ pub(crate) enum BinaryOperatorKind {
     StringConcat,
 }
 
-impl Display for BinaryOperatorKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
+impl BinaryOperatorKind {
+    pub(crate) fn as_src(&self) -> &'static str {
+        match self {
             BinaryOperatorKind::Add => "+",
             BinaryOperatorKind::AddFloat => "+.",
             BinaryOperatorKind::Subtract => "-",
@@ -295,8 +295,7 @@ impl Display for BinaryOperatorKind {
             BinaryOperatorKind::BitwiseAnd => "&",
             BinaryOperatorKind::BitwiseOr => "|",
             BinaryOperatorKind::StringConcat => "^",
-        };
-        write!(f, "{s}")
+        }
     }
 }
 

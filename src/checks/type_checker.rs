@@ -137,6 +137,27 @@ impl LocalBindings {
         self.blocks.pop();
     }
 
+    /// Replace the current block stack with a single empty scope,
+    /// returning the previous stack.
+    ///
+    /// Used when checking a function, method or test body. At runtime
+    /// these execute in a fresh stack frame, so they cannot see
+    /// toplevel `let` variables (nor REPL session bindings). They can
+    /// still access other toplevel definitions, such as functions and
+    /// types, because those live in the namespace rather than in local
+    /// bindings.
+    fn enter_toplevel_definition(&mut self) -> Vec<FxHashMap<SymbolName, (Type, Position)>> {
+        std::mem::replace(&mut self.blocks, vec![FxHashMap::default()])
+    }
+
+    /// Restore the block stack saved by `enter_toplevel_definition`.
+    fn exit_toplevel_definition(
+        &mut self,
+        saved_blocks: Vec<FxHashMap<SymbolName, (Type, Position)>>,
+    ) {
+        self.blocks = saved_blocks;
+    }
+
     fn get(&self, name: &SymbolName) -> Option<&(Type, Position)> {
         for block in self.blocks.iter().rev() {
             if let Some(ty_and_pos) = block.get(name) {
@@ -183,9 +204,25 @@ struct TypeCheckVisitor<'a> {
 impl TypeCheckVisitor<'_> {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         match &item {
-            ToplevelItem::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
-            ToplevelItem::Method(method_info, _) => self.visit_method_info(method_info),
-            ToplevelItem::Test(test_info) => self.visit_test_info(test_info),
+            // Functions, methods and tests run in a fresh stack frame
+            // at runtime, so toplevel `let` bindings are not in scope
+            // inside them. Hide the toplevel scope whilst checking
+            // their bodies.
+            ToplevelItem::Fun(_, fun_info, _) => {
+                let saved_blocks = self.bindings.enter_toplevel_definition();
+                self.visit_fun_info(fun_info);
+                self.bindings.exit_toplevel_definition(saved_blocks);
+            }
+            ToplevelItem::Method(method_info, _) => {
+                let saved_blocks = self.bindings.enter_toplevel_definition();
+                self.visit_method_info(method_info);
+                self.bindings.exit_toplevel_definition(saved_blocks);
+            }
+            ToplevelItem::Test(test_info) => {
+                let saved_blocks = self.bindings.enter_toplevel_definition();
+                self.visit_test_info(test_info);
+                self.bindings.exit_toplevel_definition(saved_blocks);
+            }
             ToplevelItem::Enum(enum_info) => self.visit_enum_info(enum_info),
             ToplevelItem::Struct(struct_info) => self.visit_struct_info(struct_info),
             ToplevelItem::Import(info) => {

@@ -1,0 +1,10 @@
+// A string containing a single backslash, followed by more code.
+// The closing quote should not be treated as escaped, so the
+// following statement is parsed and run normally.
+println("\\")
+println("after")
+
+// args: run
+// expected stdout:
+// \
+// after

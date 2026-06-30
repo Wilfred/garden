@@ -1,0 +1,15 @@
+{
+  dbg(1.5 == 1.5)
+  dbg(1.5 == 2.5)
+  dbg(1.5 != 2.5)
+  dbg(1.5 != 1.5)
+  dbg(0.0 == -0.0)
+}
+
+// args: run
+// expected stderr:
+// [src/test_files/runtime/float_equality.gdn:2:3] 1.5 == 1.5 //-> True
+// [src/test_files/runtime/float_equality.gdn:3:3] 1.5 == 2.5 //-> False
+// [src/test_files/runtime/float_equality.gdn:4:3] 1.5 != 2.5 //-> True
+// [src/test_files/runtime/float_equality.gdn:5:3] 1.5 != 1.5 //-> False
+// [src/test_files/runtime/float_equality.gdn:6:3] 0.0 == -0.0 //-> True

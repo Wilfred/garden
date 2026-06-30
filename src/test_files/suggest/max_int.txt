@@ -1,0 +1,23 @@
+// The larger of two integers.
+{"inputs": ["3", "8"], "output": "8"}
+
+// args: suggest
+// expected stdout:
+// {
+//   "error": null,
+//   "inputs": [
+//     "3",
+//     "8"
+//   ],
+//   "output": "8",
+//   "suggestions": [
+//     {
+//       "kind": "function",
+//       "name": "max",
+//       "call": "max(3, 8)",
+//       "signature": "(x: Int, y: Int): Int",
+//       "constants": []
+//     }
+//   ]
+// }
+

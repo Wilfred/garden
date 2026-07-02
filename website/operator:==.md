@@ -18,3 +18,19 @@ Compound values are compared by their elements.
 ```
 1 != 2 //-> True
 ```
+
+`Float` values are compared by value, including positive and negative
+zero.
+
+```
+1.5 == 1.5 //-> True
+0.0 == -0.0 //-> True
+```
+
+Floats have limited precision, so arithmetic can produce results that
+are close but not exactly equal. Comparing computed floats with `==`
+is usually a mistake.
+
+```
+0.1 +. 0.2 == 0.3 //-> False
+```

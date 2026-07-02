@@ -136,6 +136,7 @@ impl PartialEq for Value_ {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Value_::Int(i1), Value_::Int(i2)) => i1 == i2,
+            (Value_::Float(f1), Value_::Float(f2)) => f1 == f2,
             (
                 Value_::Fun { name_sym, .. },
                 Value_::Fun {

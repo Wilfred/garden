@@ -1,0 +1,977 @@
+// A basic Scheme interpreter.
+//
+// Supports integers, booleans, strings, symbols and proper lists,
+// along with the special forms quote, if, cond, and, or, begin,
+// lambda, let, let* and define.
+//
+// Run a Scheme file:
+//   garden run scheme.gdn program.scm
+//
+// Or start a REPL:
+//   garden run scheme.gdn
+
+import "__fs.gdn" as fs
+
+enum Value {
+  Num(Int),
+  BoolVal(Bool),
+  Str(String),
+  Sym(String),
+  SList(List<Value>),
+  Closure(ClosureData),
+  Builtin(String),
+  Unspecified,
+}
+
+struct ClosureData {
+  params: List<String>,
+  body: List<Value>,
+  env: Dict<Value>,
+}
+
+// --- Tokenizer ---
+
+// Garden has no \r escape sequence (only \\, \", \n and \t), so we
+// don't treat carriage returns as whitespace here.
+fun is_whitespace(c: String): Bool {
+  ((c == " ") || (c == "\n")) || (c == "\t")
+}
+
+// A single backslash. Garden can't lex a string literal that ends
+// with an escaped backslash, like "\\", so we slice one out of a
+// longer string instead.
+fun backslash(): String {
+  "a\\b".substring(1, 2)
+}
+
+fun is_delimiter(c: String): Bool {
+  (((c == "(") || (c == ")")) || ((c == "'") || (c == ";"))) || (is_whitespace(c) || (c == "\""))
+}
+
+/// Split Scheme source into tokens. String literal tokens keep their
+/// leading double quote so the parser can recognise them, with escape
+/// sequences already processed.
+fun tokenize(src: String): List<String> {
+  let tokens: List<String> = []
+  let chars = src.chars()
+
+  let i = 0
+  while i < chars.len() {
+    let c = chars.get(i).or_throw()
+
+    if is_whitespace(c) {
+      i += 1
+    } else if c == ";" {
+      // Comment until end of line. Note that && doesn't short-circuit
+      // in Garden, so we can't write
+      // `while (i < chars.len()) && (chars.get(i).or_throw() != "\n")`.
+      while i < chars.len() {
+        if chars.get(i).or_throw() == "\n" {
+          break
+        }
+        i += 1
+      }
+    } else if ((c == "(") || (c == ")")) || (c == "'") {
+      tokens = tokens.append(c)
+      i += 1
+    } else if c == "\"" {
+      let s = "\""
+      i += 1
+      let terminated = False
+      while i < chars.len() {
+        let d = chars.get(i).or_throw()
+        if d == backslash() {
+          let next = match chars.get(i + 1) {
+            Some(n) => n
+            None => throw("Unterminated escape sequence in string literal.")
+          }
+          if next == "n" {
+            s = s ^ "\n"
+          } else if next == "t" {
+            s = s ^ "\t"
+          } else {
+            s = s ^ next
+          }
+          i += 2
+        } else if d == "\"" {
+          terminated = True
+          i += 1
+          break
+        } else {
+          s = s ^ d
+          i += 1
+        }
+      }
+      if not(terminated) {
+        throw("Unterminated string literal.")
+      }
+      tokens = tokens.append(s)
+    } else {
+      let s = ""
+      while i < chars.len() {
+        let d = chars.get(i).or_throw()
+        if is_delimiter(d) {
+          break
+        }
+        s = s ^ d
+        i += 1
+      }
+      tokens = tokens.append(s)
+    }
+  }
+
+  tokens
+}
+
+test tokenize {
+  assert(tokenize("(+ 1 2)") == ["(", "+", "1", "2", ")"])
+  assert(tokenize("'(a b)") == ["'", "(", "a", "b", ")"])
+  assert(tokenize("x ; comment\ny") == ["x", "y"])
+  assert(tokenize("\"hi there\"") == ["\"hi there"])
+}
+
+// --- Parser ---
+
+/// Parse a single expression starting at `pos`, returning the value
+/// and the position after it.
+fun parse_expr(tokens: List<String>, pos: Int): (Value, Int) {
+  let tok = match tokens.get(pos) {
+    Some(t) => t
+    None => throw("Unexpected end of input.")
+  }
+
+  if tok == "(" {
+    let items: List<Value> = []
+    let i = pos + 1
+    while i < tokens.len() {
+      let t = tokens.get(i).or_throw()
+      if t == ")" {
+        return (SList(items), i + 1)
+      }
+      let (item, next_pos) = parse_expr(tokens, i)
+      items = items.append(item)
+      i = next_pos
+    }
+    throw("Missing closing parenthesis.")
+  } else if tok == ")" {
+    throw("Unexpected closing parenthesis.")
+  } else if tok == "'" {
+    let (quoted, next_pos) = parse_expr(tokens, pos + 1)
+    (SList([Sym("quote"), quoted]), next_pos)
+  } else if tok.starts_with("\"") {
+    (Str(tok.strip_prefix("\"")), pos + 1)
+  } else if tok == "#t" {
+    (BoolVal(True), pos + 1)
+  } else if tok == "#f" {
+    (BoolVal(False), pos + 1)
+  } else {
+    match tok.as_int() {
+      Some(n) => (Num(n), pos + 1)
+      None => (Sym(tok), pos + 1)
+    }
+  }
+}
+
+/// Parse a whole program: a sequence of expressions.
+fun parse_program(src: String): List<Value> {
+  let tokens = tokenize(src)
+  let exprs: List<Value> = []
+
+  let pos = 0
+  while pos < tokens.len() {
+    let (expr, next_pos) = parse_expr(tokens, pos)
+    exprs = exprs.append(expr)
+    pos = next_pos
+  }
+
+  exprs
+}
+
+// --- Printing ---
+
+/// Render a value the way `write` would: strings keep their quotes.
+fun write_str(v: Value): String {
+  match v {
+    Num(n) => string_repr(n)
+    BoolVal(b) => {
+      if b { "#t" } else { "#f" }
+    }
+    Str(s) => {
+      let bs = backslash()
+      let escaped = s.replace(bs, bs ^ bs).replace("\"", bs ^ "\"")
+      "\"" ^ escaped ^ "\""
+    }
+    Sym(s) => s
+    SList(items) => "(" ^ " ".join(items.map(fun(item: Value) { write_str(item) })) ^ ")"
+    Closure(_) => "#<procedure>"
+    Builtin(name) => "#<builtin " ^ name ^ ">"
+    Unspecified => "#<unspecified>"
+  }
+}
+
+/// Render a value the way `display` would: strings are unquoted.
+fun display_str(v: Value): String {
+  match v {
+    Str(s) => s
+    SList(items) => "(" ^ " ".join(items.map(fun(item: Value) { display_str(item) })) ^ ")"
+    _ => write_str(v)
+  }
+}
+
+// --- Evaluation ---
+
+fun lookup(name: String, env: Dict<Value>, globals: Dict<Value>): Value {
+  match env.get(name) {
+    Some(v) => v
+    None => {
+      match globals.get(name) {
+        Some(v) => v
+        None => throw("Unbound variable: " ^ name)
+      }
+    }
+  }
+}
+
+fun is_truthy(v: Value): Bool {
+  match v {
+    BoolVal(b) => b
+    _ => True
+  }
+}
+
+/// If `expr` is a define form, return the name and the expression
+/// whose value should be bound. Handles both `(define x e)` and the
+/// function shorthand `(define (f args) body...)`.
+fun as_define(expr: Value): Option<(String, Value)> {
+  let items = match expr {
+    SList(items) => items
+    _ => { return None }
+  }
+
+  // Note: Garden doesn't support nested patterns like Some(Sym(head)),
+  // so we match in two steps.
+  match items.first() {
+    Some(head) => {
+      match head {
+        Sym(head_name) => {
+          if head_name != "define" {
+            return None
+          }
+        }
+        _ => { return None }
+      }
+    }
+    None => { return None }
+  }
+
+  if items.len() < 3 {
+    throw("Malformed define: " ^ write_str(SList(items)))
+  }
+
+  match items.get(1).or_throw() {
+    Sym(name) => {
+      if items.len() != 3 {
+        throw("Malformed define: expected exactly one expression after the name.")
+      }
+      Some((name, items.get(2).or_throw()))
+    }
+    SList(signature) => {
+      // (define (f a b) body...) is sugar for (define f (lambda (a b) body...)).
+      let name = match signature.first() {
+        Some(name_value) => {
+          match name_value {
+            Sym(name) => name
+            _ => throw("Malformed define: function name must be a symbol.")
+          }
+        }
+        None => throw("Malformed define: function name must be a symbol.")
+      }
+      let params = SList(signature.slice(1, signature.len()))
+      let lambda_expr = SList([Sym("lambda"), params].concat(items.slice(2, items.len())))
+      Some((name, lambda_expr))
+    }
+    _ => throw("Malformed define: expected a symbol or signature.")
+  }
+}
+
+fun eval(expr: Value, env: Dict<Value>, globals: Dict<Value>): Value {
+  match expr {
+    Num(_) => expr
+    BoolVal(_) => expr
+    Str(_) => expr
+    Closure(_) => expr
+    Builtin(_) => expr
+    Unspecified => expr
+    Sym(name) => lookup(name, env, globals)
+    SList(items) => eval_form(items, env, globals)
+  }
+}
+
+fun param_names(params_expr: Value): List<String> {
+  let params_list = match params_expr {
+    SList(items) => items
+    _ => throw("Malformed parameter list: " ^ write_str(params_expr))
+  }
+
+  params_list.map(fun(p: Value) {
+    match p {
+      Sym(name) => name
+      _ => throw("Parameter names must be symbols, got: " ^ write_str(p))
+    }
+  })
+}
+
+fun eval_form(items: List<Value>, env: Dict<Value>, globals: Dict<Value>): Value {
+  let head = match items.first() {
+    Some(h) => h
+    None => throw("Cannot evaluate the empty list ().")
+  }
+
+  match head {
+    Sym(name) => {
+      if name == "quote" {
+        if items.len() != 2 {
+          throw("quote expects exactly one argument.")
+        }
+        return items.get(1).or_throw()
+      }
+      if name == "if" {
+        if (items.len() != 3) && (items.len() != 4) {
+          throw("if expects a condition, a then-expression and optionally an else-expression.")
+        }
+        let cond_value = eval(items.get(1).or_throw(), env, globals)
+        if is_truthy(cond_value) {
+          return eval(items.get(2).or_throw(), env, globals)
+        }
+        match items.get(3) {
+          Some(else_expr) => { return eval(else_expr, env, globals) }
+          None => { return Unspecified }
+        }
+      }
+      if name == "cond" {
+        for clause in items.slice(1, items.len()) {
+          let clause_items = match clause {
+            SList(clause_items) => clause_items
+            _ => throw("cond clauses must be lists.")
+          }
+          let test_expr = match clause_items.first() {
+            Some(t) => t
+            None => throw("cond clauses must be non-empty.")
+          }
+
+          let matched = match test_expr {
+            Sym(sym_name) => {
+              if sym_name == "else" {
+                True
+              } else {
+                is_truthy(eval(test_expr, env, globals))
+              }
+            }
+            _ => is_truthy(eval(test_expr, env, globals))
+          }
+
+          if matched {
+            return eval_body(clause_items.slice(1, clause_items.len()), env, globals)
+          }
+        }
+        return Unspecified
+      }
+      if name == "and" {
+        let result: Value = BoolVal(True)
+        for arg in items.slice(1, items.len()) {
+          result = eval(arg, env, globals)
+          if not(is_truthy(result)) {
+            return result
+          }
+        }
+        return result
+      }
+      if name == "or" {
+        for arg in items.slice(1, items.len()) {
+          let result = eval(arg, env, globals)
+          if is_truthy(result) {
+            return result
+          }
+        }
+        return BoolVal(False)
+      }
+      if name == "begin" {
+        return eval_body(items.slice(1, items.len()), env, globals)
+      }
+      if name == "lambda" {
+        if items.len() < 3 {
+          throw("lambda expects a parameter list and a body.")
+        }
+        let params = param_names(items.get(1).or_throw())
+        return Closure(ClosureData{
+          params: params,
+          body: items.slice(2, items.len()),
+          env: env,
+        })
+      }
+      if (name == "let") || (name == "let*") {
+        if items.len() < 3 {
+          throw(name ^ " expects a binding list and a body.")
+        }
+        let bindings = match items.get(1).or_throw() {
+          SList(bindings) => bindings
+          _ => throw(name ^ " bindings must be a list.")
+        }
+
+        let inner_env = env
+        for binding in bindings {
+          let binding_items = match binding {
+            SList(binding_items) => binding_items
+            _ => throw("Each " ^ name ^ " binding must be a list.")
+          }
+          if binding_items.len() != 2 {
+            throw("Each " ^ name ^ " binding must have a name and an expression.")
+          }
+          let binding_name = match binding_items.first().or_throw() {
+            Sym(binding_name) => binding_name
+            _ => throw(name ^ " binding names must be symbols.")
+          }
+
+          // For plain let, bindings are evaluated in the outer
+          // environment. For let*, each binding sees the previous ones.
+          let binding_env = if name == "let*" { inner_env } else { env }
+          let bound_value = eval(binding_items.get(1).or_throw(), binding_env, globals)
+          inner_env = inner_env.set(binding_name, bound_value)
+        }
+
+        return eval_body(items.slice(2, items.len()), inner_env, globals)
+      }
+      if name == "define" {
+        throw("define is only supported at the top level or at the start of a body.")
+      }
+    }
+    _ => {}
+  }
+
+  // Not a special form: evaluate as a function application.
+  let f = eval(head, env, globals)
+  let args = items.slice(1, items.len()).map(fun(arg: Value) { eval(arg, env, globals) })
+  apply_fn(f, args, globals)
+}
+
+/// Evaluate a sequence of expressions, returning the last value.
+/// Internal defines extend the local environment.
+fun eval_body(exprs: List<Value>, env: Dict<Value>, globals: Dict<Value>): Value {
+  let result: Value = Unspecified
+  let current_env = env
+
+  for expr in exprs {
+    match as_define(expr) {
+      Some((name, value_expr)) => {
+        let v = eval(value_expr, current_env, globals)
+        current_env = current_env.set(name, v)
+        result = Unspecified
+      }
+      None => {
+        result = eval(expr, current_env, globals)
+      }
+    }
+  }
+
+  result
+}
+
+fun as_num(v: Value): Int {
+  match v {
+    Num(n) => n
+    _ => throw("Expected a number, got: " ^ write_str(v))
+  }
+}
+
+fun as_list(v: Value): List<Value> {
+  match v {
+    SList(items) => items
+    _ => throw("Expected a list, got: " ^ write_str(v))
+  }
+}
+
+fun arity_check(name: String, args: List<Value>, expected: Int): Unit {
+  if args.len() != expected {
+    throw(name ^ " expects " ^ string_repr(expected) ^ " argument(s), got " ^ string_repr(args.len()))
+  }
+}
+
+fun num_fold(args: List<Value>, initial: Int, f: Fun<(Int, Int), Int>): Value {
+  let acc = initial
+  for arg in args {
+    acc = f(acc, as_num(arg))
+  }
+  Num(acc)
+}
+
+/// Check that adjacent arguments all satisfy `f`, e.g. for (< 1 2 3).
+fun num_compare(name: String, args: List<Value>, f: Fun<(Int, Int), Bool>): Value {
+  if args.len() < 2 {
+    throw(name ^ " expects at least 2 arguments.")
+  }
+  let prev = as_num(args.first().or_throw())
+  for arg in args.slice(1, args.len()) {
+    let n = as_num(arg)
+    if not(f(prev, n)) {
+      return BoolVal(False)
+    }
+    prev = n
+  }
+  BoolVal(True)
+}
+
+fun apply_fn(f: Value, args: List<Value>, globals: Dict<Value>): Value {
+  match f {
+    Closure(data) => {
+      if args.len() != data.params.len() {
+        throw("Procedure expects " ^ string_repr(data.params.len()) ^ " argument(s), got " ^ string_repr(args.len()))
+      }
+      let call_env = data.env
+      for (i, param) in data.params.enumerate() {
+        call_env = call_env.set(param, args.get(i).or_throw())
+      }
+      eval_body(data.body, call_env, globals)
+    }
+    Builtin(name) => apply_builtin(name, args, globals)
+    _ => throw("Not a procedure: " ^ write_str(f))
+  }
+}
+
+fun apply_builtin(name: String, args: List<Value>, globals: Dict<Value>): Value {
+  if name == "+" {
+    return num_fold(args, 0, fun(x: Int, y: Int) { x + y })
+  }
+  if name == "*" {
+    return num_fold(args, 1, fun(x: Int, y: Int) { x * y })
+  }
+  if name == "-" {
+    if args.is_empty() {
+      throw("- expects at least 1 argument.")
+    }
+    if args.len() == 1 {
+      return Num(0 - as_num(args.first().or_throw()))
+    }
+    return num_fold(args.slice(1, args.len()), as_num(args.first().or_throw()), fun(x: Int, y: Int) { x - y })
+  }
+  if name == "/" {
+    if args.len() < 2 {
+      throw("/ expects at least 2 arguments.")
+    }
+    return num_fold(args.slice(1, args.len()), as_num(args.first().or_throw()), fun(x: Int, y: Int) { x / y })
+  }
+  if (name == "modulo") || (name == "remainder") {
+    arity_check(name, args, 2)
+    return Num(as_num(args.first().or_throw()) % as_num(args.get(1).or_throw()))
+  }
+  if name == "=" {
+    return num_compare(name, args, fun(x: Int, y: Int) { x == y })
+  }
+  if name == "<" {
+    return num_compare(name, args, fun(x: Int, y: Int) { x < y })
+  }
+  if name == ">" {
+    return num_compare(name, args, fun(x: Int, y: Int) { x > y })
+  }
+  if name == "<=" {
+    return num_compare(name, args, fun(x: Int, y: Int) { x <= y })
+  }
+  if name == ">=" {
+    return num_compare(name, args, fun(x: Int, y: Int) { x >= y })
+  }
+  if name == "abs" {
+    arity_check(name, args, 1)
+    let n = as_num(args.first().or_throw())
+    return Num(if n < 0 { 0 - n } else { n })
+  }
+  if (name == "equal?") || (name == "eq?") {
+    arity_check(name, args, 2)
+    return BoolVal(args.first().or_throw() == args.get(1).or_throw())
+  }
+  if name == "not" {
+    arity_check(name, args, 1)
+    return BoolVal(not(is_truthy(args.first().or_throw())))
+  }
+  if name == "car" {
+    arity_check(name, args, 1)
+    match as_list(args.first().or_throw()).first() {
+      Some(v) => { return v }
+      None => throw("car: empty list.")
+    }
+  }
+  if name == "cdr" {
+    arity_check(name, args, 1)
+    let items = as_list(args.first().or_throw())
+    if items.is_empty() {
+      throw("cdr: empty list.")
+    }
+    return SList(items.slice(1, items.len()))
+  }
+  if name == "cons" {
+    arity_check(name, args, 2)
+    let tail = match args.get(1).or_throw() {
+      SList(items) => items
+      _ => throw("cons: improper pairs are not supported, the second argument must be a list.")
+    }
+    return SList([args.first().or_throw()].concat(tail))
+  }
+  if name == "list" {
+    return SList(args)
+  }
+  if name == "length" {
+    arity_check(name, args, 1)
+    return Num(as_list(args.first().or_throw()).len())
+  }
+  if name == "append" {
+    let items: List<Value> = []
+    for arg in args {
+      items = items.concat(as_list(arg))
+    }
+    return SList(items)
+  }
+  if name == "reverse" {
+    arity_check(name, args, 1)
+    let items = as_list(args.first().or_throw())
+    let reversed: List<Value> = []
+    for item in items {
+      reversed = [item].concat(reversed)
+    }
+    return SList(reversed)
+  }
+  if name == "null?" {
+    arity_check(name, args, 1)
+    return BoolVal(match args.first().or_throw() {
+        SList(items) => items.is_empty()
+        _ => False
+    })
+  }
+  if name == "pair?" {
+    arity_check(name, args, 1)
+    return BoolVal(match args.first().or_throw() {
+        SList(items) => items.is_non_empty()
+        _ => False
+    })
+  }
+  if name == "number?" {
+    arity_check(name, args, 1)
+    return BoolVal(match args.first().or_throw() {
+        Num(_) => True
+        _ => False
+    })
+  }
+  if name == "symbol?" {
+    arity_check(name, args, 1)
+    return BoolVal(match args.first().or_throw() {
+        Sym(_) => True
+        _ => False
+    })
+  }
+  if name == "string?" {
+    arity_check(name, args, 1)
+    return BoolVal(match args.first().or_throw() {
+        Str(_) => True
+        _ => False
+    })
+  }
+  if name == "procedure?" {
+    arity_check(name, args, 1)
+    return BoolVal(match args.first().or_throw() {
+        Closure(_) => True
+        Builtin(_) => True
+        _ => False
+    })
+  }
+  if name == "string-append" {
+    let s = ""
+    for arg in args {
+      match arg {
+        Str(part) => { s = s ^ part }
+        _ => throw("string-append expects string arguments.")
+      }
+    }
+    return Str(s)
+  }
+  if name == "string-length" {
+    arity_check(name, args, 1)
+    match args.first().or_throw() {
+      Str(s) => { return Num(s.len()) }
+      _ => throw("string-length expects a string.")
+    }
+  }
+  if name == "map" {
+    arity_check(name, args, 2)
+    let f = args.first().or_throw()
+    let items = as_list(args.get(1).or_throw())
+    return SList(items.map(fun(item: Value) { apply_fn(f, [item], globals) }))
+  }
+  if name == "filter" {
+    arity_check(name, args, 2)
+    let f = args.first().or_throw()
+    let items = as_list(args.get(1).or_throw())
+    return SList(items.filter(fun(item: Value) { is_truthy(apply_fn(f, [item], globals)) }))
+  }
+  if name == "apply" {
+    arity_check(name, args, 2)
+    return apply_fn(args.first().or_throw(), as_list(args.get(1).or_throw()), globals)
+  }
+  if name == "display" {
+    arity_check(name, args, 1)
+    print(display_str(args.first().or_throw()))
+    return Unspecified
+  }
+  if name == "newline" {
+    arity_check(name, args, 0)
+    println("")
+    return Unspecified
+  }
+
+  throw("Unknown builtin: " ^ name)
+}
+
+// --- Top level ---
+
+fun builtin_names(): List<String> {
+  ["+", "-", "*", "/", "modulo", "remainder", "=", "<", ">", "<=", ">=",
+   "abs", "equal?", "eq?", "not", "car", "cdr", "cons", "list", "length",
+   "append", "reverse", "null?", "pair?", "number?", "symbol?", "string?",
+   "procedure?", "string-append", "string-length", "map", "filter",
+   "apply", "display", "newline"]
+}
+
+fun default_globals(): Dict<Value> {
+  let globals: Dict<Value> = Dict[]
+  for name in builtin_names() {
+    globals = globals.set(name, Builtin(name))
+  }
+  globals
+}
+
+/// Evaluate a top-level expression. Returns the value and the
+/// (possibly extended) global environment.
+fun eval_toplevel(expr: Value, globals: Dict<Value>): (Value, Dict<Value>) {
+  let empty_env: Dict<Value> = Dict[]
+  match as_define(expr) {
+    Some((name, value_expr)) => {
+      let v = eval(value_expr, empty_env, globals)
+      (Unspecified, globals.set(name, v))
+    }
+    None => (eval(expr, empty_env, globals), globals)
+  }
+}
+
+/// Evaluate a whole program, returning the value of the last
+/// expression.
+public fun run_program(src: String): Value {
+  let globals = default_globals()
+  let result: Value = Unspecified
+
+  for expr in parse_program(src) {
+    let (value, new_globals) = eval_toplevel(expr, globals)
+    result = value
+    globals = new_globals
+  }
+
+  result
+}
+
+/// Evaluate `src` and render the final value with `write`. This is
+/// the main entry point for tests.
+public fun interp(src: String): String {
+  write_str(run_program(src))
+}
+
+/// Evaluate one line of REPL input, printing the value of each
+/// expression, and return the updated global environment.
+fun eval_repl_line(line: String, globals: Dict<Value>): Dict<Value> {
+  let current_globals = globals
+  for expr in parse_program(line) {
+    let (value, new_globals) = eval_toplevel(expr, current_globals)
+    current_globals = new_globals
+    match value {
+      Unspecified => {}
+      _ => println(write_str(value))
+    }
+  }
+  current_globals
+}
+
+fun repl(): Unit {
+  println("A basic Scheme interpreter. Enter a blank line to exit.")
+
+  let globals = default_globals()
+  while True {
+    print("> ")
+    let line = match read_line() {
+      Ok(line) => line
+      Err(_) => break
+    }
+    // read_line() returns Ok("") at end of input rather than an Err,
+    // so an empty line is indistinguishable from EOF. Treat both as a
+    // request to exit.
+    if line.trim() == "" {
+      break
+    }
+
+    globals = eval_repl_line(line, globals)
+  }
+}
+
+fun run_file(path: String): Unit {
+  let src = fs::read_file(Path{ p: path }).or_throw()
+  let _ = run_program(src)
+}
+
+fun main(): Unit {
+  let args = shell_arguments()
+  if args.is_empty() {
+    repl()
+  } else {
+    for arg in args {
+      run_file(arg)
+    }
+  }
+}
+
+main()
+
+// --- Tests ---
+
+test interp_arithmetic {
+  assert(interp("(+ 1 2)") == "3")
+  assert(interp("(+ 1 2 3 4)") == "10")
+  assert(interp("(- 10 3)") == "7")
+  assert(interp("(- 5)") == "-5")
+  assert(interp("(* 2 3 4)") == "24")
+  assert(interp("(/ 10 2)") == "5")
+  assert(interp("(modulo 7 3)") == "1")
+  assert(interp("(abs -4)") == "4")
+}
+
+test interp_comparisons {
+  assert(interp("(= 1 1)") == "#t")
+  assert(interp("(< 1 2 3)") == "#t")
+  assert(interp("(< 1 3 2)") == "#f")
+  assert(interp("(>= 3 3 2)") == "#t")
+}
+
+test interp_if_and_truthiness {
+  assert(interp("(if #t 1 2)") == "1")
+  assert(interp("(if #f 1 2)") == "2")
+  assert(interp("(if 0 1 2)") == "1")
+  assert(interp("(if '() 1 2)") == "1")
+}
+
+test interp_and_or {
+  assert(interp("(and 1 2 3)") == "3")
+  assert(interp("(and 1 #f 3)") == "#f")
+  assert(interp("(or #f 2)") == "2")
+  assert(interp("(or #f #f)") == "#f")
+}
+
+test interp_quote {
+  assert(interp("'foo") == "foo")
+  assert(interp("'(1 2 3)") == "(1 2 3)")
+  assert(interp("(quote (a (b c)))") == "(a (b c))")
+}
+
+test interp_lists {
+  assert(interp("(car '(1 2 3))") == "1")
+  assert(interp("(cdr '(1 2 3))") == "(2 3)")
+  assert(interp("(cons 1 '(2 3))") == "(1 2 3)")
+  assert(interp("(list 1 2 (+ 1 2))") == "(1 2 3)")
+  assert(interp("(length '(a b c))") == "3")
+  assert(interp("(append '(1 2) '(3 4))") == "(1 2 3 4)")
+  assert(interp("(reverse '(1 2 3))") == "(3 2 1)")
+  assert(interp("(null? '())") == "#t")
+  assert(interp("(null? '(1))") == "#f")
+  assert(interp("(pair? '(1))") == "#t")
+}
+
+test interp_strings {
+  assert(interp("\"hello\"") == "\"hello\"")
+  assert(interp("(string-append \"foo\" \"bar\")") == "\"foobar\"")
+  assert(interp("(string-length \"hello\")") == "5")
+}
+
+test interp_lambda {
+  assert(interp("((lambda (x) (* x x)) 5)") == "25")
+  assert(interp("((lambda (x y) (+ x y)) 3 4)") == "7")
+}
+
+test interp_define {
+  assert(interp("(define x 42) x") == "42")
+  assert(interp("(define (square x) (* x x)) (square 6)") == "36")
+}
+
+test interp_recursion {
+  let fact = "
+    (define (fact n)
+      (if (= n 0)
+          1
+          (* n (fact (- n 1)))))
+    (fact 10)"
+  assert(interp(fact) == "3628800")
+
+  let fib = "
+    (define (fib n)
+      (if (< n 2)
+          n
+          (+ (fib (- n 1)) (fib (- n 2)))))
+    (fib 15)"
+  assert(interp(fib) == "610")
+}
+
+test interp_closures {
+  let adder = "
+    (define (make-adder n)
+      (lambda (x) (+ x n)))
+    (define add5 (make-adder 5))
+    (add5 37)"
+  assert(interp(adder) == "42")
+}
+
+test interp_let {
+  assert(interp("(let ((x 2) (y 3)) (+ x y))") == "5")
+  assert(interp("(let* ((x 2) (y (* x x))) (+ x y))") == "6")
+  assert(interp("(define x 1) (let ((x 2)) x)") == "2")
+  assert(interp("(define x 1) (let ((x 2)) x) x") == "1")
+}
+
+test interp_cond {
+  let classify = "
+    (define (classify n)
+      (cond ((< n 0) 'negative)
+            ((= n 0) 'zero)
+            (else 'positive)))
+    (list (classify -5) (classify 0) (classify 3))"
+  assert(interp(classify) == "(negative zero positive)")
+}
+
+test interp_higher_order {
+  assert(interp("(map (lambda (x) (* x 2)) '(1 2 3))") == "(2 4 6)")
+  assert(interp("(filter (lambda (x) (< x 3)) '(1 2 3 4))") == "(1 2)")
+  assert(interp("(apply + '(1 2 3))") == "6")
+}
+
+test interp_equal {
+  assert(interp("(equal? '(1 2) '(1 2))") == "#t")
+  assert(interp("(equal? '(1 2) '(1 3))") == "#f")
+  assert(interp("(equal? 'a 'a)") == "#t")
+  assert(interp("(equal? \"a\" 'a)") == "#f")
+}
+
+test interp_begin {
+  assert(interp("(begin 1 2 3)") == "3")
+}
+
+test interp_internal_define {
+  let src = "
+    (define (f x)
+      (define y 10)
+      (+ x y))
+    (f 5)"
+  assert(interp(src) == "15")
+}
+
+test interp_comments {
+  assert(interp("; a comment\n(+ 1 2) ; another") == "3")
+}

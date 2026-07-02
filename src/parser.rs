@@ -729,12 +729,17 @@ fn unescape_string(token: &Token<'_>) -> (Vec<ParseError>, String) {
                     res.push('"');
                     i += 2;
                 }
-                _ => {
+                other => {
+                    let sequence = match other {
+                        Some(next) => msgcode!("\\{}", next),
+                        None => msgcode!("\\"),
+                    };
+
                     diagnostics.push(ParseError::Invalid {
                         position: token.position.clone(),
                         message: ErrorMessage(vec![
                             msgtext!("Invalid escape sequence "),
-                            msgcode!("\\{}", c),
+                            sequence,
                             msgtext!(". Only "),
                             msgcode!("\\\\"),
                             msgtext!(", "),

@@ -2,6 +2,7 @@
 
 use ordered_float::OrderedFloat;
 use rustc_hash::FxHashMap;
+use strum_macros::EnumIter;
 
 use std::fmt::Display;
 use std::path::PathBuf;
@@ -246,7 +247,7 @@ impl PartialEq for BinaryOperatorSymbol {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BinaryOperatorKind {
     Add,
     AddFloat,
@@ -283,7 +284,7 @@ impl BinaryOperatorKind {
             BinaryOperatorKind::Divide => "/",
             BinaryOperatorKind::DivideFloat => "/.",
             BinaryOperatorKind::Modulo => "%",
-            BinaryOperatorKind::Exponent => "^",
+            BinaryOperatorKind::Exponent => "**",
             BinaryOperatorKind::Equal => "==",
             BinaryOperatorKind::NotEqual => "!=",
             BinaryOperatorKind::LessThan => "<",

@@ -6295,7 +6295,7 @@ fn eval_built_in_method_call(
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
-                            position: arg_positions[1].clone(),
+                            position: arg_positions[0].clone(),
                             message: format_type_error(
                                 &TypeName { text: "Int".into() },
                                 &arg_values[0],
@@ -6317,7 +6317,7 @@ fn eval_built_in_method_call(
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(ExceptionInfo {
-                            position: arg_positions[2].clone(),
+                            position: arg_positions[1].clone(),
                             message: format_type_error(
                                 &TypeName { text: "Int".into() },
                                 &arg_values[1],
@@ -8131,6 +8131,16 @@ mod tests {
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::new(Value_::String("bc".into())));
+    }
+
+    #[test]
+    fn test_eval_string_substring_non_int_arg() {
+        let mut id_gen = IdGenerator::default();
+        let mut vfs = Vfs::default();
+        let exprs = parse_exprs_from_str("\"hello\".substring(0, \"x\")", &mut vfs, &mut id_gen);
+
+        let mut env = Env::new(id_gen, vfs);
+        assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]

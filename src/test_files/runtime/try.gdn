@@ -1,14 +1,77 @@
-// The try block is evaluated and its last value is returned.
-// (catch is not yet evaluated at runtime.)
-let x = try {
-  println("in try")
-  "from try"
-} catch (e) {
-  "from catch"
+fun throws_deeply(): Int {
+  throw("thrown in a nested call")
 }
-println(x)
+
+fun calls_throws_deeply(): Int {
+  throws_deeply()
+}
+
+fun early_return(): Int {
+  try {
+    return 1
+  } catch (_) {
+    2
+  }
+}
+
+{
+  // If the try block doesn't throw, its last value is returned and
+  // the catch block is not evaluated.
+  let no_throw = try {
+    "from try"
+  } catch (_) {
+    "from catch"
+  }
+  println(no_throw)
+
+  // If the try block throws, the catch block is evaluated with the
+  // exception message bound to the catch variable.
+  let caught = try {
+    throw("thrown directly")
+  } catch (e) {
+    "caught: " ^ e
+  }
+  println(caught)
+
+  // or_throw() exceptions are caught too.
+  let no_int: Option<Int> = None
+  let or_throw_caught = try {
+    no_int.or_throw()
+  } catch (_) {
+    42
+  }
+  println(string_repr(or_throw_caught))
+
+  // Exceptions thrown in nested calls are caught, and evaluation
+  // continues with values elsewhere in the expression intact.
+  let items = [Ok(1), try {
+    Ok(calls_throws_deeply())
+  } catch (e) {
+    Err(e)
+  }, Ok(3)]
+  println(string_repr(items))
+
+  // The innermost try catches.
+  let nested = try {
+    try {
+      throw("inner")
+    } catch (e) {
+      "inner caught: " ^ e
+    }
+  } catch (_) {
+    "outer caught"
+  }
+  println(nested)
+
+  // return inside a try block returns from the enclosing function.
+  println(string_repr(early_return()))
+}
 
 // args: run
 // expected stdout:
-// in try
 // from try
+// caught: thrown directly
+// 42
+// [Ok(1), Err("thrown in a nested call"), Ok(3)]
+// inner caught: inner
+// 1

@@ -2152,7 +2152,8 @@ impl TypeCheckVisitor<'_> {
         let try_ty = self.infer_block(try_body, type_bindings, expected_return_ty);
 
         self.bindings.enter_block();
-        self.set_binding(catch_sym, Type::Any);
+        // The catch variable is bound to the exception message.
+        self.set_binding(catch_sym, Type::string());
         let catch_ty = self.infer_block(catch_body, type_bindings, expected_return_ty);
         self.bindings.exit_block();
 
@@ -2633,7 +2634,8 @@ impl TypeCheckVisitor<'_> {
                 self.check_block(expected_ty, try_body, type_bindings, expected_return_ty);
 
                 self.bindings.enter_block();
-                self.set_binding(catch_sym, Type::Any);
+                // The catch variable is bound to the exception message.
+                self.set_binding(catch_sym, Type::string());
                 self.check_block(expected_ty, catch_body, type_bindings, expected_return_ty);
                 self.bindings.exit_block();
 

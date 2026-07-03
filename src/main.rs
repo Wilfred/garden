@@ -169,6 +169,10 @@ enum CliCommands {
         /// does not print the formatted output.
         #[clap(long, action)]
         check: bool,
+        /// Rewrite the file in place with the formatted output
+        /// instead of printing it.
+        #[clap(long, action, conflicts_with = "check")]
+        write: bool,
     },
     /// Check the Garden program at the path specified for issues.
     Check {
@@ -664,7 +668,7 @@ fn main() {
                 }
             }
         }
-        CliCommands::Format { path, check } => {
+        CliCommands::Format { path, check, write } => {
             let abs_path = to_abs_path(&path);
             let raw_src = read_utf8_or_die(&abs_path);
             let mut src = remove_testing_footer(&raw_src);
@@ -681,6 +685,15 @@ fn main() {
                 if src != formatted {
                     eprintln!("{}: not formatted", path.display());
                     std::process::exit(1);
+                }
+            } else if write {
+                // Only write when the content changes, to avoid
+                // touching the mtime needlessly.
+                if src != formatted {
+                    if let Err(e) = std::fs::write(&abs_path, &formatted) {
+                        eprintln!("Error: Could not write file {}: {}", path.display(), e);
+                        std::process::exit(1);
+                    }
                 }
             } else {
                 print!("{formatted}");

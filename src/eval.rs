@@ -7330,15 +7330,22 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
     while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
+        // `exprs_to_eval` interleaves expressions we are currently
+        // inside (in-progress states) with later statements of
+        // enclosing blocks that haven't run yet (`NotEvaluated`). A
+        // `NotEvaluated` loop is scheduled future work, not a loop
+        // we're inside, so discard it like any other expression.
+        let loop_in_progress = !matches!(expr_state, ExpressionState::NotEvaluated);
+
         match &expr.expr_ {
-            Expression_::While(_, _) => {
+            Expression_::While(_, _) if loop_in_progress => {
                 env.current_frame_mut()
                     .exprs_to_eval
                     .push((ExpressionState::EvaluatedSubexpressions, Rc::clone(&expr)));
 
                 break;
             }
-            Expression_::ForIn(_, _, _) => {
+            Expression_::ForIn(_, _, _) if loop_in_progress => {
                 // We're exiting the loop early, we need to follow the
                 // pattern of `eval_for_in` and maintain stack
                 // discipline for values pushed for the loop body.
@@ -7380,10 +7387,15 @@ fn eval_continue(env: &mut Env) {
     // Pop all the currently evaluating expressions until we are back
     // at the loop.
     while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
-        if matches!(
-            expr.expr_,
-            Expression_::While(_, _) | Expression_::ForIn(_, _, _)
-        ) {
+        // As in `eval_break`, a `NotEvaluated` loop is a pending
+        // statement of an enclosing block, not a loop we're inside,
+        // so skip it.
+        if !matches!(expr_state, ExpressionState::NotEvaluated)
+            && matches!(
+                expr.expr_,
+                Expression_::While(_, _) | Expression_::ForIn(_, _, _)
+            )
+        {
             // TODO: this needs to clean up any items pushed to the value stack.
             // E.g. in `1 + continue`.
 

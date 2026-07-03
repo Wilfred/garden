@@ -1056,9 +1056,24 @@ fn parse_pattern(
 
     let payload = if peeked_symbol_is(tokens, "(") {
         require_token(tokens, diagnostics, "(");
-        let dest = parse_let_destination(tokens, id_gen, diagnostics);
+
+        // A symbol followed by `(` is a nested pattern, such as
+        // `Wrapped(x)` in `Some(Wrapped(x))`. Otherwise, the payload
+        // is a binding such as `Some(value)` or a tuple
+        // destructuring such as `Some((x, y))`.
+        let is_nested_pattern = matches!(
+            tokens.peek_two(),
+            Some((first, second)) if first.text != "(" && second.text == "("
+        );
+
+        let payload = if is_nested_pattern {
+            PatternPayload::Pattern(Box::new(parse_pattern(tokens, id_gen, diagnostics)))
+        } else {
+            PatternPayload::Dest(parse_let_destination(tokens, id_gen, diagnostics))
+        };
+
         require_token(tokens, diagnostics, ")");
-        Some(dest)
+        Some(payload)
     } else {
         None
     };

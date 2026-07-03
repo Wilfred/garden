@@ -328,7 +328,17 @@ pub(crate) struct Pattern {
     /// E.g. `Some` or `None`.
     pub(crate) variant_sym: Symbol,
     /// E.g. `foo` in `Some(foo) => `.
-    pub(crate) payload: Option<LetDestination>,
+    pub(crate) payload: Option<PatternPayload>,
+}
+
+/// The payload of a pattern, e.g. `foo` in `Some(foo)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum PatternPayload {
+    /// A variable binding or tuple destructuring, e.g. `Some(foo)`
+    /// or `Some((x, y))`.
+    Dest(LetDestination),
+    /// A nested pattern, e.g. `Some(Wrapped(x))`.
+    Pattern(Box<Pattern>),
 }
 
 #[derive(Debug, Clone, Eq)]

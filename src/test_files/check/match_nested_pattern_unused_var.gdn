@@ -1,0 +1,22 @@
+public fun foo(x: Option<Option<Int>>): Int {
+  match x {
+    Some(Some(n)) => 0
+    Some(_) => 1
+    None => 2
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `n` is unused.
+// 
+// -| src/test_files/check/match_nested_pattern_unused_var.gdn:3:15
+// 1| public fun foo(x: Option<Option<Int>>): Int {
+// 2|   match x {
+// 3|     Some(Some(n)) => 0
+//  |               ^
+// 4|     Some(_) => 1
+// 5|     None => 2
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

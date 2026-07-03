@@ -261,8 +261,8 @@ impl Visitor for FreeVarsVisitor {
 
         for (pattern, block) in cases {
             self.local_bindings.push(FxHashSet::default());
-            if let Some(payload_dest) = &pattern.payload {
-                self.insert_dest_bindings(payload_dest);
+            if let Some(payload) = &pattern.payload {
+                self.insert_payload_bindings(payload);
             }
 
             self.visit_block(block);
@@ -396,6 +396,19 @@ impl FreeVarsVisitor {
             ast::LetDestination::Destructure(symbols) => {
                 for symbol in symbols {
                     block_bindings.insert(symbol.name.clone());
+                }
+            }
+        }
+    }
+
+    fn insert_payload_bindings(&mut self, payload: &ast::PatternPayload) {
+        match payload {
+            ast::PatternPayload::Dest(dest) => {
+                self.insert_dest_bindings(dest);
+            }
+            ast::PatternPayload::Pattern(inner_pattern) => {
+                if let Some(inner_payload) = &inner_pattern.payload {
+                    self.insert_payload_bindings(inner_payload);
                 }
             }
         }

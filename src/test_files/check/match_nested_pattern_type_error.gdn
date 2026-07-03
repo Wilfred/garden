@@ -1,0 +1,23 @@
+public fun foo(x: Option<Int>): Int {
+  // The payload of `Some` is an `Int`, so the nested pattern can
+  // never match.
+  match x {
+    Some(Some(n)) => n
+    Some(_) => 0
+    None => 1
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: This match case is for `Option`, but you're matching on a `Int`.
+// 
+// -| src/test_files/check/match_nested_pattern_type_error.gdn:5:10
+// 3|   // never match.
+// 4|   match x {
+// 5|     Some(Some(n)) => n
+//  |          ^^^^
+// 6|     Some(_) => 0
+// 7|     None => 1
+

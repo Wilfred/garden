@@ -3,7 +3,8 @@ use std::rc::Rc;
 use crate::parser::ast::ToplevelExpression;
 use crate::parser::{
     Block, EnumInfo, Expression, Expression_, FunInfo, ImportInfo, LetDestination, MethodInfo,
-    MethodKind, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
+    MethodKind, Pattern, PatternPayload, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint,
+    TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -268,12 +269,25 @@ pub(crate) trait Visitor {
     fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Block)]) {
         self.visit_expr(scrutinee);
         for (pattern, case_expr) in cases {
-            self.visit_symbol(&pattern.variant_sym);
-            if let Some(dest) = &pattern.payload {
+            self.visit_pattern(pattern);
+            self.visit_block(case_expr);
+        }
+    }
+
+    fn visit_pattern(&mut self, pattern: &Pattern) {
+        self.visit_pattern_default(pattern);
+    }
+
+    fn visit_pattern_default(&mut self, pattern: &Pattern) {
+        self.visit_symbol(&pattern.variant_sym);
+        match &pattern.payload {
+            Some(PatternPayload::Dest(dest)) => {
                 self.visit_dest(dest);
             }
-
-            self.visit_block(case_expr);
+            Some(PatternPayload::Pattern(inner_pattern)) => {
+                self.visit_pattern(inner_pattern);
+            }
+            None => {}
         }
     }
 

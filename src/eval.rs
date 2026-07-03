@@ -25,8 +25,8 @@ use crate::parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, BinaryOperatorSymbol, Block, BuiltInMethodKind,
     EnumInfo, Expression, ExpressionWithComma, Expression_, FunInfo, IdGenerator, ImportInfo,
     InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments,
-    ParenthesizedParameters, Pattern, Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo,
-    ToplevelItem, TypeHint, TypeName, TypeSymbol, Visibility,
+    ParenthesizedParameters, Pattern, PatternPayload, Symbol, SymbolName, SymbolWithHint, SyntaxId,
+    TestInfo, ToplevelItem, TypeHint, TypeName, TypeSymbol, Visibility,
 };
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::diagnostics::{ErrorMessage, MessagePart};
@@ -7621,8 +7621,6 @@ fn eval_match_cases(
 
     let Value_::EnumVariant {
         type_name: value_type_name,
-        variant_idx: value_variant_idx,
-        payload: value_payload,
         ..
     } = scrutinee_value.as_ref()
     else {
@@ -7648,104 +7646,8 @@ fn eval_match_cases(
     };
 
     for (pattern, case_expr) in cases {
-        if pattern.variant_sym.name.is_underscore() {
-            eval_block(env, expr_value_is_used, case_expr);
-            return Ok(());
-        }
-
-        let Some(value) = get_var(&pattern.variant_sym, env) else {
-            let msg = ErrorMessage(vec![
-                msgtext!("Expected an enum variant named "),
-                msgcode!("{}", pattern.variant_sym.name),
-                msgtext!(" but nothing is defined with that name."),
-            ]);
-            return Err(EvalError::Exception(ExceptionInfo {
-                position: pattern.variant_sym.position.clone(),
-                message: msg,
-            }));
-        };
-
-        let (pattern_type_name, pattern_variant_idx) = match value.as_ref() {
-            Value_::EnumVariant {
-                type_name,
-                variant_idx,
-                ..
-            } => (type_name, *variant_idx),
-            Value_::EnumConstructor {
-                type_name,
-                variant_idx,
-                ..
-            } => (type_name, *variant_idx),
-            _ => {
-                // TODO: error messages should include examples of valid code.
-                let msg = ErrorMessage(vec![Text(format!(
-                    "Patterns must be enum variants, got `{}`",
-                    value.display(env)
-                ))]);
-                return Err(EvalError::Exception(ExceptionInfo {
-                    position: pattern.variant_sym.position.clone(),
-                    message: msg,
-                }));
-            }
-        };
-
-        if value_type_name == pattern_type_name && *value_variant_idx == pattern_variant_idx {
-            let mut bindings: Vec<(Symbol, Value)> = vec![];
-            match (&value_payload, &pattern.payload) {
-                (Some(payload), Some(payload_dest)) => match payload_dest {
-                    LetDestination::Symbol(symbol) => {
-                        if !symbol.name.is_underscore() {
-                            bindings.push((symbol.clone(), (**payload).clone()));
-                        }
-                    }
-                    LetDestination::Destructure(symbols) => {
-                        let items = match payload.as_ref().as_ref() {
-                            Value_::Tuple { items, .. } => items,
-                            _ => {
-                                let msg = ErrorMessage(vec![
-                                    msgtext!(
-                                        "Expected a tuple of {} items, but got ",
-                                        symbols.len(),
-                                    ),
-                                    msgcode!("{}", type_representation(payload.as_ref())),
-                                    msgtext!("."),
-                                ]);
-                                return Err(EvalError::Exception(ExceptionInfo {
-                                    position: pattern.variant_sym.position.clone(),
-                                    message: msg,
-                                }));
-                            }
-                        };
-
-                        if items.len() != symbols.len() {
-                            let msg = ErrorMessage(vec![msgtext!(
-                                "Expected a tuple of {} items, but got a tuple of {} items.",
-                                symbols.len(),
-                                items.len(),
-                            )]);
-                            return Err(EvalError::Exception(ExceptionInfo {
-                                position: pattern.variant_sym.position.clone(),
-                                message: msg,
-                            }));
-                        }
-
-                        for (symbol, value) in symbols.iter().zip(items) {
-                            if symbol.name.is_underscore() {
-                                continue;
-                            }
-
-                            bindings.push((symbol.clone(), value.clone()));
-                        }
-                    }
-                },
-                (None, None) => {}
-                _ => {
-                    // This variant has been redefined and previously
-                    // had/didn't have a payload. Ignore it.
-                    continue;
-                }
-            }
-
+        let mut bindings: Vec<(Symbol, Value)> = vec![];
+        if pattern_matches(env, pattern, &scrutinee_value, &mut bindings)? {
             let stack_frame = env.current_frame_mut();
             stack_frame.bindings_next_block = bindings;
             eval_block(env, expr_value_is_used, case_expr);
@@ -7760,6 +7662,134 @@ fn eval_match_cases(
         position: scrutinee_pos.clone(),
         message: msg,
     }))
+}
+
+/// Check whether `value` matches `pattern`. If it does, append the
+/// pattern's variable bindings to `bindings` and return true.
+fn pattern_matches(
+    env: &Env,
+    pattern: &Pattern,
+    value: &Value,
+    bindings: &mut Vec<(Symbol, Value)>,
+) -> Result<bool, EvalError> {
+    if pattern.variant_sym.name.is_underscore() {
+        return Ok(true);
+    }
+
+    let Value_::EnumVariant {
+        type_name: value_type_name,
+        variant_idx: value_variant_idx,
+        payload: value_payload,
+        ..
+    } = value.as_ref()
+    else {
+        let msg = ErrorMessage(vec![Text(format!(
+            "Expected an enum value, but got {}: {}",
+            Type::from_value(value),
+            value.display(env)
+        ))]);
+        return Err(EvalError::Exception(ExceptionInfo {
+            position: pattern.variant_sym.position.clone(),
+            message: msg,
+        }));
+    };
+
+    let Some(variant_value) = get_var(&pattern.variant_sym, env) else {
+        let msg = ErrorMessage(vec![
+            msgtext!("Expected an enum variant named "),
+            msgcode!("{}", pattern.variant_sym.name),
+            msgtext!(" but nothing is defined with that name."),
+        ]);
+        return Err(EvalError::Exception(ExceptionInfo {
+            position: pattern.variant_sym.position.clone(),
+            message: msg,
+        }));
+    };
+
+    let (pattern_type_name, pattern_variant_idx) = match variant_value.as_ref() {
+        Value_::EnumVariant {
+            type_name,
+            variant_idx,
+            ..
+        } => (type_name, *variant_idx),
+        Value_::EnumConstructor {
+            type_name,
+            variant_idx,
+            ..
+        } => (type_name, *variant_idx),
+        _ => {
+            // TODO: error messages should include examples of valid code.
+            let msg = ErrorMessage(vec![Text(format!(
+                "Patterns must be enum variants, got `{}`",
+                variant_value.display(env)
+            ))]);
+            return Err(EvalError::Exception(ExceptionInfo {
+                position: pattern.variant_sym.position.clone(),
+                message: msg,
+            }));
+        }
+    };
+
+    if value_type_name != pattern_type_name || *value_variant_idx != pattern_variant_idx {
+        return Ok(false);
+    }
+
+    match (&value_payload, &pattern.payload) {
+        (Some(payload), Some(PatternPayload::Dest(payload_dest))) => match payload_dest {
+            LetDestination::Symbol(symbol) => {
+                if !symbol.name.is_underscore() {
+                    bindings.push((symbol.clone(), (**payload).clone()));
+                }
+                Ok(true)
+            }
+            LetDestination::Destructure(symbols) => {
+                let items = match payload.as_ref().as_ref() {
+                    Value_::Tuple { items, .. } => items,
+                    _ => {
+                        let msg = ErrorMessage(vec![
+                            msgtext!("Expected a tuple of {} items, but got ", symbols.len(),),
+                            msgcode!("{}", type_representation(payload.as_ref())),
+                            msgtext!("."),
+                        ]);
+                        return Err(EvalError::Exception(ExceptionInfo {
+                            position: pattern.variant_sym.position.clone(),
+                            message: msg,
+                        }));
+                    }
+                };
+
+                if items.len() != symbols.len() {
+                    let msg = ErrorMessage(vec![msgtext!(
+                        "Expected a tuple of {} items, but got a tuple of {} items.",
+                        symbols.len(),
+                        items.len(),
+                    )]);
+                    return Err(EvalError::Exception(ExceptionInfo {
+                        position: pattern.variant_sym.position.clone(),
+                        message: msg,
+                    }));
+                }
+
+                for (symbol, value) in symbols.iter().zip(items) {
+                    if symbol.name.is_underscore() {
+                        continue;
+                    }
+
+                    bindings.push((symbol.clone(), value.clone()));
+                }
+                Ok(true)
+            }
+        },
+        (Some(payload), Some(PatternPayload::Pattern(inner_pattern))) => {
+            pattern_matches(env, inner_pattern, payload, bindings)
+        }
+        (None, None) => Ok(true),
+        _ => {
+            // This variant has been redefined and previously
+            // had/didn't have a payload. Ignore it.
+            Ok(false)
+        }
+    }
 }
 
 /// Evaluate the toplevel expressions provided, and then stop. If we

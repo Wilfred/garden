@@ -99,7 +99,7 @@ impl Visitor for UnnecessaryLetVisitor {
                     self.check_block(block);
                 }
             }
-            Expression_::While(_, body) => {
+            Expression_::While { body, .. } => {
                 self.check_block(body);
             }
             Expression_::ForIn(_, _, body) => {

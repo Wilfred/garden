@@ -6451,7 +6451,9 @@ fn eval_expr(
                 }
             }
         },
-        Expression_::While(condition, ref body) => {
+        Expression_::While {
+            condition, body, ..
+        } => {
             match expr_state {
                 ExpressionState::NotEvaluated => {
                     // Once we've evaluated the condition, we can consider evaluating the body.
@@ -7281,7 +7283,7 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
     // longer inside the innermost loop.
     while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
         match &expr.expr_ {
-            Expression_::While(_, _) => {
+            Expression_::While { .. } => {
                 env.current_frame_mut()
                     .exprs_to_eval
                     .push((ExpressionState::EvaluatedSubexpressions, Rc::clone(&expr)));
@@ -7332,7 +7334,7 @@ fn eval_continue(env: &mut Env) {
     while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
         if matches!(
             expr.expr_,
-            Expression_::While(_, _) | Expression_::ForIn(_, _, _)
+            Expression_::While { .. } | Expression_::ForIn(_, _, _)
         ) {
             // TODO: this needs to clean up any items pushed to the value stack.
             // E.g. in `1 + continue`.

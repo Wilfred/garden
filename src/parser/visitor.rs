@@ -152,8 +152,10 @@ pub(crate) trait Visitor {
             Expression_::If(cond, then_body, else_body) => {
                 self.visit_expr_if(cond, then_body, else_body.as_ref());
             }
-            Expression_::While(cond, body) => {
-                self.visit_expr_while(cond, body);
+            Expression_::While {
+                condition, body, ..
+            } => {
+                self.visit_expr_while(condition, body);
             }
             Expression_::ForIn(sym, expr, body) => {
                 self.visit_expr_for_in(sym, expr, body);
@@ -410,7 +412,9 @@ pub(crate) trait MutVisitor {
                     self.visit_block(else_body);
                 }
             }
-            Expression_::While(condition, body) => {
+            Expression_::While {
+                condition, body, ..
+            } => {
                 self.visit_expr(Rc::make_mut(condition));
                 self.visit_block(body);
             }

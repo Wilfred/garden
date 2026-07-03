@@ -968,9 +968,11 @@ impl TypeCheckVisitor<'_> {
                 type_bindings,
                 expected_return_ty,
             ),
-            Expression_::While(cond_expr, block) => {
-                self.check_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
-                self.infer_block(block, type_bindings, expected_return_ty);
+            Expression_::While {
+                condition, body, ..
+            } => {
+                self.check_expr(&Type::bool(), condition, type_bindings, expected_return_ty);
+                self.infer_block(body, type_bindings, expected_return_ty);
                 Type::unit()
             }
             Expression_::ForIn(dest, expr, body) => {

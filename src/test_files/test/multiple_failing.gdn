@@ -9,9 +9,17 @@ test bar {
 // args: test
 // expected exit status: 1
 // expected stdout:
-// Failed: foo src/test_files/test/multiple_failing.gdn:2
-//   Expected `2` but got `1`.
-// Failed: bar src/test_files/test/multiple_failing.gdn:6
-//   Expected `2` but got `1`.
+// Failed: foo
+// Exception: Expected `2` but got `1`.
+// -| src/test_files/test/multiple_failing.gdn:2:10	 test foo
+// 2|   assert(1 == 2)
+//  |          ^^^^^^
+// 
+// Failed: bar
+// Exception: Expected `2` but got `1`.
+// -| src/test_files/test/multiple_failing.gdn:6:10	 test bar
+// 6|   assert(1 == 2)
+//  |          ^^^^^^
 // 
 // Ran 2 tests: 0 passed and 2 failed.
+

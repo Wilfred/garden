@@ -92,11 +92,11 @@ fn sandboxed_tests_summary(
     let mut num_reached_limit = 0;
 
     let mut tests: FxHashMap<_, TestState> = FxHashMap::default();
-    for (test_sym, err, test_body_err_pos) in &summary.tests {
+    for outcome in &summary.tests {
         let mut failure_start_offset = None;
         let mut failure_end_offset = None;
 
-        let msg = match err {
+        let msg = match &outcome.err {
             Some(EvalError::Interrupted) => {
                 num_errored += 1;
                 "interrupted".to_owned()
@@ -129,13 +129,13 @@ fn sandboxed_tests_summary(
             }
         };
 
-        if let Some(pos) = test_body_err_pos {
+        if let Some(pos) = &outcome.test_body_err_pos {
             failure_start_offset = Some(pos.start_offset);
             failure_end_offset = Some(pos.end_offset);
         }
 
         tests.insert(
-            test_sym.name.text.clone(),
+            outcome.test_sym.name.text.clone(),
             TestState {
                 description: msg,
                 failure_start_offset,
@@ -208,7 +208,7 @@ pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) -> String
     let tests_failed = summary
         .tests
         .iter()
-        .filter(|(_, err, _)| err.is_some())
+        .filter(|outcome| outcome.err.is_some())
         .count();
     let tests_passed = total_tests - tests_failed;
 
@@ -216,50 +216,42 @@ pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) -> String
     if tests_passed == 0 && tests_failed == 0 {
         s.push_str("No tests found.\n");
     } else {
-        for (test_sym, err, _) in &summary.tests {
-            let Some(err) = err else {
+        for outcome in &summary.tests {
+            let Some(err) = &outcome.err else {
                 continue;
             };
 
             s.push_str(&format!(
                 "Failed: {}",
                 if use_color {
-                    test_sym.name.text.bold().to_string()
+                    outcome.test_sym.name.text.bold().to_string()
                 } else {
-                    test_sym.name.text.clone()
+                    outcome.test_sym.name.text.clone()
                 }
             ));
 
-            let (pos, msg) = match err {
-                EvalError::Interrupted => (None, None),
-                EvalError::Exception(ExceptionInfo {
-                    position,
-                    message: msg,
-                }) => (Some(position), Some(msg)),
-                EvalError::AssertionFailed(position, msg) => (Some(position), Some(msg)),
-                EvalError::ReachedTickLimit(position) => (Some(position), None),
-                EvalError::ReachedStackLimit(position) => (Some(position), None),
-                EvalError::ForbiddenInSandbox(position) => (Some(position), None),
-            };
+            if let Some(trace) = &outcome.trace {
+                s.push('\n');
+                s.push_str(trace);
+                s.push('\n');
+            } else {
+                let pos = match err {
+                    EvalError::Interrupted => None,
+                    EvalError::Exception(ExceptionInfo { position, .. }) => Some(position),
+                    EvalError::AssertionFailed(position, _) => Some(position),
+                    EvalError::ReachedTickLimit(position) => Some(position),
+                    EvalError::ReachedStackLimit(position) => Some(position),
+                    EvalError::ForbiddenInSandbox(position) => Some(position),
+                };
 
-            match (pos, msg) {
-                (Some(pos), Some(msg)) => s.push_str(&format!(
-                    " {}\n  {}\n",
-                    pos.as_ide_string(&env.project_root),
-                    if use_color {
-                        msg.as_styled_string()
-                    } else {
-                        msg.as_string()
+                match pos {
+                    Some(pos) => {
+                        s.push_str(&format!(" {}\n", pos.as_ide_string(&env.project_root)))
                     }
-                )),
-                (Some(pos), None) => {
-                    s.push_str(&format!(" {}\n", pos.as_ide_string(&env.project_root)))
+                    None => s.push('\n'),
                 }
-                _ => s.push('\n'),
             }
-        }
 
-        if tests_failed > 0 {
             s.push('\n');
         }
 
@@ -330,11 +322,10 @@ pub(crate) fn run_tests_in_files(
     let tests_failed = summary
         .tests
         .iter()
-        .filter(|(_, err, _)| err.is_some())
+        .filter(|outcome| outcome.err.is_some())
         .count();
 
     print!("{}", describe_tests(&env, &summary));
-    // TODO: support printing back traces from every test failure.
     // TODO: print incremental progress as tests run.
 
     if tests_failed > 0 {

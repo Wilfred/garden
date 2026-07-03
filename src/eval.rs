@@ -16,7 +16,7 @@ use rand::Rng;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::checks::{check_toplevel_items, check_toplevel_items_in_env};
-use crate::diagnostics::{Diagnostic, Severity};
+use crate::diagnostics::{format_exception_with_stack, Diagnostic, Severity};
 use crate::env::{EnclosingSymbol, Env, StackFrame};
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
 use crate::json_session::{print_as_json, Response, ResponseKind};
@@ -291,9 +291,22 @@ pub(crate) struct ToplevelEvalSummary {
     pub(crate) values: Vec<Value>,
     pub(crate) new_syms: Vec<SymbolName>,
     pub(crate) diagnostics: Vec<Diagnostic>,
-    /// Which tests were run, the error if they failed, and the
-    /// position of the failure within the test body.
-    pub(crate) tests: Vec<(Symbol, Option<EvalError>, Option<Position>)>,
+    /// Which tests were run, and how each one went.
+    pub(crate) tests: Vec<TestOutcome>,
+}
+
+/// The result of running a single test.
+#[derive(Debug)]
+pub(crate) struct TestOutcome {
+    pub(crate) test_sym: Symbol,
+    /// The error, if the test failed.
+    pub(crate) err: Option<EvalError>,
+    /// The position of the failure within the test body, if the
+    /// failure occurred in a function called from the test.
+    pub(crate) test_body_err_pos: Option<Position>,
+    /// The stack trace at the point of failure, formatted for
+    /// display.
+    pub(crate) trace: Option<String>,
 }
 
 /// Load, but do not evaluate, `items`.
@@ -845,7 +858,12 @@ pub(crate) fn eval_tests_until_error(
         push_test_stackframe(test, env);
 
         eval(env, session)?;
-        tests.push((test.name_sym.clone(), None, None));
+        tests.push(TestOutcome {
+            test_sym: test.name_sym.clone(),
+            err: None,
+            test_body_err_pos: None,
+            trace: None,
+        });
 
         env.stack.pop_to_toplevel();
     }
@@ -864,7 +882,7 @@ pub(crate) fn eval_tests(
     env: &mut Env,
     session: &Session,
 ) -> ToplevelEvalSummary {
-    let mut tests: Vec<(Symbol, Option<EvalError>, Option<Position>)> = vec![];
+    let mut tests: Vec<TestOutcome> = vec![];
 
     let mut test_defs = vec![];
     for item in items {
@@ -885,7 +903,12 @@ pub(crate) fn eval_tests(
 
         match eval(env, session) {
             Ok(_) => {
-                tests.push((test.name_sym.clone(), None, None));
+                tests.push(TestOutcome {
+                    test_sym: test.name_sym.clone(),
+                    err: None,
+                    test_body_err_pos: None,
+                    trace: None,
+                });
             }
             Err(e) => {
                 // If we errored when calling something from the test
@@ -902,7 +925,28 @@ pub(crate) fn eval_tests(
                     test_body_err_pos = stack_frame.caller_pos.clone();
                 }
 
-                tests.push((test.name_sym.clone(), Some(e.clone()), test_body_err_pos));
+                // Format the stack trace now, before we unwind the
+                // stack.
+                let trace = match &e {
+                    EvalError::Exception(ExceptionInfo { position, message })
+                    | EvalError::AssertionFailed(position, message) => {
+                        Some(format_exception_with_stack(
+                            message,
+                            position,
+                            &env.stack.0,
+                            &env.vfs,
+                            &env.project_root,
+                        ))
+                    }
+                    _ => None,
+                };
+
+                tests.push(TestOutcome {
+                    test_sym: test.name_sym.clone(),
+                    err: Some(e.clone()),
+                    test_body_err_pos,
+                    trace,
+                });
                 if matches!(e, EvalError::Interrupted) {
                     break;
                 }

@@ -1,0 +1,15 @@
+// Escaped backslashes in various positions in string literals,
+// including immediately before the closing quote.
+println("\\\\")
+println("x\\")
+println("\\" ^ "\\")
+println("\\\"")
+println(string_repr("\\"))
+
+// args: run
+// expected stdout:
+// \\
+// x\
+// \\
+// \"
+// "\\"

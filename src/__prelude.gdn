@@ -1153,7 +1153,7 @@ public method get<T>(this: Dict<T>, key: String): Option<T> {
 /// scores.set("Luigi", 8)
 /// //-> Dict["Mario" => 10, "Luigi" => 8]
 /// ```
-public method set<T>(this: Dict<T>, key: String, Value: T): Dict<T> {
+public method set<T>(this: Dict<T>, key: String, value: T): Dict<T> {
   __BUILT_IN_IMPLEMENTATION
 }
 

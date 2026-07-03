@@ -715,7 +715,7 @@ fn handle_run_eval_request(
             let tests_failed = test_summary
                 .tests
                 .iter()
-                .filter(|(_, err, _pos)| err.is_some())
+                .filter(|outcome| outcome.err.is_some())
                 .count();
             let tests_passed = total_tests - tests_failed;
 

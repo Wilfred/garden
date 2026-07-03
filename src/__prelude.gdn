@@ -948,7 +948,8 @@ public fun eprintln(_: String): Unit {
 /// Read a single line of text from stdin.
 ///
 /// Returns `Ok` with the line (without trailing newline) on success,
-/// or `Err` with an error message on failure.
+/// or `Err` with an error message on failure. When there is no more
+/// input available (end of file), returns `Err("End of input.")`.
 ///
 /// ```
 /// match read_line() {

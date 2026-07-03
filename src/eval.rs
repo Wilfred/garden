@@ -2839,6 +2839,10 @@ fn eval_built_in_call(
 
             let mut line = String::new();
             let v = match std::io::stdin().read_line(&mut line) {
+                Ok(0) => {
+                    let s = Value::new(Value_::String("End of input.".to_owned()));
+                    Value::err(s)
+                }
                 Ok(_) => {
                     // Remove trailing newline if present
                     if line.ends_with('\n') {

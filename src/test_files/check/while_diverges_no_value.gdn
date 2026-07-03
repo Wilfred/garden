@@ -1,0 +1,62 @@
+// A `while True` loop with no `break` never produces a value, so it
+// can occur where any type is expected.
+public fun forever(): Int {
+  while True {
+    println("looping")
+  }
+}
+
+// A `break` in a nested loop doesn't stop the outer loop diverging.
+public fun forever_nested(): Int {
+  while True {
+    while True {
+      break
+    }
+  }
+}
+
+// A loop with a `break` terminates, so it has type `Unit`.
+public fun with_break(): Int {
+  while True {
+    break
+  }
+}
+
+// A loop whose condition isn't `True` terminates, so it has type
+// `Unit`.
+public fun with_cond(): Int {
+  let b = True
+  while b {
+    b = False
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected an `Int` but got `Unit`.
+// 
+// --| src/test_files/check/while_diverges_no_value.gdn:20:3
+// 18| // A loop with a `break` terminates, so it has type `Unit`.
+// 19| public fun with_break(): Int {
+// 20|   while True {
+//   |   ^^^^^^^^^^^^
+// 21|     break
+//   | ^^^^^^^^^
+// 22|   }
+//   | ^^^
+// 23| }
+// 
+// Error: Expected an `Int` but got `Unit`.
+// 
+// --| src/test_files/check/while_diverges_no_value.gdn:29:3
+// 27| public fun with_cond(): Int {
+// 28|   let b = True
+// 29|   while b {
+//   |   ^^^^^^^^^
+// 30|     b = False
+//   | ^^^^^^^^^^^^^
+// 31|   }
+//   | ^^^
+// 32| }
+

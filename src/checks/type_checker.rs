@@ -973,7 +973,14 @@ impl TypeCheckVisitor<'_> {
             } => {
                 self.check_expr(&Type::bool(), condition, type_bindings, expected_return_ty);
                 self.infer_block(body, type_bindings, expected_return_ty);
-                Type::unit()
+
+                if expr_.is_diverging_loop() {
+                    // The loop never terminates normally, so it never
+                    // produces a value.
+                    Type::no_value()
+                } else {
+                    Type::unit()
+                }
             }
             Expression_::ForIn(dest, expr, body) => {
                 let expr_ty = self.check_expr(

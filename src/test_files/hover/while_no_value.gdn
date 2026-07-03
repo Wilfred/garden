@@ -1,0 +1,7 @@
+fun do_stuff() {
+  while True {}
+  // ^
+}
+
+// args: reftest-hover
+// expected stdout: NoValue

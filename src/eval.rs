@@ -2645,7 +2645,9 @@ fn eval_built_in_call(
             let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
             match &session.stdout_stderr_mode {
                 StdoutStderrMode::WriteDirectly => {
+                    use std::io::Write as _;
                     print!("{s}");
+                    let _ = std::io::stdout().flush();
                 }
                 StdoutStderrMode::WriteJson(StdoutJsonFormat::ReplSession) => {
                     let response = Response {

@@ -1,0 +1,11 @@
+{
+  throw("boom")
+}
+
+// args: run
+// expected exit status: 1
+// expected stderr:
+// Exception: boom
+// -| src/test_files/runtime/uncaught_exception_exit_status.gdn:2:3	 __toplevel__
+// 2|   throw("boom")
+//  |   ^^^^^^^^^^^^^

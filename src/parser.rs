@@ -361,11 +361,30 @@ fn parse_dict_literal(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let dict_token = require_token(tokens, diagnostics, "Dict");
-    let _open_bracket = require_token(tokens, diagnostics, "[");
 
-    let items = parse_dict_literal_items(tokens, id_gen, diagnostics);
+    // If the user wrote `Dict{` rather than `Dict[`, report a single
+    // error for the wrong delimiter, then parse the literal as if it
+    // was written with square brackets.
+    let close_bracket_text = if peeked_symbol_is(tokens, "{") {
+        tokens.pop();
+        diagnostics.push(ParseError::Invalid {
+            position: dict_token.position.clone(),
+            message: ErrorMessage(vec![
+                msgtext!("Expected "),
+                msgcode!("["),
+                msgtext!(" after this."),
+            ]),
+            notes: vec![],
+        });
+        "}"
+    } else {
+        require_token(tokens, diagnostics, "[");
+        "]"
+    };
 
-    let close_bracket = require_token(tokens, diagnostics, "]");
+    let items = parse_dict_literal_items(tokens, id_gen, diagnostics, close_bracket_text);
+
+    let close_bracket = require_token(tokens, diagnostics, close_bracket_text);
 
     Expression::new(
         Position::merge(&dict_token.position, &close_bracket.position),
@@ -378,10 +397,11 @@ fn parse_dict_literal_items(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
+    close_bracket_text: &str,
 ) -> Vec<DictKeyValue> {
     let mut items = vec![];
     loop {
-        if peeked_symbol_is(tokens, "]") {
+        if peeked_symbol_is(tokens, close_bracket_text) {
             break;
         }
 
@@ -409,14 +429,14 @@ fn parse_dict_literal_items(
         if let Some(token) = tokens.peek() {
             if token.text == "," {
                 tokens.pop();
-            } else if token.text != "]" {
+            } else if token.text != close_bracket_text {
                 diagnostics.push(ParseError::Invalid {
                     position: value_expr_pos.clone(),
                     message: ErrorMessage(vec![
                         msgtext!("Expected "),
                         msgcode!(","),
                         msgtext!(" or "),
-                        msgcode!("]"),
+                        msgcode!("{}", close_bracket_text),
                         msgtext!(" after this."),
                     ]),
                     notes: vec![],
@@ -431,7 +451,7 @@ fn parse_dict_literal_items(
                     msgtext!("Expected "),
                     msgcode!(","),
                     msgtext!(" or "),
-                    msgcode!("]"),
+                    msgcode!("{}", close_bracket_text),
                     msgtext!(", but reached the end of the file."),
                 ]),
             });

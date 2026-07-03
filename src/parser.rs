@@ -1077,7 +1077,31 @@ fn parse_pattern(
     let payload = if peeked_symbol_is(tokens, "(") {
         require_token(tokens, diagnostics, "(");
         let dest = parse_let_destination(tokens, id_gen, diagnostics);
-        require_token(tokens, diagnostics, ")");
+        if !required_token_ok(tokens, diagnostics, ")") {
+            // The pattern is malformed (e.g. a nested pattern, which
+            // isn't supported). Skip to the end of the pattern so we
+            // don't report errors for every remaining token too.
+            let mut depth = 0;
+            while let Some(token) = tokens.peek() {
+                match token.text {
+                    "(" => {
+                        depth += 1;
+                        tokens.pop();
+                    }
+                    ")" => {
+                        tokens.pop();
+                        if depth == 0 {
+                            break;
+                        }
+                        depth -= 1;
+                    }
+                    "=>" | "{" | "}" => break,
+                    _ => {
+                        tokens.pop();
+                    }
+                }
+            }
+        }
         Some(dest)
     } else {
         None

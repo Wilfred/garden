@@ -1,0 +1,26 @@
+enum Expr {
+  Sym(String),
+}
+
+// Nested patterns aren't supported. This should only report a single
+// error, not a cascade for every token in the rest of the match.
+fun first_sym(exprs: List<Expr>): Option<String> {
+  match exprs.first() {
+    Some(Sym(head)) => Some(head)
+    None => None
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `)` after this.
+// 
+// --| src/test_files/check/match_nested_pattern.gdn:9:10
+//  7| fun first_sym(exprs: List<Expr>): Option<String> {
+//  8|   match exprs.first() {
+//  9|     Some(Sym(head)) => Some(head)
+//   |          ^^^
+// 10|     None => None
+// 11|   }
+

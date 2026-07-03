@@ -90,7 +90,7 @@ pub(crate) fn extract_variable(
                 }
                 enclosing_block_level_expr = Some(expr.clone());
             }
-            Expression_::While(_, body) if block_contains_id(body, *expr_id) => break,
+            Expression_::While { body, .. } if block_contains_id(body, *expr_id) => break,
             Expression_::If(_, then_block, None) if block_contains_id(then_block, *expr_id) => {
                 break
             }

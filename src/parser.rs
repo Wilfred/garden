@@ -590,7 +590,12 @@ fn parse_while(
 
     Expression::new(
         Position::merge(&while_token.position, &body.close_brace),
-        Expression_::While(Rc::new(cond_expr), body),
+        Expression_::While {
+            condition: Rc::new(cond_expr),
+            body,
+            // Populated by set_has_break_toplevel_items after parsing.
+            has_break: false,
+        },
         id_gen.next(),
     )
 }
@@ -2421,7 +2426,9 @@ fn set_is_used_expr(expr: &mut Expression, value_is_used: bool) {
                 set_is_used_block(else_body, branch_value_used);
             }
         }
-        Expression_::While(condition, body) => {
+        Expression_::While {
+            condition, body, ..
+        } => {
             set_is_used_expr(Rc::make_mut(condition), true);
             // A loop evaluates to Unit, so the body's value is unused.
             set_is_used_block(body, false);
@@ -2498,6 +2505,166 @@ fn set_is_used_expr(expr: &mut Expression, value_is_used: bool) {
         | Expression_::StringLiteral(_)
         | Expression_::Variable(_)
         | Expression_::Invalid => {}
+    }
+}
+
+/// Set `has_break` on every `while` loop.
+///
+/// This runs as a second pass because it isn't known until the whole
+/// loop body has been parsed.
+fn set_has_break_toplevel_items(items: &mut [ToplevelItem]) {
+    for item in items {
+        set_has_break_toplevel_item(item);
+    }
+}
+
+fn set_has_break_toplevel_item(item: &mut ToplevelItem) {
+    match item {
+        ToplevelItem::Fun(_, fun_info, _) => set_has_break_fun_info(fun_info),
+        ToplevelItem::Method(method_info, _) => match &mut method_info.kind {
+            MethodKind::BuiltinMethod(_, fun_info) => {
+                if let Some(fun_info) = fun_info {
+                    set_has_break_fun_info(fun_info);
+                }
+            }
+            MethodKind::UserDefinedMethod(fun_info) => set_has_break_fun_info(fun_info),
+        },
+        ToplevelItem::Test(test_info) => {
+            set_has_break_block(&mut test_info.body);
+        }
+        ToplevelItem::Block(block) => {
+            set_has_break_block(block);
+        }
+        ToplevelItem::Expr(ToplevelExpression(expr)) => {
+            set_has_break_expr(expr);
+        }
+        ToplevelItem::Enum(_) | ToplevelItem::Struct(_) | ToplevelItem::Import(_) => {}
+    }
+}
+
+fn set_has_break_fun_info(fun_info: &mut FunInfo) {
+    set_has_break_block(&mut fun_info.body);
+}
+
+/// Set `has_break` on the `while` loops in `block`, and return
+/// whether `block` contains a `break` belonging to the enclosing
+/// loop.
+fn set_has_break_block(block: &mut Block) -> bool {
+    let mut has_break = false;
+    for expr in &mut block.exprs {
+        has_break |= set_has_break_expr(Rc::make_mut(expr));
+    }
+    has_break
+}
+
+/// Recurse into `expr`, setting `has_break` on the `while` loops it
+/// contains. Returns whether `expr` contains a `break` belonging to
+/// the enclosing loop.
+fn set_has_break_expr(expr: &mut Expression) -> bool {
+    match &mut expr.expr_ {
+        Expression_::Break => true,
+        Expression_::While {
+            condition,
+            body,
+            has_break,
+        } => {
+            // A `break` in the loop condition belongs to the
+            // enclosing loop, not to this loop.
+            let cond_has_break = set_has_break_expr(Rc::make_mut(condition));
+            *has_break = set_has_break_block(body);
+            cond_has_break
+        }
+        Expression_::ForIn(_, iteree, body) => {
+            let iteree_has_break = set_has_break_expr(Rc::make_mut(iteree));
+            // A `break` in the body belongs to this loop.
+            set_has_break_block(body);
+            iteree_has_break
+        }
+        Expression_::If(condition, then_body, else_body) => {
+            let mut has_break = set_has_break_expr(Rc::make_mut(condition));
+            has_break |= set_has_break_block(then_body);
+            if let Some(else_body) = else_body {
+                has_break |= set_has_break_block(else_body);
+            }
+            has_break
+        }
+        Expression_::Match(scrutinee, cases) => {
+            let mut has_break = set_has_break_expr(Rc::make_mut(scrutinee));
+            for (_, case_body) in cases {
+                has_break |= set_has_break_block(case_body);
+            }
+            has_break
+        }
+        Expression_::Try(try_body, _, catch_body) => {
+            set_has_break_block(try_body) | set_has_break_block(catch_body)
+        }
+        Expression_::Let(_, _, inner)
+        | Expression_::Assign(_, inner)
+        | Expression_::AssignUpdate(_, _, inner)
+        | Expression_::Return(Some(inner))
+        | Expression_::Assert(inner)
+        | Expression_::DotAccess(inner, _)
+        | Expression_::NamespaceAccess(inner, _) => set_has_break_expr(Rc::make_mut(inner)),
+        Expression_::BinaryOperator(lhs, _, rhs) => {
+            set_has_break_expr(Rc::make_mut(lhs)) | set_has_break_expr(Rc::make_mut(rhs))
+        }
+        Expression_::Call(receiver, args) => {
+            let mut has_break = set_has_break_expr(Rc::make_mut(receiver));
+            for arg in &mut args.arguments {
+                has_break |= set_has_break_expr(Rc::make_mut(&mut arg.expr));
+            }
+            has_break
+        }
+        Expression_::MethodCall(receiver, _, args) => {
+            let mut has_break = set_has_break_expr(Rc::make_mut(receiver));
+            for arg in &mut args.arguments {
+                has_break |= set_has_break_expr(Rc::make_mut(&mut arg.expr));
+            }
+            has_break
+        }
+        Expression_::TupleLiteral(items) => {
+            let mut has_break = false;
+            for item in items {
+                has_break |= set_has_break_expr(Rc::make_mut(item));
+            }
+            has_break
+        }
+        Expression_::ListLiteral(items) => {
+            let mut has_break = false;
+            for item in items {
+                has_break |= set_has_break_expr(Rc::make_mut(&mut item.expr));
+            }
+            has_break
+        }
+        Expression_::DictLiteral(items) => {
+            let mut has_break = false;
+            for item in items {
+                has_break |= set_has_break_expr(Rc::make_mut(&mut item.key));
+                has_break |= set_has_break_expr(Rc::make_mut(&mut item.value));
+            }
+            has_break
+        }
+        Expression_::StructLiteral(_, fields) => {
+            let mut has_break = false;
+            for (_, field_expr) in fields {
+                has_break |= set_has_break_expr(Rc::make_mut(field_expr));
+            }
+            has_break
+        }
+        Expression_::Parentheses(paren) => set_has_break_expr(Rc::make_mut(&mut paren.expr)),
+        Expression_::FunLiteral(fun_info) => {
+            // A `break` inside a function literal doesn't belong to
+            // any enclosing loop.
+            set_has_break_fun_info(fun_info);
+            false
+        }
+        Expression_::Continue
+        | Expression_::Return(None)
+        | Expression_::IntLiteral(_)
+        | Expression_::FloatLiteral(_)
+        | Expression_::StringLiteral(_)
+        | Expression_::Variable(_)
+        | Expression_::Invalid => false,
     }
 }
 
@@ -3085,6 +3252,7 @@ fn parse_toplevel_items_from_tokens(
     }
 
     set_is_used_toplevel_items(&mut items);
+    set_has_break_toplevel_items(&mut items);
 
     items
 }

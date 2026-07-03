@@ -435,7 +435,13 @@ pub(crate) enum Expression_ {
     /// ```garden
     /// while x { y }
     /// ```
-    While(Rc<Expression>, Block),
+    While {
+        condition: Rc<Expression>,
+        body: Block,
+        /// Does the body contain a `break` belonging to this loop?
+        /// This is populated by a separate pass after parsing.
+        has_break: bool,
+    },
     /// ```garden
     /// for x in y { z }
     /// for (foo, bar) in y { z }
@@ -565,6 +571,29 @@ impl Expression_ {
             Expression_::Invalid => true,
             _ => false,
         }
+    }
+
+    /// Is this a loop that never terminates normally, i.e. a `while
+    /// True` loop with no `break`?
+    pub(crate) fn is_diverging_loop(&self) -> bool {
+        let Expression_::While {
+            condition,
+            has_break,
+            ..
+        } = self
+        else {
+            return false;
+        };
+
+        let cond_is_true = if let Expression_::Variable(v) = &condition.expr_ {
+            // TODO: Handle the case when `v` isn't actually `True`
+            // from the prelude because the user has rebound it.
+            v.name.text == "True"
+        } else {
+            false
+        };
+
+        cond_is_true && !has_break
     }
 }
 

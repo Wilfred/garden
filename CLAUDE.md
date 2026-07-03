@@ -35,6 +35,13 @@ fs::list_directory(Path{ p: "/"})
 Do not make changes to CHANGELOG.md unless the user explicitly
 requests it.
 
+# Keeping Changes Small
+
+A change should be no larger than the problem it solves: do not
+bundle unrelated improvements (docs, tests, comments, configuration)
+into it. Prefer the smallest targeted mechanism that fixes an
+observed problem over a general framework built for one case.
+
 # Commit Messages
 
 Keep commit messages concise and matter-of-fact. State what changed,
@@ -42,6 +49,9 @@ not why it's an improvement. Do not justify the change or describe it
 as a fix/cleanup/refactor in evaluative terms. Do not repeat internal
 implementation details that are visible in the diff. Headings are
 rarely needed — a single short line is usually enough.
+
+Put independent changes in separate commits, each building and
+passing tests on its own.
 
 # Pull Request Descriptions
 
@@ -194,14 +204,20 @@ fn visit_fun_info(&mut self, fun_info: &FunInfo) {
 
 See `src/checks/loops.rs` for a concise real example.
 
+In diagnostics, be specific rather than silent: a special situation
+deserves a precise message, not suppression, and reporting more
+relevant errors is better than fewer.
+
 # Checking Changes
 - cargo fmt: Format your Rust code
 - cargo clippy: Check that your Rust code is correct
 
 # Running Tests
 Garden uses reftests in `src/test_files/` that include a sample
-program and the expected output. New features or bugfixes should
-generally include a new test file.
+program and the expected output. Test coverage should be
+proportional to risk: prefer extending existing reftest files over
+adding new ones, and do not test behaviour that something else (a
+library, the type system) already guarantees.
 
 A reftest is a test that uses a human readable file to show correct
 behaviour. When the functionality under test does not have a natural
@@ -225,6 +241,12 @@ files you change to match the project convention.
 
 To generate target/debug/garden use `cargo build`. This separation
 allows Claude to set permissions on separate Garden subcommands.
+
+# Documentation
+
+Documentation belongs in prelude doc comments, which feed the
+generated manual, not in new hand-written website pages. Document
+only what is specific to the thing being documented.
 
 # Site Builder
 

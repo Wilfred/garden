@@ -55,8 +55,11 @@ pub(crate) struct TCSummary {
     /// occurrence to the definition position of `Option::None`.
     pub id_to_def_pos: FxHashMap<SyntaxId, Position>,
     /// A mapping from each toplevel definition to the other functions
-    /// it calls. Does not include tests.
+    /// it calls. Does not include calls from tests, which are
+    /// tracked in `test_callees`.
     pub callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
+    /// The functions called directly from test bodies.
+    pub test_callees: HashSet<ToplevelItemId>,
     /// A mapping of expression IDs to the local bindings visible at
     /// that position. Used for code completion.
     pub id_to_bindings: FxHashMap<SyntaxId, Vec<(SymbolName, Type)>>,
@@ -77,8 +80,10 @@ pub(crate) fn check_types(
         id_to_doc_comment: FxHashMap::default(),
         id_to_def_pos: FxHashMap::default(),
         callees: FxHashMap::default(),
+        test_callees: HashSet::default(),
         id_to_bindings: FxHashMap::default(),
         current_item: None,
+        in_test: false,
     };
     for item in items {
         visitor.visit_toplevel_item(item);
@@ -90,6 +95,7 @@ pub(crate) fn check_types(
         id_to_doc_comment: visitor.id_to_doc_comment,
         id_to_def_pos: visitor.id_to_def_pos,
         callees: visitor.callees,
+        test_callees: visitor.test_callees,
         id_to_bindings: visitor.id_to_bindings,
     }
 }
@@ -195,7 +201,9 @@ struct TypeCheckVisitor<'a> {
     id_to_doc_comment: FxHashMap<SyntaxId, String>,
     id_to_def_pos: FxHashMap<SyntaxId, Position>,
     current_item: Option<ToplevelItemId>,
+    in_test: bool,
     callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
+    test_callees: HashSet<ToplevelItemId>,
     id_to_bindings: FxHashMap<SyntaxId, Vec<(SymbolName, Type)>>,
 }
 
@@ -246,11 +254,22 @@ impl TypeCheckVisitor<'_> {
     }
 
     fn visit_test_info(&mut self, test_info: &TestInfo) {
-        // Don't include tests call sites when computing callees, so
-        // discard any additional callee found.
-        let old_callees = self.callees.clone();
+        self.in_test = true;
         self.visit_block(&test_info.body);
-        self.callees = old_callees;
+        self.in_test = false;
+    }
+
+    /// Record a call to the function `def_id` from the definition
+    /// currently being visited.
+    fn record_callee(&mut self, def_id: ToplevelItemId) {
+        if self.in_test {
+            self.test_callees.insert(def_id);
+        } else {
+            self.callees
+                .entry(self.current_item)
+                .or_default()
+                .insert(def_id);
+        }
     }
 
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
@@ -1459,10 +1478,7 @@ impl TypeCheckVisitor<'_> {
                 };
 
                 if let Some(def_id) = fun_info.item_id {
-                    self.callees
-                        .entry(self.current_item)
-                        .or_default()
-                        .insert(def_id);
+                    self.record_callee(def_id);
                 }
 
                 let mut ty_var_env = TypeVarEnv::default();
@@ -1744,10 +1760,7 @@ impl TypeCheckVisitor<'_> {
         };
         if let Some(fun_info) = fun_info {
             if let Some(def_id) = fun_info.item_id {
-                self.callees
-                    .entry(self.current_item)
-                    .or_default()
-                    .insert(def_id);
+                self.record_callee(def_id);
             }
 
             if let Some(fun_sym) = &fun_info.name_sym {

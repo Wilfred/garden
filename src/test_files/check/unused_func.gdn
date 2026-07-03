@@ -72,7 +72,7 @@ method used_meth(this: String): Unit {}
 // 26|   unreachable_cycle()
 // 27| }
 // 
-// Warning: `called_via_test` is never called.
+// Warning: `called_via_test` is only called in tests.
 // 
 // --| src/test_files/check/unused_func.gdn:35:5
 // 33| }

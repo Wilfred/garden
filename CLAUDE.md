@@ -55,6 +55,24 @@ not enumerate every changed file, and do not list the commands you ran
 to check the work. Mention test or build results only when they are
 genuinely noteworthy.
 
+# Code Comments
+
+Keep comments concise, and write them so they still make sense to
+someone who never saw the previous version of the code. Describe the
+code as it is now: do not mention old bugs, previous implementations,
+or what the code used to do (avoid wording like "previously", "now",
+"no longer"). A comment that only makes sense alongside the diff
+belongs in the commit message, not the code.
+
+Comment to explain constraints or subtle behaviour that the code
+cannot express itself, not to narrate what each line does.
+
+# Writing Rust Code
+
+Prefer an existing crate API over a hand-written implementation. For
+example, use a library's reader-based deserializer rather than
+writing a custom parser for a format the library already handles.
+
 # Writing Error Messages
 
 Error messages in Garden are extensively marked up so they can be
@@ -84,6 +102,11 @@ ErrorMessage(vec![
 
 This markup ensures that code elements like variable names, types,
 and paths stand out clearly in error messages.
+
+Error messages should show the offending code, not just describe the
+problem in the abstract. For example, an invalid escape sequence
+error should include the actual sequence written (e.g. `\z`), and an
+unknown variable error should include the variable name.
 
 # Writing Static Analysis Checks
 

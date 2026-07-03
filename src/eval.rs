@@ -133,12 +133,13 @@ impl Default for Bindings {
 }
 
 /// For a partially evaluated expression, tracks whether the deferred
-/// subexpressions (e.g. a loop body or call arguments) have been
-/// evaluated yet.
+/// subexpressions (e.g. a loop body, call arguments or the RHS of
+/// `&&`) have been evaluated yet.
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum PartialState {
     /// We've evaluated the initial subexpression (e.g. a loop
-    /// condition or a call receiver), but not the rest.
+    /// condition, a call receiver or the LHS of `&&`), but not the
+    /// rest.
     WillEvalRest,
     /// We've evaluated a deferred block, and still need to clean up
     /// the bindings it pushed.
@@ -2118,65 +2119,38 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
     ErrorMessage(parts)
 }
 
+/// Finish evaluating `&&` or `||`. The value on top of the value
+/// stack is either the RHS value, or the LHS value if we
+/// short-circuited (in which case it is already the result).
 fn eval_boolean_binop(
     env: &mut Env,
     expr_value_is_used: bool,
-    lhs_position: &Position,
     rhs_position: &Position,
-    op: &BinaryOperatorSymbol,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    {
-        let rhs_value = env
-            .pop_value()
-            .expect("Popped an empty value stack for RHS of binary operator");
-        let lhs_value = env
-            .pop_value()
-            .expect("Popped an empty value stack for LHS of binary operator");
+    let value = env
+        .pop_value()
+        .expect("Popped an empty value stack for binary operator");
 
-        let Some(lhs_bool) = lhs_value.as_rust_bool() else {
-            return Err((
-                RestoreValues(vec![lhs_value.clone(), rhs_value]),
-                EvalError::Exception(ExceptionInfo {
-                    position: lhs_position.clone(),
-                    message: format_type_error(
-                        &TypeName {
-                            text: "Bool".into(),
-                        },
-                        &lhs_value,
-                        env,
-                    ),
-                }),
-            ));
-        };
+    let Some(value_bool) = value.as_rust_bool() else {
+        return Err((
+            RestoreValues(vec![value.clone()]),
+            EvalError::Exception(ExceptionInfo {
+                position: rhs_position.clone(),
+                message: format_type_error(
+                    &TypeName {
+                        text: "Bool".into(),
+                    },
+                    &value,
+                    env,
+                ),
+            }),
+        ));
+    };
 
-        let Some(rhs_bool) = rhs_value.as_rust_bool() else {
-            return Err((
-                RestoreValues(vec![lhs_value, rhs_value.clone()]),
-                EvalError::Exception(ExceptionInfo {
-                    position: rhs_position.clone(),
-                    message: format_type_error(
-                        &TypeName {
-                            text: "Bool".into(),
-                        },
-                        &rhs_value,
-                        env,
-                    ),
-                }),
-            ));
-        };
-
-        if expr_value_is_used {
-            match op.kind {
-                BinaryOperatorKind::And => {
-                    env.push_value(Value::bool(lhs_bool && rhs_bool));
-                }
-                BinaryOperatorKind::Or => {
-                    env.push_value(Value::bool(lhs_bool || rhs_bool));
-                }
-                _ => unreachable!(),
-            }
-        }
+    if expr_value_is_used {
+        env.push_value(Value::bool(value_bool));
     }
+
     Ok(())
 }
 
@@ -6926,19 +6900,60 @@ fn eval_expr(
                 ..
             },
             rhs,
-        ) => {
-            if expr_state.done_subexpressions() {
-                eval_boolean_binop(env, expr_value_is_used, &lhs.position, &rhs.position, op)?;
-            } else {
-                // TODO: do short-circuit evaluation of && and ||.
+        ) => match expr_state {
+            ExpressionState::NotEvaluated => {
+                // Evaluate the LHS first, so we can short-circuit if
+                // it determines the result.
+                env.push_expr_to_eval(
+                    ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
+                    Rc::clone(&outer_expr),
+                );
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(lhs));
+            }
+            ExpressionState::PartiallyEvaluated(_) => {
+                let lhs_value = env
+                    .pop_value()
+                    .expect("Popped an empty value stack for LHS of binary operator");
+
+                let Some(lhs_bool) = lhs_value.as_rust_bool() else {
+                    return Err((
+                        RestoreValues(vec![lhs_value.clone()]),
+                        EvalError::Exception(ExceptionInfo {
+                            position: lhs.position.clone(),
+                            message: format_type_error(
+                                &TypeName {
+                                    text: "Bool".into(),
+                                },
+                                &lhs_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                };
+
+                let short_circuits = match op.kind {
+                    BinaryOperatorKind::And => !lhs_bool,
+                    BinaryOperatorKind::Or => lhs_bool,
+                    _ => unreachable!(),
+                };
+
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedSubexpressions,
                     Rc::clone(&outer_expr),
                 );
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(rhs));
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(lhs));
+
+                if short_circuits {
+                    // The LHS value determines the result, so don't
+                    // evaluate the RHS.
+                    env.push_value(lhs_value);
+                } else {
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(rhs));
+                }
             }
-        }
+            ExpressionState::EvaluatedSubexpressions => {
+                eval_boolean_binop(env, expr_value_is_used, &rhs.position)?;
+            }
+        },
         Expression_::BinaryOperator(
             lhs,
             BinaryOperatorSymbol {
@@ -6950,7 +6965,6 @@ fn eval_expr(
             if expr_state.done_subexpressions() {
                 eval_string_concat(env, expr_value_is_used, &lhs.position, &rhs.position)?;
             } else {
-                // TODO: do short-circuit evaluation of && and ||.
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedSubexpressions,
                     Rc::clone(&outer_expr),
@@ -7140,6 +7154,15 @@ fn binop_for_assert(
 ) -> Option<(Rc<Expression>, BinaryOperatorKind, Rc<Expression>)> {
     match &expr.expr_ {
         Expression_::BinaryOperator(lhs, op_sym, rhs) => {
+            if matches!(
+                op_sym.kind,
+                BinaryOperatorKind::And | BinaryOperatorKind::Or
+            ) {
+                // && and || short-circuit, so we can't eagerly
+                // evaluate both sides.
+                return None;
+            }
+
             Some((Rc::clone(lhs), op_sym.kind, Rc::clone(rhs)))
         }
         _ => None,

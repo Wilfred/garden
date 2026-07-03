@@ -3,11 +3,38 @@ use std::collections::HashSet;
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::parser::ast::{ToplevelItem, ToplevelItemId, Visibility};
+use crate::parser::ast::{Symbol, ToplevelItem, ToplevelItemId, Visibility};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::{msgcode, msgtext};
 
 use super::type_checker::TCSummary;
+
+fn uncalled_message(symbol: &Symbol, only_called_in_tests: bool) -> ErrorMessage {
+    if only_called_in_tests {
+        ErrorMessage(vec![
+            msgcode!("{}", symbol.name),
+            msgtext!(" is only called in tests."),
+        ])
+    } else if symbol.name.text == "main" {
+        ErrorMessage(vec![
+            msgcode!("{}", symbol.name),
+            msgtext!(" is never called. Garden does not treat "),
+            msgcode!("main"),
+            msgtext!(
+                " functions specially. To run code, write expressions directly in the file (e.g., "
+            ),
+            msgcode!("println(\"Hello\")"),
+            msgtext!("), or call "),
+            msgcode!("main()"),
+            msgtext!(" from a top-level block."),
+        ])
+    } else {
+        ErrorMessage(vec![
+            msgcode!("{}", symbol.name),
+            msgtext!(" is never called."),
+        ])
+    }
+}
 
 pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> Vec<Diagnostic> {
     // All the definitions that are called from another definition, excluding self calls.
@@ -18,6 +45,17 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
             if Some(*called_def_id) != *def_id {
                 all_called_defs.insert(*called_def_id);
             }
+        }
+    }
+
+    let transitively_reachable = transitive_closure(summary.callees.clone());
+
+    // All the definitions reachable from tests, directly or via
+    // other functions.
+    let mut test_reachable: HashSet<ToplevelItemId> = summary.test_callees.clone();
+    for def_id in &summary.test_callees {
+        if let Some(reachable_ids) = transitively_reachable.get(&Some(*def_id)) {
+            test_reachable.extend(reachable_ids);
         }
     }
 
@@ -44,27 +82,11 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
             continue;
         }
 
-        // Report unreachable functions that have no callers at all.
+        // Report unreachable functions that have no callers outside
+        // of tests.
         if !all_called_defs.contains(&item_id) {
-            let message = if symbol.name.text == "main" {
-                ErrorMessage(vec![
-                    msgcode!("{}", symbol.name),
-                    msgtext!(" is never called. Garden does not treat "),
-                    msgcode!("main"),
-                    msgtext!(" functions specially. To run code, write expressions directly in the file (e.g., "),
-                    msgcode!("println(\"Hello\")"),
-                    msgtext!("), or call "),
-                    msgcode!("main()"),
-                    msgtext!(" from a top-level block."),
-                ])
-            } else {
-                ErrorMessage(vec![
-                    msgcode!("{}", symbol.name),
-                    msgtext!(" is never called."),
-                ])
-            };
             diagnostics.push(Diagnostic {
-                message,
+                message: uncalled_message(symbol, test_reachable.contains(&item_id)),
                 position: symbol.position.clone(),
                 notes: vec![],
                 severity: Severity::Warning,
@@ -74,7 +96,6 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
         }
     }
 
-    let transitively_reachable = transitive_closure(summary.callees.clone());
     let reachable_from = invert(transitively_reachable);
 
     for item in items {
@@ -102,25 +123,8 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                     .filter_map(|def_id| *def_id)
                     .collect();
                 if reachable_from_item_ids.is_disjoint(&already_covered_ids) {
-                    let message = if symbol.name.text == "main" {
-                        ErrorMessage(vec![
-                            msgcode!("{}", &symbol.name),
-                            msgtext!(" is never called. Garden does not treat "),
-                            msgcode!("main"),
-                            msgtext!(" functions specially. To run code, write expressions directly in the file (e.g., "),
-                            msgcode!("println(\"Hello\")"),
-                            msgtext!("), or call "),
-                            msgcode!("main()"),
-                            msgtext!(" from a top-level block."),
-                        ])
-                    } else {
-                        ErrorMessage(vec![
-                            msgcode!("{}", &symbol.name),
-                            msgtext!(" is never called."),
-                        ])
-                    };
                     diagnostics.push(Diagnostic {
-                        message,
+                        message: uncalled_message(symbol, test_reachable.contains(&item_id)),
                         position: symbol.position.clone(),
                         notes: vec![],
                         severity: Severity::Warning,

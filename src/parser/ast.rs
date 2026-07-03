@@ -2,6 +2,7 @@
 
 use ordered_float::OrderedFloat;
 use rustc_hash::FxHashMap;
+use strum_macros::EnumIter;
 
 use std::fmt::Display;
 use std::path::PathBuf;
@@ -246,7 +247,7 @@ impl PartialEq for BinaryOperatorSymbol {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BinaryOperatorKind {
     Add,
     AddFloat,
@@ -271,9 +272,9 @@ pub(crate) enum BinaryOperatorKind {
     StringConcat,
 }
 
-impl Display for BinaryOperatorKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
+impl BinaryOperatorKind {
+    pub(crate) fn as_src(&self) -> &'static str {
+        match self {
             BinaryOperatorKind::Add => "+",
             BinaryOperatorKind::AddFloat => "+.",
             BinaryOperatorKind::Subtract => "-",
@@ -283,7 +284,7 @@ impl Display for BinaryOperatorKind {
             BinaryOperatorKind::Divide => "/",
             BinaryOperatorKind::DivideFloat => "/.",
             BinaryOperatorKind::Modulo => "%",
-            BinaryOperatorKind::Exponent => "^",
+            BinaryOperatorKind::Exponent => "**",
             BinaryOperatorKind::Equal => "==",
             BinaryOperatorKind::NotEqual => "!=",
             BinaryOperatorKind::LessThan => "<",
@@ -295,8 +296,7 @@ impl Display for BinaryOperatorKind {
             BinaryOperatorKind::BitwiseAnd => "&",
             BinaryOperatorKind::BitwiseOr => "|",
             BinaryOperatorKind::StringConcat => "^",
-        };
-        write!(f, "{s}")
+        }
     }
 }
 

@@ -3171,6 +3171,8 @@ pub(crate) fn parse_toplevel_items_from_span(
 mod tests {
     use std::path::PathBuf;
 
+    use strum::IntoEnumIterator;
+
     use crate::Vfs;
 
     use super::*;
@@ -3198,5 +3200,36 @@ mod tests {
     fn test_repeated_param_underscore() {
         let (_, errors) = parse_toplevel_items("fun f(_, _) {} ");
         assert!(errors.is_empty())
+    }
+
+    /// Every `BinaryOperatorKind` should render to source with
+    /// `as_src()` and parse back to the same kind.
+    #[test]
+    fn test_binary_operator_round_trips() {
+        for kind in BinaryOperatorKind::iter() {
+            let src = format!("1 {} 2", kind.as_src());
+            let (items, errors) = parse_toplevel_items(&src);
+            assert!(
+                errors.is_empty(),
+                "Expected `{src}` to parse without errors, got {errors:?}"
+            );
+
+            let Some(ToplevelItem::Expr(ToplevelExpression(expr))) = items.first() else {
+                panic!("Expected `{src}` to parse as a toplevel expression, got {items:?}");
+            };
+            let Expression_::BinaryOperator(_, op, _) = &expr.expr_ else {
+                panic!(
+                    "Expected `{src}` to parse as a binary operator, got {:?}",
+                    expr.expr_
+                );
+            };
+
+            assert_eq!(
+                op.kind,
+                kind,
+                "Operator `{}` did not round trip to the same kind",
+                kind.as_src()
+            );
+        }
     }
 }

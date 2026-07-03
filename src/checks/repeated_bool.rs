@@ -123,7 +123,7 @@ impl Visitor for RepeatedBoolVisitor {
                             self.diagnostics.push(Diagnostic {
                                 message: ErrorMessage(vec![
                                     msgtext!("This expression has already appeared in this "),
-                                    msgcode!("{}", op_sym.kind),
+                                    msgcode!("{}", op_sym.kind.as_src()),
                                     msgtext!(" chain."),
                                 ]),
                                 position: expr.position.clone(),

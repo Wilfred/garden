@@ -1,0 +1,16 @@
+let top_var = 42
+
+public fun use_it(): Int {
+  top_var
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Unbound symbol: `top_var`
+// 
+// -| src/test_files/check/toplevel_var_in_function.gdn:4:3
+// 3| public fun use_it(): Int {
+// 4|   top_var
+// 5| } ^^^^^^^
+

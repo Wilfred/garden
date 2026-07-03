@@ -1119,16 +1119,26 @@ struct Namespace {
   __BUILT_IN_IMPLEMENTATION: NoValue,
 }
 
-/// An immutable key-value data structure. Keys must be strings.
+/// An immutable key-value data structure. Keys must be strings, and
+/// all the values have the same type: `Dict["a" => 1, "b" => 2]` is a
+/// `Dict<Int>`, and `Dict[]` is an empty dict.
 ///
-/// For example, `Dict["x" => 1, "y" ^ "z" => 2]` is a `Dict<Int>`.
-///
+/// Keys may be arbitrary expressions, such as `Dict["x" ^ "y" => 1]`.
 /// Dict items are evaluated in order, and the last value wins if there
 /// are duplicates.
 ///
 /// ```
 /// Dict["a" => "hello", "a" => "world"]
 /// //-> Dict["a" => "world"]
+/// ```
+///
+/// Dicts are values: `set()` and `remove()` return a new dict, and the
+/// original dict is unchanged.
+///
+/// ```
+/// let scores = Dict["Mario" => 10]
+/// scores.set("Luigi", 8) //-> Dict["Luigi" => 8, "Mario" => 10]
+/// scores //-> Dict["Mario" => 10]
 /// ```
 struct Dict<T> {
   __BUILT_IN_IMPLEMENTATION: NoValue,

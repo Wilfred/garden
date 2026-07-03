@@ -944,14 +944,15 @@ fn run_file(
         pretty_print_json: false,
     };
 
-    match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
+    let res = eval_toplevel_items(&vfs_path, &items, &mut env, &session);
+    match &res {
         Ok(_) => {}
         Err(EvalError::Exception(ExceptionInfo { position, message })) => {
             eprintln!(
                 "{}",
                 format_exception_with_stack(
-                    &message,
-                    &position,
+                    message,
+                    position,
                     &env.stack.0,
                     &env.vfs,
                     &env.project_root
@@ -962,8 +963,8 @@ fn run_file(
             eprintln!(
                 "{}",
                 format_exception_with_stack(
-                    &msg,
-                    &position,
+                    msg,
+                    position,
                     &env.stack.0,
                     &env.vfs,
                     &env.project_root
@@ -991,6 +992,10 @@ fn run_file(
                 position.as_ide_string(&env.project_root)
             );
         }
+    }
+
+    if res.is_err() {
+        std::process::exit(1);
     }
 }
 

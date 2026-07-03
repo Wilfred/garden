@@ -1,0 +1,33 @@
+// `break` targets the innermost loop whose evaluation is in
+// progress, ignoring not-yet-evaluated loops later in enclosing
+// blocks.
+
+while True {
+  if True {
+    break
+  }
+
+  for y in [1] {
+    println("y")
+  }
+}
+
+{
+  let total = 0
+  for x in [1, 2, 3] {
+    while True {
+      if True {
+        break
+      }
+
+      while False {}
+    }
+
+    total = total + x
+  }
+
+  dbg(total)
+}
+
+// args: run
+// expected stderr: [src/test_files/runtime/break_pending_loop.gdn:29:3] total //-> 6

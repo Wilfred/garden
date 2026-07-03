@@ -1,0 +1,22 @@
+// `continue` returns to the innermost loop whose evaluation is in
+// progress, ignoring not-yet-evaluated loops later in enclosing
+// blocks.
+
+{
+  let i = 0
+  while i < 3 {
+    i = i + 1
+    if i == 1 {
+      continue
+    }
+
+    for y in [i] {
+      dbg(y)
+    }
+  }
+}
+
+// args: run
+// expected stderr:
+// [src/test_files/runtime/continue_pending_loop.gdn:14:7] y //-> 2
+// [src/test_files/runtime/continue_pending_loop.gdn:14:7] y //-> 3

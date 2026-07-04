@@ -24,6 +24,8 @@ the current source file.
 Replaced the `not` method on `Bool` with a `not()` function. Write
 `not(x)` instead of `x.not()`.
 
+Added `String::to_ascii_lowercase()` and `String::to_ascii_uppercase()`.
+
 # 0.25 (released 29th May 2026)
 **Goal: Better REPL experience.**
 **Goal: Better runtime performance.**

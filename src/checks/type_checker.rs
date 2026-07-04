@@ -2640,19 +2640,28 @@ impl TypeCheckVisitor<'_> {
 
                 match else_block {
                     Some(else_block) => {
-                        self.check_block(
+                        let then_ty = self.check_block(
                             expected_ty,
                             then_block,
                             type_bindings,
                             expected_return_ty,
                         );
-                        self.check_block(
+                        let else_ty = self.check_block(
                             expected_ty,
                             else_block,
                             type_bindings,
                             expected_return_ty,
                         );
-                        expected_ty.clone()
+
+                        // Both branches are subtypes of the expected
+                        // type, but their join can be more specific
+                        // (e.g. checking against `Any` when both
+                        // branches are `Option`). Return the narrower
+                        // type, as the list literal case does.
+                        match unify(&then_ty, &else_ty) {
+                            Some(unified) if is_subtype(&unified, expected_ty) => unified,
+                            _ => expected_ty.clone(),
+                        }
                     }
                     None => {
                         self.infer_block(then_block, type_bindings, expected_return_ty);

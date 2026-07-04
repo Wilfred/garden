@@ -1,0 +1,19 @@
+fun apply(f: Fun<(Int), Option<Int>>): Option<Int> {
+  f(0)
+}
+
+// The closure body is an `if`/`else` whose branches are `Option<Int>`
+// and `Option<NoValue>`. Checking it against the expected return type
+// should keep the narrower `Option<Int>`, so the argument matches
+// `Fun<(Int), Option<Int>>`.
+public fun call_with_if_else(): Option<Int> {
+  apply(fun(n: Int) {
+    if n == 0 {
+      Some(n)
+    } else {
+      None
+    }
+  })
+}
+
+// args: check

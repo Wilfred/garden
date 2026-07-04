@@ -1058,6 +1058,40 @@ test string_as_int {
   assert(" 123 ".as_int() == None)
 }
 
+/// Return a copy of this string with each ASCII uppercase letter
+/// converted to lowercase. Non-ASCII characters are unchanged.
+///
+/// ```
+/// "Hello World".to_ascii_lowercase() //-> "hello world"
+/// ```
+public method to_ascii_lowercase(this: String): String {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test string_to_ascii_lowercase {
+  assert("HELLO".to_ascii_lowercase() == "hello")
+  assert("Hello123".to_ascii_lowercase() == "hello123")
+  // Non-ASCII characters are unchanged.
+  assert("Δ".to_ascii_lowercase() == "Δ")
+}
+
+/// Return a copy of this string with each ASCII lowercase letter
+/// converted to uppercase. Non-ASCII characters are unchanged.
+///
+/// ```
+/// "Hello World".to_ascii_uppercase() //-> "HELLO WORLD"
+/// ```
+public method to_ascii_uppercase(this: String): String {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test string_to_ascii_uppercase {
+  assert("hello".to_ascii_uppercase() == "HELLO")
+  assert("Hello123".to_ascii_uppercase() == "HELLO123")
+  // Non-ASCII characters are unchanged.
+  assert("δ".to_ascii_uppercase() == "δ")
+}
+
 /// Return True if this path exists.
 ///
 /// ```

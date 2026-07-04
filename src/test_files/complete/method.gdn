@@ -20,6 +20,8 @@ fun file_name(s: String) {
 // {"label":"strip_prefix","kind":2,"detail":"(String): String","insertText":"strip_prefix($0)","insertTextFormat":2}
 // {"label":"strip_suffix","kind":2,"detail":"(String): String","insertText":"strip_suffix($0)","insertTextFormat":2}
 // {"label":"substring","kind":2,"detail":"(Int, Int): String","insertText":"substring($0)","insertTextFormat":2}
+// {"label":"to_ascii_lowercase()","kind":2,"detail":"(): String","insertText":"to_ascii_lowercase()","insertTextFormat":2}
+// {"label":"to_ascii_uppercase()","kind":2,"detail":"(): String","insertText":"to_ascii_uppercase()","insertTextFormat":2}
 // {"label":"trim()","kind":2,"detail":"(): String","insertText":"trim()","insertTextFormat":2}
 // {"label":"trim_left()","kind":2,"detail":"(): String","insertText":"trim_left()","insertTextFormat":2}
 // {"label":"trim_right()","kind":2,"detail":"(): String","insertText":"trim_right()","insertTextFormat":2}

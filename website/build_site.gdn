@@ -1,561 +1,616 @@
+import "__prelude.gdn" as prelude
 import "__fs.gdn" as fs
-import "__random.gdn" as random
 import "__reflect.gdn" as reflect
+import "__random.gdn" as random
 import "__shell.gdn" as shell
 import "__time.gdn" as time
-import "__prelude.gdn" as prelude
 import "./markdown.gdn" as markdown
 import "./log.gdn" as log
 import "./operators.gdn" as ops
 
-/// A list of all the files in `website_dir` that have a .md extension.
-fun markdown_files(website_dir: Path): List<Path> {
-  let dir_files = fs::list_directory(website_dir).or_throw()
-  dir_files.filter(fun(p: Path) { p.extension() == Some("md") })
+// ---------------------------------------------------------------------
+// Generic helpers
+// ---------------------------------------------------------------------
+
+/// Return `items` with `opt` appended, if it is `Some`.
+fun append_some<T>(items: List<T>, opt: Option<T>): List<T> {
+  match opt {
+    Some(v) => items.append(v)
+    None => items
+  }
 }
 
-/// Given a snippet of source code `src`, remove all the leading lines
-/// that are just comments.
+/// Join `items` into a readable prose sentence: `["a", "b", "c"]`
+/// becomes `"a, b and c."`.
+fun join_with_commas_and(items: List<String>): String {
+  match items.last() {
+    None => ""
+    Some(last) => {
+      let rest = items.slice(0, -1)
+      if rest.is_empty() {
+        last
+      } else {
+        ", ".join(rest) ^ " and " ^ last ^ "."
+      }
+    }
+  }
+}
+
+test join_with_commas_and {
+  assert(join_with_commas_and([]) == "")
+  assert(join_with_commas_and(["a"]) == "a")
+  assert(join_with_commas_and(["a", "b"]) == "a and b.")
+  assert(join_with_commas_and(["a", "b", "c"]) == "a, b and c.")
+}
+
+/// A markdown link whose text is shown as code: `` [`text`](url) ``.
+fun code_link(text: String, url: String): String {
+  "[`" ^ text ^ "`](" ^ url ^ ")"
+}
+
+/// Drop the leading comment and blank lines from a source snippet, so
+/// documentation shows the interesting code first.
 fun drop_leading_comments(src: String): String {
   let lines = src.lines()
 
-  let first_code_line = 0
-  for (i, line) in lines.enumerate() {
-    if line.starts_with("//") {
-      continue
-    }
-    if line == "" {
-      continue
-    }
-
-    first_code_line = i
-    break
-  }
-
-  "\n".join(lines.slice(first_code_line, lines.len()))
-}
-
-fun write_fun_page(
-  ns_name: String,
-  ns: Namespace,
-  fun_name: String,
-  out_dir: Path,
-  base_tmpl_src: String,
-): Unit {
-  let qualified_name = "::".join([ns_name, fun_name])
-
-  match reflect::doc_comment(ns, fun_name) {
-    Some(doc_comment) => {
-      let dest_path = out_dir.join("fun:" ^ qualified_name ^ ".html")
-      let self_url = "/" ^ dest_path.file_name().or_throw()
-
-      let heading = if ns_name == "__prelude.gdn" {
-        "".join(["# `", fun_name, "()`"])
-      } else {
-        "".join(["# `", qualified_name, "()`"])
-      }
-
-      let src = reflect::source_for_fun(ns, fun_name)
-      let page_src = render_doc_comment(heading, doc_comment, src, Some(Path{ p: ns_name }), Some(self_url))
-
-      write_website_page(base_tmpl_src, page_src, dest_path, Some(fun_name))
-    }
-    None => {
-      let parts = [
-        "Tried to generate a page for ",
-        qualified_name,
-        " but it doesn't have a doc comment."]
-      log::warn("".join(parts))
+  let i = 0
+  while i < lines.len() {
+    let line = lines.get(i).or_throw()
+    if line.starts_with("//") || (line == "") {
+      i += 1
+    } else {
+      break
     }
   }
+
+  "\n".join(lines.slice(i, lines.len()))
 }
 
-fun write_method_page(
-  type_name: String,
-  method_name: String,
-  out_dir: Path,
-  base_tmpl_src: String,
-): Unit {
-  let qualified_name = type_name ^ "::" ^ method_name
-
-  match reflect::doc_comment_for_method(type_name, method_name) {
-    Some(doc_comment) => {
-      let heading = "# `" ^ qualified_name ^ "()`"
-
-      let page_src = render_doc_comment(
-        heading,
-        doc_comment,
-        reflect::source_for_method(type_name, method_name),
-        None,
-        None)
-
-      let dest_path = out_dir.join("method:" ^ qualified_name ^ ".html")
-      write_website_page(base_tmpl_src, page_src, dest_path, Some(qualified_name))
-    }
-    None => {
-      log::warn("Tried to generate a page for method " ^ qualified_name ^ " but it doesn't have a doc comment.")
-    }
-  }
+test drop_leading_comments {
+  assert(drop_leading_comments("// a\n// b\ncode\nmore") == "code\nmore")
+  assert(drop_leading_comments("code") == "code")
 }
 
-/// Render `doc_comment` as HTML.
-fun render_doc_comment(
-  heading: String,
-  doc_comment: String,
-  src: Option<String>,
-  file: Option<Path>,
-  self_url: Option<String>,
-): String {
-  let src = match src {
-    Some(src) => {
-      "```garden nocheck title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
-    }
-    None => ""
-  }
+// ---------------------------------------------------------------------
+// Pages
+// ---------------------------------------------------------------------
 
-  doc_comment = doc_comment.replace("\n\n```\n", "\n\n```title:Example\n")
-
-  let md_src = "".join([heading, "\n\n", doc_comment, "\n\n", src])
-  markdown::render(md_src, file, self_url)
-}
-
-fun render_type_doc_comment(
-  heading: String,
-  doc_comment: String,
-  src: String,
-  methods: List<String>,
-  type_name: String,
-  self_url: Option<String>,
-): String {
-  let src = "```garden nocheck title:\"Source Code\"\n" ^ drop_leading_comments(src) ^ "\n```"
-
-  let methods_section = if methods.is_empty() {
-    ""
-  } else {
-    let method_list = methods.map(fun(m: String) {
-      "* [`" ^ m ^ "()`](/method:" ^ type_name ^ "::" ^ m ^ ".html)"
-    })
-    "\n\n## Methods\n\n" ^ "\n".join(method_list)
-  }
-
-  let md_src = "".join([heading, "\n\n", doc_comment, "\n\n", src, methods_section])
-  markdown::render(md_src, None, self_url)
-}
-
-/// Look up the doc comment for `type_name`, render it to HTML and
-/// write it to `out_dir`.
-fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Unit {
-  match reflect::doc_comment_for_type(type_name) {
-    Some(doc_comment) => {
-      let heading = "".join(["# `", type_name, "` type"])
-      let methods = reflect::methods_for_type(type_name)
-
-      let type_src = match reflect::source_for_type(type_name) {
-        Some(src) => src
-        None => {
-          log::warn("No source found for built-in type " ^ type_name)
-          ""
-        }
-      }
-
-      let dest_path = out_dir.join("type:" ^ type_name ^ ".html")
-      let self_url = Some("/type:" ^ type_name ^ ".html")
-
-      let page_src = render_type_doc_comment(heading, doc_comment, type_src, methods, type_name, self_url)
-
-      write_website_page(base_tmpl_src, page_src, dest_path, Some(type_name))
-    }
-    None => {
-      log::warn("No doc comment found for built-in type " ^ type_name)
-    }
-  }
-}
-
-fun write_markdown_page(
-  website_dir: Path,
-  out_dir: Path,
-  base_tmpl_string: String,
-  md_path: Path,
-  title: Option<String>
-): Unit {
-  let md_file_name = md_path.file_name().or_throw()
-  let out_path = out_dir.join(md_file_name).set_extension("html")
-
-  let html_file_name = out_path.file_name().or_throw()
-  let self_url = "/" ^ html_file_name
-
-  let page_src_md = fs::read_file(md_path).or_throw()
-  let page_src = markdown::render(
-    substitute_shorthand(website_dir, page_src_md),
-    Some(md_path),
-    Some(self_url))
-
-  write_website_page(base_tmpl_string, page_src, out_path, title)
-}
-
-struct BlogPost {
-  published: Bool,
+/// A single output page. `body` is markdown that will be rendered and
+/// wrapped in the site template before being written to `dest`.
+struct Page {
+  dest: Path,
   title: Option<String>,
-  date: Option<String>,
-  src: String,
-  path: Path,
+  body: String,
+  source: Option<Path>,
+  self_url: Option<String>,
 }
 
-fun split_metadata(src: String): (Option<String>, String) {
-  let metadata_start = "```metadata\n"
-  let metadata_end = "\n```\n"
+/// Render this page to a complete HTML document using `template`.
+method render(this: Page, template: String): String {
+  let content = markdown::render(this.body, this.source, this.self_url)
 
-  if not(src.starts_with(metadata_start)) {
-    return (None, src)
+  let title = match this.title {
+    Some(t) => t ^ " - Garden"
+    None => "Garden"
+  }
+  let filled = template.replace("__TITLE", title)
+
+  let (header, footer) = match filled.split_once("__MAIN_CONTENT") {
+    Some(parts) => parts
+    None => ("", "")
   }
 
-  match src.index_of(metadata_end) {
-    Some(i) => {
-      let before = src.substring(0, i)
-      let after = src.substring(i + metadata_end.len(), src.len())
-      (Some(before.strip_prefix(metadata_start)), after)
-    }
-    None => {
-      (None, src)
+  "".join([header.trim_right(), content, footer.trim_left()])
+}
+
+/// Render this page and write it to disk.
+method write(this: Page, template: String): Unit {
+  fs::write_file(this.render(template), this.dest).or_throw()
+}
+
+/// The page title implied by a markdown file name, so that
+/// `keyword:if.md` is titled `if` and `operator:slash.md` is `/`.
+fun page_title(file_name: String): Option<String> {
+  match file_name.split_once(":") {
+    None => None
+    Some((kind, rest)) => {
+      let name = rest.strip_suffix(".md")
+      if kind == "keyword" {
+        Some(name)
+      } else if kind == "operator" {
+        Some(ops::from_url_safe_name(name))
+      } else {
+        None
+      }
     }
   }
 }
 
-test split_metadata {
-  assert(split_metadata("```metadata\nfoo\n```\nstuff\n") == (Some("foo"), "stuff\n"))
+test page_title {
+  assert(page_title("index.md") == None)
+  assert(page_title("keyword:if.md") == Some("if"))
+  assert(page_title("operator:slash.md") == Some("/"))
 }
 
-fun blog_posts(website_dir: Path): List<BlogPost> {
-  let posts: List<BlogPost> = []
+// ---------------------------------------------------------------------
+// Markdown pages
+// ---------------------------------------------------------------------
 
-  let blog_post_dir = website_dir.join("blog")
-  for path in fs::list_directory(blog_post_dir).or_throw() {
-    if path.extension() != Some("md") {
+fun markdown_pages(website_dir: Path, out_dir: Path, subs: Dict<String>): List<Page> {
+  let pages: List<Page> = []
+
+  for md_path in fs::list_directory(website_dir).or_throw() {
+    if md_path.extension() != Some("md") {
       continue
     }
 
-    let published = False
-    let title: Option<String> = None
-    let date: Option<String> = None
-    let src = match fs::read_file(path) {
-      Ok(src) => {
-        let (metadata, src) = split_metadata(src)
-        for line in metadata.or_value("").lines() {
-          if line == "published: true" {
-            published = True
-          } else if line.starts_with("title: ") {
-            title = Some(line.strip_prefix("title: "))
-          } else if line.starts_with("date: ") {
-            date = Some(line.strip_prefix("date: "))
-          }
-        }
+    let file_name = match md_path.file_name() {
+      Some(n) => n
+      None => continue
+    }
 
-        src
-      }
+    let src = match fs::read_file(md_path) {
+      Ok(s) => s
       Err(e) => {
-        log::warn("Could not read path: " ^ path.p ^ " error: " ^ e)
+        log::warn("Could not read " ^ md_path.p ^ ": " ^ e)
         continue
       }
     }
 
-    posts = posts.append(BlogPost{ path: path, src: src, published: published, title: title, date: date })
+    let out_path = out_dir.join(file_name).set_extension("html")
+
+    pages = pages.append(Page{
+      dest: out_path,
+      title: page_title(file_name),
+      body: apply_substitutions(src, subs),
+      source: Some(md_path),
+      self_url: Some("/" ^ out_path.file_name().or_throw()),
+    })
+  }
+
+  pages
+}
+
+/// Replace every `__PLACEHOLDER` in `src` with its expansion.
+fun apply_substitutions(src: String, subs: Dict<String>): String {
+  let result = src
+  for (placeholder, replacement) in subs.items() {
+    result = result.replace(placeholder, replacement)
+  }
+
+  result
+}
+
+/// A prose list of links to every function in `ns`.
+fun namespace_links(ns_name: String, ns: Namespace): String {
+  let links = reflect::namespace_functions(ns).map(fun(name: String) {
+    code_link(name ^ "()", "./fun:" ^ ns_name ^ "::" ^ name ^ ".html")
+  })
+  join_with_commas_and(links)
+}
+
+/// The `__PLACEHOLDER` expansions used in hand-written markdown pages.
+fun build_substitutions(
+  website_dir: Path,
+  namespaces: List<(String, String, Namespace)>,
+): Dict<String> {
+  let subs: Dict<String> = Dict[]
+
+  let keyword_links = reflect::keywords().map(fun(k: String) {
+    code_link(k, "./keyword:" ^ k ^ ".html")
+  })
+  subs = subs.set("__KEYWORDS", join_with_commas_and(keyword_links))
+
+  let operator_links = reflect::operators().map(fun(op: String) {
+    code_link(op, "./operator:" ^ ops::url_safe_name(op) ^ ".html")
+  })
+  subs = subs.set("__OPERATORS", join_with_commas_and(operator_links))
+
+  let type_links = reflect::prelude_types().map(fun(t: String) {
+    code_link(t, "./type:" ^ t ^ ".html")
+  })
+  subs = subs.set("__BUILT_IN_TYPES", join_with_commas_and(type_links))
+
+  for (ns_name, placeholder, ns) in namespaces {
+    subs = subs.set(placeholder, namespace_links(ns_name, ns))
+  }
+
+  subs = subs.set("__BLOG_LINKS", "\n".join(blog_index_links(website_dir)))
+
+  subs
+}
+
+// ---------------------------------------------------------------------
+// Blog
+// ---------------------------------------------------------------------
+
+struct BlogPost {
+  path: Path,
+  published: Bool,
+  title: Option<String>,
+  date: Option<String>,
+  body: String,
+}
+
+/// Split a leading ```metadata block off the front of `src`, returning
+/// the metadata block (if present) and the remaining markdown.
+fun split_metadata(src: String): (Option<String>, String) {
+  let start = "```metadata\n"
+  let end = "\n```\n"
+
+  if not(src.starts_with(start)) {
+    return (None, src)
+  }
+
+  match src.strip_prefix(start).split_once(end) {
+    Some((meta, rest)) => (Some(meta), rest)
+    None => (None, src)
+  }
+}
+
+test split_metadata {
+  assert(split_metadata("no metadata") == (None, "no metadata"))
+  assert(
+    split_metadata("```metadata\npublished: true\n```\nbody\n")
+      == (Some("published: true"), "body\n"))
+}
+
+fun parse_blog_post(path: Path): Option<BlogPost> {
+  let src = match fs::read_file(path) {
+    Ok(s) => s
+    Err(e) => {
+      log::warn("Could not read " ^ path.p ^ ": " ^ e)
+      return None
+    }
+  }
+
+  let (metadata, body) = split_metadata(src)
+
+  let published = False
+  let title: Option<String> = None
+  let date: Option<String> = None
+
+  for line in metadata.or_value("").lines() {
+    if line == "published: true" {
+      published = True
+    } else if line.starts_with("title: ") {
+      title = Some(line.strip_prefix("title: "))
+    } else if line.starts_with("date: ") {
+      date = Some(line.strip_prefix("date: "))
+    }
+  }
+
+  Some(BlogPost{
+    path: path,
+    published: published,
+    title: title,
+    date: date,
+    body: body,
+  })
+}
+
+/// Every parseable blog post, published or not.
+fun blog_posts(website_dir: Path): List<BlogPost> {
+  let posts: List<BlogPost> = []
+
+  for path in fs::list_directory(website_dir.join("blog")).or_throw() {
+    if path.extension() != Some("md") {
+      continue
+    }
+
+    match parse_blog_post(path) {
+      Some(post) => { posts = posts.append(post) }
+      None => {}
+    }
   }
 
   posts
 }
 
-fun build_blog(website_dir: Path, out_dir: Path, base_tmpl_src: String): Unit {
-  for post in blog_posts(website_dir) {
-    if not(post.published) {
-      continue
-    }
+fun published_posts(website_dir: Path): List<BlogPost> {
+  blog_posts(website_dir).filter(fun(post: BlogPost) { post.published })
+}
 
-    let src = post.src
+fun blog_pages(website_dir: Path, out_dir: Path, subs: Dict<String>): List<Page> {
+  published_posts(website_dir).map(fun(post: BlogPost) {
+    let body = post.body
 
     match post.date {
-      Some(date) => {
-        src = "*" ^ date ^ "*\n\n" ^ src
-      }
+      Some(date) => { body = "*" ^ date ^ "*\n\n" ^ body }
       None => {}
     }
-
     match post.title {
-      Some(title) => {
-        src = "# " ^ title ^ "\n" ^ src
-      }
+      Some(title) => { body = "# " ^ title ^ "\n" ^ body }
       None => {}
     }
 
-    let post_file_name = post.path.file_name().or_throw()
-    let out_path = out_dir.join("blog").join(post_file_name).set_extension("html")
+    let file_name = post.path.file_name().or_throw()
+    let out_path = out_dir.join("blog").join(file_name).set_extension("html")
 
-    let html = markdown::render(substitute_shorthand(website_dir, src), Some(post.path), None)
-    write_website_page(base_tmpl_src, html, out_path, post.title)
+    Page{
+      dest: out_path,
+      title: post.title,
+      body: apply_substitutions(body, subs),
+      source: Some(post.path),
+      self_url: None,
+    }
+  })
+}
+
+/// Markdown bullet links to every published post, for the blog index.
+fun blog_index_links(website_dir: Path): List<String> {
+  published_posts(website_dir).map(fun(post: BlogPost) {
+    let file_name = post.path.set_extension("html").file_name().or_throw()
+
+    let text = match post.title {
+      Some(title) => title
+      None => file_name
+    }
+    text = match post.date {
+      Some(date) => text ^ " (" ^ date ^ ")"
+      None => text
+    }
+
+    "* [" ^ text ^ "](blog/" ^ file_name ^ ")"
+  })
+}
+
+// ---------------------------------------------------------------------
+// Reflected API documentation
+// ---------------------------------------------------------------------
+
+/// Wrap a source snippet in a titled, non-checked garden code block.
+fun source_block(src: Option<String>): String {
+  match src {
+    Some(s) => "```garden nocheck title:\"Source Code\"\n" ^ drop_leading_comments(s) ^ "\n```"
+    None => ""
   }
 }
 
-/// Build the entire garden website.
-fun build_site(): Unit {
-  let website_dir = source_file_path().parent().or_throw().parent().or_throw().join("website")
-  fs::set_working_directory(website_dir).or_throw()
+/// Turn bare code fences in a doc comment into titled example blocks.
+fun expand_examples(doc: String): String {
+  doc.replace("\n\n```\n", "\n\n```title:Example\n")
+}
 
-  let out_dir = website_dir.join("dist")
+/// Assemble the markdown body of a documentation page.
+fun doc_body(heading: String, doc: String, src: Option<String>, extra: String): String {
+  "".join([heading, "\n\n", doc, "\n\n", source_block(src), extra])
+}
 
-  // Create necessary directories
-  fs::create_dir(out_dir)
-  fs::create_dir(out_dir.join("blog"))
-  fs::create_dir(out_dir.join("static"))
-  fs::create_dir(out_dir.join("static").join("fonts"))
-
-  let base_tmpl_path = website_dir.join("template.html")
-  let base_tmpl_src = fs::read_file(base_tmpl_path).or_throw()
-
-  build_blog(website_dir, out_dir, base_tmpl_src)
-
-  let seen_keyword_pages: List<String> = []
-  let seen_operator_pages: List<String> = []
-
-  for md_path in markdown_files(website_dir) {
-    let file_name = match md_path.file_name() {
-      Some(n) => n,
-      None => continue,
+fun fun_page(ns_name: String, ns: Namespace, name: String, out_dir: Path): Option<Page> {
+  let doc = match reflect::doc_comment(ns, name) {
+    Some(d) => d
+    None => {
+      log::warn(ns_name ^ "::" ^ name ^ " has no doc comment.")
+      return None
     }
-
-    let title: Option<String> = None
-    match file_name.split_once(":") {
-      Some((before, after)) => {
-        if before == "keyword" {
-          let keyword = after.strip_suffix(".md")
-          seen_keyword_pages = seen_keyword_pages.append(keyword)
-          title = Some(keyword)
-        } else if before == "operator" {
-          let op_name = after.strip_suffix(".md")
-          seen_operator_pages = seen_operator_pages.append(op_name)
-          title = Some(ops::from_url_safe_name(op_name))
-        }
-      }
-      None => {}
-    }
-
-    write_markdown_page(website_dir, out_dir, base_tmpl_src, md_path, title)
   }
 
+  let qualified = ns_name ^ "::" ^ name
+  let heading = if ns_name == "__prelude.gdn" {
+    "# `" ^ name ^ "()`"
+  } else {
+    "# `" ^ qualified ^ "()`"
+  }
+
+  let dest = out_dir.join("fun:" ^ qualified ^ ".html")
+
+  Some(Page{
+    dest: dest,
+    title: Some(name),
+    body: doc_body(heading, expand_examples(doc), reflect::source_for_fun(ns, name), ""),
+    source: Some(Path{ p: ns_name }),
+    self_url: Some("/" ^ dest.file_name().or_throw()),
+  })
+}
+
+fun type_page(type_name: String, out_dir: Path): Option<Page> {
+  let doc = match reflect::doc_comment_for_type(type_name) {
+    Some(d) => d
+    None => {
+      log::warn("No doc comment for built-in type " ^ type_name ^ ".")
+      return None
+    }
+  }
+
+  let heading = "# `" ^ type_name ^ "` type"
+
+  let methods = reflect::methods_for_type(type_name)
+  let extra = if methods.is_empty() {
+    ""
+  } else {
+    let method_links = methods.map(fun(m: String) {
+      "* [`" ^ m ^ "()`](/method:" ^ type_name ^ "::" ^ m ^ ".html)"
+    })
+    "\n\n## Methods\n\n" ^ "\n".join(method_links)
+  }
+
+  let dest = out_dir.join("type:" ^ type_name ^ ".html")
+
+  Some(Page{
+    dest: dest,
+    title: Some(type_name),
+    body: doc_body(heading, doc, reflect::source_for_type(type_name), extra),
+    source: None,
+    self_url: Some("/" ^ dest.file_name().or_throw()),
+  })
+}
+
+fun method_page(type_name: String, method_name: String, out_dir: Path): Option<Page> {
+  let doc = match reflect::doc_comment_for_method(type_name, method_name) {
+    Some(d) => d
+    None => {
+      log::warn("Method " ^ type_name ^ "::" ^ method_name ^ " has no doc comment.")
+      return None
+    }
+  }
+
+  let qualified = type_name ^ "::" ^ method_name
+  let heading = "# `" ^ qualified ^ "()`"
+  let dest = out_dir.join("method:" ^ qualified ^ ".html")
+
+  Some(Page{
+    dest: dest,
+    title: Some(qualified),
+    body: doc_body(heading, expand_examples(doc), reflect::source_for_method(type_name, method_name), ""),
+    source: None,
+    self_url: Some("/" ^ dest.file_name().or_throw()),
+  })
+}
+
+fun api_pages(
+  website_dir: Path,
+  out_dir: Path,
+  namespaces: List<(String, String, Namespace)>,
+): List<Page> {
+  let pages: List<Page> = []
+
+  for (ns_name, _placeholder, ns) in namespaces {
+    for name in reflect::namespace_functions(ns) {
+      pages = append_some(pages, fun_page(ns_name, ns, name, out_dir))
+    }
+  }
+
+  for type_name in reflect::prelude_types() {
+    // Some types have a hand-written page, e.g. type:Tuple.md, so
+    // don't overwrite it with a reflected one.
+    if not(website_dir.join("type:" ^ type_name ^ ".md").exists()) {
+      pages = append_some(pages, type_page(type_name, out_dir))
+    }
+
+    for method_name in reflect::methods_for_type(type_name) {
+      pages = append_some(pages, method_page(type_name, method_name, out_dir))
+    }
+  }
+
+  pages
+}
+
+// ---------------------------------------------------------------------
+// Static assets
+// ---------------------------------------------------------------------
+
+/// Copy images, videos and fonts into `out_dir`. Returns the number of
+/// files copied.
+fun copy_assets(website_dir: Path, out_dir: Path): Int {
+  let copied = 0
+
+  for path in fs::list_directory(website_dir).or_throw() {
+    let ext = path.extension()
+    if (ext == Some("png")) || (ext == Some("mp4")) {
+      let dest = out_dir.join(path.file_name().or_throw())
+      fs::copy_file(path, dest).or_throw()
+      copied += 1
+    }
+  }
+
+  let fonts_src = website_dir.join("static").join("fonts")
+  let fonts_dest = out_dir.join("static").join("fonts")
+  for path in fs::list_directory(fonts_src).or_throw() {
+    if path.extension() == Some("woff2") {
+      let dest = fonts_dest.join(path.file_name().or_throw())
+      fs::copy_file(path, dest).or_throw()
+      copied += 1
+    }
+  }
+
+  copied
+}
+
+// ---------------------------------------------------------------------
+// Coverage checks
+// ---------------------------------------------------------------------
+
+/// Warn about any built-in file that we don't generate documentation
+/// for.
+fun check_documented(namespaces: List<(String, String, Namespace)>): Unit {
+  let documented: List<String> = []
+  for (ns_name, _placeholder, _ns) in namespaces {
+    documented = documented.append(ns_name)
+  }
+
+  for built_in in reflect::built_in_files() {
+    if not(documented.contains(built_in)) {
+      log::warn("Built-in file " ^ built_in ^ " is not in the namespaces list.")
+    }
+  }
+}
+
+/// Warn about any keyword or operator that has no hand-written page.
+fun check_coverage(website_dir: Path): Unit {
   for keyword in reflect::keywords() {
-    if not(seen_keyword_pages.contains(keyword)) {
-      log::warn("Expected a page documenting keyword: " ^ keyword)
+    if not(website_dir.join("keyword:" ^ keyword ^ ".md").exists()) {
+      log::warn("Missing documentation page for keyword: " ^ keyword)
     }
   }
 
   for operator in reflect::operators() {
     let page_name = ops::url_safe_name(operator)
-    if not(seen_operator_pages.contains(page_name)) {
-      log::warn("Expected a page documenting operator: " ^ operator)
+    if not(website_dir.join("operator:" ^ page_name ^ ".md").exists()) {
+      log::warn("Missing documentation page for operator: " ^ operator)
     }
   }
+}
 
-  for type_name in reflect::prelude_types() {
-    // We have a manually created type::Tuple.md file, so don't look
-    // for a doc comment in that case.
-    if not(website_dir.join("type:" ^ type_name ^ ".md").exists()) {
-      write_type_page(type_name, out_dir, base_tmpl_src)
-    }
+// ---------------------------------------------------------------------
+// Orchestration
+// ---------------------------------------------------------------------
 
-    for method_name in reflect::methods_for_type(type_name) {
-      write_method_page(type_name, method_name, out_dir, base_tmpl_src)
-    }
+/// Create `path` if it does not already exist.
+fun ensure_dir(path: Path): Unit {
+  match fs::create_dir(path) {
+    Ok(_) => {}
+    Err(_) => {}
   }
+}
+
+/// Build the entire Garden website into `website/dist`.
+fun build_site(): Unit {
+  let started = time::unixtime()
+
+  let website_dir = reflect::source_file().or_throw().parent().or_throw()
+  fs::set_working_directory(website_dir).or_throw()
+
+  let out_dir = website_dir.join("dist")
+  ensure_dir(out_dir)
+  ensure_dir(out_dir.join("blog"))
+  ensure_dir(out_dir.join("static"))
+  ensure_dir(out_dir.join("static").join("fonts"))
+
+  let template = fs::read_file(website_dir.join("template.html")).or_throw()
 
   let namespaces = [
-    ("__prelude.gdn", prelude),
-    ("__fs.gdn", fs),
-    ("__random.gdn", random),
-    ("__reflect.gdn", reflect),
-    ("__shell.gdn", shell),
-    ("__time.gdn", time),
+    ("__prelude.gdn", "__PRELUDE_FUNS", prelude),
+    ("__fs.gdn", "__FS_FUNS", fs),
+    ("__random.gdn", "__RANDOM_FUNS", random),
+    ("__reflect.gdn", "__REFLECT_FUNS", reflect),
+    ("__shell.gdn", "__SHELL_FUNS", shell),
+    ("__time.gdn", "__TIME_FUNS", time),
   ]
 
-  // Validate that all built-in files are documented
-  let documented_files: List<String> = []
-  for (ns_name, _ns) in namespaces {
-    documented_files = documented_files.append(ns_name)
-  }
-  for built_in_file in reflect::built_in_files() {
-    if not(documented_files.contains(built_in_file)) {
-      log::warn("Builtin file " ^ built_in_file ^ " is not included in the namespaces list")
-    }
-  }
+  check_documented(namespaces)
 
-  for (ns_name, ns) in namespaces {
-    for fun_name in reflect::namespace_functions(ns) {
-      write_fun_page(ns_name, ns, fun_name, out_dir, base_tmpl_src)
-    }
+  let subs = build_substitutions(website_dir, namespaces)
+
+  let pages: List<Page> = []
+  pages = pages.concat(markdown_pages(website_dir, out_dir, subs))
+  pages = pages.concat(blog_pages(website_dir, out_dir, subs))
+  pages = pages.concat(api_pages(website_dir, out_dir, namespaces))
+
+  for page in pages {
+    page.write(template)
   }
 
-  // Copy static files (PNG, MP4, fonts)
-  for path in fs::list_directory(website_dir).or_throw() {
-    let ext = path.extension()
-    if (ext == Some("png")) || (ext == Some("mp4")) {
-      let file_name = path.file_name().or_throw()
-      let dest = out_dir.join(file_name)
-      fs::copy_file(path, dest).or_throw()
-    }
-  }
+  let assets = copy_assets(website_dir, out_dir)
 
-  // Copy font files
-  let fonts_src_dir = website_dir.join("static").join("fonts")
-  let fonts_dest_dir = out_dir.join("static").join("fonts")
-  for path in fs::list_directory(fonts_src_dir).or_throw() {
-    if path.extension() == Some("woff2") {
-      let file_name = path.file_name().or_throw()
-      let dest = fonts_dest_dir.join(file_name)
-      fs::copy_file(path, dest).or_throw()
-    }
-  }
-}
+  check_coverage(website_dir)
 
-/// Convert `["a", "b", "c"]` to `"a, b and c"`.
-fun join_with_commas_and(items: List<String>): String {
-  let last_item = match items.last() {
-    Some(item) => item,
-    None => return "",
-  }
-
-  let but_last = items.slice(0, -1)
-  if but_last.is_empty() {
-    return last_item
-  }
-
-  " and ".join([", ".join(but_last), last_item ^ "."])
-}
-
-/// Helper function to create markdown links of the form
-//
-/// ```text
-/// [`foo`](bar.html)
-/// ```
-fun code_link(text: String, url: String): String {
-  "[`" ^ text ^ "`](" ^ url ^ ")"
-}
-
-/// Replace all __FOO strings in markdown `src` with runtime values.
-fun substitute_shorthand(website_dir: Path, src: String): String {
-  let keyword_links = reflect::keywords().map(fun(keyword: String) {
-    code_link(keyword, "./keyword:" ^ keyword ^ ".html")
-  })
-
-  let keyword_links = join_with_commas_and(keyword_links)
-
-  let operator_links = reflect::operators().map(fun(operator: String) {
-    let page_name = ops::url_safe_name(operator)
-    code_link(operator, "./operator:" ^ page_name ^ ".html")
-  })
-
-  let operator_links = join_with_commas_and(operator_links)
-
-  let type_links = reflect::prelude_types().map(fun(name: String) {
-    code_link(name, "./type:" ^ name ^ ".html")
-  })
-
-  let type_links = join_with_commas_and(type_links)
-
-  let prelude_funs = reflect::namespace_functions(prelude).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__prelude.gdn::" ^ name ^ ".html")
-  })
-  let prelude_funs = join_with_commas_and(prelude_funs)
-
-  let fs_funs = reflect::namespace_functions(fs).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__fs.gdn::" ^ name ^ ".html")
-  })
-  let fs_funs = join_with_commas_and(fs_funs)
-
-  let random_funs = reflect::namespace_functions(random).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__random.gdn::" ^ name ^ ".html")
-  })
-  let random_funs = join_with_commas_and(random_funs)
-
-  let reflect_funs = reflect::namespace_functions(reflect).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__reflect.gdn::" ^ name ^ ".html")
-  })
-  let reflect_funs = join_with_commas_and(reflect_funs)
-
-  let shell_funs = reflect::namespace_functions(shell).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__shell.gdn::" ^ name ^ ".html")
-  })
-  let shell_funs = join_with_commas_and(shell_funs)
-
-  let time_funs = reflect::namespace_functions(time).map(fun(name: String) {
-    code_link(name ^ "()", "./fun:__time.gdn::" ^ name ^ ".html")
-  })
-  let time_funs = join_with_commas_and(time_funs)
-
-  let blog_links: List<String> = []
-  for post in blog_posts(website_dir) {
-    if not(post.published) {
-      continue
-    }
-
-    let html_path = post.path.set_extension("html")
-    let file_name = match html_path.file_name() {
-      Some(fn) => fn
-      None => continue
-    }
-
-    let link_text = match post.title {
-      Some(title) => title
-      None => file_name
-    }
-
-    let link_with_date = match post.date {
-      Some(date) => link_text ^ " (" ^ date ^ ")"
-      None => link_text
-    }
-
-    let link = "* [" ^ link_with_date ^ "](blog/" ^ file_name ^ ")"
-    blog_links = blog_links.append(link)
-  }
-
-  let blog_links = "\n".join(blog_links)
-
-  src
-    .replace("__KEYWORDS", keyword_links)
-    .replace("__OPERATORS", operator_links)
-    .replace("__BUILT_IN_TYPES", type_links)
-    .replace("__PRELUDE_FUNS", prelude_funs)
-    .replace("__FS_FUNS", fs_funs)
-    .replace("__RANDOM_FUNS", random_funs)
-    .replace("__REFLECT_FUNS", reflect_funs)
-    .replace("__SHELL_FUNS", shell_funs)
-    .replace("__TIME_FUNS", time_funs)
-    .replace("__BLOG_LINKS", blog_links)
-}
-
-/// Wrap `page_src` in the base template and write to the file `dest_path`.
-fun write_website_page(
-  base_tmpl_src: String,
-  page_src: String,
-  dest_path: Path,
-  title: Option<String>
-): Unit {
-  let title = match title {
-    Some(s) => s ^ " - Garden"
-    None => "Garden"
-  }
-
-  let base_tmpl_src = base_tmpl_src.replace("__TITLE", title)
-
-  let (header, footer) = match base_tmpl_src.split_once("__MAIN_CONTENT") {
-    Some(s) => s,
-    None => ("", "")
-  }
-
-  let src = "".join([header.trim_right(), page_src, footer.trim_left()])
-  fs::write_file(src, dest_path).or_throw()
+  let elapsed = time::unixtime() - started
+  log::info(
+    "Wrote " ^ string_repr(pages.len()) ^ " pages and " ^ string_repr(assets) ^
+      " assets in " ^ string_repr(elapsed) ^ "s.")
 }
 
 {
   build_site()
-}
-
-fun source_file_path(): Path {
-  reflect::source_file().or_throw()
 }

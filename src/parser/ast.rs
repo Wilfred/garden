@@ -995,6 +995,8 @@ pub(crate) enum BuiltInMethodKind {
     StringStartsWith,
     StringEndsWith,
     StringSubstring,
+    StringToAsciiLowercase,
+    StringToAsciiUppercase,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

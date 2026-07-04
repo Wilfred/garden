@@ -562,6 +562,14 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
                 ("lines", BuiltInMethodKind::StringLines),
                 ("starts_with", BuiltInMethodKind::StringStartsWith),
                 ("substring", BuiltInMethodKind::StringSubstring),
+                (
+                    "to_ascii_lowercase",
+                    BuiltInMethodKind::StringToAsciiLowercase,
+                ),
+                (
+                    "to_ascii_uppercase",
+                    BuiltInMethodKind::StringToAsciiUppercase,
+                ),
             ],
         ),
     ];

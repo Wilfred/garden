@@ -6434,6 +6434,52 @@ fn eval_built_in_method_call(
                 )));
             }
         }
+        BuiltInMethodKind::StringToAsciiLowercase => {
+            check_arity(
+                &SymbolName {
+                    text: "String::to_ascii_lowercase".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::String(s.to_ascii_lowercase())));
+            }
+        }
+        BuiltInMethodKind::StringToAsciiUppercase => {
+            check_arity(
+                &SymbolName {
+                    text: "String::to_ascii_uppercase".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::String(s.to_ascii_uppercase())));
+            }
+        }
     }
 
     Ok(())

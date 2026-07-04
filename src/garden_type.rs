@@ -327,6 +327,21 @@ impl Type {
         })
     }
 
+    pub(crate) fn contains_type_parameter(&self) -> bool {
+        match self {
+            Type::Any | Type::Error { .. } => false,
+            Type::TypeParameter(_) => true,
+            Type::Tuple(items) => items.iter().any(|ty| ty.contains_type_parameter()),
+            Type::Fun {
+                params, return_, ..
+            } => {
+                params.iter().any(|ty| ty.contains_type_parameter())
+                    || return_.contains_type_parameter()
+            }
+            Type::UserDefined { args, .. } => args.iter().any(|ty| ty.contains_type_parameter()),
+        }
+    }
+
     /// The name of this type. If a type isn't user-denotable, return
     /// None.
     pub(crate) fn type_name(&self) -> Option<TypeName> {
@@ -557,6 +572,78 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
             // matched the case where RHS is Top.
             false
         }
+    }
+}
+
+/// Solve type parameters in `decl_ty` (a type in a declaration
+/// position, e.g. `List<T>`) by matching it against the runtime type
+/// of the value provided (e.g. `List<Int>`).
+///
+/// Runtime types use `Any` and `NoValue` to represent unknown types
+/// (e.g. an unannotated closure has the runtime type `Fun<(Any),
+/// NoValue>`), so these never bind a type parameter. Type parameters
+/// belonging to another function (e.g. when a generic function is
+/// passed as a value) carry no information here either.
+pub(crate) fn unify_and_solve_runtime_ty(
+    decl_ty: &Type,
+    value_ty: &Type,
+    ty_var_env: &mut TypeVarEnv,
+) {
+    match (decl_ty, value_ty) {
+        (Type::TypeParameter(name), _) => {
+            if matches!(value_ty, Type::Any | Type::Error { .. })
+                || value_ty.is_no_value()
+                || value_ty.contains_type_parameter()
+            {
+                return;
+            }
+
+            // Only bind type parameters of the function being
+            // called, and keep the first solution we find:
+            // check_param_types() reports any conflicting arguments.
+            if let Some(None) = ty_var_env.get(name) {
+                ty_var_env.insert(name.clone(), Some(value_ty.clone()));
+            }
+        }
+        (Type::Tuple(decl_items), Type::Tuple(value_items)) => {
+            for (decl_item, value_item) in decl_items.iter().zip(value_items.iter()) {
+                unify_and_solve_runtime_ty(decl_item, value_item, ty_var_env);
+            }
+        }
+        (
+            Type::Fun {
+                params: decl_params,
+                return_: decl_return,
+                ..
+            },
+            Type::Fun {
+                params: value_params,
+                return_: value_return,
+                ..
+            },
+        ) => {
+            for (decl_param, value_param) in decl_params.iter().zip(value_params.iter()) {
+                unify_and_solve_runtime_ty(decl_param, value_param, ty_var_env);
+            }
+            unify_and_solve_runtime_ty(decl_return, value_return, ty_var_env);
+        }
+        (
+            Type::UserDefined {
+                name: decl_name,
+                args: decl_args,
+                ..
+            },
+            Type::UserDefined {
+                name: value_name,
+                args: value_args,
+                ..
+            },
+        ) if decl_name.text == value_name.text => {
+            for (decl_arg, value_arg) in decl_args.iter().zip(value_args.iter()) {
+                unify_and_solve_runtime_ty(decl_arg, value_arg, ty_var_env);
+            }
+        }
+        _ => {}
     }
 }
 

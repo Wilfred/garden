@@ -18,7 +18,9 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use crate::checks::{check_toplevel_items, check_toplevel_items_in_env};
 use crate::diagnostics::{format_exception_with_stack, Diagnostic, Severity};
 use crate::env::{EnclosingSymbol, Env, StackFrame};
-use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
+use crate::garden_type::{
+    is_subtype, unify_and_solve_runtime_ty, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy,
+};
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
@@ -4715,11 +4717,12 @@ fn eval_call(
                 );
             }
 
-            let mut type_bindings = TypeVarEnv::default();
-            for param_sym in &fi.type_params {
-                // TODO: calculate the value of type parameters properly.
-                type_bindings.insert(param_sym.name.clone(), Some(Type::Any));
-            }
+            let hints_and_values = params
+                .iter()
+                .zip(arg_values.iter())
+                .map(|(param, value)| (param.hint.as_ref(), value))
+                .collect::<Vec<_>>();
+            let type_bindings = solve_type_params(&fi.type_params, &hints_and_values, env);
 
             check_param_types(
                 env,
@@ -4999,6 +5002,44 @@ fn enum_value_runtime_type(
     }
 }
 
+/// Solve the type parameters of the function or method being called
+/// by matching each declared type hint against the runtime type of
+/// the corresponding value. Type parameters that can't be solved this
+/// way are bound to `Any`.
+fn solve_type_params(
+    type_params: &[TypeSymbol],
+    hints_and_values: &[(Option<&TypeHint>, &Value)],
+    env: &Env,
+) -> TypeVarEnv {
+    let mut type_bindings = TypeVarEnv::default();
+    if type_params.is_empty() {
+        return type_bindings;
+    }
+
+    for type_param in type_params {
+        type_bindings.insert(type_param.name.clone(), None);
+    }
+
+    for (hint, value) in hints_and_values {
+        let Some(hint) = hint else {
+            continue;
+        };
+        // Unresolvable hints are reported by check_param_types().
+        let Ok(decl_ty) = Type::from_hint(hint, &env.types, &type_bindings) else {
+            continue;
+        };
+        unify_and_solve_runtime_ty(&decl_ty, &Type::from_value(value), &mut type_bindings);
+    }
+
+    for binding in type_bindings.values_mut() {
+        if binding.is_none() {
+            *binding = Some(Type::Any);
+        }
+    }
+
+    type_bindings
+}
+
 fn check_param_types(
     env: &Env,
     receiver_value: &Value,
@@ -5154,6 +5195,12 @@ fn eval_method_call(
         &arg_values,
     )?;
 
+    let mut hints_and_values = vec![(Some(&receiver_method.receiver_hint), &receiver_value)];
+    for (param, value) in fun_info.params.params.iter().zip(arg_values.iter()) {
+        hints_and_values.push((param.hint.as_ref(), value));
+    }
+    let type_bindings = solve_type_params(&fun_info.type_params, &hints_and_values, env);
+
     // TODO: check for duplicate parameter names.
     // TODO: parameter names must not clash with the receiver name.
     let mut fun_bindings: FxHashMap<InternedSymbolId, Value> = FxHashMap::default();
@@ -5161,12 +5208,6 @@ fn eval_method_call(
         fun_bindings.insert(param.symbol.interned_id, value.clone());
     }
     fun_bindings.insert(receiver_method.receiver_sym.interned_id, receiver_value);
-
-    let mut type_bindings = TypeVarEnv::default();
-    for type_param in &fun_info.type_params {
-        // TODO: compute the value of these type params properly.
-        type_bindings.insert(type_param.name.clone(), Some(Type::Any));
-    }
 
     let return_hint = fun_info.return_hint.clone();
 

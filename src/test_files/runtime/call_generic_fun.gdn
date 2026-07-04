@@ -1,7 +1,17 @@
 fun foo<T>(x: T): Unit {}
 
+fun my_map<T, U>(items: List<T>, f: Fun<(T), U>): List<U> {
+  let result: List<U> = []
+  for item in items {
+    result = result.append(f(item))
+  }
+  result
+}
+
 {
   foo(1)
+  println(string_repr(my_map([1, 2, 3], fun(x: Int) { x + 1 })))
 }
 
 // args: run
+// expected stdout: [2, 3, 4]

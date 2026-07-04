@@ -1,0 +1,16 @@
+{
+  // The payload isn't an enum value, so we get a runtime error when
+  // trying to match the nested pattern against it.
+  match Some(1) {
+    Some(Some(n)) => println(string_repr(n))
+    _ => println("no match")
+  }
+}
+
+// args: run
+// expected stderr:
+// Exception: Expected an enum value, but got Int: 1
+// -| src/test_files/runtime/match_nested_pattern_not_enum.gdn:5:10	 __toplevel__
+// 5|     Some(Some(n)) => println(string_repr(n))
+//  |          ^^^^
+

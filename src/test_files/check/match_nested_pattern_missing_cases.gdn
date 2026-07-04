@@ -1,0 +1,23 @@
+public fun foo(x: Option<Option<Int>>): Int {
+  // A nested pattern only matches some values of `Some`, so this
+  // match isn't exhaustive.
+  match x {
+    Some(Some(n)) => n
+    None => 0
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: This match expression does not cover all the cases of `Option`. It's missing `Some`.
+// 
+// -| src/test_files/check/match_nested_pattern_missing_cases.gdn:4:9
+// 2|   // A nested pattern only matches some values of `Some`, so this
+// 3|   // match isn't exhaustive.
+// 4|   match x {
+//  |         ^
+// 5|     Some(Some(n)) => n
+// 6|     None => 0
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

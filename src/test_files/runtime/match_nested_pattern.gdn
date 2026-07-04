@@ -1,0 +1,44 @@
+{
+  // A nested pattern that matches.
+  match Some(Some(1)) {
+    Some(Some(n)) => println("Some(Some(n)): " ^ string_repr(n))
+    Some(_) => println("Some(_)")
+    None => println("None")
+  }
+
+  // The inner value doesn't match the nested pattern, so this falls
+  // through to the next case.
+  match Some(None) {
+    Some(Some(n)) => println("Some(Some(n)): " ^ string_repr(n))
+    Some(_) => println("Some(_)")
+    None => println("None")
+  }
+
+  // A wildcard inside a nested pattern.
+  match Some(Some(2)) {
+    Some(Some(_)) => println("Some(Some(_))")
+    _ => println("wildcard")
+  }
+
+  // Deeper nesting.
+  match Some(Some(Some(3))) {
+    Some(Some(Some(n))) => println("Some(Some(Some(n))): " ^ string_repr(n))
+    _ => println("wildcard")
+  }
+
+  // Tuple destructuring inside a nested pattern.
+  match Ok(Some((1, 2))) {
+    Ok(Some((x, y))) => println("Ok(Some((x, y))): " ^ string_repr(x + y))
+    Ok(_) => println("Ok(_)")
+    Err(_) => println("Err(_)")
+  }
+}
+
+// args: run
+// expected stdout:
+// Some(Some(n)): 1
+// Some(_)
+// Some(Some(_))
+// Some(Some(Some(n))): 3
+// Ok(Some((x, y))): 3
+

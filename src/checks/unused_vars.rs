@@ -4,7 +4,8 @@ use std::rc::Rc;
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::parser::ast::{
     Block, Expression, Expression_, FunInfo, ImportInfo, InternedSymbolId, LetDestination,
-    MethodInfo, Pattern, Symbol, SymbolName, ToplevelItem, TypeHint, TypeName, TypeSymbol,
+    MethodInfo, Pattern, PatternPayload, Symbol, SymbolName, ToplevelItem, TypeHint, TypeName,
+    TypeSymbol,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::position::Position;
@@ -245,6 +246,21 @@ impl UnusedVariableVisitor {
             symbol.name.clone(),
             UseState::NotUsed(symbol.position.clone()),
         ));
+    }
+
+    /// Add bindings for the variables bound by this match pattern
+    /// payload, e.g. `x` in `Some(Wrapped(x))`.
+    fn add_payload_bindings(&mut self, payload: &PatternPayload) {
+        match payload {
+            PatternPayload::Dest(dest) => {
+                self.visit_dest(dest);
+            }
+            PatternPayload::Pattern(inner_pattern) => {
+                if let Some(inner_payload) = &inner_pattern.payload {
+                    self.add_payload_bindings(inner_payload);
+                }
+            }
+        }
     }
 
     fn push_scope(&mut self) {
@@ -596,8 +612,8 @@ impl Visitor for UnusedVariableVisitor {
             // variant, and that we've covered all the variants.
 
             self.push_scope();
-            if let Some(payload_dest) = &pattern.payload {
-                self.visit_dest(payload_dest);
+            if let Some(payload) = &pattern.payload {
+                self.add_payload_bindings(payload);
             }
 
             self.visit_block(case_expr);

@@ -1,0 +1,52 @@
+match foo {
+  Some(Some(x)) => x
+}
+
+// args: reftest-ast
+// expected stdout:
+// Match(
+//     Expression {
+//         position: Position { ... },
+//         expr_: Variable(
+//             Symbol"foo",
+//         ),
+//         value_is_used: true,
+//         id: SyntaxId(1),
+//     },
+//     [
+//         (
+//             Pattern {
+//                 variant_sym: Symbol"Some",
+//                 payload: Some(
+//                     Pattern(
+//                         Pattern {
+//                             variant_sym: Symbol"Some",
+//                             payload: Some(
+//                                 Dest(
+//                                     Symbol(
+//                                         Symbol"x",
+//                                     ),
+//                                 ),
+//                             ),
+//                         },
+//                     ),
+//                 ),
+//             },
+//             Block {
+//                 open_brace: Position { ... },
+//                 exprs: [
+//                     Expression {
+//                         position: Position { ... },
+//                         expr_: Variable(
+//                             Symbol"x",
+//                         ),
+//                         value_is_used: true,
+//                         id: SyntaxId(6),
+//                     },
+//                 ],
+//                 close_brace: Position { ... },
+//             },
+//         ),
+//     ],
+// )
+

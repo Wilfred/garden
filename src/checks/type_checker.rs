@@ -84,6 +84,7 @@ pub(crate) fn check_types(
         id_to_bindings: FxHashMap::default(),
         current_item: None,
         in_test: false,
+        closure_return_tys: vec![],
     };
     for item in items {
         visitor.visit_toplevel_item(item);
@@ -205,6 +206,11 @@ struct TypeCheckVisitor<'a> {
     callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
     test_callees: HashSet<ToplevelItemId>,
     id_to_bindings: FxHashMap<SyntaxId, Vec<(SymbolName, Type)>>,
+    /// The types produced by `return` expressions in each enclosing
+    /// closure body currently being checked, innermost last. Used to
+    /// infer a closure's return type, which is the join of its final
+    /// expression and every `return` inside it.
+    closure_return_tys: Vec<Vec<Type>>,
 }
 
 impl TypeCheckVisitor<'_> {
@@ -1087,9 +1093,17 @@ impl TypeCheckVisitor<'_> {
                 let expr_ty = expected_return_ty;
                 match inner_expr {
                     Some(expr) => {
-                        self.check_expr(expr_ty, expr, type_bindings, expected_return_ty);
+                        let returned_ty =
+                            self.check_expr(expr_ty, expr, type_bindings, expected_return_ty);
+                        if let Some(returned_tys) = self.closure_return_tys.last_mut() {
+                            returned_tys.push(returned_ty);
+                        }
                     }
                     None => {
+                        if let Some(returned_tys) = self.closure_return_tys.last_mut() {
+                            returned_tys.push(Type::unit());
+                        }
+
                         if !is_subtype(&Type::unit(), expr_ty) {
                             let mut message_parts =
                                 vec![msgtext!("Expected this function to return ")];
@@ -2529,12 +2543,29 @@ impl TypeCheckVisitor<'_> {
                     param_tys.push(param_ty);
                 }
 
-                let block_ty = self.check_block(
+                self.closure_return_tys.push(vec![]);
+                let final_expr_ty = self.check_block(
                     expected_return_ty,
                     &fun_info.body,
                     type_bindings,
                     expected_return_ty,
                 );
+                let returned_tys = self
+                    .closure_return_tys
+                    .pop()
+                    .expect("We pushed a frame above.");
+
+                // A closure yields a value either by falling off the
+                // end or via a `return`, so its return type is the join
+                // of the final expression and every `return`. Ignoring
+                // the `return`s would let a closure whose body diverges
+                // (e.g. ends in `throw`) be inferred as returning
+                // `NoValue`, so it would be accepted anywhere even
+                // though it can return a concrete value at runtime.
+                let mut block_ty = final_expr_ty;
+                for returned_ty in returned_tys {
+                    block_ty = unify(&block_ty, &returned_ty).unwrap_or(Type::Any);
+                }
 
                 if let Some(hint) = &fun_info.return_hint {
                     let hint_ty =

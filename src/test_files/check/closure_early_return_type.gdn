@@ -1,0 +1,37 @@
+fun apply(f: Fun<(Int), String>): String {
+  f(0)
+}
+
+public fun call_with_early_return(): String {
+  apply(fun(n) {
+    if n == 0 {
+      return 42
+    }
+
+    throw("unreachable")
+  })
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected a `Fun<(Int), String>` but got a `Fun<(Any), Int>`.
+// 
+// --| src/test_files/check/closure_early_return_type.gdn:6:9
+//  5| public fun call_with_early_return(): String {
+//  6|   apply(fun(n) {
+//   |         ^^^^^^^^
+//  7|     if n == 0 {
+//   | ^^^^^^^^^^^^^^^
+//  8|       return 42
+//   | ^^^^^^^^^^^^^^^
+//  9|     }
+//   | ^^^^^
+// 10| 
+//   | 
+// 11|     throw("unreachable")
+//   | ^^^^^^^^^^^^^^^^^^^^^^^^
+// 12|   })
+//   | ^^^
+// 13| }
+

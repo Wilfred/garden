@@ -1503,15 +1503,13 @@ impl TypeCheckVisitor<'_> {
                         .unwrap_or_err_ty();
                 unify_and_solve_ty(&recv_decl_ty, &receiver_ty, &mut ty_var_env);
 
-                let mut arg_tys = vec![];
-                for arg in &paren_args.arguments {
-                    let arg_ty = self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-                    arg_tys.push((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
-                }
-
-                for (param_ty, (arg_ty, _, _)) in param_decl_tys.iter().zip(arg_tys.iter()) {
-                    unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
-                }
+                let arg_tys = self.check_call_args(
+                    paren_args,
+                    &param_decl_tys,
+                    &mut ty_var_env,
+                    type_bindings,
+                    expected_return_ty,
+                );
 
                 let params = param_decl_tys
                     .iter()
@@ -1593,6 +1591,75 @@ impl TypeCheckVisitor<'_> {
         }
     }
 
+    /// Infer the types of call arguments, solving the type
+    /// parameters occurring in `param_tys` into `ty_var_env` as
+    /// arguments are visited.
+    ///
+    /// Function literal arguments are visited last and checked
+    /// against their declared parameter type with the solutions
+    /// found so far substituted in. This gives unannotated lambda
+    /// parameters their types from the declaration, e.g. a `fun(x) {
+    /// x + 1 }` argument for a `Fun<(T), U>` parameter where another
+    /// argument solved `T`.
+    fn check_call_args(
+        &mut self,
+        paren_args: &ParenthesizedArguments,
+        param_tys: &[Type],
+        ty_var_env: &mut TypeVarEnv,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+    ) -> Vec<(Type, Position, Option<Position>)> {
+        let mut arg_tys: Vec<Option<(Type, Position, Option<Position>)>> =
+            vec![None; paren_args.arguments.len()];
+
+        for (i, arg) in paren_args.arguments.iter().enumerate() {
+            if matches!(&arg.expr.expr_, Expression_::FunLiteral(_)) {
+                continue;
+            }
+
+            let arg_ty = self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+            if let Some(param_ty) = param_tys.get(i) {
+                unify_and_solve_ty(param_ty, &arg_ty, ty_var_env);
+            }
+            arg_tys[i] = Some((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
+        }
+
+        for (i, arg) in paren_args.arguments.iter().enumerate() {
+            if arg_tys[i].is_some() {
+                continue;
+            }
+
+            let expected_fun_ty = param_tys.get(i).and_then(|param_ty| {
+                // Type parameters that are still unsolved place no
+                // constraint on the lambda: substitute them as Any,
+                // and let the lambda's inferred type solve them
+                // below.
+                let mut solved_env = ty_var_env.clone();
+                for binding in solved_env.values_mut() {
+                    if binding.is_none() {
+                        *binding = Some(Type::Any);
+                    }
+                }
+
+                let param_ty = substitute_ty_vars(param_ty, &solved_env);
+                matches!(param_ty, Type::Fun { .. }).then_some(param_ty)
+            });
+
+            let arg_ty = match &expected_fun_ty {
+                Some(expected_ty) => {
+                    self.check_expr(expected_ty, &arg.expr, type_bindings, expected_return_ty)
+                }
+                None => self.infer_expr(&arg.expr, type_bindings, expected_return_ty),
+            };
+            if let Some(param_ty) = param_tys.get(i) {
+                unify_and_solve_ty(param_ty, &arg_ty, ty_var_env);
+            }
+            arg_tys[i] = Some((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
+        }
+
+        arg_tys.into_iter().flatten().collect()
+    }
+
     fn infer_call(
         &mut self,
         pos: &Position,
@@ -1627,16 +1694,13 @@ impl TypeCheckVisitor<'_> {
                     ty_var_env.insert(type_param.clone(), None);
                 }
 
-                let mut arg_tys = vec![];
-                for arg in &paren_args.arguments {
-                    let arg_ty = self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-
-                    arg_tys.push((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
-                }
-
-                for (param_ty, (arg_ty, _, _)) in params.iter().zip(arg_tys.iter()) {
-                    unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
-                }
+                let arg_tys = self.check_call_args(
+                    paren_args,
+                    &params,
+                    &mut ty_var_env,
+                    type_bindings,
+                    expected_return_ty,
+                );
 
                 let params = params
                     .iter()
@@ -2529,19 +2593,29 @@ impl TypeCheckVisitor<'_> {
                     param_tys.push(param_ty);
                 }
 
+                // As with parameters, a return hint on the literal
+                // takes precedence over the expected type.
+                let expected_body_ty = match &fun_info.return_hint {
+                    Some(hint) => {
+                        let hint_ty = Type::from_hint(hint, &self.env.types, type_bindings)
+                            .unwrap_or_err_ty();
+                        self.save_hint_ty_id(hint, &hint_ty);
+                        hint_ty
+                    }
+                    None => (**expected_return_ty).clone(),
+                };
+
                 let block_ty = self.check_block(
-                    expected_return_ty,
+                    &expected_body_ty,
                     &fun_info.body,
                     type_bindings,
-                    expected_return_ty,
+                    &expected_body_ty,
                 );
 
-                if let Some(hint) = &fun_info.return_hint {
-                    let hint_ty =
-                        Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty();
-                    self.save_hint_ty_id(hint, &hint_ty);
+                if fun_info.return_hint.is_some() {
+                    let hint_ty = &expected_body_ty;
 
-                    if !is_subtype(&block_ty, &hint_ty) {
+                    if !is_subtype(&block_ty, hint_ty) {
                         self.diagnostics.push(Diagnostic {
                             notes: vec![],
                             fixes: vec![],

@@ -1,0 +1,32 @@
+// An exception thrown outside a try block still stops the program
+// with a stack trace, even after earlier try expressions have caught
+// an exception or been exited early with break.
+fun boom(): Unit {
+  throw("not caught")
+}
+
+{
+  try {
+    throw("caught")
+  } catch (_) {}
+
+  while True {
+    try {
+      break
+    } catch (_) {}
+  }
+
+  boom()
+}
+
+// args: run
+// expected exit status: 1
+// expected stderr:
+// Exception: not caught
+// -| src/test_files/runtime/try_uncaught.gdn:5:3	 fun boom()
+// 5|   throw("not caught")
+//  |   ^^^^^^^^^^^^^^^^^^^
+// --| src/test_files/runtime/try_uncaught.gdn:19:3	 __toplevel__
+// 19|   boom()
+//   |   ^^^^^^
+

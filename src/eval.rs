@@ -162,6 +162,11 @@ pub(crate) enum ExpressionState {
     /// * In `assert(foo() == bar())` we've evaluated `foo()` and
     ///   `bar()` but not yet compared them.
     PartiallyEvaluated(BlockState),
+    /// This `try` expression is evaluating its try block. If an
+    /// exception is thrown, we restore the stack frame to the
+    /// recorded depths before evaluating the catch block. See
+    /// `unwind_to_enclosing_try`.
+    TryBlockRunning(TryCheckpoint),
     /// This expression has had its children evaluated, but hasn't
     /// been evaluated itself. For example, in `foo(bar())` we have
     /// evaluated `bar()` but not yet called `foo()` with the result.
@@ -170,6 +175,16 @@ pub(crate) enum ExpressionState {
     /// EvaluatedSubexpressions state. We use it for eval-up-to to
     /// track when the evaluation finishes.
     EvaluatedSubexpressions,
+}
+
+/// The state of the enclosing stack frame when a `try` block started
+/// evaluating.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct TryCheckpoint {
+    /// The number of evaluated values.
+    evalled_values_len: usize,
+    /// The number of binding blocks.
+    bindings_len: usize,
 }
 
 impl ExpressionState {
@@ -6498,6 +6513,9 @@ fn eval_expr(
 
     match &outer_expr.expr_ {
         Expression_::Match(scrutinee, cases) => match expr_state {
+            ExpressionState::TryBlockRunning(_) => {
+                unreachable!("Only Try expressions use the TryBlockRunning state")
+            }
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(
                     ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
@@ -6518,6 +6536,9 @@ fn eval_expr(
             }
         },
         Expression_::If(condition, ref then_body, ref else_body) => match expr_state {
+            ExpressionState::TryBlockRunning(_) => {
+                unreachable!("Only Try expressions use the TryBlockRunning state")
+            }
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(
                     ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
@@ -6549,6 +6570,9 @@ fn eval_expr(
         },
         Expression_::While(condition, ref body) => {
             match expr_state {
+                ExpressionState::TryBlockRunning(_) => {
+                    unreachable!("Only Try expressions use the TryBlockRunning state")
+                }
                 ExpressionState::NotEvaluated => {
                     // Once we've evaluated the condition, we can consider evaluating the body.
                     env.push_expr_to_eval(
@@ -6592,6 +6616,9 @@ fn eval_expr(
         }
         Expression_::ForIn(sym, expr, body) => {
             match expr_state {
+                ExpressionState::TryBlockRunning(_) => {
+                    unreachable!("Only Try expressions use the TryBlockRunning state")
+                }
                 ExpressionState::NotEvaluated => {
                     // The initial value of the loop index.
                     env.push_value(Value::new(Value_::Int(0)));
@@ -6640,17 +6667,44 @@ fn eval_expr(
         }
         Expression_::Try(try_body, _catch_sym, _catch_body) => match expr_state {
             ExpressionState::NotEvaluated => {
+                // Record the frame state on this expression's entry,
+                // so we can restore it if an exception is thrown
+                // during the try block. See
+                // `unwind_to_enclosing_try`.
+                let stack_frame = env.current_frame();
+                let checkpoint = TryCheckpoint {
+                    evalled_values_len: stack_frame.evalled_values.len(),
+                    bindings_len: stack_frame.bindings.block_bindings.len(),
+                };
+
                 env.push_expr_to_eval(
-                    ExpressionState::EvaluatedSubexpressions,
+                    ExpressionState::TryBlockRunning(checkpoint),
                     Rc::clone(&outer_expr),
                 );
                 eval_block(env, expr_value_is_used, try_body);
             }
+            ExpressionState::TryBlockRunning(_) => {
+                // The try block finished without throwing an
+                // exception, so the catch block is not evaluated.
+                env.current_frame_mut().bindings.pop_block();
+                env.push_expr_to_eval(
+                    ExpressionState::EvaluatedSubexpressions,
+                    Rc::clone(&outer_expr),
+                );
+            }
+            ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock) => {
+                // The catch block finished.
+                env.current_frame_mut().bindings.pop_block();
+                env.push_expr_to_eval(
+                    ExpressionState::EvaluatedSubexpressions,
+                    Rc::clone(&outer_expr),
+                );
+            }
             ExpressionState::PartiallyEvaluated(_) => {
-                unreachable!("Try should not be in PartiallyEvaluated state");
+                unreachable!("Try blocks should only be in the DoneRunBlock partial state");
             }
             ExpressionState::EvaluatedSubexpressions => {
-                env.current_frame_mut().bindings.pop_block();
+                // Both the try and catch blocks are complete.
             }
         },
         Expression_::Return(expr) => {
@@ -7025,6 +7079,9 @@ fn eval_expr(
             }
         }
         Expression_::Call(receiver, paren_args) => match expr_state {
+            ExpressionState::TryBlockRunning(_) => {
+                unreachable!("Only Try expressions use the TryBlockRunning state")
+            }
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(
                     ExpressionState::PartiallyEvaluated(BlockState::NotBlock),
@@ -7125,6 +7182,9 @@ fn eval_expr(
         }
         Expression_::Assert(expr) => {
             match expr_state {
+                ExpressionState::TryBlockRunning(_) => {
+                    unreachable!("Only Try expressions use the TryBlockRunning state")
+                }
                 ExpressionState::NotEvaluated => match binop_for_assert(expr) {
                     Some((lhs, _, rhs)) => {
                         // Intercept evaluation of LHS and RHS, so we
@@ -7194,6 +7254,68 @@ fn binop_for_assert(
     }
 }
 
+/// If we're inside a `try` expression, unwind the stack to the
+/// innermost `try`, then start evaluating its catch block with the
+/// exception message bound to the catch variable.
+///
+/// Returns false if there is no enclosing `try` expression, in which
+/// case the exception should propagate as normal.
+fn unwind_to_enclosing_try(env: &mut Env, exception_info: &ExceptionInfo) -> bool {
+    let is_try_block_entry = |(state, _): &(ExpressionState, Rc<Expression>)| -> bool {
+        matches!(state, ExpressionState::TryBlockRunning(_))
+    };
+
+    let Some(frame_idx) = env
+        .stack
+        .0
+        .iter()
+        .rposition(|frame| frame.exprs_to_eval.iter().any(is_try_block_entry))
+    else {
+        return false;
+    };
+
+    // Discard the stack frames of calls made inside the try block.
+    env.stack.0.truncate(frame_idx + 1);
+
+    // Pop the currently evaluating expressions until we reach the
+    // innermost `try` whose try block is running.
+    let stack_frame = env.current_frame_mut();
+    let (checkpoint, try_expr) = loop {
+        let (state, expr) = stack_frame
+            .exprs_to_eval
+            .pop()
+            .expect("This frame should contain a running try block");
+
+        if let ExpressionState::TryBlockRunning(checkpoint) = state {
+            break (checkpoint, expr);
+        }
+    };
+
+    let Expression_::Try(_, catch_sym, catch_body) = &try_expr.expr_ else {
+        unreachable!("A TryBlockRunning entry should contain a Try expression");
+    };
+
+    // Restore the frame to its state when the try block started.
+    stack_frame
+        .evalled_values
+        .truncate(checkpoint.evalled_values_len);
+    stack_frame
+        .bindings
+        .block_bindings
+        .truncate(checkpoint.bindings_len);
+
+    let exception_message = Value::new(Value_::String(exception_info.message.as_string()));
+    stack_frame.bindings_next_block = vec![(catch_sym.clone(), exception_message)];
+
+    env.push_expr_to_eval(
+        ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock),
+        Rc::clone(&try_expr),
+    );
+    eval_block(env, try_expr.value_is_used, catch_body);
+
+    true
+}
+
 /// Start evaluation of the expressions in the current stack frame.
 pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError> {
     if env.stack.0.len() == 1 && env.current_frame().exprs_to_eval.is_empty() {
@@ -7252,6 +7374,12 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 
             match eval_expr(env, session, Rc::clone(&outer_expr), &mut expr_state) {
                 Err((RestoreValues(restore_values), eval_err)) => {
+                    if let EvalError::Exception(exception_info) = &eval_err {
+                        if unwind_to_enclosing_try(env, exception_info) {
+                            continue;
+                        }
+                    }
+
                     restore_stack_frame(env, (expr_state, Rc::clone(&outer_expr)), &restore_values);
                     return Err(eval_err);
                 }
@@ -7308,19 +7436,27 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 let return_ty = match Type::from_hint(return_hint, &env.types, &type_bindings) {
                     Ok(ty) => ty,
                     Err(e) => {
-                        return Err(EvalError::Exception(ExceptionInfo {
+                        let exception_info = ExceptionInfo {
                             position: err_pos,
                             message: ErrorMessage(vec![Text(e)]),
-                        }));
+                        };
+                        if unwind_to_enclosing_try(env, &exception_info) {
+                            continue;
+                        }
+                        return Err(EvalError::Exception(exception_info));
                     }
                 };
 
                 if let Err(msg) = check_type(&return_value, &return_ty, env) {
-                    env.push_value(return_value.clone());
-                    return Err(EvalError::Exception(ExceptionInfo {
+                    let exception_info = ExceptionInfo {
                         position: err_pos,
                         message: msg,
-                    }));
+                    };
+                    if unwind_to_enclosing_try(env, &exception_info) {
+                        continue;
+                    }
+                    env.push_value(return_value.clone());
+                    return Err(EvalError::Exception(exception_info));
                 }
             }
 
@@ -7408,11 +7544,13 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
             }
             _ => {
                 // We're exiting a block that wasn't part of a loop
-                // (i.e. a match case or an if/else block), so we
-                // should pop the bindings block here too.
+                // (i.e. a match case, an if/else block or a try
+                // block), so we should pop the bindings block here
+                // too.
                 if matches!(
                     expr_state,
                     ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock)
+                        | ExpressionState::TryBlockRunning(_)
                 ) {
                     env.current_frame_mut().bindings.pop_block();
                 }

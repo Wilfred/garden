@@ -1,0 +1,17 @@
+// Assertion failures are not exceptions, so try does not catch them.
+{
+  try {
+    assert(1 == 2)
+  } catch (_) {
+    println("not reached")
+  }
+}
+
+// args: run
+// expected exit status: 1
+// expected stderr:
+// Exception: Expected `2` but got `1`.
+// -| src/test_files/runtime/try_assert.gdn:4:12	 __toplevel__
+// 4|     assert(1 == 2)
+//  |            ^^^^^^
+

@@ -2,6 +2,7 @@ pub(crate) mod ast;
 pub(crate) mod diagnostics;
 pub(crate) mod lex;
 pub(crate) mod position;
+pub(crate) mod vars;
 pub(crate) mod vfs;
 pub(crate) mod visitor;
 
@@ -2768,6 +2769,7 @@ pub(crate) fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -
         position,
         name,
         id: id_gen.next(),
+        var_id: None,
     }
 }
 
@@ -2780,6 +2782,7 @@ fn keyword_placeholder(position: Position, id_gen: &mut IdGenerator) -> Symbol {
         position,
         name,
         id: id_gen.next(),
+        var_id: None,
     }
 }
 
@@ -2953,6 +2956,7 @@ fn parse_symbol(
         position: variable_token.position,
         name,
         id: id_gen.next(),
+        var_id: None,
     }
 }
 
@@ -3085,6 +3089,7 @@ fn parse_toplevel_items_from_tokens(
     }
 
     set_is_used_toplevel_items(&mut items);
+    vars::assign_var_ids(&mut items, id_gen);
 
     items
 }

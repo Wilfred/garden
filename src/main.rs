@@ -200,6 +200,9 @@ enum CliCommands {
     /// Parse the Garden program at the path specified and print the
     /// AST.
     ReftestAst { path: PathBuf },
+    /// Parse the Garden program at the path specified and print the
+    /// local variable ID resolved for each variable.
+    ReftestVarIds { path: PathBuf },
     /// Add a type annotation to the local, parameter or function
     /// return type at the offset specified.
     ReftestAddTypeAnnotation {
@@ -408,6 +411,11 @@ fn main() {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
             reftest_ast(&src, &abs_path)
+        }
+        CliCommands::ReftestVarIds { path } => {
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            reftest_var_ids(&src, &abs_path)
         }
         CliCommands::ReftestHover { path } => {
             let abs_path = to_abs_path(&path);
@@ -886,6 +894,36 @@ fn reftest_ast(src: &str, path: &Path) {
     }
 }
 
+fn reftest_var_ids(src: &str, path: &Path) {
+    let project_root = std::env::current_dir().unwrap_or(PathBuf::from("/"));
+
+    let mut id_gen = IdGenerator::default();
+    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+    let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+    for error in errors.into_iter() {
+        let (position, message) = match error {
+            ParseError::Invalid {
+                position, message, ..
+            } => (position, message),
+            ParseError::Incomplete { position, message } => (position, message),
+        };
+        eprintln!(
+            "{}",
+            format_diagnostic(
+                &ErrorMessage(vec![Text(format!("Parse error: {}", message.as_string()))]),
+                &position,
+                &project_root,
+                Severity::Error,
+                &[],
+                &vfs,
+            )
+        );
+    }
+
+    println!("{}", parser::vars::var_id_summary(&items));
+}
+
 fn parse_toplevel_items_or_die(
     vfs_path: &VfsPathBuf,
     src: &str,
@@ -1134,6 +1172,11 @@ mod tests {
     #[test]
     fn reftest_parser() -> TestResult<()> {
         run_reftests("parser")
+    }
+
+    #[test]
+    fn reftest_var_ids() -> TestResult<()> {
+        run_reftests("var_ids")
     }
 
     #[test]

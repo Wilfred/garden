@@ -1,0 +1,18 @@
+fun f(x: Int): Int {
+  if x > 0 {
+    let x = x + 1
+    x
+  } else {
+    x
+  }
+}
+
+// args: reftest-var-ids
+// expected stdout:
+// x binding #0
+// x reference #0
+// x reference #0
+// x binding #1
+// x reference #1
+// x reference #0
+

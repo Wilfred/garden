@@ -1,0 +1,35 @@
+fun demo(xs: List<Int>, opt: Option<Int>): Int {
+  let sum = 0
+  for x in xs {
+    sum += x
+  }
+
+  let extra = match opt {
+    Some(n) => n
+    _ => 0
+  }
+
+  try {
+    sum + extra
+  } catch (e) {
+    0
+  }
+}
+
+// args: reftest-var-ids
+// expected stdout:
+// xs binding #0
+// opt binding #1
+// sum binding #2
+// xs reference #0
+// x binding #3
+// sum reference #2
+// x reference #3
+// opt reference #1
+// n binding #4
+// n reference #4
+// extra binding #5
+// sum reference #2
+// extra reference #5
+// e binding #6
+

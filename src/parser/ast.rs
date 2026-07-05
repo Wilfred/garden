@@ -165,6 +165,15 @@ impl From<&str> for SymbolName {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub(crate) struct InternedSymbolId(pub(crate) usize);
 
+/// A unique ID for a local variable binding. Every reference to the
+/// same binding shares this ID, and two bindings of the same name in
+/// different lexical scopes have distinct IDs.
+///
+/// Unlike [`InternedSymbolId`], which is shared by every symbol with the
+/// same name, this distinguishes a variable by the binding it refers to.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub(crate) struct LocalVariableId(pub(crate) usize);
+
 /// A symbol representing a value, such as a local variable, a
 /// function name or a method name.
 ///
@@ -175,6 +184,14 @@ pub(crate) struct Symbol {
     pub(crate) name: SymbolName,
     pub(crate) id: SyntaxId,
     pub(crate) interned_id: InternedSymbolId,
+    /// If this symbol denotes a lexically-scoped local variable, the ID
+    /// of the binding it introduces or refers to.
+    ///
+    /// This is `None` for symbols that are not local variables (such as
+    /// function or method names) and for variables bound at the
+    /// toplevel, which are looked up by name so that a later REPL
+    /// snippet can still refer to them.
+    pub(crate) var_id: Option<LocalVariableId>,
 }
 
 /// Structural equality: ignore position and IDs.
@@ -185,6 +202,7 @@ impl PartialEq for Symbol {
             name,
             id: _,
             interned_id: _,
+            var_id: _,
         } = self;
         *name == other.name
     }
@@ -205,6 +223,7 @@ impl Symbol {
             position,
             name,
             id: id_gen.next(),
+            var_id: None,
         }
     }
 
@@ -221,6 +240,7 @@ impl std::fmt::Debug for Symbol {
                 .field("position", &self.position)
                 .field("id", &self.id)
                 .field("interned_id", &self.interned_id)
+                .field("var_id", &self.var_id)
                 .finish()
         } else {
             write!(f, "Symbol\"{}\"", self.name.text)
@@ -629,6 +649,7 @@ pub(crate) struct IdGenerator {
     pub(crate) next_id: SyntaxId,
     pub(crate) interned: FxHashMap<SymbolName, InternedSymbolId>,
     pub(crate) intern_id_to_name: FxHashMap<InternedSymbolId, SymbolName>,
+    pub(crate) next_var_id: LocalVariableId,
 }
 
 impl Default for IdGenerator {
@@ -637,6 +658,7 @@ impl Default for IdGenerator {
             next_id: SyntaxId(0),
             interned: FxHashMap::default(),
             intern_id_to_name: FxHashMap::default(),
+            next_var_id: LocalVariableId(0),
         }
     }
 }
@@ -647,6 +669,14 @@ impl IdGenerator {
         let next_id = self.next_id;
         self.next_id = SyntaxId(next_id.0 + 1);
         next_id
+    }
+
+    /// A fresh ID for a local variable binding. IDs stay unique across
+    /// REPL snippets because the same generator is reused.
+    pub(crate) fn next_var_id(&mut self) -> LocalVariableId {
+        let next_var_id = self.next_var_id;
+        self.next_var_id = LocalVariableId(next_var_id.0 + 1);
+        next_var_id
     }
 
     pub(crate) fn intern_symbol(&mut self, name: &SymbolName) -> InternedSymbolId {

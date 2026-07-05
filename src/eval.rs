@@ -1405,6 +1405,7 @@ pub(crate) fn eval_toplevel_method_call(
         name: meth_name.clone(),
         id: env.id_gen.next(),
         interned_id: env.id_gen.intern_symbol(meth_name),
+        var_id: None,
     };
 
     let mut arguments = vec![];

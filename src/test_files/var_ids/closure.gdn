@@ -1,0 +1,15 @@
+let base = 10
+
+fun adder(n: Int): Fun<(Int), Int> {
+  fun(m: Int) { n + m + base }
+}
+
+// args: reftest-var-ids
+// expected stdout:
+// base binding global
+// n binding #0
+// m binding #1
+// n reference #0
+// m reference #1
+// base reference global
+

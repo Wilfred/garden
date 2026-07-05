@@ -25,7 +25,7 @@ public fun bar(_: Int, _: Int, _: String) {
 //  |                ^ Note: The previous occurrence is here.
 // 2|     let (y, y) = (1, 2)
 // 
-// Error: Duplicate variable  `y` in destructuring `let`.
+// Error: Duplicate variable `y` in destructuring `let`.
 // 
 // -| src/test_files/check/repeated_bindings.gdn:2:13
 // 1| public fun foo(x: Int, x: Int) {

@@ -8,5 +8,6 @@ public fun foo(x: Int) {}
 // -| src/test_files/check/bound_but_unused.gdn:1:16
 // 1| public fun foo(x: Int) {}
 // 2|                ^
+// Help: Rename to `_x`
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

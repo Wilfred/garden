@@ -864,6 +864,7 @@ fn reftest_ast(src: &str, path: &Path) {
                         &project_root,
                         Severity::Error,
                         &notes,
+                        &[],
                         &vfs,
                     )
                 );
@@ -911,6 +912,7 @@ fn parse_toplevel_items_or_die(
                         &project_root,
                         Severity::Error,
                         &notes,
+                        &[],
                         vfs,
                     )
                 ),

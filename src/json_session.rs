@@ -246,6 +246,7 @@ fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs, project_root: &Path) ->
                     project_root,
                     Severity::Error,
                     &notes,
+                    &[],
                     vfs,
                 ));
 
@@ -306,6 +307,7 @@ fn handle_eval_up_to_request(
                     &env.project_root,
                     Severity::Error,
                     &notes,
+                    &[],
                     &env.vfs,
                 ));
                 return Response {

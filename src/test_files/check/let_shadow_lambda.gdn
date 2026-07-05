@@ -22,5 +22,6 @@
 // 3|     let x = "a"
 // 4|         ^
 // 5|     let f = fun() {
+// Help: Remove this let binding
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

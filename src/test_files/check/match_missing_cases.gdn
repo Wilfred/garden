@@ -15,5 +15,6 @@ public fun foo(v: Result<Int, Unit>) {
 // 3|   match v {
 // 4|   }     ^
 // 5| }
+// Help: Add missing match cases
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

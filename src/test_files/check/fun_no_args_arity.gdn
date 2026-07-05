@@ -13,6 +13,7 @@ fun foo(x: Int): Unit {}
 // 1| fun foo(x: Int): Unit {}
 // 2|         ^
 // 3| {
+// Help: Rename to `_x`
 // 
 // Error: `foo` requires an additional `Int` argument.
 // 

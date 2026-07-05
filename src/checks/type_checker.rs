@@ -37,7 +37,7 @@ use crate::parser::position::Position;
 use crate::parser::vfs::{VfsId, VfsPathBuf};
 use crate::type_defs::TypeDef;
 use crate::values::{Value, Value_};
-use crate::{msgcode, msgtext};
+use crate::{msgcode, msglink, msgtext};
 
 #[derive(Debug)]
 pub(crate) struct TCSummary {
@@ -3397,6 +3397,12 @@ fn check_match_exhaustive(
     } else {
         message_parts.push(msgtext!("."));
     }
+    message_parts.push(msgtext!(" See "));
+    message_parts.push(msglink!(
+        "https://www.garden-lang.org/keyword:match.html",
+        "the documentation"
+    ));
+    message_parts.push(msgtext!("."));
 
     let fixes = build_missing_cases_autofix(match_pos, cases, &missing_variants);
 

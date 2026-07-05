@@ -37,7 +37,7 @@ public fun foo(x: Option<Int>) {
 // 10|         Some(_) => {}
 // 11|         None => {}
 // 
-// Error: This match expression does not cover all the cases of `Option`. It's missing `None`.
+// Error: This match expression does not cover all the cases of `Option`. It's missing `None`. See the documentation (https://www.garden-lang.org/keyword:match.html).
 // 
 // --| src/test_files/check/type_error_missing_case.gdn:15:11
 // 14|     // Missing None.

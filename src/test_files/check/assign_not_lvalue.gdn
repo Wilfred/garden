@@ -7,22 +7,6 @@ public fun foo() {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected a symbol after this.
-// 
-// -| src/test_files/check/assign_not_lvalue.gdn:4:7
-// 2|     let x = 1
-// 3|     // TODO: why does this produce duplicate errors?
-// 4|     x + 1 = 2
-// 5| }     ^
-// 
-// Error: Expected a symbol after this.
-// 
-// -| src/test_files/check/assign_not_lvalue.gdn:4:7
-// 2|     let x = 1
-// 3|     // TODO: why does this produce duplicate errors?
-// 4|     x + 1 = 2
-// 5| }     ^
-// 
 // Error: Expected `}` to close this.
 // 
 // -| src/test_files/check/assign_not_lvalue.gdn:4:7
@@ -34,12 +18,4 @@ public fun foo() {
 // 1| public fun foo() {
 // 2|     let x = 1    ^ Note: The `{` here is never closed.
 // 3|     // TODO: why does this produce duplicate errors?
-// 
-// Error: Expected a symbol after this.
-// 
-// -| src/test_files/check/assign_not_lvalue.gdn:4:7
-// 2|     let x = 1
-// 3|     // TODO: why does this produce duplicate errors?
-// 4|     x + 1 = 2
-// 5| }     ^
 

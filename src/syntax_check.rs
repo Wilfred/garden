@@ -72,47 +72,45 @@ pub(crate) fn check(
     let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
 
     for e in errors.into_iter() {
-        match e {
+        let (position, message, notes) = match e {
             ParseError::Invalid {
                 position,
                 message,
                 notes,
-            } => {
-                // Expose line numbers as 1-indexed.
-                diagnostics.push(CheckDiagnostic {
-                    position: position.clone(),
-                    line_number: position.line_number + 1,
-                    end_line_number: position.end_line_number + 1,
-                    column: position.column,
-                    end_column: position.end_column,
-                    message: if use_color {
-                        message.as_styled_string()
-                    } else {
-                        message.as_string()
-                    },
-                    severity: Severity::Error,
-                    notes,
-                });
-            }
-            ParseError::Incomplete {
-                message, position, ..
-            } => {
-                diagnostics.push(CheckDiagnostic {
-                    position: position.clone(),
-                    line_number: position.line_number + 1,
-                    end_line_number: position.end_line_number + 1,
-                    column: position.column,
-                    end_column: position.end_column,
-                    message: if use_color {
-                        message.as_styled_string()
-                    } else {
-                        message.as_string()
-                    },
-                    severity: Severity::Error,
-                    notes: vec![],
-                });
-            }
+            } => (position, message, notes),
+            ParseError::Incomplete { message, position } => (position, message, vec![]),
         };
+
+        // Expose line numbers as 1-indexed.
+        let diagnostic = CheckDiagnostic {
+            position: position.clone(),
+            line_number: position.line_number + 1,
+            end_line_number: position.end_line_number + 1,
+            column: position.column,
+            end_column: position.end_column,
+            message: if use_color {
+                message.as_styled_string()
+            } else {
+                message.as_string()
+            },
+            severity: Severity::Error,
+            notes,
+        };
+
+        // Parsing can produce several errors that all trace back to
+        // the same spot (e.g. one construct failing to parse cascades
+        // into its caller failing too). Keep a single error per start
+        // position: prefer one with a note (it points at the relevant
+        // code elsewhere), otherwise keep whichever arrived first.
+        match diagnostics.iter_mut().find(|d: &&mut CheckDiagnostic| {
+            d.position.start_offset == diagnostic.position.start_offset
+        }) {
+            Some(existing) if existing.notes.is_empty() && !diagnostic.notes.is_empty() => {
+                *existing = diagnostic;
+            }
+            Some(_) => {}
+            None => diagnostics.push(diagnostic),
+        }
     }
 
     let mut env = Env::new(id_gen, vfs);

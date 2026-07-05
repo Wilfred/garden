@@ -18,14 +18,6 @@ fun quux(): Int {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected a symbol after this.
-// 
-// -| src/test_files/check/incomplete_fun.gdn:2:11
-// 1| // Incomplete
-// 2| fun bar() {
-// 3|           ^
-// 4| // This should be fully parsed.
-// 
 // Error: Expected `}` to close this.
 // 
 // -| src/test_files/check/incomplete_fun.gdn:2:11
@@ -38,16 +30,6 @@ fun quux(): Int {
 // 2| fun bar() {
 // 3|           ^ Note: The `{` here is never closed.
 // 4| // This should be fully parsed.
-// 
-// Error: Expected a symbol after this.
-// 
-// --| src/test_files/check/incomplete_fun.gdn:12:1
-// 10|   if True {
-// 11|     1
-// 12| }
-//   | ^
-// 13| 
-// 14| fun quux(): Int {
 // 
 // Error: Expected `}` to close this.
 // 

@@ -5,12 +5,13 @@ use std::rc::Rc;
 use rustc_hash::{FxHashMap, FxHashSet};
 use strum::IntoEnumIterator;
 
-use crate::eval::{load_toplevel_items, Bindings, ExpressionState};
+use crate::bytecode::{ChunkState, Code};
+use crate::eval::{load_toplevel_items, Bindings};
 use crate::garden_type::TypeVarEnv;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
-    BuiltInMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, StructInfo, Symbol,
-    SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, Visibility,
+    BuiltInMethodKind, IdGenerator, MethodInfo, MethodKind, StructInfo, Symbol, SymbolName,
+    SyntaxId, TestInfo, TypeHint, TypeName, Visibility,
 };
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
@@ -53,7 +54,7 @@ impl Stack {
             caller_expr_id: None,
             bindings: Bindings::default(),
             bindings_next_block: vec![],
-            exprs_to_eval: vec![],
+            chunks: vec![],
             evalled_values: vec![Value::unit()],
             return_hint: None,
             enclosing_name: EnclosingSymbol::Toplevel,
@@ -129,6 +130,10 @@ pub(crate) struct Env {
     /// Used for 'evaluate up to cursor'.
     pub(crate) stop_at_expr_id: Option<SyntaxId>,
 
+    /// Compiled bytecode for function, method and test bodies, keyed
+    /// by the syntax ID of the first body expression.
+    pub(crate) compiled_blocks: FxHashMap<SyntaxId, Rc<Code>>,
+
     /// Refuse to run code might modify the system, such as filesystem
     /// access or shell commands. This should allow us to run
     /// arbitrary code safely.
@@ -203,6 +208,7 @@ impl Env {
             stack_limit: None,
             enforce_sandbox: false,
             stop_at_expr_id: None,
+            compiled_blocks: FxHashMap::default(),
             id_gen,
             vfs,
             initial_state: None,
@@ -367,9 +373,11 @@ impl Env {
         );
     }
 
-    pub(crate) fn push_expr_to_eval(&mut self, state: ExpressionState, expr: Rc<Expression>) {
+    /// Push a chunk of code to evaluate in the current stack frame,
+    /// before any code the frame is already evaluating.
+    pub(crate) fn push_chunk(&mut self, code: Rc<Code>) {
         let stack_frame = self.stack.0.last_mut().unwrap();
-        stack_frame.exprs_to_eval.push((state, expr));
+        stack_frame.chunks.push(ChunkState::new(code));
     }
 
     pub(crate) fn push_value(&mut self, value: Value) {
@@ -627,8 +635,10 @@ pub(crate) struct StackFrame {
     ///
     /// We want `y` to be bound, but only in the block.
     pub(crate) bindings_next_block: Vec<(Symbol, Value)>,
-    /// A stack of expressions to evaluate.
-    pub(crate) exprs_to_eval: Vec<(ExpressionState, Rc<Expression>)>,
+    /// A stack of code chunks to evaluate. The topmost chunk is
+    /// evaluated first; sessions can push additional chunks to
+    /// evaluate code in a paused frame.
+    pub(crate) chunks: Vec<ChunkState>,
     /// The values of subexpressions that we've evaluated so far.
     pub(crate) evalled_values: Vec<Value>,
 }

@@ -11,6 +11,7 @@ use std::time::Instant;
 use rand::seq::IndexedRandom;
 use serde::{Deserialize, Serialize};
 
+use crate::bytecode::{compile_exprs, ChunkState};
 use crate::checks::check_toplevel_items_in_env;
 use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError, EvalAction,
@@ -20,7 +21,7 @@ use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to,
     load_toplevel_items_with_stubs, push_test_stackframe, EvalError, EvalUpToErr, ExceptionInfo,
-    ExpressionState, Session, StdoutJsonFormat, StdoutStderrMode,
+    Session, StdoutJsonFormat, StdoutStderrMode,
 };
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::IdGenerator;
@@ -615,18 +616,21 @@ fn handle_run_request(
 
                     stack_frame.evalled_values.pop();
                     stack_frame
-                        .exprs_to_eval
-                        .push((ExpressionState::NotEvaluated, expr.into()));
+                        .chunks
+                        .push(ChunkState::new(Rc::new(compile_exprs(&[Rc::new(expr)]))));
 
                     eval_to_response(env, session)
                 }
                 Err(CommandError::Action(EvalAction::Skip)) => {
                     let stack_frame = env.stack.0.last_mut().unwrap();
 
-                    stack_frame
-                        .exprs_to_eval
-                        .pop()
+                    let chunk = stack_frame
+                        .chunks
+                        .last_mut()
                         .expect("Tried to skip an expression, but none in this frame.");
+                    if chunk.pc < chunk.code.instrs.len() {
+                        chunk.pc = chunk.code.instrs[chunk.pc].skip_to as usize;
+                    }
 
                     eval_to_response(env, session)
                 }

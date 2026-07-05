@@ -40,6 +40,7 @@
 #![warn(clippy::clone_on_ref_ptr)]
 
 mod add_type_annotation;
+mod bytecode;
 mod caret_finder;
 mod checks;
 mod cli_session;

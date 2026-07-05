@@ -727,8 +727,15 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::FrameStatements => {
             if let Some(stack_frame) = env.stack.0.last() {
-                for (_, expr) in stack_frame.exprs_to_eval.iter().rev() {
-                    writeln!(buf, "{:#?}", expr.expr_)?;
+                for chunk in stack_frame.chunks.iter().rev() {
+                    for instr in &chunk.code.instrs[chunk.pc.min(chunk.code.instrs.len())..] {
+                        writeln!(
+                            buf,
+                            "{:?} {}",
+                            instr.op,
+                            instr.expr.position.as_ide_string(&env.project_root)
+                        )?;
+                    }
                 }
             }
         }

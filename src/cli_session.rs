@@ -6,16 +6,17 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Instant;
 
+use crate::bytecode::{compile_exprs, ChunkState};
 use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError, EvalAction,
 };
 use crate::diagnostics::format_exception_with_stack;
 use crate::env::Env;
 use crate::eval::{
-    eval, load_toplevel_items_with_stubs, push_test_stackframe, EvalError, ExceptionInfo,
-    ExpressionState, Session, StdoutStderrMode,
+    eval, load_toplevel_items_with_stubs, push_test_stackframe, EvalError, ExceptionInfo, Session,
+    StdoutStderrMode,
 };
-use crate::parser::ast::{IdGenerator, ToplevelItem};
+use crate::parser::ast::{Expression, IdGenerator, ToplevelItem};
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::prompt::prompt_symbol;
 use crate::syntax_highlighter::GardenHighlighter;
@@ -147,14 +148,14 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
                     .last_mut()
                     .expect("Should always have the toplevel stack frame");
 
-                // Push expressions in reverse order, so the top of
-                // exprs_to_eval is the first expression from the
-                // user.
-                for expr in exprs.iter().rev() {
-                    stack_frame
-                        .exprs_to_eval
-                        .push((ExpressionState::NotEvaluated, expr.0.clone().into()));
-                }
+                // Push the expressions as a chunk of code to
+                // evaluate before any paused evaluation in this
+                // frame.
+                let exprs: Vec<Rc<Expression>> =
+                    exprs.iter().map(|expr| Rc::new(expr.0.clone())).collect();
+                stack_frame
+                    .chunks
+                    .push(ChunkState::new(Rc::new(compile_exprs(&exprs))));
             }
             Err(ReadError::NeedsEval(EvalAction::Abort)) => {
                 // TODO: doesn't this need to pop the stack to the toplevel?
@@ -170,18 +171,21 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
 
                 stack_frame.evalled_values.pop();
                 stack_frame
-                    .exprs_to_eval
-                    .push((ExpressionState::NotEvaluated, expr.into()));
+                    .chunks
+                    .push(ChunkState::new(Rc::new(compile_exprs(&[Rc::new(expr)]))));
 
                 // TODO: Prevent :replace when we've not just halted.
             }
             Err(ReadError::NeedsEval(EvalAction::Skip)) => {
                 let stack_frame = env.stack.0.last_mut().unwrap();
 
-                stack_frame
-                    .exprs_to_eval
-                    .pop()
+                let chunk = stack_frame
+                    .chunks
+                    .last_mut()
                     .expect("Tried to skip an expression, but none in this frame.");
+                if chunk.pc < chunk.code.instrs.len() {
+                    chunk.pc = chunk.code.instrs[chunk.pc].skip_to as usize;
+                }
             }
             Err(ReadError::NeedsEval(EvalAction::RunTest(name))) => {
                 // Push test then continue to eval_env().

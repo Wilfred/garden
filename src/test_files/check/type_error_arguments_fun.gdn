@@ -11,3 +11,11 @@
 // 1| {
 // 2|     print(123)
 // 3| }         ^^^
+// ---| __prelude.gdn:917:18
+// 915| /// print("hello world\n")
+// 916| /// ```
+// 917| public fun print(_: String): Unit {
+//    |                  ^^^^^^^^^ Note: the parameter `_` is declared with type `String` here.
+// 918|   __BUILT_IN_IMPLEMENTATION
+// 919| }
+

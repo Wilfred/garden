@@ -34,10 +34,16 @@ public fun stuff(): String {
 // 
 // Error: `if` and `else` have incompatible types: `String` and `Int`.
 // 
+// --| src/test_files/check/type_error_if.gdn:11:5
+//  9|     "foo"
+// 10|   } else {
+// 11|     123
+// 12|   } ^^^
+// 13| }
 // --| src/test_files/check/type_error_if.gdn:9:5
 //  8|   if True {
 //  9|     "foo"
-//   |     ^^^^^
+//   |     ^^^^^ Note: this branch has type `String`.
 // 10|   } else {
 // 11|     123
 // 
@@ -49,4 +55,10 @@ public fun stuff(): String {
 // 19|     123
 // 20|   } ^^^
 // 21| }
+// --| src/test_files/check/type_error_if.gdn:15:21
+// 13| }
+// 14| 
+// 15| public fun stuff(): String {
+// 16|   if True {         ^^^^^^ Note: expected `String` because of this return type.
+// 17|     "foo"
 

@@ -28,8 +28,8 @@ use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
     BinaryOperatorKind, BinaryOperatorSymbol, Block, EnumInfo, Expression, Expression_, FunInfo,
     LetDestination, MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName,
-    SyntaxId, TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName,
-    VariantInfo,
+    SymbolWithHint, SyntaxId, TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint,
+    TypeName, VariantInfo,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -405,7 +405,23 @@ impl TypeCheckVisitor<'_> {
             None => Type::Any,
         };
 
-        self.check_block(&return_ty, &fun_info.body, &type_bindings, &return_ty);
+        let return_note = fun_info.return_hint.as_ref().map(|hint| {
+            (
+                ErrorMessage(vec![
+                    msgtext!("expected "),
+                    msgcode!("{}", return_ty),
+                    msgtext!(" because of this return type."),
+                ]),
+                hint.position.clone(),
+            )
+        });
+        self.check_block(
+            &return_ty,
+            &fun_info.body,
+            &type_bindings,
+            &return_ty,
+            return_note.as_ref(),
+        );
 
         self.bindings.exit_block();
 
@@ -727,13 +743,20 @@ impl TypeCheckVisitor<'_> {
         block: &Block,
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
+        expected_note: Option<&(ErrorMessage, Position)>,
     ) -> Type {
         self.bindings.enter_block();
 
         let mut ty = Type::unit();
         for (i, expr) in block.exprs.iter().enumerate() {
             if i == block.exprs.len() - 1 {
-                ty = self.check_expr(expected_ty, expr, type_bindings, expected_return_ty);
+                ty = self.check_expr(
+                    expected_ty,
+                    expr,
+                    type_bindings,
+                    expected_return_ty,
+                    expected_note,
+                );
             } else {
                 self.infer_expr(expr, type_bindings, expected_return_ty);
             }
@@ -743,7 +766,7 @@ impl TypeCheckVisitor<'_> {
             let block_pos = Position::merge(&block.open_brace, &block.close_brace);
 
             self.diagnostics.push(Diagnostic {
-                notes: vec![],
+                notes: as_notes(expected_note),
                 fixes: vec![],
                 severity: Severity::Error,
                 message: format_type_mismatch(expected_ty, &ty),
@@ -782,6 +805,7 @@ impl TypeCheckVisitor<'_> {
         match_pos: &Position,
         scrutinee: &Expression,
         cases: &[(Pattern, Block)],
+        expected_note: Option<&(ErrorMessage, Position)>,
     ) -> Type {
         let scrutinee_ty = self.infer_expr(scrutinee, type_bindings, expected_return_ty);
         let scrutinee_ty_name = scrutinee_ty.type_name();
@@ -824,7 +848,13 @@ impl TypeCheckVisitor<'_> {
                     // expected type, keep the inferred case type so we
                     // can record the more specific type below.
                     case_tys.push((
-                        self.check_block(expected_ty, case_expr, type_bindings, expected_return_ty),
+                        self.check_block(
+                            expected_ty,
+                            case_expr,
+                            type_bindings,
+                            expected_return_ty,
+                            expected_note,
+                        ),
                         case_value_pos,
                     ));
                 }
@@ -929,9 +959,16 @@ impl TypeCheckVisitor<'_> {
         let ty = match expected_ty {
             Type::Any => match unify_all(&case_tys) {
                 Ok(ty) => ty,
-                Err((_, _, position)) => {
+                Err((prev_ty, prev_position, _, position)) => {
                     self.diagnostics.push(Diagnostic {
-                        notes: vec![],
+                        notes: vec![(
+                            ErrorMessage(vec![
+                                msgtext!("this branch has type "),
+                                msgcode!("{}", prev_ty),
+                                msgtext!("."),
+                            ]),
+                            prev_position,
+                        )],
                         fixes: vec![],
                         severity: Severity::Error,
                         message: ErrorMessage(vec![
@@ -979,6 +1016,7 @@ impl TypeCheckVisitor<'_> {
                 pos,
                 scrutinee,
                 cases,
+                None,
             ),
             Expression_::If(cond_expr, then_block, else_block) => self.infer_if(
                 cond_expr,
@@ -988,7 +1026,13 @@ impl TypeCheckVisitor<'_> {
                 expected_return_ty,
             ),
             Expression_::While(cond_expr, block) => {
-                self.check_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
+                self.check_expr(
+                    &Type::bool(),
+                    cond_expr,
+                    type_bindings,
+                    expected_return_ty,
+                    None,
+                );
                 self.infer_block(block, type_bindings, expected_return_ty);
                 Type::unit()
             }
@@ -998,6 +1042,7 @@ impl TypeCheckVisitor<'_> {
                     expr,
                     type_bindings,
                     expected_return_ty,
+                    None,
                 );
 
                 self.bindings.enter_block();
@@ -1037,7 +1082,7 @@ impl TypeCheckVisitor<'_> {
                 // TODO: also enforce the type of an assignment at runtime.
                 let expected_ty = self.get_var_for_assignment(sym);
 
-                self.check_expr(&expected_ty, expr, type_bindings, expected_return_ty);
+                self.check_expr(&expected_ty, expr, type_bindings, expected_return_ty, None);
                 Type::unit()
             }
             Expression_::AssignUpdate(sym, op, expr) => {
@@ -1063,7 +1108,7 @@ impl TypeCheckVisitor<'_> {
                     });
                 }
 
-                self.check_expr(&Type::int(), expr, type_bindings, expected_return_ty);
+                self.check_expr(&Type::int(), expr, type_bindings, expected_return_ty, None);
                 Type::unit()
             }
             Expression_::Let(dest, hint, expr) => {
@@ -1073,7 +1118,21 @@ impl TypeCheckVisitor<'_> {
                             .unwrap_or_err_ty();
                         self.save_hint_ty_id(hint, &hint_ty);
 
-                        self.check_expr(&hint_ty, expr, type_bindings, expected_return_ty);
+                        let hint_note = (
+                            ErrorMessage(vec![
+                                msgtext!("expected "),
+                                msgcode!("{}", hint_ty),
+                                msgtext!(" because of this type hint."),
+                            ]),
+                            hint.position.clone(),
+                        );
+                        self.check_expr(
+                            &hint_ty,
+                            expr,
+                            type_bindings,
+                            expected_return_ty,
+                            Some(&hint_note),
+                        );
 
                         hint_ty
                     }
@@ -1087,7 +1146,7 @@ impl TypeCheckVisitor<'_> {
                 let expr_ty = expected_return_ty;
                 match inner_expr {
                     Some(expr) => {
-                        self.check_expr(expr_ty, expr, type_bindings, expected_return_ty);
+                        self.check_expr(expr_ty, expr, type_bindings, expected_return_ty, None);
                     }
                     None => {
                         if !is_subtype(&Type::unit(), expr_ty) {
@@ -1130,7 +1189,7 @@ impl TypeCheckVisitor<'_> {
 
                 let elem_ty = match unify_all(&item_tys) {
                     Ok(ty) => ty,
-                    Err((prev_ty, ty, position)) => {
+                    Err((prev_ty, _, ty, position)) => {
                         let mut message_parts =
                             vec![msgtext!("List elements have different types: ")];
                         message_parts.extend_from_slice(&prev_ty.as_message_parts());
@@ -1154,7 +1213,13 @@ impl TypeCheckVisitor<'_> {
             Expression_::DictLiteral(items) => {
                 let mut value_tys = vec![];
                 for kv in items {
-                    self.check_expr(&Type::string(), &kv.key, type_bindings, expected_return_ty);
+                    self.check_expr(
+                        &Type::string(),
+                        &kv.key,
+                        type_bindings,
+                        expected_return_ty,
+                        None,
+                    );
 
                     let inferred_value_ty =
                         self.infer_expr(&kv.value, type_bindings, expected_return_ty);
@@ -1163,7 +1228,7 @@ impl TypeCheckVisitor<'_> {
 
                 let value_ty = match unify_all(&value_tys) {
                     Ok(ty) => ty,
-                    Err((_, _, position)) => {
+                    Err((_, _, _, position)) => {
                         self.diagnostics.push(Diagnostic {
                             notes: vec![],
                             fixes: vec![],
@@ -1245,10 +1310,11 @@ impl TypeCheckVisitor<'_> {
                     expr_id,
                     type_bindings,
                     expected_return_ty,
+                    None,
                 )
             }
             Expression_::Assert(expr) => {
-                self.check_expr(&Type::bool(), expr, type_bindings, expected_return_ty);
+                self.check_expr(&Type::bool(), expr, type_bindings, expected_return_ty, None);
                 Type::unit()
             }
             Expression_::Parentheses(paren) => {
@@ -1522,10 +1588,17 @@ impl TypeCheckVisitor<'_> {
                     // Only check argument types if we have the right number of
                     // arguments. Otherwise, it's likely that the types are valid,
                     // but there were missing previous arguments.
-                    for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
+                    for (i, (param_ty, (arg_ty, arg_pos, _))) in
+                        params.iter().zip(&arg_tys).enumerate()
+                    {
                         if !is_subtype(arg_ty, param_ty) {
+                            let note = fun_info
+                                .params
+                                .params
+                                .get(i)
+                                .map(|param| param_declared_note(param, param_ty));
                             self.diagnostics.push(Diagnostic {
-                                notes: vec![],
+                                notes: as_notes(note.as_ref()),
                                 fixes: vec![],
                                 severity: Severity::Error,
                                 message: format_type_mismatch(param_ty, arg_ty),
@@ -1647,10 +1720,13 @@ impl TypeCheckVisitor<'_> {
                     // Only check argument types if we have the right number of
                     // arguments. Otherwise, it's likely that the types are valid,
                     // but there were missing previous arguments.
-                    for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
+                    for (i, (param_ty, (arg_ty, arg_pos, _))) in
+                        params.iter().zip(&arg_tys).enumerate()
+                    {
                         if !is_subtype(arg_ty, param_ty) {
+                            let note = self.callee_param_note(recv, i, param_ty);
                             self.diagnostics.push(Diagnostic {
-                                notes: vec![],
+                                notes: as_notes(note.as_ref()),
                                 fixes: vec![],
                                 severity: Severity::Error,
                                 message: format_type_mismatch(param_ty, arg_ty),
@@ -1812,8 +1888,8 @@ impl TypeCheckVisitor<'_> {
             | BinaryOperatorKind::LessThanOrEqual
             | BinaryOperatorKind::GreaterThan
             | BinaryOperatorKind::GreaterThanOrEqual => {
-                self.check_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
-                self.check_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
+                self.check_expr(&Type::int(), lhs, type_bindings, expected_return_ty, None);
+                self.check_expr(&Type::int(), rhs, type_bindings, expected_return_ty, None);
 
                 Type::bool()
             }
@@ -1840,14 +1916,26 @@ impl TypeCheckVisitor<'_> {
                 Type::bool()
             }
             BinaryOperatorKind::And | BinaryOperatorKind::Or => {
-                self.check_expr(&Type::bool(), lhs, type_bindings, expected_return_ty);
-                self.check_expr(&Type::bool(), rhs, type_bindings, expected_return_ty);
+                self.check_expr(&Type::bool(), lhs, type_bindings, expected_return_ty, None);
+                self.check_expr(&Type::bool(), rhs, type_bindings, expected_return_ty, None);
 
                 Type::bool()
             }
             BinaryOperatorKind::StringConcat => {
-                self.check_expr(&Type::string(), lhs, type_bindings, expected_return_ty);
-                self.check_expr(&Type::string(), rhs, type_bindings, expected_return_ty);
+                self.check_expr(
+                    &Type::string(),
+                    lhs,
+                    type_bindings,
+                    expected_return_ty,
+                    None,
+                );
+                self.check_expr(
+                    &Type::string(),
+                    rhs,
+                    type_bindings,
+                    expected_return_ty,
+                    None,
+                );
 
                 Type::string()
             }
@@ -2096,7 +2184,13 @@ impl TypeCheckVisitor<'_> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
-        self.check_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
+        self.check_expr(
+            &Type::bool(),
+            cond_expr,
+            type_bindings,
+            expected_return_ty,
+            None,
+        );
 
         match else_block {
             Some(else_block) => {
@@ -2117,17 +2211,28 @@ impl TypeCheckVisitor<'_> {
                             msgtext!("."),
                         ]);
 
-                        let position = match then_block.exprs.last() {
+                        let then_position = match then_block.exprs.last() {
+                            Some(last_expr) => last_expr.position.clone(),
+                            None => cond_expr.position.clone(),
+                        };
+                        let else_position = match else_block.exprs.last() {
                             Some(last_expr) => last_expr.position.clone(),
                             None => cond_expr.position.clone(),
                         };
 
                         self.diagnostics.push(Diagnostic {
-                            notes: vec![],
+                            notes: vec![(
+                                ErrorMessage(vec![
+                                    msgtext!("this branch has type "),
+                                    msgcode!("{}", then_ty),
+                                    msgtext!("."),
+                                ]),
+                                then_position,
+                            )],
                             fixes: vec![],
                             severity: Severity::Error,
                             message,
-                            position,
+                            position: else_position,
                         });
 
                         Type::error("Incompatible if blocks")
@@ -2195,7 +2300,13 @@ impl TypeCheckVisitor<'_> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
-        self.check_expr(&Type::namespace(), recv, type_bindings, expected_return_ty);
+        self.check_expr(
+            &Type::namespace(),
+            recv,
+            type_bindings,
+            expected_return_ty,
+            None,
+        );
 
         let Expression_::Variable(recv_symbol) = &recv.expr_ else {
             self.diagnostics.push(Diagnostic {
@@ -2478,6 +2589,7 @@ impl TypeCheckVisitor<'_> {
         expr: &Expression,
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
+        expected_note: Option<&(ErrorMessage, Position)>,
     ) -> Type {
         let inferred_ty = self.check_expr_(
             expected_ty,
@@ -2486,6 +2598,7 @@ impl TypeCheckVisitor<'_> {
             expr.id,
             type_bindings,
             expected_return_ty,
+            expected_note,
         );
 
         self.id_to_ty.insert(expr.id, inferred_ty.clone());
@@ -2500,6 +2613,7 @@ impl TypeCheckVisitor<'_> {
         expr_id: SyntaxId,
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
+        expected_note: Option<&(ErrorMessage, Position)>,
     ) -> Type {
         let mut ty = match (expr_, expected_ty) {
             (
@@ -2534,6 +2648,7 @@ impl TypeCheckVisitor<'_> {
                     &fun_info.body,
                     type_bindings,
                     expected_return_ty,
+                    None,
                 );
 
                 if let Some(hint) = &fun_info.return_hint {
@@ -2588,6 +2703,7 @@ impl TypeCheckVisitor<'_> {
                         &item.expr,
                         type_bindings,
                         expected_return_ty,
+                        None,
                     );
                     item_tys.push((item_ty, item.expr.position.clone()));
                 }
@@ -2603,9 +2719,16 @@ impl TypeCheckVisitor<'_> {
                 pos,
                 scrutinee,
                 cases,
+                expected_note,
             ),
             (Expression_::If(cond_expr, then_block, else_block), _) => {
-                self.check_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
+                self.check_expr(
+                    &Type::bool(),
+                    cond_expr,
+                    type_bindings,
+                    expected_return_ty,
+                    None,
+                );
 
                 match else_block {
                     Some(else_block) => {
@@ -2614,12 +2737,14 @@ impl TypeCheckVisitor<'_> {
                             then_block,
                             type_bindings,
                             expected_return_ty,
+                            expected_note,
                         );
                         self.check_block(
                             expected_ty,
                             else_block,
                             type_bindings,
                             expected_return_ty,
+                            expected_note,
                         );
                         expected_ty.clone()
                     }
@@ -2630,11 +2755,23 @@ impl TypeCheckVisitor<'_> {
                 }
             }
             (Expression_::Try(try_body, catch_sym, catch_body), _) => {
-                self.check_block(expected_ty, try_body, type_bindings, expected_return_ty);
+                self.check_block(
+                    expected_ty,
+                    try_body,
+                    type_bindings,
+                    expected_return_ty,
+                    expected_note,
+                );
 
                 self.bindings.enter_block();
                 self.set_binding(catch_sym, Type::Any);
-                self.check_block(expected_ty, catch_body, type_bindings, expected_return_ty);
+                self.check_block(
+                    expected_ty,
+                    catch_body,
+                    type_bindings,
+                    expected_return_ty,
+                    expected_note,
+                );
                 self.bindings.exit_block();
 
                 expected_ty.clone()
@@ -2644,7 +2781,7 @@ impl TypeCheckVisitor<'_> {
 
         if !is_subtype(&ty, expected_ty) {
             self.diagnostics.push(Diagnostic {
-                notes: vec![],
+                notes: as_notes(expected_note),
                 fixes: vec![],
                 severity: Severity::Error,
                 message: format_type_mismatch(expected_ty, &ty),
@@ -2665,6 +2802,25 @@ impl TypeCheckVisitor<'_> {
         self.id_to_ty.insert(symbol.id, ty);
         self.id_to_def_pos
             .insert(symbol.id, symbol.position.clone());
+    }
+
+    /// If `recv` is a direct reference to a function whose declaration
+    /// we can see, build a note pointing at the declaration of its
+    /// `index`-th parameter. Returns `None` for built-ins and other
+    /// callees without a useful position.
+    fn callee_param_note(
+        &self,
+        recv: &Expression,
+        index: usize,
+        param_ty: &Type,
+    ) -> Option<(ErrorMessage, Position)> {
+        let Expression_::Variable(sym) = &recv.expr_ else {
+            return None;
+        };
+        let value = self.get_var(&sym.name)?;
+        let fun_info = value.fun_info()?;
+        let param = fun_info.params.params.get(index)?;
+        Some(param_declared_note(param, param_ty))
     }
 }
 
@@ -2986,16 +3142,29 @@ fn unify_and_solve_hint(
 /// Unify all the types given, to a single type, if we can find a
 /// compatible type.
 ///
-/// If we can't find a compatible type, return the position of the
-/// first type that didn't unify.
-fn unify_all(tys: &[(Type, Position)]) -> Result<Type, (Type, Type, Position)> {
+/// If we can't find a compatible type, return the type and position
+/// established by the earlier elements, along with the type and
+/// position of the first element that didn't unify.
+fn unify_all(tys: &[(Type, Position)]) -> Result<Type, (Type, Position, Type, Position)> {
     let mut unified_ty = Type::no_value();
+    // The position of the earliest element whose type is still
+    // reflected in `unified_ty`. Only updated when unifying actually
+    // changes the accumulated type, so e.g. a later diverging (`NoValue`)
+    // case doesn't steal credit for a type established earlier.
+    let mut established_pos: Option<Position> = None;
 
     // Unify the types pairwise.
     for (ty, position) in tys {
         let Some(new_unified_ty) = unify(&unified_ty, ty) else {
-            return Err((unified_ty, ty.clone(), position.clone()));
+            // Unifying against the initial `NoValue` accumulator always
+            // succeeds, so by the time we can fail, there's at least one
+            // earlier element to fall back on.
+            let prev_position = established_pos.unwrap_or_else(|| tys[0].1.clone());
+            return Err((unified_ty, prev_position, ty.clone(), position.clone()));
         };
+        if new_unified_ty != unified_ty {
+            established_pos = Some(position.clone());
+        }
         unified_ty = new_unified_ty;
     }
 
@@ -3272,6 +3441,32 @@ fn build_missing_cases_autofix(
         position: insert_pos,
         new_text,
     }]
+}
+
+/// Turn an optional note about where an expected type came from into
+/// the note list expected by `Diagnostic`.
+fn as_notes(note: Option<&(ErrorMessage, Position)>) -> Vec<(ErrorMessage, Position)> {
+    note.cloned().into_iter().collect()
+}
+
+/// Build a note pointing at a parameter's declaration, for use when an
+/// argument at a call site doesn't match its declared type.
+fn param_declared_note(param: &SymbolWithHint, param_ty: &Type) -> (ErrorMessage, Position) {
+    let position = match &param.hint {
+        Some(hint) => Position::merge(&param.symbol.position, &hint.position),
+        None => param.symbol.position.clone(),
+    };
+
+    (
+        ErrorMessage(vec![
+            msgtext!("the parameter "),
+            msgcode!("{}", param.symbol.name),
+            msgtext!(" is declared with type "),
+            msgcode!("{}", param_ty),
+            msgtext!(" here."),
+        ]),
+        position,
+    )
 }
 
 fn format_mismatch_text(expected_desc: &str, actual_ty: &Type) -> ErrorMessage {

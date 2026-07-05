@@ -1737,13 +1737,46 @@ impl TypeCheckVisitor<'_> {
             self.set_binding(sym, ty.clone());
 
             if sym.name.text != "__BUILT_IN_IMPLEMENTATION" {
+                let mut fixes = vec![];
+
+                let ns = self.env.get_namespace(&self.path.path).expect(&format!(
+                    "Should have a namespace created for this path: {}",
+                    self.path.path.display()
+                ));
+                let ns_names: Vec<SymbolName> = ns.borrow().values.keys().cloned().collect();
+                // Exclude error-typed bindings: these are placeholders for
+                // other unbound symbols (added above to prevent cascading
+                // errors), not real local variables.
+                let local_names: Vec<SymbolName> = self
+                    .bindings
+                    .all_bindings()
+                    .into_iter()
+                    .filter(|(_, ty)| !ty.is_error())
+                    .map(|(name, _)| name)
+                    .collect();
+                let available: Vec<&SymbolName> =
+                    ns_names.iter().chain(local_names.iter()).collect();
+
+                let suggest = if let Some(similar) = most_similar(&available, &sym.name) {
+                    fixes.push(Autofix {
+                        description: format!("Use `{}` here.", similar),
+                        position: sym.position.clone(),
+                        new_text: similar.text.clone(),
+                    });
+
+                    format!(" Did you mean `{similar}`?")
+                } else {
+                    "".to_owned()
+                };
+
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
-                    fixes: vec![],
+                    fixes,
                     severity: Severity::Error,
                     message: ErrorMessage(vec![
                         msgtext!("Unbound symbol: "),
                         msgcode!("{}", sym.name),
+                        msgtext!("{}", suggest),
                     ]),
                     position: sym.position.clone(),
                 });

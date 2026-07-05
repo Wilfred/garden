@@ -11,3 +11,8 @@ public method foo<T>(this: List<T>): String {
 // 1| public method foo<T>(this: List<T>): String {
 // 2|   this.get(1).or_throw()
 // 3| } ^^^^^^^^^^^^^^^^^^^^^^
+// -| src/test_files/check/type_error_generic_method_receiver.gdn:1:38
+// 1| public method foo<T>(this: List<T>): String {
+// 2|   this.get(1).or_throw()             ^^^^^^ Note: expected `String` because of this return type.
+// 3| }
+

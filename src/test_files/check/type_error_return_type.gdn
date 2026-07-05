@@ -22,3 +22,8 @@ public fun bad(): Bool {
 // 3|     
 // 4|     "abc"
 // 5| }   ^^^^^
+// -| src/test_files/check/type_error_return_type.gdn:1:19
+// 1| public fun bad(): Bool {
+//  |                   ^^^^ Note: expected `Bool` because of this return type.
+// 2|     let _f = fun(): Int { True }
+

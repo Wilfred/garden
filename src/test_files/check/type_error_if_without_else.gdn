@@ -18,4 +18,8 @@ public fun foo(b: Bool): Int {
 // 4|     }
 //  | ^^^^^
 // 5| }
+// -| src/test_files/check/type_error_if_without_else.gdn:1:26
+// 1| public fun foo(b: Bool): Int {
+// 2|     if b {               ^^^ Note: expected `Int` because of this return type.
+// 3|         123
 

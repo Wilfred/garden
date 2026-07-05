@@ -28,6 +28,10 @@ public fun returns_bools(): List<Bool> {
 // 4|     let x = [1, True]
 // 5|     takes_bools(x)
 // 6| }               ^
+// -| src/test_files/check/list_mixed.gdn:1:24
+// 1| public fun takes_bools(_: List<Bool>) {}
+// 2|                        ^^^^^^^^^^^^^ Note: the parameter `_` is declared with type `List<Bool>` here.
+// 3| {
 // 
 // Error: Expected a `Bool` but got an `Int`.
 // 

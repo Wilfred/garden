@@ -11,3 +11,9 @@
 // 1| {
 // 2|     [1, 2].filter(fun() { True })
 // 3| }                 ^^^^^^^^^^^^^^
+// ---| __prelude.gdn:638:40
+// 636| /// Return a copy of this list with the items where `f(item)` returns
+// 637| /// True.
+// 638| public method filter<T>(this: List<T>, f: Fun<(T), Bool>): List<T> {
+// 639|   let result: List<T> = []             ^^^^^^^^^^^^^^^^^ Note: the parameter `f` is declared with type `Fun<(Int), Bool>` here.
+

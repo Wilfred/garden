@@ -19,4 +19,10 @@ public fun unwrap(w: Wrap<Int>): String {
 // 7|     Wrapped(xs) => xs
 // 8|   }                ^^
 // 9| }
+// -| src/test_files/check/enum_generic_payload_mismatch.gdn:5:34
+// 3| }
+// 4| 
+// 5| public fun unwrap(w: Wrap<Int>): String {
+// 6|   match w {                      ^^^^^^ Note: expected `String` because of this return type.
+// 7|     Wrapped(xs) => xs
 

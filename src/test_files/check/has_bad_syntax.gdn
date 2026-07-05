@@ -21,3 +21,4 @@ public fun bar() {
 // 1| public fun bar() {
 // 2|   let x
 // 3| }     ^
+

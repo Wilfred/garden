@@ -22,7 +22,7 @@ public fun foo(): Unit {
 // 7|                    ^
 // 8|   // This is therefore a syntax error, because SomeValue cannot be a
 // 
-// Error: Expected `}` after this.
+// Error: Expected `}` to close this.
 // 
 // -| src/test_files/check/ambiguity_struct_literal_or_block.gdn:6:20
 // 4|   while SomeStruct{} {}
@@ -30,6 +30,11 @@ public fun foo(): Unit {
 // 6|   while SomeValue {}
 // 7|                    ^
 // 8|   // This is therefore a syntax error, because SomeValue cannot be a
+// -| src/test_files/check/ambiguity_struct_literal_or_block.gdn:1:24
+// 1| public fun foo(): Unit {
+//  |                        ^ Note: The `{` here is never closed.
+// 2|   // We solve this ambiguity by requiring braces to touch for struct
+// 3|   // literals.
 // 
 // Error: Expected an expression after this.
 // 
@@ -38,3 +43,4 @@ public fun foo(): Unit {
 //  9|   // struct literal.
 // 10|   {}
 // 11| }  ^
+

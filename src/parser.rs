@@ -1725,6 +1725,11 @@ fn parse_test(
                 message: ErrorMessage(vec![
                     msgtext!("Tests should not have arguments. A valid test look like this: "),
                     msgcode!("test foo {{}}"),
+                    msgtext!(". See "),
+                    msglink!(
+                        "https://www.garden-lang.org/keyword:test.html",
+                        "the documentation"
+                    ),
                     msgtext!("."),
                 ]),
                 notes: vec![],
@@ -1779,6 +1784,11 @@ fn parse_import(
                 msgcode!("import"),
                 msgtext!(" requires a path, for example "),
                 msgcode!("import \"./foo.gdn\""),
+                msgtext!(". See "),
+                msglink!(
+                    "https://www.garden-lang.org/keyword:import.html",
+                    "the documentation"
+                ),
                 msgtext!("."),
             ]),
         });

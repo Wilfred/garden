@@ -211,8 +211,20 @@ fn most_similar_var(name: &SymbolName, env: &Env) -> Option<SymbolName> {
     let ns = ns.borrow();
     let file_level_names: Vec<_> = ns.values.keys().collect();
 
-    // TODO: suggest local variables too.
-    most_similar(&file_level_names, name)
+    let local_names: Vec<SymbolName> = env
+        .current_frame()
+        .bindings
+        .all()
+        .into_iter()
+        .filter_map(|(interned_id, _)| env.id_gen.intern_id_to_name.get(&interned_id).cloned())
+        .collect();
+
+    let available: Vec<&SymbolName> = file_level_names
+        .into_iter()
+        .chain(local_names.iter())
+        .collect();
+
+    most_similar(&available, name)
 }
 
 fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {

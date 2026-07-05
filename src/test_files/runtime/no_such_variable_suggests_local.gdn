@@ -1,0 +1,18 @@
+fun use_var(): Unit {
+  let count = 1
+  println(cuont)
+}
+
+use_var()
+
+// args: run
+// expected exit status: 1
+// expected stderr:
+// Exception: No such variable `cuont`. Did you mean `count` instead?
+// -| src/test_files/runtime/no_such_variable_suggests_local.gdn:3:11	 fun use_var()
+// 3|   println(cuont)
+//  |           ^^^^^
+// -| src/test_files/runtime/no_such_variable_suggests_local.gdn:6:1	 __toplevel__
+// 6| use_var()
+//  | ^^^^^^^^^
+

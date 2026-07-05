@@ -112,7 +112,7 @@ impl Visitor for RepeatedBoolVisitor {
                                 let mut fix_pos = expr.position.clone();
                                 fix_pos.start_offset = delete_from;
                                 vec![Autofix {
-                                    description: "Remove this duplicate".to_owned(),
+                                    description: "Remove this duplicate.".to_owned(),
                                     position: fix_pos,
                                     new_text: String::new(),
                                 }]

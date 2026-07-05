@@ -24,6 +24,6 @@ fun add_one(i: Int): Int {
 // 6|   (10, 11)
 // 7|   ^^^^^^^^
 // 8|   // Should be parsed as a call, not an if followed by a tuple (5).
-// Help: Remove unused value
+// Help: Remove unused value.
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

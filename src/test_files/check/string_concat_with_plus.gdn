@@ -11,6 +11,6 @@ public fun foo() {
 // 1| public fun foo() {
 // 2|   "a" + "b"
 // 3| }     ^
-// Help: Replace `+` with `^`
+// Help: Replace `+` with `^`.
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

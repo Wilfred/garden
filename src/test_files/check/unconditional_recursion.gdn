@@ -111,6 +111,6 @@ public method other_receiver(this: String): String {
 // 16| public fun return_recurse(): Int {
 // 17|     return return_recurse()
 // 18| }   ^^^^^^^^^^^^^^^^^^^^^^^
-// Help: Remove unnecessary `return`
+// Help: Remove unnecessary `return`.
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

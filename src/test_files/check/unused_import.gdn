@@ -8,6 +8,6 @@ import "__fs.gdn" as fs
 // -| src/test_files/check/unused_import.gdn:1:22
 // 1| import "__fs.gdn" as fs
 // 2|                      ^^
-// Help: Remove this import
+// Help: Remove this import.
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

@@ -205,6 +205,6 @@ public fun different_variants(b: Bool): Bool {
 // 21|     }
 // 22|     return 1
 // 23| }   ^^^^^^^^
-// Help: Remove unnecessary `return`
+// Help: Remove unnecessary `return`.
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

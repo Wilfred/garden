@@ -11,7 +11,6 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use normalize_path::NormalizePath as _;
-use ordered_float::OrderedFloat;
 use rand::Rng;
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -178,17 +177,33 @@ impl ExpressionState {
     }
 }
 
+/// Find the candidate in `available` closest to `name`, using
+/// Damerau-Levenshtein distance. This catches common typos such as
+/// transpositions (`trmi` vs `trim`) that bigram-based metrics like
+/// Sørensen-Dice score poorly.
+///
+/// The maximum allowed distance scales with the length of `name`, so
+/// short unrelated names (e.g. `zzz`) don't produce spurious
+/// suggestions. Ties are broken by choosing the alphabetically first
+/// candidate, so the result doesn't depend on hash map iteration
+/// order.
 pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {
-    let mut res: Vec<_> = available.iter().collect();
-    res.sort_by_key(|n| OrderedFloat(strsim::sorensen_dice(&n.text, &name.text)));
+    let max_distance = std::cmp::max(1, name.text.len() / 3);
 
-    if let Some(closest) = res.last() {
-        if strsim::sorensen_dice(&closest.text, &name.text) > 0.4 {
-            return Some((**closest).clone());
-        }
-    }
+    let mut candidates: Vec<&SymbolName> = available.to_vec();
+    candidates.sort_by(|a, b| a.text.cmp(&b.text));
 
-    None
+    candidates
+        .into_iter()
+        .map(|candidate| {
+            (
+                candidate,
+                strsim::damerau_levenshtein(&candidate.text, &name.text),
+            )
+        })
+        .filter(|(_, distance)| *distance <= max_distance)
+        .min_by_key(|(_, distance)| *distance)
+        .map(|(candidate, _)| candidate.clone())
 }
 
 fn most_similar_var(name: &SymbolName, env: &Env) -> Option<SymbolName> {

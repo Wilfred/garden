@@ -63,7 +63,7 @@ impl Bindings {
         }
     }
 
-    fn get(&self, interned_id: InternedSymbolId) -> Option<Value> {
+    pub(crate) fn get(&self, interned_id: InternedSymbolId) -> Option<Value> {
         // TODO: this allows shadowing. Is that desirable -- does it
         // make REPL workflows less convenient when it's harder to inspect?
         //
@@ -930,13 +930,7 @@ pub(crate) fn eval_tests(
                 let trace = match &e {
                     EvalError::Exception(ExceptionInfo { position, message })
                     | EvalError::AssertionFailed(position, message) => {
-                        Some(format_exception_with_stack(
-                            message,
-                            position,
-                            &env.stack.0,
-                            &env.vfs,
-                            &env.project_root,
-                        ))
+                        Some(format_exception_with_stack(message, position, env))
                     }
                     _ => None,
                 };

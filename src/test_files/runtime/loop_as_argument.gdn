@@ -15,9 +15,11 @@ fun foo(_a: Int, b: Int): Int {
 }
 
 // args: run
+// expected exit status: 1
 // expected stderr:
 // Exception: Expected `Int` but got `Unit`.
 // -| src/test_files/runtime/loop_as_argument.gdn:9:15	 __toplevel__
 // 9|   dbg(foo(10, while n < 3 { n += 1 }))
 //  |               ^^^^^^^^^^^^^^^^^^^^^^
+//  | where n = 3
 

@@ -961,28 +961,10 @@ fn run_file(
     match &res {
         Ok(_) => {}
         Err(EvalError::Exception(ExceptionInfo { position, message })) => {
-            eprintln!(
-                "{}",
-                format_exception_with_stack(
-                    message,
-                    position,
-                    &env.stack.0,
-                    &env.vfs,
-                    &env.project_root
-                )
-            );
+            eprintln!("{}", format_exception_with_stack(message, position, &env));
         }
         Err(EvalError::AssertionFailed(position, msg)) => {
-            eprintln!(
-                "{}",
-                format_exception_with_stack(
-                    msg,
-                    position,
-                    &env.stack.0,
-                    &env.vfs,
-                    &env.project_root
-                )
-            );
+            eprintln!("{}", format_exception_with_stack(msg, position, &env));
         }
         Err(EvalError::Interrupted) => {
             eprintln!("Interrupted");

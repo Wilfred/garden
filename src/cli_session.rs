@@ -212,29 +212,11 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
                 let _ = last_src; // should use this.
-                println!(
-                    "{}",
-                    format_exception_with_stack(
-                        &message,
-                        &position,
-                        &env.stack.0,
-                        &env.vfs,
-                        &env.project_root
-                    )
-                );
+                println!("{}", format_exception_with_stack(&message, &position, &env));
                 is_stopped = true;
             }
             Err(EvalError::AssertionFailed(position, msg)) => {
-                println!(
-                    "{}",
-                    format_exception_with_stack(
-                        &msg,
-                        &position,
-                        &env.stack.0,
-                        &env.vfs,
-                        &env.project_root
-                    )
-                );
+                println!("{}", format_exception_with_stack(&msg, &position, &env));
                 is_stopped = true;
             }
             Err(EvalError::Interrupted) => {

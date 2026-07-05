@@ -10,4 +10,5 @@ public method bad(this: String): Bool {
 // -| src/test_files/check/type_error_this.gdn:2:8
 // 1| public method bad(this: String): Bool {
 // 2|   this.no_such_meth()
-// 3| }      ^^^^^^^^^^^^
+//  |        ^^^^^^^^^^^^
+// 3| }

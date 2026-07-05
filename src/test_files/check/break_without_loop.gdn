@@ -19,7 +19,8 @@ public fun foo() {
 // -| src/test_files/check/break_without_loop.gdn:2:5
 // 1| public fun foo() {
 // 2|     break
-// 3|     ^^^^^
+//  |     ^^^^^
+// 3| 
 // 4|     while True {
 // 
 // Error: `break` can only be used inside `for` or `while` loops.
@@ -27,4 +28,5 @@ public fun foo() {
 // --| src/test_files/check/break_without_loop.gdn:9:17
 //  8|         // Bad
 //  9|         fun() { break }
-// 10|     }           ^^^^^
+//   |                 ^^^^^
+// 10|     }

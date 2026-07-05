@@ -15,4 +15,5 @@ public fun weird_but_ok() {
 // -| src/test_files/check/todo.gdn:2:3
 // 1| public fun bad() {
 // 2|   todo()
-// 3| } ^^^^^^
+//  |   ^^^^^^
+// 3| }

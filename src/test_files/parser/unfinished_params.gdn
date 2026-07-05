@@ -61,5 +61,6 @@ public fun foo: Option<Int> {
 // 
 // -| src/test_files/parser/unfinished_params.gdn:1:12
 // 1| public fun foo: Option<Int> {
-// 2|   None     ^^^
+//  |            ^^^
+// 2|   None
 // 3| }

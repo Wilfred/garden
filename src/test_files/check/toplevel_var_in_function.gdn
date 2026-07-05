@@ -12,5 +12,6 @@ public fun use_it(): Int {
 // -| src/test_files/check/toplevel_var_in_function.gdn:4:3
 // 3| public fun use_it(): Int {
 // 4|   top_var
-// 5| } ^^^^^^^
+//  |   ^^^^^^^
+// 5| }
 

@@ -13,7 +13,8 @@ greeet()
 // 1| foo
 // 2| 
 // 3| fun greet(): Unit {}
-// 4|     ^^^^^
+//  |     ^^^^^
+// 4| 
 // 5| greeet()
 // 
 // Error: No such function or variable `foo`.

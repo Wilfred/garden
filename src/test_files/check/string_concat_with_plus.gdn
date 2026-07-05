@@ -10,6 +10,7 @@ public fun foo() {
 // -| src/test_files/check/string_concat_with_plus.gdn:2:7
 // 1| public fun foo() {
 // 2|   "a" + "b"
-// 3| }     ^
+//  |       ^
+// 3| }
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

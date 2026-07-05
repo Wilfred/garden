@@ -13,7 +13,8 @@ public fun bar(): Tuple<Int> {
 // 
 // -| src/test_files/check/desugared_tuple.gdn:1:19
 // 1| public fun foo(): Tuple {
-// 2|   throw("")       ^^^^^
+//  |                   ^^^^^
+// 2|   throw("")
 // 3| }
 // 
 // Error: `Tuple` cannot be used as a type hint. Use `(Int)` instead.
@@ -22,5 +23,6 @@ public fun bar(): Tuple<Int> {
 // 3| }
 // 4| 
 // 5| public fun bar(): Tuple<Int> {
-// 6|   throw("")       ^^^^^^^^^^
+//  |                   ^^^^^^^^^^
+// 6|   throw("")
 // 7| }

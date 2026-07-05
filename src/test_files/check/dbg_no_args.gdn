@@ -7,5 +7,6 @@ dbg()
 // 
 // -| src/test_files/check/dbg_no_args.gdn:1:4
 // 1| dbg()
-// 2|    ^^
+//  |    ^^
+// 2|
 

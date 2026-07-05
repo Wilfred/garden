@@ -11,9 +11,11 @@ enum Foo {}
 // 1| struct Foo {}
 // 2| 
 // 3| enum Foo {}
-// 4|      ^^^
+//  |      ^^^
+// 4| 
 // -| src/test_files/check/duplicate_type.gdn:1:8
 // 1| struct Foo {}
-// 2|        ^^^ Note: Previous definition was here.
+//  |        ^^^ Note: Previous definition was here.
+// 2| 
 // 3| enum Foo {}
 

@@ -17,12 +17,14 @@ public fun unwrap(w: Wrap<Int>): String {
 // 5| public fun unwrap(w: Wrap<Int>): String {
 // 6|   match w {
 // 7|     Wrapped(xs) => xs
-// 8|   }                ^^
+//  |                    ^^
+// 8|   }
 // 9| }
 // -| src/test_files/check/enum_generic_payload_mismatch.gdn:5:34
 // 3| }
 // 4| 
 // 5| public fun unwrap(w: Wrap<Int>): String {
-// 6|   match w {                      ^^^^^^ Note: expected `String` because of this return type.
+//  |                                  ^^^^^^ Note: expected `String` because of this return type.
+// 6|   match w {
 // 7|     Wrapped(xs) => xs
 

@@ -1,0 +1,10 @@
+{
+  "hello".substring(0, "x")
+}
+
+// args: run
+// expected stderr:
+// Exception: Expected `Int` but `"x"` has type `String`.
+// -| src/test_files/runtime/string_method_arg_position.gdn:2:24	 __toplevel__
+// 2|   "hello".substring(0, "x")
+//  |                        ^^^

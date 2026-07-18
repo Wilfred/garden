@@ -8269,16 +8269,6 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_string_substring_non_int_arg() {
-        let mut id_gen = IdGenerator::default();
-        let mut vfs = Vfs::default();
-        let exprs = parse_exprs_from_str("\"hello\".substring(0, \"x\")", &mut vfs, &mut id_gen);
-
-        let mut env = Env::new(id_gen, vfs);
-        assert!(eval_exprs(&exprs, &mut env).is_err());
-    }
-
-    #[test]
     fn test_eval_call() {
         let id_gen = IdGenerator::default();
         let vfs = Vfs::default();

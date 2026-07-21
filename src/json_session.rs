@@ -380,13 +380,7 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             position,
             message: e,
         }) => {
-            let stack = format_exception_with_stack(
-                &e,
-                &position,
-                &env.stack.0,
-                &env.vfs,
-                &env.project_root,
-            );
+            let stack = format_exception_with_stack(&e, &position, env);
 
             Response {
                 kind: ResponseKind::Evaluate {
@@ -403,13 +397,7 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             }
         }
         EvalError::AssertionFailed(position, message) => {
-            let stack = format_exception_with_stack(
-                &message,
-                &position,
-                &env.stack.0,
-                &env.vfs,
-                &env.project_root,
-            );
+            let stack = format_exception_with_stack(&message, &position, env);
 
             Response {
                 kind: ResponseKind::Evaluate {

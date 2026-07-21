@@ -20,6 +20,7 @@ public fun example() {
 // 4|     i += 1
 // 5|     42
 // 6|   } ^^
+// Help: Remove unused value.
 // 
 // Warning: Unused value.
 // 
@@ -28,5 +29,6 @@ public fun example() {
 //  9|     "hello"
 // 10|   } ^^^^^^^
 // 11| }
+// Help: Remove unused value.
 
 // expected stderr: 2 issues can be fixed automatically (use `--fix`).

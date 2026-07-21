@@ -23,6 +23,8 @@ struct CheckDiagnostic {
     position: Position,
     #[serde(skip)]
     notes: Vec<(ErrorMessage, Position)>,
+    #[serde(skip)]
+    fixes: Vec<Autofix>,
     // TODO: Could we just use Position here? The only downside of
     // using Position directly is that a file with a large number of
     // errors will repeat the same file name many times in the JSON
@@ -92,6 +94,7 @@ pub(crate) fn check(
                     },
                     severity: Severity::Error,
                     notes,
+                    fixes: vec![],
                 });
             }
             ParseError::Incomplete {
@@ -110,6 +113,7 @@ pub(crate) fn check(
                     },
                     severity: Severity::Error,
                     notes: vec![],
+                    fixes: vec![],
                 });
             }
         };
@@ -133,7 +137,7 @@ pub(crate) fn check(
             fixes,
         } in raw_diagnostics
         {
-            all_fixes.extend(fixes);
+            all_fixes.extend(fixes.iter().cloned());
 
             diagnostics.push(CheckDiagnostic {
                 position: position.clone(),
@@ -148,6 +152,7 @@ pub(crate) fn check(
                 },
                 severity,
                 notes,
+                fixes,
             });
         }
     }
@@ -180,6 +185,7 @@ pub(crate) fn check(
                 &env.project_root,
                 diagnostic.severity,
                 &diagnostic.notes,
+                &diagnostic.fixes,
                 &env.vfs,
             )
         };

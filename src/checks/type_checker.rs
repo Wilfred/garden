@@ -2000,7 +2000,7 @@ impl TypeCheckVisitor<'_> {
             self.diagnostics.push(Diagnostic {
                 notes: vec![],
                 fixes: vec![Autofix {
-                    description: format!("Replace `{}` with `{}`", float_op, int_op),
+                    description: format!("Replace `{}` with `{}`.", float_op, int_op),
                     position: op.position.clone(),
                     new_text: int_op.to_owned(),
                 }],
@@ -2062,7 +2062,7 @@ impl TypeCheckVisitor<'_> {
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
                     fixes: vec![Autofix {
-                        description: format!("Replace `{}` with `{}`", int_op, float_op),
+                        description: format!("Replace `{}` with `{}`.", int_op, float_op),
                         position: op.position.clone(),
                         new_text: float_op.to_owned(),
                     }],
@@ -2092,7 +2092,7 @@ impl TypeCheckVisitor<'_> {
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
                     fixes: vec![Autofix {
-                        description: "Replace `+` with `^`".to_owned(),
+                        description: "Replace `+` with `^`.".to_owned(),
                         position: op.position.clone(),
                         new_text: "^".to_owned(),
                     }],
@@ -3299,7 +3299,7 @@ fn check_match_exhaustive(
                 // of this one, removing the unreachable case.
                 let fixes = match prev_case_end {
                     Some(prev_end) => vec![Autofix {
-                        description: "Remove unreachable case".to_owned(),
+                        description: "Remove unreachable case.".to_owned(),
                         position: Position {
                             start_offset: prev_end.end_offset,
                             end_offset: block.close_brace.end_offset,
@@ -3468,11 +3468,11 @@ fn build_missing_cases_autofix(
 
     let description = if missing_variants.len() == 1 {
         format!(
-            "Add missing case `{}`",
+            "Add missing case `{}`.",
             missing_variants[0].name_sym.name.text
         )
     } else {
-        "Add missing match cases".to_owned()
+        "Add missing match cases.".to_owned()
     };
 
     vec![Autofix {

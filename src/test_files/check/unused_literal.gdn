@@ -20,6 +20,7 @@ public fun example() {
 //  |   ^^
 // 3|   3.14
 // 4|   "hello"
+// Help: Remove unused value.
 // 
 // Warning: Unused value.
 // 
@@ -30,6 +31,7 @@ public fun example() {
 //  |   ^^^^
 // 4|   "hello"
 // 5|   [1, 2, 3]
+// Help: Remove unused value.
 // 
 // Warning: Unused value.
 // 
@@ -40,6 +42,7 @@ public fun example() {
 //  |   ^^^^^^^
 // 5|   [1, 2, 3]
 // 6|   Dict[]
+// Help: Remove unused value.
 // 
 // Warning: Unused value.
 // 
@@ -49,6 +52,7 @@ public fun example() {
 // 5|   [1, 2, 3]
 //  |   ^^^^^^^^^
 // 6|   Dict[]
+// Help: Remove unused value.
 // 
 // Warning: Unused value.
 // 
@@ -58,6 +62,7 @@ public fun example() {
 // 6|   Dict[]
 // 7|   ^^^^^^
 // 8|   let x = 10
+// Help: Remove unused value.
 // 
 // Warning: Unnecessary `let`, this value is immediately returned.
 // 
@@ -67,5 +72,6 @@ public fun example() {
 //  8|   let x = 10
 //  9|   x       ^^
 // 10| }
+// Help: Remove unnecessary `let` binding.
 
 // expected stderr: 7 issues can be fixed automatically (use `--fix`).

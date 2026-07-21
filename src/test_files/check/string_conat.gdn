@@ -12,7 +12,8 @@ public fun foo() {
 // 1| public fun foo() {
 // 2|   "a" ^ "b"
 // 3|   1 ^ 2
-// 4| } ^
+//  |   ^
+// 4| }
 // 
 // Error: Expected a `String` but got an `Int`.
 // 
@@ -20,4 +21,5 @@ public fun foo() {
 // 1| public fun foo() {
 // 2|   "a" ^ "b"
 // 3|   1 ^ 2
-// 4| }     ^
+//  |       ^
+// 4| }

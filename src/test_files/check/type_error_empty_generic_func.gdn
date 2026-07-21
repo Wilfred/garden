@@ -7,8 +7,10 @@ public fun empty_block<T>(): List<T> {}
 // 
 // -| src/test_files/check/type_error_empty_generic_func.gdn:1:38
 // 1| public fun empty_block<T>(): List<T> {}
-// 2|                                      ^^
+//  |                                      ^^
+// 2| 
 // -| src/test_files/check/type_error_empty_generic_func.gdn:1:30
 // 1| public fun empty_block<T>(): List<T> {}
-// 2|                              ^^^^^^^ Note: expected `List<T>` because of this return type.
+//  |                              ^^^^^^^ Note: expected `List<T>` because of this return type.
+// 2|
 

@@ -12,7 +12,8 @@ fun baz() {}
 // -| src/test_files/check/incomplete_fun.gdn:2:11
 // 1| // Incomplete
 // 2| fun bar() {
-// 3|           ^
+//  |           ^
+// 3| 
 // 4| // This should be fully parsed.
 // 
 // Error: Expected `}` after this.
@@ -20,5 +21,6 @@ fun baz() {}
 // -| src/test_files/check/incomplete_fun.gdn:2:11
 // 1| // Incomplete
 // 2| fun bar() {
-// 3|           ^
+//  |           ^
+// 3| 
 // 4| // This should be fully parsed.

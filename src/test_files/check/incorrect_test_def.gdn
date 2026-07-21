@@ -7,27 +7,30 @@ test baz(x: Int) {}
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Tests should not have arguments. A valid test look like this: `test foo {}`. See the documentation (https://www.garden-lang.org/keyword:test.html).
+// Error: Tests should not have arguments. A valid test looks like this: `test foo {}`. See the documentation (https://www.garden-lang.org/keyword:test.html).
 // 
 // -| src/test_files/check/incorrect_test_def.gdn:1:9
 // 1| test foo() {}
-// 2|         ^^
+//  |         ^^
+// 2| 
 // 3| test bar(x) {}
 // 
-// Error: Tests should not have arguments. A valid test look like this: `test foo {}`. See the documentation (https://www.garden-lang.org/keyword:test.html).
+// Error: Tests should not have arguments. A valid test looks like this: `test foo {}`. See the documentation (https://www.garden-lang.org/keyword:test.html).
 // 
 // -| src/test_files/check/incorrect_test_def.gdn:3:9
 // 1| test foo() {}
 // 2| 
 // 3| test bar(x) {}
-// 4|         ^^^
+//  |         ^^^
+// 4| 
 // 5| test baz(x: Int) {}
 // 
-// Error: Tests should not have arguments. A valid test look like this: `test foo {}`. See the documentation (https://www.garden-lang.org/keyword:test.html).
+// Error: Tests should not have arguments. A valid test looks like this: `test foo {}`. See the documentation (https://www.garden-lang.org/keyword:test.html).
 // 
 // -| src/test_files/check/incorrect_test_def.gdn:5:9
 // 3| test bar(x) {}
 // 4| 
 // 5| test baz(x: Int) {}
-// 6|         ^^^^^^^^
+//  |         ^^^^^^^^
+// 6|
 

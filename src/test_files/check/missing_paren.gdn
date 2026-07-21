@@ -19,5 +19,6 @@ fun foo() {
 // --| src/test_files/check/missing_paren.gdn:9:13
 //  8|   // Forgot closing paren here:
 //  9|   takes_arg(inc(x)
-// 10|             ^^^^^^
+//   |             ^^^^^^
+// 10| 
 // 11|   x = 2

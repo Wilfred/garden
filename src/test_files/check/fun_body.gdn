@@ -13,4 +13,5 @@ public fun returns_fun(): Fun<(Int), String> {
 // 2|   // We should only complain about the lambda body, not the whole
 // 3|   // lambda.
 // 4|   fun(x) { x + 1 }
-// 5| }          ^^^^^
+//  |            ^^^^^
+// 5| }

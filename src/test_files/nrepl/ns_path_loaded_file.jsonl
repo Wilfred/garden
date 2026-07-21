@@ -1,0 +1,38 @@
+{ "op": "clone" }
+{ "op": "load-file", "session": "garden-1", "file": "fun helper(): Int { 1 }", "file-path": "/tmp/myns.gdn" }
+{ "op": "ns-path", "session": "garden-1", "ns": "myns" }
+{ "op": "ns-path", "session": "garden-1", "ns": "no_such_namespace" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "ns": "myns",
+//   "session": "garden-1",
+//   "value": "()"
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "path": "/tmp/myns.gdn",
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }

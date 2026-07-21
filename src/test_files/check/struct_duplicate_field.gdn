@@ -1,0 +1,24 @@
+struct Point {
+    x: Int,
+    y: Int,
+    x: Int,
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Duplicate field `x`.
+// 
+// -| src/test_files/check/struct_duplicate_field.gdn:4:5
+// 2|     x: Int,
+// 3|     y: Int,
+// 4|     x: Int,
+// 5| }   ^
+// -| src/test_files/check/struct_duplicate_field.gdn:2:5
+// 1| struct Point {
+// 2|     x: Int,
+//  |     ^ Note: The previous occurrence is here.
+// 3|     y: Int,
+// 4|     x: Int,
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

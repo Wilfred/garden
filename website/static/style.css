@@ -479,6 +479,59 @@ ul ul {
   background-color: #a8dda855 !important;
 }
 
+/* A vine on the left edge of the viewport that grows upwards as the
+   reader scrolls down: it is fully grown on reaching the end of the
+   page. Only shown in browsers with scroll-driven animation
+   support. */
+#reading-vine {
+  display: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    #reading-vine {
+      display: block;
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 5px;
+      height: 0;
+      background: linear-gradient(to top, #245c24, var(--green-primary));
+      border-radius: 0 4px 4px 0;
+      animation: grow-vine linear both;
+      animation-timeline: scroll(root);
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    #reading-vine::after {
+      content: "🌿";
+      position: absolute;
+      top: -10px;
+      left: 3px;
+      font-size: 18px;
+      line-height: 1;
+    }
+  }
+}
+
+@keyframes grow-vine {
+  from {
+    height: 0;
+  }
+  to {
+    height: calc(100vh - 80px);
+  }
+}
+
+/* On narrow screens keep the slender stem (it fits within the page
+   margin) but drop the leaf tip, which would overlap the text. */
+@media (max-width: 600px) {
+  #reading-vine::after {
+    content: none;
+  }
+}
+
 .spinner {
   border: 3px solid #00000030;
   border-top: 3px solid var(--green-primary);

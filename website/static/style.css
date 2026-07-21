@@ -183,6 +183,31 @@ a:has(> code):hover {
   border-bottom: 0;
 }
 
+/* On hover, a seedling sprouts from the end of a link's dotted
+   underline. Hover-only, so touch devices are unaffected. The sprout
+   is absolutely positioned so the text never reflows. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .container a:not(pre a) {
+    position: relative;
+  }
+
+  .container a:not(pre a)::after {
+    content: "🌱";
+    position: absolute;
+    left: calc(100% - 0.2em);
+    bottom: 0.55em;
+    font-size: 0.7em;
+    transform: scale(0);
+    transform-origin: bottom left;
+    transition: transform 0.25s ease-out;
+    pointer-events: none;
+  }
+
+  .container a:not(pre a):hover::after {
+    transform: scale(1);
+  }
+}
+
 pre a {
   border-bottom: 0;
 }

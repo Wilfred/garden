@@ -1,0 +1,32 @@
+// `True` is one of the synthesized constants, so it can be supplied as
+// the fallback value here.
+{"inputs": ["None"], "output": "True"}
+
+// args: suggest
+// expected stdout:
+// {
+//   "error": null,
+//   "inputs": [
+//     "None"
+//   ],
+//   "output": "True",
+//   "suggestions": [
+//     {
+//       "kind": "method",
+//       "name": "is_none",
+//       "call": "None.is_none()",
+//       "signature": "(this: Option<T>): Bool",
+//       "constants": []
+//     },
+//     {
+//       "kind": "method",
+//       "name": "or_value",
+//       "call": "None.or_value(True)",
+//       "signature": "(this: Option<T>, value: T): T",
+//       "constants": [
+//         "True"
+//       ]
+//     }
+//   ]
+// }
+

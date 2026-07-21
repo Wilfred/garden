@@ -1,0 +1,686 @@
+#!/usr/bin/env -S garden run
+
+enum Expression {
+  IntegerExpr(Int),
+  BooleanExpr(Bool),
+  StringExpr(String),
+  SymbolExpr(String),
+  ListExpr(List<Expression>),
+}
+
+enum Value {
+  IntegerValue(Int),
+  BooleanValue(Bool),
+  StringValue(String),
+  SymbolValue(String),
+  ListValue(List<Value>),
+  PrimitiveValue(String),
+  LambdaValue((List<String>, List<Expression>, Environment, Option<String>)),
+  UnspecifiedValue,
+}
+
+struct Environment {
+  bindings: Dict<Value>,
+}
+
+enum TokenizeResult {
+  Tokenized(List<String>),
+  TokenizeError(String),
+}
+
+enum ParseResult {
+  Parsed((Expression, Int)),
+  ParseError(String),
+}
+
+enum EvalResult {
+  Evaluated((Value, Environment)),
+  EvalError(String),
+}
+
+fun is_whitespace(c: String): Bool {
+  [" ", "\n", "\t"].contains(c)
+}
+
+fun tokenize(source: String): TokenizeResult {
+  let tokens: List<String> = []
+  let current = ""
+  let in_comment = False
+  let in_string = False
+
+  for c in source.chars() {
+    if in_comment {
+      if c == "\n" {
+        in_comment = False
+      }
+    } else if in_string {
+      if c == "\"" {
+        tokens = tokens.append("\"" ^ current ^ "\"")
+        current = ""
+        in_string = False
+      } else {
+        current = current ^ c
+      }
+    } else if c == ";" {
+      if current != "" {
+        tokens = tokens.append(current)
+        current = ""
+      }
+      in_comment = True
+    } else if c == "\"" {
+      if current != "" {
+        return TokenizeError("A string literal must start after whitespace or a delimiter.")
+      }
+      in_string = True
+    } else if is_whitespace(c) {
+      if current != "" {
+        tokens = tokens.append(current)
+        current = ""
+      }
+    } else if ["(", ")", "'"].contains(c) {
+      if current != "" {
+        tokens = tokens.append(current)
+        current = ""
+      }
+      tokens = tokens.append(c)
+    } else {
+      current = current ^ c
+    }
+  }
+
+  if in_string {
+    return TokenizeError("Unterminated string literal.")
+  }
+  if current != "" {
+    tokens = tokens.append(current)
+  }
+  Tokenized(tokens)
+}
+
+fun parse_list(
+  tokens: List<String>,
+  index: Int,
+  expressions: List<Expression>,
+): ParseResult {
+  match tokens.get(index) {
+    None => ParseError("Unclosed list; expected `)`."),
+    Some(token) => {
+      if token == ")" {
+        Parsed((ListExpr(expressions), index + 1))
+      } else {
+        match parse_at(tokens, index) {
+          Parsed((expression, next)) => parse_list(tokens, next, expressions.append(expression)),
+          ParseError(message) => ParseError(message),
+        }
+      }
+    }
+  }
+}
+
+fun parse_at(tokens: List<String>, index: Int): ParseResult {
+  let token = match tokens.get(index) {
+    Some(token) => token
+    None => return ParseError("Expected an expression, but reached end of input.")
+  }
+
+  if token == "(" {
+    parse_list(tokens, index + 1, [])
+  } else if token == ")" {
+    ParseError("Unexpected `)`.")
+  } else if token == "'" {
+    match parse_at(tokens, index + 1) {
+      Parsed((expression, next)) => {
+        Parsed((ListExpr([SymbolExpr("quote"), expression]), next))
+      }
+      ParseError(message) => ParseError(message),
+    }
+  } else if token == "#t" {
+    Parsed((BooleanExpr(True), index + 1))
+  } else if token == "#f" {
+    Parsed((BooleanExpr(False), index + 1))
+  } else if token.starts_with("\"") {
+    Parsed((StringExpr(token.substring(1, token.len() - 1)), index + 1))
+  } else {
+    match token.as_int() {
+      Some(integer) => Parsed((IntegerExpr(integer), index + 1)),
+      None => Parsed((SymbolExpr(token), index + 1)),
+    }
+  }
+}
+
+fun parse(source: String): Result<Expression, String> {
+  let tokens = match tokenize(source) {
+    Tokenized(tokens) => tokens
+    TokenizeError(message) => return Err(message)
+  }
+  match parse_at(tokens, 0) {
+    Parsed((expression, next)) => {
+      if next != tokens.len() {
+        Err("Unexpected input after the first expression.")
+      } else {
+        Ok(expression)
+      }
+    }
+    ParseError(message) => Err(message),
+  }
+}
+
+fun expression_to_value(expression: Expression): Value {
+  match expression {
+    IntegerExpr(integer) => IntegerValue(integer),
+    BooleanExpr(boolean) => BooleanValue(boolean),
+    StringExpr(string) => StringValue(string),
+    SymbolExpr(symbol) => SymbolValue(symbol),
+    ListExpr(expressions) => ListValue(expressions.map(expression_to_value)),
+  }
+}
+
+fun value_to_string(value: Value): String {
+  match value {
+    IntegerValue(integer) => string_repr(integer),
+    BooleanValue(boolean) => if boolean { "#t" } else { "#f" },
+    StringValue(string) => "\"" ^ string ^ "\"",
+    SymbolValue(symbol) => symbol,
+    ListValue(values) => "(" ^ " ".join(values.map(value_to_string)) ^ ")",
+    PrimitiveValue(name) => "#<primitive:" ^ name ^ ">",
+    LambdaValue(_) => "#<procedure>",
+    UnspecifiedValue => "#<unspecified>",
+  }
+}
+
+fun standard_environment(): Environment {
+  let bindings: Dict<Value> = Dict[]
+  for name in [
+    "+", "-", "*", "/", "=", "<", ">", "<=", ">=", "list", "car", "cdr", "cons",
+    "null?", "number?", "boolean?", "symbol?", "list?", "not", "display",
+  ] {
+    bindings = bindings.set(name, PrimitiveValue(name))
+  }
+  Environment{ bindings: bindings }
+}
+
+fun lookup(environment: Environment, name: String): Result<Value, String> {
+  match environment.bindings.get(name) {
+    Some(value) => Ok(value),
+    None => Err("Unbound symbol `" ^ name ^ "`."),
+  }
+}
+
+fun eval_sequence(
+  expressions: List<Expression>,
+  environment: Environment,
+): EvalResult {
+  let value = UnspecifiedValue
+  let current_environment = environment
+  for expression in expressions {
+    match eval(expression, current_environment) {
+      Evaluated((next_value, next_environment)) => {
+        value = next_value
+        current_environment = next_environment
+      }
+      EvalError(message) => return EvalError(message),
+    }
+  }
+  Evaluated((value, current_environment))
+}
+
+fun eval_arguments(
+  expressions: List<Expression>,
+  environment: Environment,
+): Result<(List<Value>, Environment), String> {
+  let values: List<Value> = []
+  let current_environment = environment
+  for expression in expressions {
+    match eval(expression, current_environment) {
+      Evaluated((value, next_environment)) => {
+        values = values.append(value)
+        current_environment = next_environment
+      }
+      EvalError(message) => return Err(message),
+    }
+  }
+  Ok((values, current_environment))
+}
+
+fun expect_arity(name: String, arguments: List<Value>, arity: Int): Result<Unit, String> {
+  if arguments.len() == arity {
+    Ok(Unit)
+  } else {
+    Err(
+      "`" ^ name ^ "` expected " ^ string_repr(arity) ^ " argument(s), but received " ^
+        string_repr(arguments.len()) ^ "."
+    )
+  }
+}
+
+fun integer_arguments(name: String, arguments: List<Value>): Result<List<Int>, String> {
+  let integers: List<Int> = []
+  for argument in arguments {
+    match argument {
+      IntegerValue(integer) => integers = integers.append(integer)
+      _ => return Err("`" ^ name ^ "` expected integer arguments, but received " ^ value_to_string(argument) ^ ".")
+    }
+  }
+  Ok(integers)
+}
+
+fun compare_integers(name: String, arguments: List<Value>): Result<Value, String> {
+  match expect_arity(name, arguments, 2) {
+    Err(message) => return Err(message)
+    Ok(_) => {}
+  }
+  let integers = match integer_arguments(name, arguments) {
+    Ok(integers) => integers
+    Err(message) => return Err(message)
+  }
+  let left = integers.get(0).or_throw()
+  let right = integers.get(1).or_throw()
+  let result = if name == "<" {
+    left < right
+  } else if name == ">" {
+    left > right
+  } else if name == "<=" {
+    left <= right
+  } else {
+    left >= right
+  }
+  Ok(BooleanValue(result))
+}
+
+fun apply_primitive(name: String, arguments: List<Value>): Result<Value, String> {
+  if name == "+" {
+    let total = 0
+    let integers = match integer_arguments(name, arguments) {
+      Ok(integers) => integers
+      Err(message) => return Err(message)
+    }
+    for integer in integers {
+      total += integer
+    }
+    Ok(IntegerValue(total))
+  } else if name == "*" {
+    let product = 1
+    let integers = match integer_arguments(name, arguments) {
+      Ok(integers) => integers
+      Err(message) => return Err(message)
+    }
+    for integer in integers {
+      product = product * integer
+    }
+    Ok(IntegerValue(product))
+  } else if name == "-" {
+    if arguments.is_empty() {
+      return Err("`-` expected at least one argument.")
+    }
+    let integers = match integer_arguments(name, arguments) {
+      Ok(integers) => integers
+      Err(message) => return Err(message)
+    }
+    let result = integers.get(0).or_throw()
+    if integers.len() == 1 {
+      result = 0 - result
+    } else {
+      for integer in integers.slice(1, integers.len()) {
+        result -= integer
+      }
+    }
+    Ok(IntegerValue(result))
+  } else if name == "/" {
+    if arguments.len() < 2 {
+      return Err("`/` expected at least two arguments.")
+    }
+    let integers = match integer_arguments(name, arguments) {
+      Ok(integers) => integers
+      Err(message) => return Err(message)
+    }
+    let result = integers.get(0).or_throw()
+    for integer in integers.slice(1, integers.len()) {
+      if integer == 0 {
+        return Err("Cannot divide by zero.")
+      }
+      result = result / integer
+    }
+    Ok(IntegerValue(result))
+  } else if name == "=" {
+    match expect_arity(name, arguments, 2) {
+      Err(message) => return Err(message)
+      Ok(_) => {}
+    }
+    Ok(BooleanValue(arguments.get(0) == arguments.get(1)))
+  } else if ["<", ">", "<=", ">="].contains(name) {
+    compare_integers(name, arguments)
+  } else if name == "list" {
+    Ok(ListValue(arguments))
+  } else if name == "car" {
+    match expect_arity(name, arguments, 1) {
+      Err(message) => return Err(message)
+      Ok(_) => {}
+    }
+    let argument = arguments.get(0).or_throw()
+    match argument {
+      ListValue(values) => match values.first() {
+        Some(value) => Ok(value),
+        None => Err("`car` cannot be applied to an empty list."),
+      },
+      _ => Err("`car` expected a list, but received " ^ value_to_string(argument) ^ "."),
+    }
+  } else if name == "cdr" {
+    match expect_arity(name, arguments, 1) {
+      Err(message) => return Err(message)
+      Ok(_) => {}
+    }
+    let argument = arguments.get(0).or_throw()
+    match argument {
+      ListValue(values) => {
+        if values.is_empty() {
+          Err("`cdr` cannot be applied to an empty list.")
+        } else {
+          Ok(ListValue(values.slice(1, values.len())))
+        }
+      }
+      _ => Err("`cdr` expected a list, but received " ^ value_to_string(argument) ^ "."),
+    }
+  } else if name == "cons" {
+    match expect_arity(name, arguments, 2) {
+      Err(message) => return Err(message)
+      Ok(_) => {}
+    }
+    let first = arguments.get(0).or_throw()
+    let rest = arguments.get(1).or_throw()
+    match rest {
+      ListValue(rest) => Ok(ListValue([first].concat(rest))),
+      _ => Err("`cons` expected a list as its second argument, but received " ^ value_to_string(rest) ^ "."),
+    }
+  } else if name == "null?" {
+    match expect_arity(name, arguments, 1) {
+      Err(message) => return Err(message)
+      Ok(_) => {}
+    }
+    match arguments.get(0).or_throw() {
+      ListValue(values) => Ok(BooleanValue(values.is_empty())),
+      _ => Ok(BooleanValue(False)),
+    }
+  } else if ["number?", "boolean?", "symbol?", "list?"].contains(name) {
+    match expect_arity(name, arguments, 1) {
+      Err(message) => return Err(message)
+      Ok(_) => {}
+    }
+    let value = arguments.get(0).or_throw()
+    let result = match value {
+      IntegerValue(_) => name == "number?",
+      BooleanValue(_) => name == "boolean?",
+      SymbolValue(_) => name == "symbol?",
+      ListValue(_) => name == "list?",
+      _ => False,
+    }
+    Ok(BooleanValue(result))
+  } else if name == "not" {
+    match expect_arity(name, arguments, 1) {
+      Err(message) => return Err(message)
+      Ok(_) => {}
+    }
+    match arguments.get(0).or_throw() {
+      BooleanValue(boolean) => Ok(BooleanValue(not(boolean))),
+      _ => Ok(BooleanValue(False)),
+    }
+  } else if name == "display" {
+    match expect_arity(name, arguments, 1) {
+      Err(message) => return Err(message)
+      Ok(_) => {}
+    }
+    let value = arguments.get(0).or_throw()
+    match value {
+      StringValue(string) => print(string)
+      _ => print(value_to_string(value))
+    }
+    Ok(UnspecifiedValue)
+  } else {
+    Err("Unknown primitive `" ^ name ^ "`.")
+  }
+}
+
+fun named_lambda(value: Value, name: String): Value {
+  match value {
+    LambdaValue((parameters, body, closure, _)) => {
+      LambdaValue((parameters, body, closure, Some(name)))
+    }
+    _ => value,
+  }
+}
+
+fun apply(
+  procedure: Value,
+  arguments: List<Value>,
+  caller_environment: Environment,
+): EvalResult {
+  match procedure {
+    PrimitiveValue(name) => match apply_primitive(name, arguments) {
+      Ok(value) => Evaluated((value, caller_environment)),
+      Err(message) => EvalError(message),
+    },
+    LambdaValue((parameters, body, closure, name)) => {
+      if parameters.len() != arguments.len() {
+        return EvalError(
+          "Procedure expected " ^ string_repr(parameters.len()) ^ " argument(s), but received " ^
+            string_repr(arguments.len()) ^ "."
+        )
+      }
+      let local_bindings = closure.bindings
+      let lambda = LambdaValue((parameters, body, closure, name))
+      match name {
+        Some(lambda_name) => local_bindings = local_bindings.set(lambda_name, lambda)
+        None => {}
+      }
+      for (index, parameter) in parameters.enumerate() {
+        local_bindings = local_bindings.set(parameter, arguments.get(index).or_throw())
+      }
+      match eval_sequence(body, Environment{ bindings: local_bindings }) {
+        Evaluated((value, _)) => Evaluated((value, caller_environment)),
+        EvalError(message) => EvalError(message),
+      }
+    }
+    _ => EvalError("Expected a procedure, but received " ^ value_to_string(procedure) ^ "."),
+  }
+}
+
+fun lambda_parameters(expression: Expression): Result<List<String>, String> {
+  match expression {
+    ListExpr(expressions) => {
+      let parameters: List<String> = []
+      for parameter in expressions {
+        match parameter {
+          SymbolExpr(name) => {
+            if parameters.contains(name) {
+              return Err("Duplicate lambda parameter `" ^ name ^ "`.")
+            }
+            parameters = parameters.append(name)
+          }
+          _ => return Err("Lambda parameters must be symbols."),
+        }
+      }
+      Ok(parameters)
+    }
+    _ => Err("Lambda parameters must be written as a list."),
+  }
+}
+
+fun is_truthy(value: Value): Bool {
+  match value {
+    BooleanValue(boolean) => boolean,
+    _ => True,
+  }
+}
+
+fun eval_application(expressions: List<Expression>, environment: Environment): EvalResult {
+  match eval(expressions.get(0).or_throw(), environment) {
+    Evaluated((procedure, next_environment)) => {
+      match eval_arguments(expressions.slice(1, expressions.len()), next_environment) {
+        Ok((arguments, after_arguments)) => apply(procedure, arguments, after_arguments),
+        Err(message) => EvalError(message),
+      }
+    }
+    EvalError(message) => EvalError(message),
+  }
+}
+
+fun eval_list(expressions: List<Expression>, environment: Environment): EvalResult {
+  if expressions.is_empty() {
+    return Evaluated((ListValue([]), environment))
+  }
+
+  match expressions.get(0).or_throw() {
+    SymbolExpr(symbol) => {
+      if symbol == "quote" {
+        if expressions.len() != 2 {
+          return EvalError("`quote` expected one argument.")
+        }
+        Evaluated((expression_to_value(expressions.get(1).or_throw()), environment))
+      } else if symbol == "if" {
+        if expressions.len() != 4 {
+          return EvalError("`if` expected a condition, consequent and alternative.")
+        }
+        match eval(expressions.get(1).or_throw(), environment) {
+          Evaluated((condition, next_environment)) => {
+            let branch = if is_truthy(condition) { 2 } else { 3 }
+            eval(expressions.get(branch).or_throw(), next_environment)
+          }
+          EvalError(message) => EvalError(message),
+        }
+      } else if symbol == "define" {
+        if expressions.len() != 3 {
+          return EvalError("`define` expected a name and a value expression.")
+        }
+        let name = match expressions.get(1).or_throw() {
+          SymbolExpr(name) => name
+          _ => return EvalError("The first argument to `define` must be a symbol.")
+        }
+        match eval(expressions.get(2).or_throw(), environment) {
+          Evaluated((value, next_environment)) => {
+            let value = named_lambda(value, name)
+            let bindings = next_environment.bindings.set(name, value)
+            Evaluated((UnspecifiedValue, Environment{ bindings: bindings }))
+          }
+          EvalError(message) => EvalError(message),
+        }
+      } else if symbol == "lambda" {
+        if expressions.len() < 3 {
+          return EvalError("`lambda` expected parameters and at least one body expression.")
+        }
+        match lambda_parameters(expressions.get(1).or_throw()) {
+          Ok(parameters) => Evaluated((
+            LambdaValue((parameters, expressions.slice(2, expressions.len()), environment, None)),
+            environment
+          )),
+          Err(message) => EvalError(message),
+        }
+      } else if symbol == "begin" {
+        eval_sequence(expressions.slice(1, expressions.len()), environment)
+      } else {
+        eval_application(expressions, environment)
+      }
+    }
+    _ => eval_application(expressions, environment),
+  }
+}
+
+fun eval(expression: Expression, environment: Environment): EvalResult {
+  match expression {
+    IntegerExpr(integer) => Evaluated((IntegerValue(integer), environment)),
+    BooleanExpr(boolean) => Evaluated((BooleanValue(boolean), environment)),
+    StringExpr(string) => Evaluated((StringValue(string), environment)),
+    SymbolExpr(symbol) => match lookup(environment, symbol) {
+      Ok(value) => Evaluated((value, environment)),
+      Err(message) => EvalError(message),
+    },
+    ListExpr(expressions) => eval_list(expressions, environment),
+  }
+}
+
+fun evaluate(source: String, environment: Environment): EvalResult {
+  match parse(source) {
+    Ok(expression) => eval(expression, environment),
+    Err(message) => EvalError(message),
+  }
+}
+
+fun repl() {
+  let environment = standard_environment()
+  while True {
+    print("scheme> ")
+    match read_line() {
+      Ok(line) => {
+        if line.trim() != "" {
+          match evaluate(line, environment) {
+            Evaluated((value, next_environment)) => {
+              environment = next_environment
+              if value != UnspecifiedValue {
+                println(value_to_string(value))
+              }
+            }
+            EvalError(message) => eprintln("Error: " ^ message),
+          }
+        }
+      }
+      Err(_) => {
+        println("")
+        return
+      }
+    }
+  }
+}
+
+test tokenize_scheme {
+  assert(tokenize("(+ 1 'x) ; ignored") == Tokenized(["(", "+", "1", "'", "x", ")"]))
+  assert(tokenize("\"hello world\"") == Tokenized(["\"hello world\""]))
+  assert(tokenize("\"unterminated") == TokenizeError("Unterminated string literal."))
+}
+
+test parse_scheme {
+  assert(
+    parse("'(+ 1 2)") == Ok(ListExpr([
+      SymbolExpr("quote"),
+      ListExpr([SymbolExpr("+"), IntegerExpr(1), IntegerExpr(2)]),
+    ]))
+  )
+  assert(parse("(+ 1 2") == Err("Unclosed list; expected `)`."))
+}
+
+test evaluate_scheme {
+  let environment = standard_environment()
+  assert(evaluate("(+ 1 (* 2 3))", environment) == Evaluated((IntegerValue(7), environment)))
+  assert(evaluate("(car '(10 20))", environment) == Evaluated((IntegerValue(10), environment)))
+  assert(evaluate("((lambda (x) (+ x 1)) 4)", environment) == Evaluated((IntegerValue(5), environment)))
+  assert(
+    evaluate("(((lambda (x) (lambda (y) (+ x y))) 5) 8)", environment) ==
+      Evaluated((IntegerValue(13), environment))
+  )
+  assert(evaluate("(+ 1 #t)", environment) == EvalError("`+` expected integer arguments, but received #t."))
+  assert(evaluate("(car)", environment) == EvalError("`car` expected 1 argument(s), but received 0."))
+  assert(evaluate("(/ 4 0)", environment) == EvalError("Cannot divide by zero."))
+}
+
+test define_and_recurse_scheme {
+  let environment = standard_environment()
+  let environment = match evaluate("(define answer 42)", environment) {
+    Evaluated((value, environment)) => {
+      assert(value == UnspecifiedValue)
+      environment
+    }
+    _ => throw("define failed")
+  }
+  assert(evaluate("answer", environment) == Evaluated((IntegerValue(42), environment)))
+
+  let environment = match evaluate(
+    "(define factorial (lambda (n) (if (= n 0) 1 (* n (factorial (- n 1))))))",
+    environment
+  ) {
+    Evaluated((value, environment)) => {
+      assert(value == UnspecifiedValue)
+      environment
+    }
+    _ => throw("recursive define failed")
+  }
+  assert(evaluate("(factorial 6)", environment) == Evaluated((IntegerValue(720), environment)))
+}
+
+repl()

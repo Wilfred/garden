@@ -31,5 +31,20 @@
     </footer>
 
     <script type="module" src="/static/playground.js"></script>
+    <script>
+      (function () {
+        var lastScrollY = window.scrollY;
+        var header = document.querySelector("header");
+        window.addEventListener("scroll", function () {
+          var currentScrollY = window.scrollY;
+          if (currentScrollY > lastScrollY && currentScrollY > 60) {
+            header.classList.add("header-hidden");
+          } else {
+            header.classList.remove("header-hidden");
+          }
+          lastScrollY = currentScrollY;
+        });
+      })();
+    </script>
   </body>
 </html>

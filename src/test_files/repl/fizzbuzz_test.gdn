@@ -1,0 +1,14 @@
+fun fizzbuzz(n: Int): String {
+  if n % 15 == 0 { "FizzBuzz" } else if n % 3 == 0 { "Fizz" } else if n % 5 == 0 { "Buzz" } else { string_repr(n) }
+}
+test fizzbuzz_works {
+  assert(fizzbuzz(3) == "Fizz")
+  assert(fizzbuzz(5) == "Buzz")
+  assert(fizzbuzz(15) == "FizzBuzz")
+  assert(fizzbuzz(1) == "1")
+}
+:test fizzbuzz_works
+fizzbuzz(15)
+
+// args: reftest-repl
+// expected stdout: "FizzBuzz"

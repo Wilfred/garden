@@ -1,0 +1,26 @@
+public fun direct(c: Bool): Bool {
+  if c { True } else { False }
+}
+
+public fun negated(c: Bool): Bool {
+  if c { False } else { True }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: This `if` can be simplified. Use the condition directly.
+// 
+// -| src/test_files/check/simplify_bool_if.gdn:2:3
+// 1| public fun direct(c: Bool): Bool {
+// 2|   if c { True } else { False }
+// 3| } ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+// 
+// Warning: This `if` can be simplified. Use `not()` on the condition instead.
+// 
+// -| src/test_files/check/simplify_bool_if.gdn:6:3
+// 5| public fun negated(c: Bool): Bool {
+// 6|   if c { False } else { True }
+// 7| } ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// expected stderr: 4 issues can be fixed automatically (use `--fix`).

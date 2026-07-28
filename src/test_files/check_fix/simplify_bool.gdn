@@ -1,0 +1,34 @@
+public fun eq_true(x: Bool): Bool {
+  x == True
+}
+
+public fun eq_false(x: Bool): Bool {
+  x == False
+}
+
+public fun direct(c: Bool): Bool {
+  if c { True } else { False }
+}
+
+public fun negated(c: Bool): Bool {
+  if c { False } else { True }
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// public fun eq_true(x: Bool): Bool {
+//   x
+// }
+// 
+// public fun eq_false(x: Bool): Bool {
+//   not(x)
+// }
+// 
+// public fun direct(c: Bool): Bool {
+//   c
+// }
+// 
+// public fun negated(c: Bool): Bool {
+//   not(c)
+// }
+

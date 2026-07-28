@@ -1,0 +1,18 @@
+public fun cmp(x: Int, y: Int): Bool {
+  x < y == False
+}
+
+public fun cond(a: Bool, b: Bool): Bool {
+  if a || b { False } else { True }
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// public fun cmp(x: Int, y: Int): Bool {
+//   not(x < y)
+// }
+// 
+// public fun cond(a: Bool, b: Bool): Bool {
+//   not(a || b)
+// }
+

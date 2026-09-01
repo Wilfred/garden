@@ -7412,6 +7412,16 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
 
         match &expr.expr_ {
             Expression_::While(_, _) if loop_in_progress => {
+                // The body block pushed by `eval_while_body` is
+                // normally popped in the `DoneRunBlock` state, which
+                // we are skipping.
+                if matches!(
+                    expr_state,
+                    ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock)
+                ) {
+                    env.current_frame_mut().bindings.pop_block();
+                }
+
                 env.current_frame_mut()
                     .exprs_to_eval
                     .push((ExpressionState::EvaluatedSubexpressions, Rc::clone(&expr)));
@@ -7434,15 +7444,7 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
                 break;
             }
             _ => {
-                // We're exiting a block that wasn't part of a loop
-                // (i.e. a match case or an if/else block), so we
-                // should pop the bindings block here too.
-                if matches!(
-                    expr_state,
-                    ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock)
-                ) {
-                    env.current_frame_mut().bindings.pop_block();
-                }
+                pop_owned_block(env, &expr_state, &expr);
 
                 // TODO: this needs to clean up any items pushed to the value stack.
                 // E.g. in `1 + break`.
@@ -7475,6 +7477,23 @@ fn eval_continue(env: &mut Env) {
             env.push_expr_to_eval(expr_state, expr);
             break;
         }
+
+        pop_owned_block(env, &expr_state, &expr);
+    }
+}
+
+/// When unwinding past `expr` for `break` or `continue`, pop the
+/// bindings block it owns. `if`, `match` and `try` push a block when
+/// their body starts running, and pop it again in the
+/// `EvaluatedSubexpressions` state.
+fn pop_owned_block(env: &mut Env, expr_state: &ExpressionState, expr: &Expression) {
+    if matches!(expr_state, ExpressionState::EvaluatedSubexpressions)
+        && matches!(
+            expr.expr_,
+            Expression_::If(_, _, _) | Expression_::Match(_, _) | Expression_::Try(_, _, _)
+        )
+    {
+        env.current_frame_mut().bindings.pop_block();
     }
 }
 

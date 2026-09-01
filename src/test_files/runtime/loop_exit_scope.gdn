@@ -1,0 +1,45 @@
+// Bindings introduced inside `if` or `match` blocks are discarded
+// when `break` or `continue` leaves the loop body.
+
+{
+  let x = "outer"
+  let i = 0
+  while i < 2 {
+    i += 1
+    if True {
+      let x = "inner"
+      continue
+    }
+  }
+  dbg(x)
+
+  let y = "outer"
+  while True {
+    if True {
+      let y = "inner"
+      break
+    }
+  }
+  dbg(y)
+
+  let z = "outer"
+  for j in [1, 2] {
+    match Some(j) {
+      Some(_) => {
+        let z = "inner"
+        if j == 1 {
+          continue
+        }
+        break
+      }
+      None => {}
+    }
+  }
+  dbg(z)
+}
+
+// args: run
+// expected stderr:
+// [src/test_files/runtime/loop_exit_scope.gdn:14:3] x //-> "outer"
+// [src/test_files/runtime/loop_exit_scope.gdn:23:3] y //-> "outer"
+// [src/test_files/runtime/loop_exit_scope.gdn:38:3] z //-> "outer"

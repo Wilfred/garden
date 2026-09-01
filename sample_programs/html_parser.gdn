@@ -1,0 +1,803 @@
+// A basic HTML parser.
+//
+// Handles start tags, end tags, attributes (quoted and unquoted),
+// self-closing tags, void elements, comments, doctypes, raw text
+// elements (`<script>` and `<style>`), character references, and a
+// few of the implicit end-tag rules from HTML5 (e.g. `<p>` and
+// `<li>`).
+
+import "__fs.gdn" as fs
+
+/// A node in the parsed HTML tree.
+enum Node {
+  Element(Element),
+  Text(String),
+  Comment(String),
+  Doctype(String),
+}
+
+/// An HTML element, such as `<a href="/">Home</a>`.
+struct Element {
+  name: String,
+  attributes: List<(String, String)>,
+  children: List<Node>,
+}
+
+/// A start tag, such as `<a href="/">` or `<br />`.
+struct Tag {
+  name: String,
+  attributes: List<(String, String)>,
+  self_closing: Bool,
+}
+
+/// The lexical tokens that make up an HTML document.
+enum Token {
+  StartTag(Tag),
+  EndTag(String),
+  TextToken(String),
+  CommentToken(String),
+  DoctypeToken(String),
+}
+
+/// Elements that never have children or an end tag.
+fun void_elements(): List<String> {
+  [
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "source",
+    "track",
+    "wbr",
+  ]
+}
+
+/// Elements whose content is raw text rather than markup.
+fun raw_text_elements(): List<String> {
+  ["script", "style"]
+}
+
+/// Elements that implicitly close an open `<p>`.
+fun p_closing_elements(): List<String> {
+  [
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "div",
+    "dl",
+    "fieldset",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "hr",
+    "main",
+    "nav",
+    "ol",
+    "p",
+    "pre",
+    "section",
+    "table",
+    "ul",
+  ]
+}
+
+fun is_whitespace(c: String): Bool {
+  ((c == " ") || (c == "\n")) || ((c == "\t") || (c == "\r"))
+}
+
+/// Is `s` empty or entirely whitespace? Unlike `String::trim()`,
+/// this treats newlines and tabs as whitespace.
+fun is_blank(s: String): Bool {
+  for c in s.chars() {
+    if not(is_whitespace(c)) {
+      return False
+    }
+  }
+  True
+}
+
+test is_blank {
+  assert(is_blank(""))
+  assert(is_blank(" \n\t"))
+  assert(not(is_blank(" a ")))
+}
+
+/// Characters that end a tag or attribute name.
+fun is_name_terminator(c: String): Bool {
+  ((is_whitespace(c) || (c == ">")) || (c == "/")) || (c == "=")
+}
+
+fun is_ascii_letter(c: String): Bool {
+  let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  (c != "") && letters.contains(c)
+}
+
+/// The character at position `i`, or `""` if `i` is out of bounds.
+///
+/// `&&` and `||` do not short-circuit in Garden, so bounds checks
+/// cannot guard an `or_throw()` on the same line.
+fun char_at(chars: List<String>, i: Int): String {
+  chars.get(i).or_value("")
+}
+
+/// Does `chars` contain `needle` starting at position `i`?
+fun starts_with_at(chars: List<String>, i: Int, needle: String): Bool {
+  let needle_chars = needle.chars()
+  for (offset, c) in needle_chars.enumerate() {
+    if chars.get(i + offset) != Some(c) {
+      return False
+    }
+  }
+  True
+}
+
+test starts_with_at {
+  assert(starts_with_at("<!-- x".chars(), 0, "<!--"))
+  assert(starts_with_at("a<!--".chars(), 1, "<!--"))
+  assert(not(starts_with_at("<!-".chars(), 0, "<!--")))
+  assert(not(starts_with_at("abc".chars(), 1, "ab")))
+}
+
+/// Find the first position at or after `i` where `needle` occurs.
+fun find_at(chars: List<String>, i: Int, needle: String): Option<Int> {
+  let j = i
+  while j < chars.len() {
+    if starts_with_at(chars, j, needle) {
+      return Some(j)
+    }
+    j += 1
+  }
+  None
+}
+
+test find_at {
+  assert(find_at("ab-->".chars(), 0, "-->") == Some(2))
+  assert(find_at("ab-->".chars(), 3, "-->") == None)
+  assert(find_at("abc".chars(), 0, "x") == None)
+}
+
+fun join_chars(chars: List<String>, from_index: Int, to_index: Int): String {
+  "".join(chars.slice(from_index, to_index))
+}
+
+/// Parse a hexadecimal string such as `"1F"`.
+fun parse_hex(s: String): Option<Int> {
+  if s == "" {
+    return None
+  }
+
+  let digits = "0123456789abcdef"
+  let value = 0
+  for c in s.to_ascii_lowercase().chars() {
+    match digits.index_of(c) {
+      Some(d) => {
+        value = (value * 16) + d
+      }
+      None => {
+        return None
+      }
+    }
+  }
+
+  Some(value)
+}
+
+test parse_hex {
+  assert(parse_hex("") == None)
+  assert(parse_hex("0") == Some(0))
+  assert(parse_hex("ff") == Some(255))
+  assert(parse_hex("1F") == Some(31))
+  assert(parse_hex("xyz") == None)
+}
+
+/// Convert a codepoint to a string. Garden has no built-in for this,
+/// so only printable ASCII is supported.
+fun char_from_codepoint(codepoint: Int): Option<String> {
+  let printable_ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+  if (codepoint < 32) || (codepoint > 126) {
+    return None
+  }
+
+  Some(printable_ascii.substring(codepoint - 32, codepoint - 31))
+}
+
+test char_from_codepoint {
+  assert(char_from_codepoint(32) == Some(" "))
+  assert(char_from_codepoint(65) == Some("A"))
+  assert(char_from_codepoint(126) == Some("~"))
+  assert(char_from_codepoint(10) == None)
+  assert(char_from_codepoint(9731) == None)
+}
+
+/// Look up a character reference, e.g. `amp` or `#x3C`, without its
+/// surrounding `&` and `;`.
+fun decode_entity(name: String): Option<String> {
+  let named = Dict[
+    "amp" => "&",
+    "lt" => "<",
+    "gt" => ">",
+    "quot" => "\"",
+    "apos" => "'",
+    "nbsp" => " ",
+    "copy" => "©",
+    "mdash" => "—",
+    "ndash" => "–",
+    "hellip" => "…",
+  ]
+
+  match named.get(name) {
+    Some(s) => {
+      return Some(s)
+    }
+    None => {}
+  }
+
+  if name.starts_with("#x") || name.starts_with("#X") {
+    match parse_hex(name.substring(2, name.len())) {
+      Some(codepoint) => char_from_codepoint(codepoint)
+      None => None
+    }
+  } else if name.starts_with("#") {
+    match name.substring(1, name.len()).as_int() {
+      Some(codepoint) => char_from_codepoint(codepoint)
+      None => None
+    }
+  } else {
+    None
+  }
+}
+
+/// Replace character references such as `&amp;` and `&#65;` with the
+/// characters they represent. Unrecognised references are left as-is.
+fun decode_entities(s: String): String {
+  if not(s.contains("&")) {
+    return s
+  }
+
+  let parts: List<String> = []
+  let rest = s
+  while True {
+    match rest.split_once("&") {
+      Some((before, after)) => {
+        parts = parts.append(before)
+
+        match after.index_of(";") {
+          Some(semicolon_idx) => {
+            let name = after.substring(0, semicolon_idx)
+            match decode_entity(name) {
+              Some(decoded) => {
+                parts = parts.append(decoded)
+                rest = after.substring(semicolon_idx + 1, after.len())
+              }
+              None => {
+                parts = parts.append("&")
+                rest = after
+              }
+            }
+          }
+          None => {
+            parts = parts.append("&")
+            rest = after
+          }
+        }
+      }
+      None => {
+        parts = parts.append(rest)
+        break
+      }
+    }
+  }
+
+  "".join(parts)
+}
+
+test decode_entities {
+  assert(decode_entities("a &amp; b") == "a & b")
+  assert(decode_entities("&lt;p&gt;") == "<p>")
+  assert(decode_entities("&#65;&#x42;") == "AB")
+  assert(decode_entities("&bogus; &") == "&bogus; &")
+  assert(decode_entities("&amp") == "&amp")
+  assert(decode_entities("&#9731;") == "&#9731;")
+}
+
+/// Escape a string so it can be used as HTML text content.
+fun escape_text(s: String): String {
+  s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+}
+
+/// Escape a string so it can be used inside a double-quoted
+/// attribute value.
+fun escape_attribute(s: String): String {
+  escape_text(s).replace("\"", "&quot;")
+}
+
+/// Parse the attributes of a start tag, starting at position `i`
+/// (just after the tag name). Returns the attributes, whether the tag
+/// was self-closing, and the position after the closing `>`.
+fun tokenize_attributes(chars: List<String>, i: Int): (List<(String, String)>, Bool, Int) {
+  let attributes: List<(String, String)> = []
+  let self_closing = False
+  let pos = i
+
+  while pos < chars.len() {
+    let c = char_at(chars, pos)
+
+    if is_whitespace(c) {
+      pos += 1
+    } else if c == ">" {
+      return (attributes, self_closing, pos + 1)
+    } else if c == "/" {
+      self_closing = starts_with_at(chars, pos, "/>")
+      pos += 1
+    } else {
+      // Attribute name.
+      let name_start = pos
+      while (pos < chars.len()) && not(is_name_terminator(char_at(chars, pos))) {
+        pos += 1
+      }
+      let name = join_chars(chars, name_start, pos).to_ascii_lowercase()
+
+      // A stray `=` with no attribute name: consume it so we always
+      // make progress.
+      if name == "" {
+        pos += 1
+        continue
+      }
+
+      // Skip whitespace before a possible `=`.
+      while (pos < chars.len()) && is_whitespace(char_at(chars, pos)) {
+        pos += 1
+      }
+
+      let value = ""
+      if char_at(chars, pos) == "=" {
+        pos += 1
+        while (pos < chars.len()) && is_whitespace(char_at(chars, pos)) {
+          pos += 1
+        }
+
+        let quote = char_at(chars, pos)
+        if (quote == "\"") || (quote == "'") {
+          pos += 1
+          let value_start = pos
+          while (pos < chars.len()) && (char_at(chars, pos) != quote) {
+            pos += 1
+          }
+          value = join_chars(chars, value_start, pos)
+          // Skip the closing quote, if present.
+          pos = min(pos + 1, chars.len())
+        } else {
+          let value_start = pos
+          while (pos < chars.len()) && not(is_whitespace(char_at(chars, pos)) || (char_at(chars, pos) == ">")) {
+            pos += 1
+          }
+          value = join_chars(chars, value_start, pos)
+        }
+      }
+
+      attributes = attributes.append((name, decode_entities(value)))
+    }
+  }
+
+  (attributes, self_closing, pos)
+}
+
+test tokenize_attributes {
+  assert(tokenize_attributes(">".chars(), 0) == ([], False, 1))
+  assert(tokenize_attributes(" a=\"1\" b='2' c=3 d>".chars(), 0) == ([("a", "1"), ("b", "2"), ("c", "3"), ("d", "")], False, 19))
+  assert(tokenize_attributes(" href = \"/x\" />".chars(), 0) == ([("href", "/x")], True, 15))
+  assert(tokenize_attributes(" CLASS=\"a &amp; b\">".chars(), 0) == ([("class", "a & b")], False, 19))
+  assert(tokenize_attributes(" a = 'unterminated".chars(), 0) == ([("a", "unterminated")], False, 18))
+}
+
+/// Split HTML source into tokens.
+fun tokenize(src: String): List<Token> {
+  let chars = src.chars()
+  let tokens: List<Token> = []
+  let text = ""
+  let i = 0
+
+  while i < chars.len() {
+    let c = char_at(chars, i)
+
+    if c != "<" {
+      text = text ^ c
+      i += 1
+      continue
+    }
+
+    if starts_with_at(chars, i, "<!--") {
+      if text != "" {
+        tokens = tokens.append(TextToken(decode_entities(text)))
+        text = ""
+      }
+
+      let content_start = i + 4
+      match find_at(chars, content_start, "-->") {
+        Some(end) => {
+          tokens = tokens.append(CommentToken(join_chars(chars, content_start, end)))
+          i = end + 3
+        }
+        None => {
+          tokens = tokens.append(CommentToken(join_chars(chars, content_start, chars.len())))
+          i = chars.len()
+        }
+      }
+    } else if starts_with_at(chars, i, "<!") || starts_with_at(chars, i, "<?") {
+      if text != "" {
+        tokens = tokens.append(TextToken(decode_entities(text)))
+        text = ""
+      }
+
+      let content_start = i + 2
+      let end = find_at(chars, content_start, ">").or_value(chars.len())
+      tokens = tokens.append(DoctypeToken(join_chars(chars, content_start, end).trim()))
+      i = min(end + 1, chars.len())
+    } else if starts_with_at(chars, i, "</") && is_ascii_letter(char_at(chars, i + 2)) {
+      if text != "" {
+        tokens = tokens.append(TextToken(decode_entities(text)))
+        text = ""
+      }
+
+      let name_start = i + 2
+      let name_end = name_start
+      while (name_end < chars.len()) && not(is_name_terminator(char_at(chars, name_end))) {
+        name_end += 1
+      }
+      let name = join_chars(chars, name_start, name_end).to_ascii_lowercase()
+      tokens = tokens.append(EndTag(name))
+
+      // Anything else in the end tag is ignored.
+      let end = find_at(chars, name_end, ">").or_value(chars.len())
+      i = min(end + 1, chars.len())
+    } else if is_ascii_letter(char_at(chars, i + 1)) {
+      if text != "" {
+        tokens = tokens.append(TextToken(decode_entities(text)))
+        text = ""
+      }
+
+      let name_start = i + 1
+      let name_end = name_start
+      while (name_end < chars.len()) && not(is_name_terminator(char_at(chars, name_end))) {
+        name_end += 1
+      }
+      let name = join_chars(chars, name_start, name_end).to_ascii_lowercase()
+
+      let (attributes, self_closing, after_tag) = tokenize_attributes(chars, name_end)
+      tokens = tokens.append(StartTag(Tag{ name: name, attributes: attributes, self_closing: self_closing }))
+      i = after_tag
+
+      if raw_text_elements().contains(name) && not(self_closing) {
+        // Everything up to the matching end tag is raw text, with no
+        // markup or character references.
+        let end = find_at(chars, i, "</" ^ name).or_value(chars.len())
+        if end > i {
+          tokens = tokens.append(TextToken(join_chars(chars, i, end)))
+        }
+        i = end
+      }
+    } else {
+      // A `<` that doesn't start a tag is just text.
+      text = text ^ c
+      i += 1
+    }
+  }
+
+  if text != "" {
+    tokens = tokens.append(TextToken(decode_entities(text)))
+  }
+
+  tokens
+}
+
+test tokenize_text {
+  assert(tokenize("") == [])
+  assert(tokenize("hello") == [TextToken("hello")])
+  assert(tokenize("1 < 2") == [TextToken("1 < 2")])
+  assert(tokenize("a &lt; b") == [TextToken("a < b")])
+}
+
+test tokenize_tags {
+  assert(tokenize("<p>") == [StartTag(Tag{ name: "p", attributes: [], self_closing: False })])
+  assert(tokenize("<P>") == [StartTag(Tag{ name: "p", attributes: [], self_closing: False })])
+  assert(tokenize("</p>") == [EndTag("p")])
+  assert(tokenize("</p foo>") == [EndTag("p")])
+  assert(tokenize("<br/>") == [StartTag(Tag{ name: "br", attributes: [], self_closing: True })])
+  assert(tokenize("<a href=\"x\">y</a>") == [StartTag(Tag{ name: "a", attributes: [("href", "x")], self_closing: False }), TextToken("y"), EndTag("a")])
+  assert(tokenize("<p") == [StartTag(Tag{ name: "p", attributes: [], self_closing: False })])
+}
+
+test tokenize_comment_and_doctype {
+  assert(tokenize("<!-- hi -->") == [CommentToken(" hi ")])
+  assert(tokenize("<!-- unterminated") == [CommentToken(" unterminated")])
+  assert(tokenize("<!DOCTYPE html>") == [DoctypeToken("DOCTYPE html")])
+  assert(tokenize("<?xml version=\"1.0\"?>") == [DoctypeToken("xml version=\"1.0\"?")])
+}
+
+test tokenize_raw_text {
+  assert(tokenize("<script>if (a < b) {}</script>") == [StartTag(Tag{ name: "script", attributes: [], self_closing: False }), TextToken("if (a < b) {}"), EndTag("script")])
+  assert(tokenize("<style>a > b {}") == [StartTag(Tag{ name: "style", attributes: [], self_closing: False }), TextToken("a > b {}")])
+  assert(tokenize("<script></script>") == [StartTag(Tag{ name: "script", attributes: [], self_closing: False }), EndTag("script")])
+}
+
+/// Parse child nodes from `tokens` starting at position `i`, until we
+/// reach an end tag for one of the elements in `open_names` (the
+/// stack of enclosing elements, innermost last) or run out of tokens.
+///
+/// Returns the nodes and the position of the next unconsumed token.
+fun parse_children(tokens: List<Token>, i: Int, open_names: List<String>): (List<Node>, Int) {
+  let nodes: List<Node> = []
+  let pos = i
+  let current = open_names.last().or_value("")
+
+  while pos < tokens.len() {
+    let token = tokens.get(pos).or_throw()
+
+    match token {
+      TextToken(s) => {
+        nodes = nodes.append(Text(s))
+        pos += 1
+      }
+      CommentToken(s) => {
+        nodes = nodes.append(Comment(s))
+        pos += 1
+      }
+      DoctypeToken(s) => {
+        nodes = nodes.append(Doctype(s))
+        pos += 1
+      }
+      EndTag(name) => {
+        if name == current {
+          // Our own end tag: consume it and stop.
+          return (nodes, pos + 1)
+        } else if open_names.contains(name) {
+          // An ancestor's end tag: we are implicitly closed, and the
+          // ancestor consumes the tag.
+          return (nodes, pos)
+        } else {
+          // A stray end tag, ignore it.
+          pos += 1
+        }
+      }
+      StartTag(tag) => {
+        let name = tag.name
+        let attributes = tag.attributes
+        let self_closing = tag.self_closing
+        if implicitly_closes(current, name) {
+          return (nodes, pos)
+        }
+
+        if void_elements().contains(name) || self_closing {
+          nodes = nodes.append(Element(Element{ name: name, attributes: attributes, children: [] }))
+          pos += 1
+        } else {
+          let (children, after) = parse_children(tokens, pos + 1, open_names.append(name))
+          nodes = nodes.append(Element(Element{ name: name, attributes: attributes, children: children }))
+          pos = after
+        }
+      }
+    }
+  }
+
+  (nodes, pos)
+}
+
+/// Does a start tag for `new_name` implicitly end the open element
+/// `current`?
+fun implicitly_closes(current: String, new_name: String): Bool {
+  if current == "p" {
+    p_closing_elements().contains(new_name)
+  } else if current == "li" {
+    new_name == "li"
+  } else if (current == "dt") || (current == "dd") {
+    (new_name == "dt") || (new_name == "dd")
+  } else if (current == "td") || (current == "th") {
+    ((new_name == "td") || (new_name == "th")) || (new_name == "tr")
+  } else if current == "tr" {
+    new_name == "tr"
+  } else if current == "option" {
+    new_name == "option"
+  } else {
+    False
+  }
+}
+
+/// Parse `src` as HTML, returning the top-level nodes.
+fun parse(src: String): List<Node> {
+  let (nodes, _) = parse_children(tokenize(src), 0, [])
+  nodes
+}
+
+public fun element(name: String, attributes: List<(String, String)>, children: List<Node>): Node {
+  Element(Element{ name: name, attributes: attributes, children: children })
+}
+
+test parse_simple {
+  assert(parse("") == [])
+  assert(parse("hi") == [Text("hi")])
+  assert(parse("<p>hi</p>") == [element("p", [], [Text("hi")])])
+  assert(parse("<p>a<b>b</b>c</p>") == [element("p", [], [Text("a"), element("b", [], [Text("b")]), Text("c")])])
+}
+
+test parse_attributes {
+  assert(parse("<a href=\"/\" id=x>y</a>") == [element("a", [("href", "/"), ("id", "x")], [Text("y")])])
+}
+
+test parse_void_and_self_closing {
+  assert(parse("<br>a<br/>b<img src=x>") == [element("br", [], []), Text("a"), element("br", [], []), Text("b"), element("img", [("src", "x")], [])])
+  assert(parse("<div/>x") == [element("div", [], []), Text("x")])
+}
+
+test parse_unclosed {
+  assert(parse("<div><p>a") == [element("div", [], [element("p", [], [Text("a")])])])
+  assert(parse("<div><p>a</div>b") == [element("div", [], [element("p", [], [Text("a")])]), Text("b")])
+}
+
+test parse_stray_end_tag {
+  assert(parse("a</b>c") == [Text("a"), Text("c")])
+  assert(parse("<p>a</b>c</p>") == [element("p", [], [Text("a"), Text("c")])])
+}
+
+test parse_implicit_end_tags {
+  assert(parse("<p>a<p>b") == [element("p", [], [Text("a")]), element("p", [], [Text("b")])])
+  assert(parse("<p>a<div>b</div>") == [element("p", [], [Text("a")]), element("div", [], [Text("b")])])
+  assert(parse("<ul><li>a<li>b</ul>") == [element("ul", [], [element("li", [], [Text("a")]), element("li", [], [Text("b")])])])
+  assert(parse("<table><tr><td>a<td>b<tr><td>c</table>") == [element("table", [], [element("tr", [], [element("td", [], [Text("a")]), element("td", [], [Text("b")])]), element("tr", [], [element("td", [], [Text("c")])])])])
+}
+
+test parse_comments_and_doctype {
+  assert(parse("<!DOCTYPE html><!-- c --><html></html>") == [Doctype("DOCTYPE html"), Comment(" c "), element("html", [], [])])
+}
+
+test parse_entities {
+  assert(parse("<p title=\"&quot;x&quot;\">&lt;b&gt;</p>") == [element("p", [("title", "\"x\"")], [Text("<b>")])])
+}
+
+test parse_script {
+  assert(parse("<script>if (a < b) document.write('<p>')</script>") == [element("script", [], [Text("if (a < b) document.write('<p>')")])])
+}
+
+/// Serialise `node` back to HTML.
+fun to_html(node: Node): String {
+  match node {
+    Text(s) => escape_text(s)
+    Comment(s) => "<!--" ^ s ^ "-->"
+    Doctype(s) => "<!" ^ s ^ ">"
+    Element(e) => {
+      let attributes = e.attributes.map(fun(attr: (String, String)): String {
+        let (name, value) = attr
+        if value == "" {
+          " " ^ name
+        } else {
+          " " ^ name ^ "=\"" ^ escape_attribute(value) ^ "\""
+        }
+      })
+      let open_tag = "<" ^ e.name ^ "".join(attributes) ^ ">"
+
+      if void_elements().contains(e.name) {
+        open_tag
+      } else if raw_text_elements().contains(e.name) {
+        open_tag ^ "".join(e.children.map(text_content)) ^ "</" ^ e.name ^ ">"
+      } else {
+        open_tag ^ "".join(e.children.map(to_html)) ^ "</" ^ e.name ^ ">"
+      }
+    }
+  }
+}
+
+public fun nodes_to_html(nodes: List<Node>): String {
+  "".join(nodes.map(to_html))
+}
+
+test to_html {
+  assert(nodes_to_html(parse("<p>a &amp; b</p>")) == "<p>a &amp; b</p>")
+  assert(nodes_to_html(parse("<a href='x&y' hidden>z</a>")) == "<a href=\"x&amp;y\" hidden>z</a>")
+  assert(nodes_to_html(parse("<br><hr/>")) == "<br><hr>")
+  assert(nodes_to_html(parse("<!DOCTYPE html><!-- c -->")) == "<!DOCTYPE html><!-- c -->")
+  assert(nodes_to_html(parse("<script>a < b</script>")) == "<script>a < b</script>")
+  assert(nodes_to_html(parse("<div><p>a<p>b")) == "<div><p>a</p><p>b</p></div>")
+}
+
+/// The concatenated text of `node` and all its descendants, ignoring
+/// comments.
+fun text_content(node: Node): String {
+  match node {
+    Text(s) => s
+    Comment(_) => ""
+    Doctype(_) => ""
+    Element(e) => "".join(e.children.map(text_content))
+  }
+}
+
+test text_content {
+  assert("".join(parse("<p>a<b>b</b><!-- x -->c</p>").map(text_content)) == "abc")
+}
+
+/// Look up an attribute by name on an element.
+public fun get_attribute(e: Element, name: String): Option<String> {
+  for (attr_name, value) in e.attributes {
+    if attr_name == name {
+      return Some(value)
+    }
+  }
+  None
+}
+
+/// Find every element named `name` in `nodes`, in document order.
+public fun find_all(nodes: List<Node>, name: String): List<Element> {
+  let found: List<Element> = []
+  for node in nodes {
+    match node {
+      Element(e) => {
+        if e.name == name {
+          found = found.append(e)
+        }
+        found = found.concat(find_all(e.children, name))
+      }
+      _ => {}
+    }
+  }
+  found
+}
+
+test find_all {
+  let doc = parse("<ul><li><a href=\"/a\">A</a></li><li><a href=/b>B</a></li></ul>")
+  let links = find_all(doc, "a")
+  assert(links.map(fun(e: Element) { get_attribute(e, "href") }) == [Some("/a"), Some("/b")])
+  assert(get_attribute(links.first().or_throw(), "class") == None)
+}
+
+/// Render a tree as an indented outline, for debugging.
+fun outline(node: Node, indent: String): String {
+  match node {
+    Text(s) => indent ^ string_repr(s) ^ "\n"
+    Comment(s) => indent ^ "<!--" ^ s ^ "-->\n"
+    Doctype(s) => indent ^ "<!" ^ s ^ ">\n"
+    Element(e) => {
+      let attributes = e.attributes.map(fun(attr: (String, String)): String {
+        let (name, value) = attr
+        " " ^ name ^ "=" ^ string_repr(value)
+      })
+      let children = e.children.filter(fun(child: Node) {
+        match child {
+          Text(s) => not(is_blank(s))
+          _ => True
+        }
+      })
+      let line = indent ^ e.name ^ "".join(attributes) ^ "\n"
+      line ^ "".join(children.map(fun(child: Node) { outline(child, indent ^ "  ") }))
+    }
+  }
+}
+
+test outline {
+  assert(outline(parse("<p id=x> a <b>b</b>\n</p>").first().or_throw(), "") == "p id=\"x\"\n  \" a \"\n  b\n    \"b\"\n")
+}
+
+{
+  let args = shell_arguments()
+  match args.first() {
+    Some(path) => {
+      let src = fs::read_file(Path{ p: path }).or_throw()
+      for node in parse(src) {
+        print(outline(node, ""))
+      }
+    }
+    None => {
+      println("Usage: html_parser.gdn <file.html>")
+    }
+  }
+}

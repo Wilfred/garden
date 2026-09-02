@@ -65,6 +65,20 @@ function removeTempDir(tmpDir) {
   });
 }
 
+// The source code submitted, or null if the request didn't include
+// any.
+function requestSource(req) {
+  const { src } = req.body;
+  return typeof src === 'string' ? src : null;
+}
+
+function missingSource(res) {
+  res.status(400).json({
+    success: false,
+    error: 'src parameter is required'
+  });
+}
+
 // Get Garden version on startup
 exec('garden --version', (error, stdout, stderr) => {
   if (!error && stdout) {
@@ -110,13 +124,11 @@ app.get('/', (req, res) => {
 });
 
 app.post('/run', (req, res) => {
-  const { src } = req.body;
+  const src = requestSource(req);
 
-  if (src === undefined || src === null) {
-    return res.status(400).json({
-      success: false,
-      error: 'src parameter is required'
-    });
+  if (src === null) {
+    missingSource(res);
+    return;
   }
 
   // Log the submitted code
@@ -179,13 +191,11 @@ app.post('/run', (req, res) => {
 });
 
 app.post('/check', (req, res) => {
-  const { src } = req.body;
+  const src = requestSource(req);
 
-  if (src === undefined || src === null) {
-    return res.status(400).json({
-      success: false,
-      error: 'src parameter is required'
-    });
+  if (src === null) {
+    missingSource(res);
+    return;
   }
 
   const codePreview = src.length > 200 ? src.substring(0, 200) + '...' : src;
@@ -236,13 +246,11 @@ app.post('/check', (req, res) => {
 });
 
 app.post('/format', (req, res) => {
-  const { src } = req.body;
+  const src = requestSource(req);
 
-  if (src === undefined || src === null) {
-    return res.status(400).json({
-      success: false,
-      error: 'src parameter is required'
-    });
+  if (src === null) {
+    missingSource(res);
+    return;
   }
 
   const codePreview = src.length > 200 ? src.substring(0, 200) + '...' : src;

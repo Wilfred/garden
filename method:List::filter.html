@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>List::filter - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/blocks.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+          <a class="block" href="/playground.html">Playground</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1><code>List::filter()</code></h1>
+<p>Return a copy of this list with the items where <code>f(item)</code> returns
+True.</p>
+<div class="snippet"><span class="code-title">Source Code</span><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> filter&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;, f: <a class="type" href="/type:Fun.html">Fun</a>&lt;(<span class="type">T</span>), <a class="type" href="/type:Bool.html">Bool</a>&gt;): <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; {
+  <a class="keyword" href="/keyword:let.html">let</a> result: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; <a class="operator" href="/operator:=.html">=</a> []
+
+  <a class="keyword" href="/keyword:for.html">for</a> item <a class="keyword" href="/keyword:in.html">in</a> this {
+    <a class="keyword" href="/keyword:if.html">if</a> f(item) {
+      result <a class="operator" href="/operator:=.html">=</a> result.append(item)
+    }
+  }
+
+  result
+}</code></pre><div class="snippet-output" hidden></div></div></div>
+
+    <footer>
+      <a href="/blog.html">Blog</a>
+      🪴
+      <a href="https://github.com/Wilfred/garden">GitHub</a>
+    </footer>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

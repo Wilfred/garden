@@ -199,7 +199,9 @@ app.post("/run", (req, res) => {
             .trim()
             .split("\n")
             .filter((line) => line.length > 0);
-          const results: unknown[] = lines.map((line) => JSON.parse(line));
+          const results: unknown[] = lines.map(
+            (line) => JSON.parse(line) as unknown,
+          );
 
           const response = {
             success: true,
@@ -268,7 +270,9 @@ app.post("/check", (req, res) => {
 
         try {
           const lines = stdout.split("\n").filter((line) => line.length > 0);
-          const diagnostics: unknown[] = lines.map((line) => JSON.parse(line));
+          const diagnostics: unknown[] = lines.map(
+            (line) => JSON.parse(line) as unknown,
+          );
           res.json({
             success: true,
             diagnostics: diagnostics,

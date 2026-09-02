@@ -83,6 +83,23 @@ jobs:
         run: npm ci && npm run build
         working-directory: playground
 
+  eslint:
+    name: Lint TypeScript
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Lint playground
+        run: npm ci && npm run lint
+        working-directory: playground
+
+      - name: Lint website
+        run: npm ci && npm run lint
+        working-directory: website/static
+
   typos:
     name: Check spelling
     runs-on: ubuntu-24.04

@@ -1,6 +1,6 @@
 # `while` keyword
 
-`for` runs a block code repeatedly, while an expression evaluates to
+`while` runs a block code repeatedly, whilst an expression evaluates to
 `True`.
 
 ```title:Example

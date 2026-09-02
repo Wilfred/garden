@@ -8,7 +8,7 @@ const pino = require('pino');
 const { LRUCache } = require('lru-cache');
 
 const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env['LOG_LEVEL'] || 'info',
   transport: {
     target: 'pino-pretty',
     options: {
@@ -20,7 +20,7 @@ const logger = pino({
 });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env['PORT'] || 3000;
 
 let gardenVersion = 'unknown';
 
@@ -28,7 +28,7 @@ let gardenVersion = 'unknown';
 // world and other landing-page examples — feel instant on repeat
 // visits without re-spawning the garden CLI each time.
 const runCache = new LRUCache({
-  max: parseInt(process.env.RUN_CACHE_CAPACITY, 10) || 1000,
+  max: parseInt(process.env['RUN_CACHE_CAPACITY'] ?? '', 10) || 1000,
 });
 
 // Skip the cache when the program imports a built-in whose output
@@ -143,27 +143,30 @@ app.post('/run', (req, res) => {
     const cached = runCache.get(src);
     if (cached) {
       logger.info({ codeLength: src.length }, 'Cache hit');
-      return res.json(cached);
+      res.json(cached);
+      return;
     }
   }
 
   writeTempSource(src, (writeError, tmpDir) => {
     if (writeError) {
-      return res.json({
+      res.json({
         success: false,
         error: writeError.message
       });
+      return;
     }
 
     exec(`garden playground-run ${SOURCE_NAME}`, { cwd: tmpDir }, (execError, stdout, stderr) => {
       removeTempDir(tmpDir);
 
       if (execError) {
-        return res.json({
+        res.json({
           success: false,
           error: `Execution failed: ${execError.message}`,
           stderr: stderr
         });
+        return;
       }
 
       try {
@@ -180,7 +183,7 @@ app.post('/run', (req, res) => {
         }
         res.json(response);
       } catch (parseError) {
-        return res.json({
+        res.json({
           success: false,
           error: `Failed to parse Garden output: ${parseError.message}`,
           rawOutput: stdout
@@ -206,10 +209,11 @@ app.post('/check', (req, res) => {
 
   writeTempSource(src, (writeError, tmpDir) => {
     if (writeError) {
-      return res.json({
+      res.json({
         success: false,
         error: writeError.message
       });
+      return;
     }
 
     exec(`garden check --json ${SOURCE_NAME}`, { cwd: tmpDir }, (execError, stdout, stderr) => {
@@ -220,11 +224,12 @@ app.post('/check', (req, res) => {
       // error counts. `execError.code` is the process exit code; any
       // other error (e.g. ENOENT) means the binary couldn't be run.
       if (execError && execError.code === undefined) {
-        return res.json({
+        res.json({
           success: false,
           error: `Check failed: ${execError.message}`,
           stderr: stderr
         });
+        return;
       }
 
       try {
@@ -235,7 +240,7 @@ app.post('/check', (req, res) => {
           diagnostics: diagnostics
         });
       } catch (parseError) {
-        return res.json({
+        res.json({
           success: false,
           error: `Failed to parse Garden output: ${parseError.message}`,
           rawOutput: stdout
@@ -261,21 +266,23 @@ app.post('/format', (req, res) => {
 
   writeTempSource(src, (writeError, tmpDir) => {
     if (writeError) {
-      return res.json({
+      res.json({
         success: false,
         error: writeError.message
       });
+      return;
     }
 
     exec(`garden format ${SOURCE_NAME}`, { cwd: tmpDir }, (execError, stdout, stderr) => {
       removeTempDir(tmpDir);
 
       if (execError) {
-        return res.json({
+        res.json({
           success: false,
           error: `Format failed: ${execError.message}`,
           stderr: stderr
         });
+        return;
       }
 
       res.json({

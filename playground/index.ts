@@ -25,9 +25,28 @@ const PORT = process.env["PORT"] || 3000;
 
 let gardenVersion = "unknown";
 
+// One JSON line of `garden playground-run` output. The evaluated
+// value, or something the program printed. See `PlaygroundResponse` in
+// src/sandboxed_playground.rs and `ResponseKind` in src/json_session.rs.
+type RunResult =
+  | { error: string | null; value: string | null }
+  | { printed: { s: string } }
+  | { printed_stderr: { s: string } };
+
+// One JSON line of `garden check --json` output. See `CheckDiagnostic`
+// in src/syntax_check.rs. Line numbers are 1-indexed.
+interface CheckDiagnostic {
+  line_number: number;
+  end_line_number: number;
+  column: number;
+  end_column: number;
+  message: string;
+  severity: "error" | "warning";
+}
+
 interface RunResponse {
   success: boolean;
-  results: unknown[];
+  results: RunResult[];
 }
 
 // Cache /run responses so common snippets from the website — hello
@@ -199,9 +218,7 @@ app.post("/run", (req, res) => {
             .trim()
             .split("\n")
             .filter((line) => line.length > 0);
-          const results: unknown[] = lines.map(
-            (line) => JSON.parse(line) as unknown,
-          );
+          const results = lines.map((line) => JSON.parse(line) as RunResult);
 
           const response = {
             success: true,
@@ -270,8 +287,8 @@ app.post("/check", (req, res) => {
 
         try {
           const lines = stdout.split("\n").filter((line) => line.length > 0);
-          const diagnostics: unknown[] = lines.map(
-            (line) => JSON.parse(line) as unknown,
+          const diagnostics = lines.map(
+            (line) => JSON.parse(line) as CheckDiagnostic,
           );
           res.json({
             success: true,

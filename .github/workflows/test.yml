@@ -45,7 +45,7 @@ jobs:
         run: npx prettier --check "website/**/style.css"
 
       - name: Check TS formatting
-        run: npx prettier --check "website/**/*.ts"
+        run: npx prettier --check "website/**/*.ts" "playground/**/*.ts"
 
       - name: Build Garden
         run: cargo build
@@ -69,6 +69,19 @@ jobs:
             fi
           done < <(find src/test_files/runtime src/test_files/sandboxed_test src/test_files/test -name '*.gdn' -print0)
           exit "$status"
+
+  playground:
+    name: Check playground types
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build playground
+        run: npm ci && npm run build
+        working-directory: playground
 
   typos:
     name: Check spelling

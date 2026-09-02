@@ -1,0 +1,26 @@
+{
+  "files": ["index.ts"],
+  "compilerOptions": {
+    "outDir": "dist",
+
+    "module": "node16",
+    "target": "es2022",
+    "lib": ["es2022"],
+
+    "sourceMap": true,
+
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  }
+}

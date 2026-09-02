@@ -2,6 +2,7 @@ target
 website/static/node_modules/
 website/dist/
 playground/node_modules
+playground/dist/
 
 # Performance/profiling data.
 perf.data*

@@ -18,8 +18,9 @@ WORKDIR /app
 COPY --from=garden-builder /build/target/release/garden /usr/local/bin/garden
 
 COPY playground/package*.json ./
-RUN npm install --production
-COPY playground/index.js ./
+RUN npm ci
+COPY playground/tsconfig.json playground/index.ts ./
+RUN npm run build && npm prune --omit=dev
 
 EXPOSE 3000
-CMD ["node", "index.js"]
+CMD ["node", "dist/index.js"]

@@ -40,6 +40,31 @@ function isCacheable(src) {
   return !NONDETERMINISTIC_IMPORT.test(src);
 }
 
+const SOURCE_NAME = 'playground.gdn';
+
+// Write `src` to `playground.gdn` in a new temporary directory, and
+// call `callback` with that directory.
+function writeTempSource(src, callback) {
+  fs.mkdtemp(path.join(os.tmpdir(), 'garden-'), (mkdtempError, tmpDir) => {
+    if (mkdtempError) {
+      return callback(mkdtempError);
+    }
+
+    fs.writeFile(path.join(tmpDir, SOURCE_NAME), src, (writeError) => {
+      callback(writeError, tmpDir);
+    });
+  });
+}
+
+// Delete a directory created by `writeTempSource`.
+function removeTempDir(tmpDir) {
+  fs.rm(tmpDir, { recursive: true, force: true }, (rmError) => {
+    if (rmError) {
+      logger.error({ error: rmError.message, tmpDir }, 'Failed to delete temp directory');
+    }
+  });
+}
+
 // Get Garden version on startup
 exec('garden --version', (error, stdout, stderr) => {
   if (!error && stdout) {
@@ -110,11 +135,7 @@ app.post('/run', (req, res) => {
     }
   }
 
-  // Create a temporary file path with .gdn extension
-  const tmpFile = path.join(os.tmpdir(), `garden-tmp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.gdn`);
-
-  // Write content to temp file
-  fs.writeFile(tmpFile, src, (writeError) => {
+  writeTempSource(src, (writeError, tmpDir) => {
     if (writeError) {
       return res.json({
         success: false,
@@ -122,13 +143,8 @@ app.post('/run', (req, res) => {
       });
     }
 
-    exec(`garden playground-run "${tmpFile}"`, (execError, stdout, stderr) => {
-      // Delete the temp file
-      fs.unlink(tmpFile, (unlinkError) => {
-        if (unlinkError) {
-          logger.error({ error: unlinkError.message, tmpFile }, 'Failed to delete temp file');
-        }
-      });
+    exec(`garden playground-run ${SOURCE_NAME}`, { cwd: tmpDir }, (execError, stdout, stderr) => {
+      removeTempDir(tmpDir);
 
       if (execError) {
         return res.json({
@@ -178,9 +194,7 @@ app.post('/check', (req, res) => {
     codePreview
   }, 'Checking code');
 
-  const tmpFile = path.join(os.tmpdir(), `garden-check-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.gdn`);
-
-  fs.writeFile(tmpFile, src, (writeError) => {
+  writeTempSource(src, (writeError, tmpDir) => {
     if (writeError) {
       return res.json({
         success: false,
@@ -188,12 +202,8 @@ app.post('/check', (req, res) => {
       });
     }
 
-    exec(`garden check --json "${tmpFile}"`, (execError, stdout, stderr) => {
-      fs.unlink(tmpFile, (unlinkError) => {
-        if (unlinkError) {
-          logger.error({ error: unlinkError.message, tmpFile }, 'Failed to delete temp file');
-        }
-      });
+    exec(`garden check --json ${SOURCE_NAME}`, { cwd: tmpDir }, (execError, stdout, stderr) => {
+      removeTempDir(tmpDir);
 
       // `garden check` exits non-zero when there are diagnostics, so
       // we don't treat that as a failure here — only a real spawn
@@ -241,9 +251,7 @@ app.post('/format', (req, res) => {
     codePreview
   }, 'Formatting code');
 
-  const tmpFile = path.join(os.tmpdir(), `garden-format-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.gdn`);
-
-  fs.writeFile(tmpFile, src, (writeError) => {
+  writeTempSource(src, (writeError, tmpDir) => {
     if (writeError) {
       return res.json({
         success: false,
@@ -251,12 +259,8 @@ app.post('/format', (req, res) => {
       });
     }
 
-    exec(`garden format "${tmpFile}"`, (execError, stdout, stderr) => {
-      fs.unlink(tmpFile, (unlinkError) => {
-        if (unlinkError) {
-          logger.error({ error: unlinkError.message, tmpFile }, 'Failed to delete temp file');
-        }
-      });
+    exec(`garden format ${SOURCE_NAME}`, { cwd: tmpDir }, (execError, stdout, stderr) => {
+      removeTempDir(tmpDir);
 
       if (execError) {
         return res.json({

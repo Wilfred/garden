@@ -96,6 +96,13 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
     }
 
     if line.starts_with("```") {
+      if not(in_code_block) && current_section.is_non_empty() {
+        parts = parts.append(finish_section(in_bullets, current_section))
+        in_bullets = False
+
+        current_section = []
+      }
+
       current_section = current_section.append(line)
 
       if in_code_block {
@@ -124,6 +131,8 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
       if current_section.is_non_empty() {
         parts = parts.append(finish_section(in_bullets, current_section))
         in_bullets = False
+
+        current_section = []
       }
 
       parts = parts.append(ThematicBreak)
@@ -829,6 +838,15 @@ test render_thematic_break {
   assert(render("***", None, None) == "<hr />")
   assert(render("---", None, None) == "<hr />")
   assert(render("___", None, None) == "<hr />")
+}
+
+test render_thematic_break_between_paragraphs {
+  assert(render("foo\n---\nbar", None, None) == "<p>foo</p>\n<hr />\n<p>bar</p>")
+}
+
+test render_paragraph_before_code_block {
+  let expected = "<p>foo</p>\n<div class=\"snippet\"><pre><code>bar</code></pre></div>"
+  assert(render("foo\n```nocheck\nbar\n```", None, None) == expected)
 }
 
 test render_html {

@@ -8,8 +8,27 @@ enum MarkdownPart {
   Heading(String),
   Paragraph(String),
   CodeBlock(Snippet),
-  Bullets(List<String>),
+  ListBlock(MarkdownList),
   ThematicBreak,
+}
+
+/// A bullet or numbered list, whose items may contain further lists.
+struct MarkdownList {
+  ordered: Bool,
+  /// The number written on the first item of an ordered list.
+  start: Int,
+  items: List<ListItem>,
+}
+
+struct ListItem {
+  content: String,
+  sublist: Option<MarkdownList>,
+}
+
+/// The kind of lines currently being gathered for the next part.
+enum SectionKind {
+  TextLines,
+  ListLines,
 }
 
 struct Snippet {
@@ -19,11 +38,163 @@ struct Snippet {
   file: Option<Path>,
 }
 
-fun finish_section(in_bullets: Bool, current_section: List<String>): MarkdownPart {
-  if in_bullets {
-    Bullets(current_section)
+fun finish_section(kind: SectionKind, current_section: List<String>): MarkdownPart {
+  match kind {
+    ListLines => ListBlock(parse_list(current_section))
+    TextLines => Paragraph("\n".join(current_section))
+  }
+}
+
+/// A list item marker, such as `* ` or `12. `, with the text after it.
+struct ListMarker {
+  indent: Int,
+  ordered: Bool,
+  /// The number written on an ordered item, or 1 for a bullet.
+  number: Int,
+  content: String,
+}
+
+fun leading_spaces(line: String): Int {
+  let count = 0
+  while line.substring(count, count + 1) == " " {
+    count += 1
+  }
+
+  count
+}
+
+test leading_spaces {
+  assert(leading_spaces("foo") == 0)
+  assert(leading_spaces("  foo") == 2)
+  assert(leading_spaces("  ") == 2)
+}
+
+fun is_digit(c: String): Bool {
+  (c != "") && "0123456789".contains(c)
+}
+
+/// Parse the `* ` or `1. ` marker at the start of a list item.
+fun parse_list_marker(line: String): Option<ListMarker> {
+  let indent = leading_spaces(line)
+  let rest = line.substring(indent, line.len())
+
+  if (rest.starts_with("* ") || rest.starts_with("- ")) || rest.starts_with("+ ") {
+    let content = rest.substring(2, rest.len()).trim_left()
+    return Some(ListMarker{ indent: indent, ordered: False, number: 1, content: content })
+  }
+
+  let digits = ""
+  while is_digit(rest.substring(digits.len(), digits.len() + 1)) {
+    digits = digits ^ rest.substring(digits.len(), digits.len() + 1)
+  }
+
+  let after_digits = rest.substring(digits.len(), rest.len())
+  if not(after_digits.starts_with(". ") || after_digits.starts_with(") ")) {
+    return None
+  }
+
+  match digits.as_int() {
+    Some(number) => {
+      let content = after_digits.substring(2, after_digits.len()).trim_left()
+      Some(ListMarker{ indent: indent, ordered: True, number: number, content: content })
+    }
+    None => None
+  }
+}
+
+test parse_list_marker {
+  assert(parse_list_marker("* foo") == Some(ListMarker{ indent: 0, ordered: False, number: 1, content: "foo" }))
+  assert(parse_list_marker("- foo") == Some(ListMarker{ indent: 0, ordered: False, number: 1, content: "foo" }))
+  assert(parse_list_marker("+ foo") == Some(ListMarker{ indent: 0, ordered: False, number: 1, content: "foo" }))
+  assert(parse_list_marker("  * foo") == Some(ListMarker{ indent: 2, ordered: False, number: 1, content: "foo" }))
+  assert(parse_list_marker("3. foo") == Some(ListMarker{ indent: 0, ordered: True, number: 3, content: "foo" }))
+  assert(parse_list_marker("3) foo") == Some(ListMarker{ indent: 0, ordered: True, number: 3, content: "foo" }))
+
+  assert(parse_list_marker("foo") == None)
+  assert(parse_list_marker("*foo") == None)
+  assert(parse_list_marker("3.foo") == None)
+  assert(parse_list_marker("-") == None)
+}
+
+/// Build a list from consecutive list item lines, nesting items that
+/// are indented relative to the first item.
+fun parse_list(lines: List<String>): MarkdownList {
+  let markers: List<ListMarker> = []
+  for line in lines {
+    match parse_list_marker(line) {
+      Some(marker) => {
+        markers = markers.append(marker)
+      }
+      None => {}
+    }
+  }
+
+  build_list(markers)
+}
+
+fun build_list(markers: List<ListMarker>): MarkdownList {
+  let (ordered, start, base_indent) = match markers.first() {
+    Some(marker) => (marker.ordered, marker.number, marker.indent)
+    None => (False, 1, 0)
+  }
+
+  let items: List<ListItem> = []
+  let current_content: Option<String> = None
+  let nested: List<ListMarker> = []
+
+  for marker in markers {
+    if marker.indent > base_indent {
+      nested = nested.append(marker)
+    } else {
+      match current_content {
+        Some(content) => {
+          items = items.append(ListItem{ content: content, sublist: build_sublist(nested) })
+        }
+        None => {}
+      }
+
+      nested = []
+      current_content = Some(marker.content)
+    }
+  }
+
+  match current_content {
+    Some(content) => {
+      items = items.append(ListItem{ content: content, sublist: build_sublist(nested) })
+    }
+    None => {}
+  }
+
+  MarkdownList{ ordered: ordered, start: start, items: items }
+}
+
+fun build_sublist(markers: List<ListMarker>): Option<MarkdownList> {
+  if markers.is_empty() {
+    None
   } else {
-    Paragraph("\n".join(current_section))
+    Some(build_list(markers))
+  }
+}
+
+/// Does `line` start a list that is separate from the items already
+/// gathered in `section`? A bullet list and a numbered list at the
+/// same indentation are distinct lists.
+fun starts_new_list(section: List<String>, line: String): Bool {
+  let marker = match parse_list_marker(line) {
+    Some(marker) => marker
+    None => { return True }
+  }
+
+  let first_line = match section.first() {
+    Some(first_line) => first_line
+    None => { return True }
+  }
+
+  match parse_list_marker(first_line) {
+    Some(first_marker) => {
+      (marker.indent <= first_marker.indent) && (marker.ordered != first_marker.ordered)
+    }
+    None => True
   }
 }
 
@@ -88,7 +259,7 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
   let current_section: List<String> = []
 
   let in_code_block = False
-  let in_bullets = False
+  let section_kind = TextLines
 
   for line in src.lines() {
     if (line == "") && current_section.is_empty() {
@@ -97,8 +268,8 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
 
     if line.starts_with("```") {
       if not(in_code_block) && current_section.is_non_empty() {
-        parts = parts.append(finish_section(in_bullets, current_section))
-        in_bullets = False
+        parts = parts.append(finish_section(section_kind, current_section))
+        section_kind = TextLines
 
         current_section = []
       }
@@ -129,8 +300,8 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
       current_section = current_section.append(line)
     } else if ((line == "---") || (line == "***")) || (line == "___") {
       if current_section.is_non_empty() {
-        parts = parts.append(finish_section(in_bullets, current_section))
-        in_bullets = False
+        parts = parts.append(finish_section(section_kind, current_section))
+        section_kind = TextLines
 
         current_section = []
       }
@@ -138,38 +309,48 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
       parts = parts.append(ThematicBreak)
     } else if line.starts_with("#") {
       if current_section.is_non_empty() {
-        parts = parts.append(finish_section(in_bullets, current_section))
-        in_bullets = False
+        parts = parts.append(finish_section(section_kind, current_section))
+        section_kind = TextLines
 
         current_section = []
       }
 
       parts = parts.append(Heading(line))
-    } else if line.starts_with("* ") {
-      if in_bullets {
-        current_section = current_section.append(line)
+    } else if parse_list_marker(line).is_some() {
+      if section_kind == ListLines {
+        if starts_new_list(current_section, line) {
+          parts = parts.append(finish_section(section_kind, current_section))
+          current_section = []
+        }
       } else {
         if current_section.is_non_empty() {
-          parts = parts.append(finish_section(in_bullets, current_section))
+          parts = parts.append(finish_section(section_kind, current_section))
           current_section = []
         }
 
-        in_bullets = True
-        current_section = current_section.append(line)
+        section_kind = ListLines
       }
 
+      current_section = current_section.append(line)
     } else if line == "" {
-      parts = parts.append(finish_section(in_bullets, current_section))
-      in_bullets = False
+      parts = parts.append(finish_section(section_kind, current_section))
+      section_kind = TextLines
 
       current_section = []
     } else {
+      if section_kind != TextLines {
+        parts = parts.append(finish_section(section_kind, current_section))
+        section_kind = TextLines
+
+        current_section = []
+      }
+
       current_section = current_section.append(line)
     }
   }
 
   if current_section.is_non_empty() {
-    parts = parts.append(finish_section(in_bullets, current_section))
+    parts = parts.append(finish_section(section_kind, current_section))
   }
 
   parts
@@ -694,13 +875,34 @@ fun render_paragraph(src: String, self_url: Option<String>): String {
   "<p>" ^ render_inline(src, self_url) ^ "</p>"
 }
 
-fun render_bullets(items: List<String>, self_url: Option<String>): String {
-  let rendered_items = items.map(fun(item: String) {
-    let rendered_item = render_inline(item.strip_prefix("*").trim_left(), self_url)
-    "<li>" ^ rendered_item ^ "</li>"
-  })
+fun render_list(list: MarkdownList, self_url: Option<String>): String {
+  let rendered_items: List<String> = []
+  for item in list.items {
+    let rendered_item = render_inline(item.content, self_url)
 
-  "<ul>\n" ^ "\n".join(rendered_items) ^ "\n</ul>"
+    match item.sublist {
+      Some(sublist) => {
+        rendered_item = rendered_item ^ "\n" ^ render_list(sublist, self_url)
+      }
+      None => {}
+    }
+
+    rendered_items = rendered_items.append("<li>" ^ rendered_item ^ "</li>")
+  }
+
+  let (open_tag, close_tag) = if list.ordered {
+    let start_attr = if list.start == 1 {
+      ""
+    } else {
+      " start=\"" ^ string_repr(list.start) ^ "\""
+    }
+
+    ("<ol" ^ start_attr ^ ">", "</ol>")
+  } else {
+    ("<ul>", "</ul>")
+  }
+
+  open_tag ^ "\n" ^ "\n".join(rendered_items) ^ "\n" ^ close_tag
 }
 
 public fun render(src: String, file: Option<Path>, self_url: Option<String>): String {
@@ -717,8 +919,8 @@ public fun render(src: String, file: Option<Path>, self_url: Option<String>): St
       CodeBlock(code) => {
         html_parts = html_parts.append(render_code_block(code, self_url))
       }
-      Bullets(items) => {
-        html_parts = html_parts.append(render_bullets(items, self_url))
+      ListBlock(list) => {
+        html_parts = html_parts.append(render_list(list, self_url))
       }
       ThematicBreak => {
         html_parts = html_parts.append("<hr />")
@@ -821,6 +1023,69 @@ test render_asterisk_bullet {
 
 test render_asterisk_bullet_with_content_after {
   assert(render("* foo\n\nbar", None, None) == "<ul>
+<li>foo</li>
+</ul>
+<p>bar</p>")
+}
+
+test render_dash_bullet {
+  assert(render("- foo\n- bar", None, None) == "<ul>
+<li>foo</li>
+<li>bar</li>
+</ul>")
+}
+
+test render_plus_bullet {
+  assert(render("+ foo\n+ bar", None, None) == "<ul>
+<li>foo</li>
+<li>bar</li>
+</ul>")
+}
+
+test render_numbered_list {
+  assert(render("1. foo\n2. bar", None, None) == "<ol>
+<li>foo</li>
+<li>bar</li>
+</ol>")
+}
+
+test render_numbered_list_start {
+  assert(render("3. foo\n4. bar", None, None) == "<ol start=\"3\">
+<li>foo</li>
+<li>bar</li>
+</ol>")
+}
+
+test render_nested_bullets {
+  assert(render("* foo\n  * bar\n* baz", None, None) == "<ul>
+<li>foo
+<ul>
+<li>bar</li>
+</ul></li>
+<li>baz</li>
+</ul>")
+}
+
+test render_nested_list_of_different_kind {
+  assert(render("1. foo\n   * bar", None, None) == "<ol>
+<li>foo
+<ul>
+<li>bar</li>
+</ul></li>
+</ol>")
+}
+
+test render_bullets_then_numbered_list {
+  assert(render("* foo\n1. bar", None, None) == "<ul>
+<li>foo</li>
+</ul>
+<ol>
+<li>bar</li>
+</ol>")
+}
+
+test render_text_after_bullets {
+  assert(render("* foo\nbar", None, None) == "<ul>
 <li>foo</li>
 </ul>
 <p>bar</p>")

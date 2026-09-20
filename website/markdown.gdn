@@ -9,6 +9,7 @@ enum MarkdownPart {
   Paragraph(String),
   CodeBlock(Snippet),
   ListBlock(MarkdownList),
+  BlockQuote(List<MarkdownPart>),
   ThematicBreak,
 }
 
@@ -29,6 +30,7 @@ struct ListItem {
 enum SectionKind {
   TextLines,
   ListLines,
+  QuoteLines,
 }
 
 struct Snippet {
@@ -38,11 +40,31 @@ struct Snippet {
   file: Option<Path>,
 }
 
-fun finish_section(kind: SectionKind, current_section: List<String>): MarkdownPart {
+fun finish_section(
+  kind: SectionKind,
+  current_section: List<String>,
+  file: Option<Path>,
+): MarkdownPart {
   match kind {
     ListLines => ListBlock(parse_list(current_section))
+    QuoteLines => BlockQuote(parse_markdown(quoted_src(current_section), file))
     TextLines => Paragraph("\n".join(current_section))
   }
+}
+
+/// Remove the `> ` marker from each line of a blockquote.
+fun quoted_src(lines: List<String>): String {
+  let quoted_lines: List<String> = []
+  for line in lines {
+    let quoted_line = line.trim_left().strip_prefix(">")
+    quoted_lines = quoted_lines.append(quoted_line.strip_prefix(" "))
+  }
+
+  "\n".join(quoted_lines)
+}
+
+test quoted_src {
+  assert(quoted_src(["> foo", ">bar", ">"]) == "foo\nbar\n")
 }
 
 /// A list item marker, such as `* ` or `12. `, with the text after it.
@@ -268,7 +290,7 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
 
     if line.starts_with("```") {
       if not(in_code_block) && current_section.is_non_empty() {
-        parts = parts.append(finish_section(section_kind, current_section))
+        parts = parts.append(finish_section(section_kind, current_section, file))
         section_kind = TextLines
 
         current_section = []
@@ -300,7 +322,7 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
       current_section = current_section.append(line)
     } else if ((line == "---") || (line == "***")) || (line == "___") {
       if current_section.is_non_empty() {
-        parts = parts.append(finish_section(section_kind, current_section))
+        parts = parts.append(finish_section(section_kind, current_section, file))
         section_kind = TextLines
 
         current_section = []
@@ -309,7 +331,7 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
       parts = parts.append(ThematicBreak)
     } else if line.starts_with("#") {
       if current_section.is_non_empty() {
-        parts = parts.append(finish_section(section_kind, current_section))
+        parts = parts.append(finish_section(section_kind, current_section, file))
         section_kind = TextLines
 
         current_section = []
@@ -319,12 +341,12 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
     } else if parse_list_marker(line).is_some() {
       if section_kind == ListLines {
         if starts_new_list(current_section, line) {
-          parts = parts.append(finish_section(section_kind, current_section))
+          parts = parts.append(finish_section(section_kind, current_section, file))
           current_section = []
         }
       } else {
         if current_section.is_non_empty() {
-          parts = parts.append(finish_section(section_kind, current_section))
+          parts = parts.append(finish_section(section_kind, current_section, file))
           current_section = []
         }
 
@@ -332,14 +354,25 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
       }
 
       current_section = current_section.append(line)
+    } else if line.trim_left().starts_with(">") {
+      if section_kind != QuoteLines {
+        if current_section.is_non_empty() {
+          parts = parts.append(finish_section(section_kind, current_section, file))
+          current_section = []
+        }
+
+        section_kind = QuoteLines
+      }
+
+      current_section = current_section.append(line)
     } else if line == "" {
-      parts = parts.append(finish_section(section_kind, current_section))
+      parts = parts.append(finish_section(section_kind, current_section, file))
       section_kind = TextLines
 
       current_section = []
     } else {
       if section_kind != TextLines {
-        parts = parts.append(finish_section(section_kind, current_section))
+        parts = parts.append(finish_section(section_kind, current_section, file))
         section_kind = TextLines
 
         current_section = []
@@ -350,7 +383,7 @@ fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
   }
 
   if current_section.is_non_empty() {
-    parts = parts.append(finish_section(section_kind, current_section))
+    parts = parts.append(finish_section(section_kind, current_section, file))
   }
 
   parts
@@ -905,10 +938,18 @@ fun render_list(list: MarkdownList, self_url: Option<String>): String {
   open_tag ^ "\n" ^ "\n".join(rendered_items) ^ "\n" ^ close_tag
 }
 
+fun render_blockquote(parts: List<MarkdownPart>, self_url: Option<String>): String {
+  "<blockquote>\n" ^ render_parts(parts, self_url) ^ "\n</blockquote>"
+}
+
 public fun render(src: String, file: Option<Path>, self_url: Option<String>): String {
+  render_parts(parse_markdown(src, file), self_url)
+}
+
+fun render_parts(parts: List<MarkdownPart>, self_url: Option<String>): String {
   let html_parts: List<String> = []
 
-  for part in parse_markdown(src, file) {
+  for part in parts {
     match part {
       Heading(heading) => {
         html_parts = html_parts.append(render_heading(heading, self_url))
@@ -921,6 +962,9 @@ public fun render(src: String, file: Option<Path>, self_url: Option<String>): St
       }
       ListBlock(list) => {
         html_parts = html_parts.append(render_list(list, self_url))
+      }
+      BlockQuote(quoted_parts) => {
+        html_parts = html_parts.append(render_blockquote(quoted_parts, self_url))
       }
       ThematicBreak => {
         html_parts = html_parts.append("<hr />")
@@ -1103,6 +1147,29 @@ test render_thematic_break {
   assert(render("***", None, None) == "<hr />")
   assert(render("---", None, None) == "<hr />")
   assert(render("___", None, None) == "<hr />")
+}
+
+test render_blockquote {
+  assert(render("> foo\n> bar", None, None) == "<blockquote>
+<p>foo
+bar</p>
+</blockquote>")
+}
+
+test render_blockquote_with_bullets {
+  assert(render("> * foo", None, None) == "<blockquote>
+<ul>
+<li>foo</li>
+</ul>
+</blockquote>")
+}
+
+test render_nested_blockquote {
+  assert(render("> > foo", None, None) == "<blockquote>
+<blockquote>
+<p>foo</p>
+</blockquote>
+</blockquote>")
 }
 
 test render_thematic_break_between_paragraphs {

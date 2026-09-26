@@ -1,0 +1,18 @@
+enum Shape {
+  Rect(Int, Int),
+  Circle(Int),
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Enum variants can only have one payload. Use a tuple `Rect((Int, Int))` instead.
+// 
+// -| src/test_files/check/enum_multiple_payloads.gdn:2:8
+// 1| enum Shape {
+// 2|   Rect(Int, Int),
+//  |        ^^^^^^^^
+// 3|   Circle(Int),
+// 4| }
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

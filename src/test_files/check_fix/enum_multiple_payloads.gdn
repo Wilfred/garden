@@ -1,0 +1,12 @@
+enum Shape {
+  Rect(Int, Int),
+  Circle(Int),
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// enum Shape {
+//   Rect((Int, Int)),
+//   Circle(Int),
+// }
+

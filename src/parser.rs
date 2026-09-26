@@ -1618,7 +1618,51 @@ fn parse_variant(
     let mut payload_hint = None;
     if peeked_symbol_is(tokens, "(") {
         tokens.pop();
-        payload_hint = Some(parse_type_hint(tokens, id_gen, diagnostics));
+
+        let mut hints = vec![parse_type_hint(tokens, id_gen, diagnostics)];
+        while peeked_symbol_is(tokens, ",") {
+            tokens.pop();
+            if peeked_symbol_is(tokens, ")") {
+                break;
+            }
+            hints.push(parse_type_hint(tokens, id_gen, diagnostics));
+        }
+
+        payload_hint = Some(if hints.len() == 1 {
+            hints.pop().unwrap()
+        } else {
+            let position = Position::merge(&hints[0].position, &hints[hints.len() - 1].position);
+            let tuple_hint = TypeHint {
+                sym: TypeSymbol {
+                    name: TypeName {
+                        text: "Tuple".to_owned(),
+                    },
+                    position: position.clone(),
+                    id: id_gen.next(),
+                },
+                args: hints,
+                position,
+            };
+
+            let tuple_src = tuple_hint.as_src();
+            diagnostics.push(ParseError::Invalid {
+                position: tuple_hint.position.clone(),
+                message: ErrorMessage(vec![
+                    msgtext!("Enum variants can only have one payload. Use a tuple "),
+                    msgcode!("{}({})", name_symbol.name, tuple_src),
+                    msgtext!(" instead."),
+                ]),
+                notes: vec![],
+                fixes: vec![Autofix {
+                    description: "Wrap the payload types in a tuple".to_owned(),
+                    position: tuple_hint.position.clone(),
+                    new_text: tuple_src,
+                }],
+            });
+
+            tuple_hint
+        });
+
         require_token(tokens, diagnostics, ")");
     }
 

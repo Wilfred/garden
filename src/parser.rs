@@ -506,14 +506,13 @@ fn parse_assert(
 ) -> Expression {
     let assert_keyword = require_token(tokens, diagnostics, "assert");
 
-    let open_paren = require_token(tokens, diagnostics, "(");
+    let paren_args = parse_call_arguments(tokens, id_gen, diagnostics);
+    let position = Position::merge(&assert_keyword.position, &paren_args.close_paren);
 
-    if peeked_symbol_is(tokens, ")") {
-        let close_paren = tokens.pop().unwrap();
-
-        let position = Position::merge(&open_paren.position, &close_paren.position);
+    let mut arguments = paren_args.arguments.into_iter();
+    let Some(first) = arguments.next() else {
         diagnostics.push(ParseError::Invalid {
-            position: position.clone(),
+            position: Position::merge(&paren_args.open_paren, &paren_args.close_paren),
             message: ErrorMessage(vec![
                 msgcode!("assert"),
                 msgtext!(" requires an expression, for example "),
@@ -524,16 +523,22 @@ fn parse_assert(
         });
 
         return Expression::new(position, Expression_::Invalid, id_gen.next());
+    };
+
+    for extra in arguments {
+        diagnostics.push(ParseError::Invalid {
+            position: extra.expr.position.clone(),
+            message: ErrorMessage(vec![
+                msgcode!("assert"),
+                msgtext!(" takes a single expression, for example "),
+                msgcode!("assert(x == 42)"),
+                msgtext!("."),
+            ]),
+            notes: vec![],
+        });
     }
 
-    let expr = parse_expression(tokens, id_gen, diagnostics);
-    let close_paren = require_token(tokens, diagnostics, ")");
-
-    Expression::new(
-        Position::merge(&assert_keyword.position, &close_paren.position),
-        Expression_::Assert(Rc::new(expr)),
-        id_gen.next(),
-    )
+    Expression::new(position, Expression_::Assert(first.expr), id_gen.next())
 }
 
 fn parse_if(

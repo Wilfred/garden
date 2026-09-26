@@ -197,9 +197,7 @@ fn eval_code_block(
         for error in parse_errors {
             match error {
                 ParseError::Invalid {
-                    position,
-                    message,
-                    notes: _,
+                    position, message, ..
                 } => {
                     let adjusted_pos = position.clone();
                     // Use the actual file path

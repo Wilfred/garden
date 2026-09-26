@@ -230,7 +230,7 @@ public method trim_left(this: String): String {
   let i = 0
   while i < this.len() {
     let char = this.substring(i, i + 1)
-    if char != " " {
+    if not([" ", "\t", "\n", "\r"].contains(char)) {
       break
     }
 
@@ -256,7 +256,7 @@ public method trim_right(this: String): String {
   let i = this.len() - 1
   while i >= 0 {
     let char = this.substring(i, i + 1)
-    if char != " " {
+    if not([" ", "\t", "\n", "\r"].contains(char)) {
       break
     }
 
@@ -283,6 +283,7 @@ test trim {
   assert("a b".trim() == "a b")
   assert(" a".trim() == "a")
   assert("a  ".trim() == "a")
+  assert("\t\na\r\n".trim() == "a")
 }
 
 /// Returns this string without the suffix specified. If this string

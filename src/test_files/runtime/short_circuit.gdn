@@ -1,0 +1,32 @@
+fun noisy(b: Bool): Bool {
+  println("rhs evaluated")
+  b
+}
+
+{
+  // The RHS is only evaluated when the LHS doesn't determine the
+  // result.
+  println(string_repr(False && noisy(True)))
+  println(string_repr(True || noisy(False)))
+  println(string_repr(True && noisy(False)))
+  println(string_repr(False || noisy(True)))
+
+  // Short-circuiting means the LHS can guard the RHS.
+  let l: List<Int> = []
+  if (l.len() > 0) && (l.first().or_throw() == 1) {
+    println("nonempty")
+  } else {
+    println("ok")
+  }
+}
+
+// args: run
+// expected stdout:
+// False
+// True
+// rhs evaluated
+// False
+// rhs evaluated
+// True
+// ok
+

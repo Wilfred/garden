@@ -9,12 +9,12 @@ False || True  //-> True
 False || False //-> False
 ```
 
-Note that `||` does not currently use short-circuiting, so both sides are
-evaluated.
+`||` uses short-circuiting: if the left-hand side is `True`, the
+right-hand side is not evaluated.
 
 ```
-// Prints "hello"
-False || fun() { 
+// Does not print "hello"
+True || fun() {
   println("hello")
   False
 }()

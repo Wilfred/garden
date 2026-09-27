@@ -163,6 +163,72 @@ fn require_token<'a>(
     token
 }
 
+/// Pop a token, requiring it to be the closing delimiter `expected`
+/// (one of `}`, `)` or `]`) that closes the delimiter `opener` opened
+/// at `opener_pos`.
+///
+/// If the token doesn't match, the error notes where the opening
+/// delimiter is, so the user can find the construct that was never
+/// closed, rather than just the position where parsing gave up.
+fn require_closing_token<'a>(
+    tokens: &mut TokenStream<'a>,
+    diagnostics: &mut Vec<ParseError>,
+    expected: &str,
+    opener: &str,
+    opener_pos: &Position,
+) -> Token<'a> {
+    let prev_token = tokens.prev();
+
+    match tokens.pop() {
+        Some(token) => {
+            if token.text != expected {
+                let position = prev_token.as_ref().unwrap_or(&token).position.clone();
+
+                diagnostics.push(ParseError::Invalid {
+                    position,
+                    message: ErrorMessage(vec![
+                        msgtext!("Expected "),
+                        msgcode!("{}", expected),
+                        msgtext!(" to close this."),
+                    ]),
+                    notes: vec![(
+                        ErrorMessage(vec![
+                            msgtext!("The "),
+                            msgcode!("{}", opener),
+                            msgtext!(" here is never closed."),
+                        ]),
+                        opener_pos.clone(),
+                    )],
+                });
+
+                // Undo the pop. We saw an unexpected token, so it
+                // might be e.g. a close brace so we shouldn't just
+                // discard it.
+                tokens.unpop();
+            }
+
+            token
+        }
+        None => {
+            let position = prev_token
+                .as_ref()
+                .map(|t| t.position.clone())
+                .unwrap_or(Position::todo(&tokens.vfs_path));
+
+            diagnostics.push(ParseError::Incomplete {
+                message: ErrorMessage(vec![
+                    msgtext!("Expected "),
+                    msgcode!("{}", expected),
+                    msgtext!(", but reached the end of the file."),
+                ]),
+                position,
+            });
+
+            prev_token.expect("TODO: handle empty file properly")
+        }
+    }
+}
+
 fn parse_integer(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
@@ -1109,6 +1175,13 @@ fn parse_comma_separated_exprs(
                     comma: None,
                 });
 
+                // The opener and the argument are on the same line,
+                // but the next token is on a later line: this looks
+                // like a forgotten closing delimiter rather than a
+                // forgotten comma, so point back at the opener.
+                let looks_unclosed = arg_pos.line_number != token.position.line_number
+                    && open_token.position.line_number == arg_pos.line_number;
+
                 diagnostics.push(ParseError::Invalid {
                     position: arg_pos.clone(),
                     message: ErrorMessage(vec![
@@ -1118,7 +1191,18 @@ fn parse_comma_separated_exprs(
                         msgcode!("{}", terminator),
                         msgtext!(" after this."),
                     ]),
-                    notes: vec![],
+                    notes: if looks_unclosed {
+                        vec![(
+                            ErrorMessage(vec![
+                                msgtext!("The "),
+                                msgcode!("{}", open_token.text),
+                                msgtext!(" here is never closed."),
+                            ]),
+                            open_token.position.clone(),
+                        )]
+                    } else {
+                        vec![]
+                    },
                 });
 
                 // Attempt to recover a reasonable AST.
@@ -1126,7 +1210,7 @@ fn parse_comma_separated_exprs(
                     // Next token is on the same line, treat it as
                     // `foo(a b)` with a forgotten comma.
                     continue;
-                } else if open_token.position.line_number != arg_pos.line_number {
+                } else if !looks_unclosed {
                     // Next token is on another line, but the open
                     // token was on an earlier line. Treat it as a
                     // forgotten comma.
@@ -2358,7 +2442,7 @@ fn parse_block(
         );
     }
 
-    let close_brace = require_token(tokens, diagnostics, "}");
+    let close_brace = require_closing_token(tokens, diagnostics, "}", "{", &open_brace.position);
     Block {
         open_brace: open_brace.position,
         exprs,

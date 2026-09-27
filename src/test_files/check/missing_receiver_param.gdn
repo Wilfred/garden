@@ -7,4 +7,5 @@ method forgot_receiver() {}
 // 
 // -| src/test_files/check/missing_receiver_param.gdn:1:23
 // 1| method forgot_receiver() {}
-// 2|                       ^^
+//  |                       ^^
+// 2|

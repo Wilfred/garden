@@ -11,7 +11,8 @@ fun foo(x: Int): Unit {}
 // 
 // -| src/test_files/check/fun_no_args_arity.gdn:1:9
 // 1| fun foo(x: Int): Unit {}
-// 2|         ^
+//  |         ^
+// 2| 
 // 3| {
 // 
 // Error: `foo` requires an additional `Int` argument.
@@ -19,6 +20,7 @@ fun foo(x: Int): Unit {}
 // -| src/test_files/check/fun_no_args_arity.gdn:4:6
 // 3| {
 // 4|   foo()
-// 5| }    ^^
+//  |      ^^
+// 5| }
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

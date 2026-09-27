@@ -38,7 +38,8 @@ public fun stuff(): String {
 //  9|     "foo"
 // 10|   } else {
 // 11|     123
-// 12|   } ^^^
+//   |     ^^^
+// 12|   }
 // 13| }
 // --| src/test_files/check/type_error_if.gdn:9:5
 //  8|   if True {
@@ -53,12 +54,14 @@ public fun stuff(): String {
 // 17|     "foo"
 // 18|   } else {
 // 19|     123
-// 20|   } ^^^
+//   |     ^^^
+// 20|   }
 // 21| }
 // --| src/test_files/check/type_error_if.gdn:15:21
 // 13| }
 // 14| 
 // 15| public fun stuff(): String {
-// 16|   if True {         ^^^^^^ Note: expected `String` because of this return type.
+//   |                     ^^^^^^ Note: expected `String` because of this return type.
+// 16|   if True {
 // 17|     "foo"
 

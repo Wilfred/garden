@@ -12,7 +12,8 @@ public fun foo() {
 // 1| public fun foo() {
 // 2|     let s = ""
 // 3|     return s.no_such_meth()
-// 4| }            ^^^^^^^^^^^^
+//  |              ^^^^^^^^^^^^
+// 4| }
 // 
 // Warning: Unnecessary `return` at the end of a function body.
 // 
@@ -20,6 +21,7 @@ public fun foo() {
 // 1| public fun foo() {
 // 2|     let s = ""
 // 3|     return s.no_such_meth()
-// 4| }   ^^^^^^^^^^^^^^^^^^^^^^^
+//  |     ^^^^^^^^^^^^^^^^^^^^^^^
+// 4| }
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

@@ -24,6 +24,7 @@ public fun unwrap_or_zero(o: Option<Int>): Int {
 // 2|   match o {
 // 3|     Some => 0
 // 4|     None(x) => x
-// 5|   } ^^^^
+//  |     ^^^^
+// 5|   }
 // 6| }
 

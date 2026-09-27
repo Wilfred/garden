@@ -19,14 +19,16 @@ public fun example() {
 // 3|   while i < 3 {
 // 4|     i += 1
 // 5|     42
-// 6|   } ^^
+//  |     ^^
+// 6|   }
 // 
 // Warning: Unused value.
 // 
 // --| src/test_files/check/unused_literal_loop.gdn:9:5
 //  8|   for _ in [1, 2, 3] {
 //  9|     "hello"
-// 10|   } ^^^^^^^
+//   |     ^^^^^^^
+// 10|   }
 // 11| }
 
 // expected stderr: 2 issues can be fixed automatically (use `--fix`).

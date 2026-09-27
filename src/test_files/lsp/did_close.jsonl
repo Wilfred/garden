@@ -11,7 +11,7 @@
 //   "params": {
 //     "diagnostics": [
 //       {
-//         "message": "Unbound symbol: `no_such_var`",
+//         "message": "No such function or variable `no_such_var`.",
 //         "range": {
 //           "end": {
 //             "character": 19,

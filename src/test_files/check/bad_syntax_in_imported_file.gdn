@@ -10,11 +10,13 @@ import "./has_bad_syntax.gdn"
 // -| src/test_files/check/has_bad_syntax.gdn:2:7
 // 1| public fun bar() {
 // 2|   let x
-// 3| }     ^
+//  |       ^
+// 3| }
 // 
 // Error: Expected an expression after this.
 // 
 // -| src/test_files/check/has_bad_syntax.gdn:2:7
 // 1| public fun bar() {
 // 2|   let x
-// 3| }     ^
+//  |       ^
+// 3| }

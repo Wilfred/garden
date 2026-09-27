@@ -102,7 +102,7 @@ impl Visitor for ListLenCompareVisitor<'_> {
                 if let Some((method_sym, args, call_expr, zero_expr)) = call_and_zero {
                     // Fix 1: rename `len` to the new method.
                     let rename_fix = Autofix {
-                        description: format!("Use `.{}()`", new_method),
+                        description: format!("Use `.{}()`.", new_method),
                         position: method_sym.position.clone(),
                         new_text: new_method.to_owned(),
                     };
@@ -139,7 +139,7 @@ impl Visitor for ListLenCompareVisitor<'_> {
                         };
 
                     let removal_fix = Autofix {
-                        description: format!("Use `.{}()`", new_method),
+                        description: format!("Use `.{}()`.", new_method),
                         position: removal_position,
                         new_text: String::new(),
                     };

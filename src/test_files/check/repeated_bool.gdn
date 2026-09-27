@@ -32,6 +32,7 @@ public fun no_repeats(x: Bool, y: Bool, z: Bool): Bool {
 // 2| public fun repeated_or(x: Bool, y: Bool): Bool {
 // 3|     x || y || x
 // 4| }             ^
+// Help: Remove this duplicate.
 // 
 // Warning: This expression has already appeared in this `&&` chain.
 // 
@@ -40,5 +41,6 @@ public fun no_repeats(x: Bool, y: Bool, z: Bool): Bool {
 //  7| public fun repeated_and(x: Bool, y: Bool): Bool {
 //  8|     x && y && x
 //  9| }             ^
+// Help: Remove this duplicate.
 
 // expected stderr: 2 issues can be fixed automatically (use `--fix`).

@@ -337,6 +337,7 @@ fn print_diagnostics(project_root: &Path, vfs: &Vfs, diagnostics: &[Diagnostic])
             project_root,
             diagnostic.severity,
             &diagnostic.notes,
+            &diagnostic.fixes,
             vfs,
         );
         eprintln!("{}", formatted);

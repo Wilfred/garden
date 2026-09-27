@@ -111,6 +111,7 @@ pub(crate) fn format_diagnostic(
     project_root: &Path,
     severity: Severity,
     notes: &[(ErrorMessage, Position)],
+    fixes: &[Autofix],
     vfs: &Vfs,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
@@ -137,6 +138,16 @@ pub(crate) fn format_diagnostic(
         false,
         2,
     ));
+
+    // A single logical fix can be made up of several `Autofix` edits
+    // (e.g. removing a prefix and a suffix), which share the same
+    // description. Only show each distinct description once.
+    for fix in fixes.iter().dedup_by(|a, b| a.description == b.description) {
+        s.push('\n');
+        s.push_str(&format_help_severity(use_color));
+        s.push_str(": ");
+        s.push_str(&fix.description);
+    }
 
     for (message, position) in notes {
         s.push('\n');
@@ -185,6 +196,14 @@ fn format_note_severity(use_color: bool) -> String {
         "Note".dimmed().to_string()
     } else {
         "Note".to_owned()
+    }
+}
+
+fn format_help_severity(use_color: bool) -> String {
+    if use_color {
+        "Help".dimmed().to_string()
+    } else {
+        "Help".to_owned()
     }
 }
 

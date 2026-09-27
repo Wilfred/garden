@@ -21,5 +21,6 @@ public fun foo() {
 // 2|     let s = ""
 // 3|     return s.no_such_meth()
 // 4| }   ^^^^^^^^^^^^^^^^^^^^^^^
+// Help: Remove unnecessary `return`.
 
 // expected stderr: 1 issue can be fixed automatically (use `--fix`).

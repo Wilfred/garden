@@ -62,12 +62,12 @@ impl UnnecessaryLetVisitor {
                         severity: Severity::Warning,
                         fixes: vec![
                             Autofix {
-                                description: "Remove unnecessary `let` binding".to_owned(),
+                                description: "Remove unnecessary `let` binding.".to_owned(),
                                 position: prefix_position,
                                 new_text: String::new(),
                             },
                             Autofix {
-                                description: "Remove unnecessary `let` binding".to_owned(),
+                                description: "Remove unnecessary `let` binding.".to_owned(),
                                 position: suffix_position,
                                 new_text: String::new(),
                             },

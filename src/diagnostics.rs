@@ -9,9 +9,10 @@ use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::env::{EnclosingSymbol, StackFrame};
+use crate::env::{EnclosingSymbol, Env, StackFrame};
+use crate::parser::ast::SymbolName;
 use crate::parser::diagnostics::ErrorMessage;
-use crate::parser::lex::{lex, STRING_RE};
+use crate::parser::lex::{lex, STRING_RE, SYMBOL_RE};
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_project_relative, Vfs, VfsId};
 use crate::parser::KEYWORDS;
@@ -47,10 +48,12 @@ pub(crate) struct Diagnostic {
 pub(crate) fn format_exception_with_stack(
     message: &ErrorMessage,
     position: &Position,
-    stack: &[StackFrame],
-    vfs: &Vfs,
-    project_root: &Path,
+    env: &Env,
 ) -> String {
+    let stack = &env.stack.0;
+    let vfs = &env.vfs;
+    let project_root = &env.project_root;
+
     let use_color = std::io::stdout().is_terminal();
 
     let mut res = String::new();
@@ -70,7 +73,9 @@ pub(crate) fn format_exception_with_stack(
     ));
 
     // For the topmost (most recently called) stack frame, the
-    // relevant position is where the error occurred.
+    // relevant position is where the error occurred. Show the
+    // values of any local variables used in that expression, since
+    // we still have them to hand.
     let top_stack = stack.last().unwrap();
     res.push_str(&format_pos_in_fun(
         position,
@@ -82,6 +87,7 @@ pub(crate) fn format_exception_with_stack(
         true,
         false,
         0,
+        Some((top_stack, env)),
     ));
 
     // For the rest of the stack, we want the positions of calls.
@@ -98,6 +104,7 @@ pub(crate) fn format_exception_with_stack(
                 false,
                 false,
                 0,
+                None,
             ));
         }
     }
@@ -136,6 +143,7 @@ pub(crate) fn format_diagnostic(
         matches!(severity, Severity::Error),
         false,
         2,
+        None,
     ));
 
     for (message, position) in notes {
@@ -155,6 +163,7 @@ pub(crate) fn format_diagnostic(
             false,
             true,
             2,
+            None,
         ));
     }
 
@@ -201,6 +210,11 @@ fn format_pos_in_fun(
     is_error: bool,
     is_note: bool,
     context_lines: usize,
+    // The stack frame and environment to look up local variable
+    // values in, for the frame where the error occurred. `None` for
+    // every other position we print (e.g. call sites further up the
+    // stack, or diagnostics that aren't runtime exceptions).
+    locals: Option<(&StackFrame, &Env)>,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
@@ -369,6 +383,40 @@ fn format_pos_in_fun(
             }
         }
 
+        if let Some((frame, env)) = locals {
+            let mut vars: Vec<(String, String)> = vec![];
+            for span in &spans {
+                let Some(relevant_line) = s_lines.get(span.line.as_usize()) else {
+                    continue;
+                };
+                for (name, value) in local_bindings_in_line(relevant_line, frame, env) {
+                    if !vars.iter().any(|(existing, _)| existing == &name) {
+                        vars.push((name, value));
+                    }
+                }
+            }
+
+            if !vars.is_empty() {
+                let prefix = "where ";
+                for (i, (name, value)) in vars.iter().enumerate() {
+                    res.push('\n');
+                    res.push_str(&format_margin_num("", margin_width, use_color));
+
+                    let indent = if i == 0 {
+                        prefix.to_owned()
+                    } else {
+                        " ".repeat(prefix.len())
+                    };
+                    let line = format!("{indent}{name} = {value}");
+                    if use_color {
+                        res.push_str(&line.dimmed().to_string());
+                    } else {
+                        res.push_str(&line);
+                    }
+                }
+            }
+        }
+
         if let Some(span) = spans.last() {
             for line_i in span.line.as_usize() + 1..span.line.as_usize() + 1 + context_lines {
                 let Some(relevant_line) = s_lines.get(line_i) else {
@@ -467,4 +515,74 @@ fn format_src_line(line: &str, use_color: bool) -> String {
     // that start on the previous line.
 
     with_syntax_highlighting(line, false)
+}
+
+/// The longest a value's display string may be before we truncate it
+/// in a "where" line, so a single huge value doesn't dominate the
+/// output.
+const MAX_LOCAL_VALUE_LEN: usize = 80;
+
+/// Find identifiers in `line` that refer to local variables bound in
+/// `frame`, and return their names along with a display string of
+/// their current value.
+///
+/// This only considers identifiers that resolve to an existing local
+/// binding, so it naturally skips keywords, type names, function and
+/// method names, and any other identifier that isn't a variable in
+/// scope.
+fn local_bindings_in_line(line: &str, frame: &StackFrame, env: &Env) -> Vec<(String, String)> {
+    let vfs_path = VfsPathBuf {
+        path: Rc::new(PathBuf::from("irrelevant")),
+        id: VfsId(0),
+    };
+    let (mut stream, _errs) = lex(&vfs_path, line);
+
+    let mut result = vec![];
+    let mut prev_token_text: Option<&str> = None;
+
+    while let Some(token) = stream.pop() {
+        // Skip method and field names (`foo.bar`) and function calls
+        // (`foo(`), since those aren't local variables.
+        let preceded_by_dot = prev_token_text == Some(".");
+        let followed_by_call = matches!(stream.peek(), Some(next) if next.text == "(");
+        prev_token_text = Some(token.text);
+
+        if preceded_by_dot || followed_by_call {
+            continue;
+        }
+        if KEYWORDS.contains(&token.text) || looks_like_type_name(token.text) {
+            continue;
+        }
+        if !SYMBOL_RE.is_match(token.text) {
+            continue;
+        }
+        if result.iter().any(|(name, _)| name == token.text) {
+            continue;
+        }
+
+        let Some(&interned_id) = env.id_gen.interned.get(&SymbolName {
+            text: token.text.to_owned(),
+        }) else {
+            continue;
+        };
+        let Some(value) = frame.bindings.get(interned_id) else {
+            continue;
+        };
+
+        result.push((
+            token.text.to_owned(),
+            truncate_display(&value.display(env), MAX_LOCAL_VALUE_LEN),
+        ));
+    }
+
+    result
+}
+
+fn truncate_display(s: &str, max_len: usize) -> String {
+    if s.chars().count() > max_len {
+        let truncated: String = s.chars().take(max_len).collect();
+        format!("{truncated}...")
+    } else {
+        s.to_owned()
+    }
 }

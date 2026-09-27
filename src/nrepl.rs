@@ -627,24 +627,11 @@ fn handle_lookup(
 
 fn format_eval_error(e: &EvalError, env: &Env) -> (String, Option<&'static str>) {
     match e {
-        EvalError::Exception(ExceptionInfo { position, message }) => (
-            format_exception_with_stack(
-                message,
-                position,
-                &env.stack.0,
-                &env.vfs,
-                &env.project_root,
-            ),
-            None,
-        ),
+        EvalError::Exception(ExceptionInfo { position, message }) => {
+            (format_exception_with_stack(message, position, env), None)
+        }
         EvalError::AssertionFailed(position, message) => (
-            format_exception_with_stack(
-                message,
-                position,
-                &env.stack.0,
-                &env.vfs,
-                &env.project_root,
-            ),
+            format_exception_with_stack(message, position, env),
             Some("assertion-failed"),
         ),
         EvalError::Interrupted => ("Interrupted.".to_owned(), None),

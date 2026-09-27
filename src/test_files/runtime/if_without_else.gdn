@@ -10,11 +10,13 @@ fun foo(b: Bool): Int {
 }
 
 // args: run
+// expected exit status: 1
 // expected stderr:
 // Exception: Expected `Int` but got `Unit`.
 // -| src/test_files/runtime/if_without_else.gdn:1:19	 fun foo()
 // 1| fun foo(b: Bool): Int {
 //  |                   ^^^
+//  | where b = True
 // -| src/test_files/runtime/if_without_else.gdn:9:3	 __toplevel__
 // 9|   foo(True)
 //  |   ^^^^^^^^^

@@ -60,7 +60,7 @@
 //               "path": "__user.gdn"
 //             },
 //             "message": "Exception: oh no",
-//             "stack": "Exception: oh no\n-| __user.gdn:1:23\t fun foo()\n1| fun foo() { let x = 1 throw(\"oh no\") }\n |                       ^^^^^^^^^^^^^^\n-| __user.gdn:1:1\t __toplevel__\n?| foo()"
+//             "stack": "Exception: oh no\n-| __user.gdn:1:23\t fun foo()\n1| fun foo() { let x = 1 throw(\"oh no\") }\n |                       ^^^^^^^^^^^^^^\n | where x = 1\n-| __user.gdn:1:1\t __toplevel__\n?| foo()"
 //           }
 //         ]
 //       },

@@ -1,0 +1,59 @@
+struct Point {
+    x: Int,
+    y: Int,
+    x: Int,
+}
+
+// args: reftest-ast
+// expected stdout:
+// Struct(
+//     StructInfo {
+//         pos: Position { ... },
+//         visibility: CurrentFile,
+//         doc_comment: None,
+//         name_sym: TypeSymbol"Point",
+//         type_params: [],
+//         fields: [
+//             FieldInfo {
+//                 sym: Symbol"x",
+//                 hint: TypeHint {
+//                     sym: TypeSymbol"Int",
+//                     args: [],
+//                     position: Position { ... },
+//                 },
+//                 doc_comment: None,
+//                 comma: Some(
+//                     Position { ... },
+//                 ),
+//             },
+//             FieldInfo {
+//                 sym: Symbol"y",
+//                 hint: TypeHint {
+//                     sym: TypeSymbol"Int",
+//                     args: [],
+//                     position: Position { ... },
+//                 },
+//                 doc_comment: None,
+//                 comma: Some(
+//                     Position { ... },
+//                 ),
+//             },
+//         ],
+//     },
+// )
+
+// expected stderr:
+// Error: Parse error: Duplicate field `x`.
+// 
+// -| src/test_files/parser/duplicate_struct_field.gdn:4:5
+// 2|     x: Int,
+// 3|     y: Int,
+// 4|     x: Int,
+// 5| }   ^
+// -| src/test_files/parser/duplicate_struct_field.gdn:2:5
+// 1| struct Point {
+// 2|     x: Int,
+//  |     ^ Note: The previous occurrence is here.
+// 3|     y: Int,
+// 4|     x: Int,
+

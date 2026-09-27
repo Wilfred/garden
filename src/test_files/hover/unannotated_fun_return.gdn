@@ -1,0 +1,9 @@
+fun fizzbuzz() {
+  let _x = 1
+}
+
+fizzbuzz()
+//^
+
+// args: show-type
+// expected stdout: Fun<(), Any>

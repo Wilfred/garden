@@ -228,6 +228,10 @@ pre a:hover {
   overflow: hidden;
 }
 .snippet-titlebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
   padding: 8px 20px;
   background: #e9eee2;
   border-bottom: 1px solid var(--rule);
@@ -235,15 +239,16 @@ pre a:hover {
 .code-title {
   display: block;
   font:
-    700 17px/1.6 "Lora",
+    400 17px/1.6 "Lora",
     serif;
   color: var(--ink);
 }
 .snippet-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 0 20px 16px;
+  flex-wrap: nowrap;
+  gap: 4px;
+  margin-left: auto;
+  padding: 0;
 }
 button {
   font:
@@ -261,16 +266,24 @@ button:hover {
   background: #e5ecdd;
   border-color: #849a77;
 }
-.run-snippet,
 #playground-run {
   background: #e1e9d9;
   border-color: #849a77;
   color: #29452c;
 }
-.run-snippet:hover,
 #playground-run:hover {
   background: #d5e1ca;
   border-color: #66825b;
+}
+.snippet-actions button {
+  background: transparent;
+  border-color: transparent;
+  min-height: 36px;
+  padding: 4px 8px;
+}
+.snippet-actions button:hover {
+  background: #dfe7d7;
+  border-color: var(--rule);
 }
 button:active {
   background: #cfddc4;

@@ -63,7 +63,9 @@ function setupPlayground(): void {
     // Check the initial content so diagnostics show without an edit.
     scheduleCheck(editorView.state.sliceDoc());
 
-    editorView.focus();
+    if (playgroundEditor.getAttribute("data-autofocus") !== "false") {
+      editorView.focus();
+    }
   }
 }
 

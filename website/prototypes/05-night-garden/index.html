@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Garden website concept: Plain code blocks"
+    />
+    <title>Garden — Plain code blocks</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="playground.js"></script>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <a class="logo" href="/">garden<span aria-hidden="true">🌻</span></a>
+        <nav aria-label="Main">
+          <a href="https://garden-lang.org/manual.html">Manual</a
+          ><a href="https://garden-lang.org/playground.html">Playground ↗</a
+          ><a href="https://github.com/Wilfred/garden">GitHub ↗</a>
+        </nav>
+      </header>
+      <main>
+        <section class="hero">
+          <div>
+            <h1>The Garden<br />Programming Language</h1>
+            <p class="intro">
+              Garden is an experimental programming language focused on
+              interactive tooling.
+            </p>
+          </div>
+          <div class="terminal snippet" role="group" aria-label="Hello World">
+            <div class="terminal-top">
+              <span class="terminal-light" aria-hidden="true"></span>
+              <h3 class="snippet-title">Hello World</h3>
+            </div>
+            <pre><code><a class="keyword" href="https://garden-lang.org/keyword:fun.html">fun</a> greet(name: <a class="type" href="https://garden-lang.org/type:String.html">String</a>): <a class="type" href="https://garden-lang.org/type:String.html">String</a> {
+  <span class="string">"Hello, " </span><a class="operator" href="https://garden-lang.org/operator:^.html">^</a> name <a class="operator" href="https://garden-lang.org/operator:^.html">^</a> <span class="string">"!"</span>
+}
+
+greet(<span class="string">"World"</span>)</code></pre>
+            <div class="snippet-actions">
+              <button class="run-snippet" type="button">Run</button
+              ><button class="edit-snippet" type="button">Edit</button>
+            </div>
+            <div
+              class="snippet-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+        <section class="repl-section">
+          <div>
+            <h2>Taking REPLs Seriously</h2>
+            <p>
+              Common Lisp and Smalltalk have a superpower: you can modify
+              running programs. You can redefine functions and modify class
+              definitions without restarting your program.
+            </p>
+            <p>
+              Garden aims to provide that superpower in a conventional language
+              design.
+            </p>
+          </div>
+          <div
+            class="terminal"
+            id="playground-wrapper"
+            role="group"
+            aria-label="Playground"
+          >
+            <div class="terminal-top">
+              <span class="terminal-light" aria-hidden="true"></span>
+              <h3 class="snippet-title">Playground</h3>
+            </div>
+            <textarea
+              id="playground-editor"
+              data-autofocus="false"
+              aria-label="Garden code"
+              rows="7"
+            >
+fun greet(name: String): String {
+  "Hello, " ^ name ^ "!"
+}
+
+greet("World")</textarea
+            >
+            <div class="snippet-actions">
+              <button id="playground-run" type="button">Run</button
+              ><button id="playground-format" type="button">Format</button>
+            </div>
+            <div
+              id="playground-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+        <section class="prose">
+          <h2>Tooling First</h2>
+          <p>
+            Garden prioritises developer experience over language functionality.
+            The syntax and semantics are deliberately small, so a small team (or
+            just me!) can build a delightful, credible language experience.
+          </p>
+        </section>
+        <section class="prose typing">
+          <h2>Just Enough Typing</h2>
+          <p>
+            Most gradual type systems are intended for incremental adoption in a
+            dynamically typed language. Garden is new, but requires a typing
+            model that works with code of the form:
+          </p>
+          <div
+            class="terminal snippet"
+            role="group"
+            aria-label="Just Enough Typing"
+          >
+            <div class="terminal-top">
+              <span class="terminal-light" aria-hidden="true"></span>
+              <h3 class="snippet-title">Just Enough Typing</h3>
+            </div>
+            <pre><code><a class="keyword" href="https://garden-lang.org/keyword:fun.html">fun</a> get_value(): <a class="type" href="https://garden-lang.org/type:String.html">String</a> {
+  <a class="keyword" href="https://garden-lang.org/keyword:return.html">return</a> <span class="string">""</span>
+}
+
+<a class="keyword" href="https://garden-lang.org/keyword:fun.html">fun</a> add_one(): <a class="type" href="https://garden-lang.org/type:Int.html">Int</a> {
+  get_value() <a class="operator" href="https://garden-lang.org/operator:+.html">+</a> 1
+}
+
+<a class="keyword" href="https://garden-lang.org/keyword:fun.html">fun</a> get_value(): <a class="type" href="https://garden-lang.org/type:Int.html">Int</a> {
+  <a class="keyword" href="https://garden-lang.org/keyword:return.html">return</a> 2
+}
+
+add_one()</code></pre>
+            <div class="snippet-actions">
+              <button class="run-snippet" type="button">Run</button
+              ><button class="edit-snippet" type="button">Edit</button>
+            </div>
+            <div
+              class="snippet-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+        <section class="prose">
+          <h2>Sandboxed Execution</h2>
+          <p>
+            Garden supports sandbox execution without third-party libraries.
+            This is important for two workflows:
+          </p>
+          <p>
+            (1) The IDE can speculatively evaluate snippets of code safely. This
+            is convenient and enables 'mutation testing' for code completion.
+          </p>
+          <figure class="recording">
+            <video
+              controls
+              preload="metadata"
+              aria-label="Speculative evaluation of tests in Garden"
+            >
+              <source src="speculative_eval_tests.mp4" type="video/mp4" />
+            </video>
+          </figure>
+          <p>
+            (2) Libraries can declare what capabilities they need, such as
+            network or disk. This makes third-party libraries safer to install.
+            This will be coarse permissions, similar to OpenBSD's Pledge.
+          </p>
+        </section>
+        <section class="prose">
+          <h2>Tooling Oriented Dynamism</h2>
+          <p>
+            Garden splits its semantics into (1) simple evaluation that is
+            amenable to static analysis, and (2) reflective, dynamic evaluation
+            that is friendly to developer experience.
+          </p>
+          <p>
+            This means that errors in userland are plain
+            <code>Result</code> types, but unhandled errors can be fixed at
+            runtime by a programmer.
+          </p>
+        </section>
+      </main>
+      <footer>
+        <span
+          ><a href="https://garden-lang.org/blog.html">Blog</a> ·
+          <a href="https://github.com/Wilfred/garden">GitHub</a></span
+        ><span aria-hidden="true">🪴</span>
+      </footer>
+    </div>
+  </body>
+</html>

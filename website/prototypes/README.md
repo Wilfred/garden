@@ -30,3 +30,11 @@ To rebuild the standalone reference's JavaScript, run
 
 For a browser on another machine, use the server machine's hostname in place
 of `localhost`, or forward port 8105.
+
+## Snippet action comparison
+
+`snippet-actions.html` compares six live action layouts using the
+`Option::or_value()` example. After building the main site, run
+`bash website/prototypes/build.sh`, then visit
+http://localhost:8105/snippet-actions.html. The comparison uses the main site's
+stylesheet and playground bundle.

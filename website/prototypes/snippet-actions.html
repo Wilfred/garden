@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>Snippet actions - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+      .comparison-index {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        font-size: 16px;
+      }
+      .variant-inset pre {
+        margin-bottom: 0;
+      }
+      .variant-inset .cm-editor {
+        margin-bottom: 0;
+      }
+      .variant-inset .snippet-actions {
+        padding: 16px 20px;
+      }
+      .variant-footer .snippet-actions {
+        padding: 8px 12px;
+        background: #e9eee2;
+        border-top: 1px solid var(--rule);
+        gap: 8px;
+      }
+      .variant-caption .snippet-titlebar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+      }
+      .variant-caption .snippet-actions {
+        padding: 0;
+        margin-left: auto;
+        gap: 4px;
+        flex-wrap: nowrap;
+      }
+      .variant-caption button {
+        background: transparent;
+        border-color: transparent;
+        min-height: 36px;
+        padding: 4px 8px;
+      }
+      .variant-caption button:hover {
+        background: #dfe7d7;
+        border-color: #b5c0ab;
+      }
+      .variant-caption .run-snippet {
+        color: var(--green-primary);
+      }
+      .variant-text pre {
+        margin-bottom: 8px;
+      }
+      .variant-text .cm-editor {
+        margin-bottom: 8px;
+      }
+      .variant-text .snippet-actions {
+        padding: 0 12px 12px;
+        gap: 8px;
+      }
+      .variant-text button {
+        background: transparent;
+        border-color: transparent;
+        min-height: 36px;
+        padding: 4px 8px;
+      }
+      .variant-text .run-snippet {
+        color: var(--green-primary);
+        font-weight: 700;
+      }
+      .variant-text button:hover {
+        background: #e5ecdd;
+        border-color: #b5c0ab;
+      }
+
+      :root {
+        --icon-run: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.75%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M8%205l11%207-11%207z%22%2F%3E%3C%2Fsvg%3E");
+        --icon-edit: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.75%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M15%205l4%204M4%2020l5-1L20%208a2.8%202.8%200%200%200-4-4L5%2015z%22%2F%3E%3C%2Fsvg%3E");
+        --icon-reset: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.75%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2010a8%208%200%201%201%201%208M4%204v6h6%22%2F%3E%3C%2Fsvg%3E");
+      }
+      .variant-icons button,
+      .variant-icon-only button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .variant-icons button::before,
+      .variant-icon-only button::before {
+        content: "";
+        display: block;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        background: currentColor;
+        mask: var(--action-icon) center/contain no-repeat;
+      }
+      .variant-icons .run-snippet,
+      .variant-icon-only .run-snippet {
+        --action-icon: var(--icon-run);
+      }
+      .variant-icons .edit-snippet,
+      .variant-icon-only .edit-snippet {
+        --action-icon: var(--icon-edit);
+      }
+      .variant-icons .edit-snippet.is-reset,
+      .variant-icon-only .edit-snippet.is-reset {
+        --action-icon: var(--icon-reset);
+      }
+      .variant-icons button {
+        padding: 8px 12px;
+      }
+      .variant-icon-only .snippet-titlebar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+      }
+      .variant-icon-only .snippet-actions {
+        padding: 0;
+        margin-left: auto;
+        gap: 4px;
+        flex-wrap: nowrap;
+      }
+      .variant-icon-only button {
+        font-size: 0;
+        min-width: 44px;
+        width: 44px;
+        height: 44px;
+        padding: 8px;
+        background: transparent;
+        border-color: transparent;
+      }
+      .variant-icon-only button:hover {
+        background: #dfe7d7;
+        border-color: var(--rule);
+      }
+      .variant-icon-only button::after {
+        content: attr(aria-label);
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        width: max-content;
+        padding: 4px 8px;
+        border-radius: 3px;
+        background: var(--ink);
+        color: var(--pale-cream);
+        font:
+          16px/1.5 Lora,
+          serif;
+        z-index: 1;
+      }
+      .variant-icon-only button:hover::after,
+      .variant-icon-only button:focus-visible::after {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container">
+        <h1>Snippet actions</h1>
+        <p>
+          The same short
+          <a href="/method:Option::or_value.html"
+            ><code>Option::or_value()</code></a
+          >
+          example, with six ways to arrange its actions. Every example can be
+          run and edited.
+        </p>
+        <p class="comparison-index">
+          <a href="#inset">Inset buttons</a><a href="#footer">Footer strip</a
+          ><a href="#caption">Caption toolbar</a><a href="#text">Text actions</a
+          ><a href="#icons">Icons with labels</a
+          ><a href="#icon-only">Icon-only toolbar</a>
+        </p>
+        <section id="inset">
+          <h2>Evenly inset buttons</h2>
+          <p>
+            Keep the familiar buttons, with the same space above and below the
+            action row.
+          </p>
+          <div class="snippet variant-inset">
+            <div class="snippet-titlebar">
+              <span class="code-title">Example</span>
+            </div>
+            <pre><code><span class="type">Some</span>(1).or_value(5) <span class="comment">//-&gt; 1</span>
+<span class="type">None</span>.or_value(5) <span class="comment">//-&gt; 5</span></code></pre>
+            <div class="snippet-actions">
+              <button class="run-snippet" type="button">Run</button
+              ><button class="edit-snippet" type="button">Edit</button>
+            </div>
+            <div
+              class="snippet-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+        <section id="footer">
+          <h2>Footer strip</h2>
+          <p>
+            Give the controls a clearly defined row, separate from the code.
+          </p>
+          <div class="snippet variant-footer">
+            <div class="snippet-titlebar">
+              <span class="code-title">Example</span>
+            </div>
+            <pre><code><span class="type">Some</span>(1).or_value(5) <span class="comment">//-&gt; 1</span>
+<span class="type">None</span>.or_value(5) <span class="comment">//-&gt; 5</span></code></pre>
+            <div class="snippet-actions">
+              <button class="run-snippet" type="button">Run</button
+              ><button class="edit-snippet" type="button">Edit</button>
+            </div>
+            <div
+              class="snippet-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+        <section id="caption">
+          <h2>Caption toolbar</h2>
+          <p>
+            Put small, quiet controls beside the title. This leaves more room
+            for the example.
+          </p>
+          <div class="snippet variant-caption">
+            <div class="snippet-titlebar">
+              <span class="code-title">Example</span>
+              <div class="snippet-actions">
+                <button class="run-snippet" type="button">Run</button
+                ><button class="edit-snippet" type="button">Edit</button>
+              </div>
+            </div>
+            <pre><code><span class="type">Some</span>(1).or_value(5) <span class="comment">//-&gt; 1</span>
+<span class="type">None</span>.or_value(5) <span class="comment">//-&gt; 5</span></code></pre>
+            <div
+              class="snippet-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+        <section id="text">
+          <h2>Text actions</h2>
+          <p>
+            Keep actions below the code, with less visual weight and labels
+            aligned with the code.
+          </p>
+          <div class="snippet variant-text">
+            <div class="snippet-titlebar">
+              <span class="code-title">Example</span>
+            </div>
+            <pre><code><span class="type">Some</span>(1).or_value(5) <span class="comment">//-&gt; 1</span>
+<span class="type">None</span>.or_value(5) <span class="comment">//-&gt; 5</span></code></pre>
+            <div class="snippet-actions">
+              <button class="run-snippet" type="button">Run</button
+              ><button class="edit-snippet" type="button">Edit</button>
+            </div>
+            <div
+              class="snippet-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+        <section id="icons">
+          <h2>Icons with labels</h2>
+          <p>
+            Pair the familiar labels with small line icons. The action still
+            reads clearly without knowing the symbol.
+          </p>
+          <div class="snippet variant-icons">
+            <div class="snippet-titlebar">
+              <span class="code-title">Example</span>
+            </div>
+            <pre><code><span class="type">Some</span>(1).or_value(5) <span class="comment">//-&gt; 1</span>
+<span class="type">None</span>.or_value(5) <span class="comment">//-&gt; 5</span></code></pre>
+            <div class="snippet-actions">
+              <button class="run-snippet" type="button">Run</button
+              ><button class="edit-snippet" type="button">Edit</button>
+            </div>
+            <div
+              class="snippet-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+        <section id="icon-only">
+          <h2>Icon-only toolbar</h2>
+          <p>
+            Keep controls in the caption bar. Hover or focus for the action
+            name; Edit becomes Reset after editing.
+          </p>
+          <div class="snippet variant-icon-only">
+            <div class="snippet-titlebar">
+              <span class="code-title">Example</span>
+              <div class="snippet-actions">
+                <button class="run-snippet" type="button">Run</button
+                ><button class="edit-snippet" type="button">Edit</button>
+              </div>
+            </div>
+            <pre><code><span class="type">Some</span>(1).or_value(5) <span class="comment">//-&gt; 1</span>
+<span class="type">None</span>.or_value(5) <span class="comment">//-&gt; 5</span></code></pre>
+            <div
+              class="snippet-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+        <section>
+          <h2>Source listing</h2>
+          <p>The source listing stays read-only, as on the method page.</p>
+          <div class="snippet">
+            <div class="snippet-titlebar">
+              <span class="code-title">Source Code</span>
+            </div>
+            <pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> or_value&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Option.html">Option</a>&lt;<span class="type">T</span>&gt;, value: <span class="type">T</span>): <span class="type">T</span> {
+  <a class="keyword" href="/keyword:match.html">match</a> this {
+    <span class="type">Some</span>(v) =&gt; v,
+    <span class="type">None</span> =&gt; value
+  }
+}</code></pre>
+            <div
+              class="snippet-output"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <span aria-hidden="true">🪴</span>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+    <script>
+      for (const button of document.querySelectorAll(
+        ".variant-icons button, .variant-icon-only button",
+      )) {
+        const update = () => {
+          const action = button.textContent.trim();
+          const label =
+            action === "Reset" ? "Reset example" : action + " example";
+          button.setAttribute("aria-label", label);
+          button.classList.toggle("is-reset", action === "Reset");
+        };
+        update();
+        new MutationObserver(update).observe(button, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+      }
+    </script>
+  </body>
+</html>

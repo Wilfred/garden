@@ -125,7 +125,7 @@ nav a:hover {
   text-decoration: underline;
 }
 .container {
-  padding-top: 40px;
+  padding-top: 32px;
 }
 h1,
 h2,
@@ -139,11 +139,13 @@ h6 {
 }
 h1 {
   font-size: clamp(36px, 4.1vw, 52px);
+  line-height: 1.2;
+  text-wrap: balance;
   margin: 0 0 24px;
 }
 h2 {
   font-size: 30px;
-  margin: 64px 0 24px;
+  margin: 48px 0 20px;
 }
 h3 {
   font-size: 25px;
@@ -189,12 +191,13 @@ h1 code {
   font-weight: 400;
 }
 pre {
-  margin: 24px 0;
+  margin: 16px 0;
   padding: 0 20px;
   font-size: 16px;
-  line-height: 1.8;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  line-height: 1.55;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
 }
 pre > code {
   font: inherit;
@@ -216,7 +219,7 @@ pre a:hover {
 }
 .snippet,
 #playground-wrapper {
-  margin: 24px 0 40px;
+  margin: 24px 0 32px;
   background: var(--pale-cream);
   border: 1px solid var(--rule);
   border-radius: 3px;
@@ -225,7 +228,7 @@ pre a:hover {
   overflow: hidden;
 }
 .snippet-titlebar {
-  padding: 12px 20px;
+  padding: 8px 20px;
   background: #e9eee2;
   border-bottom: 1px solid var(--rule);
 }
@@ -240,7 +243,7 @@ pre a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 0 20px 20px;
+  padding: 0 20px 16px;
 }
 button {
   font:
@@ -279,9 +282,9 @@ button[hidden] {
 #playground-output {
   border-top: 1px dashed var(--rule);
   background: #e9efe1;
-  padding: 20px;
+  padding: 16px 20px;
   font-size: 16px;
-  line-height: 1.8;
+  line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -306,19 +309,19 @@ button[hidden] {
 }
 .cm-editor {
   font:
-    16px/1.8 ui-monospace,
+    16px/1.55 ui-monospace,
     SFMono-Regular,
     Consolas,
     monospace;
   background: transparent;
   color: inherit;
-  margin: 20px;
+  margin: 16px 20px;
 }
 .cm-scroller {
   font: inherit;
 }
 .cm-content {
-  min-height: 130px;
+  min-height: 100px;
   padding: 0;
   caret-color: currentColor;
 }

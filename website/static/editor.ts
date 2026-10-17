@@ -16,7 +16,6 @@ export function createGardenEditor(
     doc,
     extensions: [
       minimalSetup,
-      EditorView.lineWrapping,
       history(),
       keymap.of([...defaultKeymap, ...historyKeymap]),
       highlightActiveLine(),

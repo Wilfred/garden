@@ -635,8 +635,9 @@ fun render_image(src: String): String {
 
 fun render_inline_code(src: String, self_url: Option<String>): String {
   let inner = src.strip_prefix("`").strip_suffix("`")
+  let display = escape_angle_brackets(inner).replace("::", "::<wbr>").replace("_", "_<wbr>")
 
-  let rendered = "<code>" ^ escape_angle_brackets(inner) ^ "</code>"
+  let rendered = "<code>" ^ display ^ "</code>"
   let url: Option<String> = None
 
   if reflect::operators().contains(inner) {
@@ -663,7 +664,7 @@ fun render_inline_code(src: String, self_url: Option<String>): String {
   match url {
     Some(url) => {
       if self_url != Some(url)  {
-        rendered = "<a href=\"" ^ url ^ "\"><code>" ^ inner ^ "</code></a>"
+        rendered = "<a href=\"" ^ url ^ "\"><code>" ^ display ^ "</code></a>"
       }
     }
     None => {}
@@ -766,6 +767,7 @@ test render_strong_escape_angle_brackets {
 
 test render_backtick_in_heading {
   assert(render("# `foo`", None, None) == "<h1><code>foo</code></h1>")
+  assert(render("# `String::starts_with()`", None, None) == "<h1><code>String::<wbr>starts_<wbr>with()</code></h1>")
 }
 
 test render_link {

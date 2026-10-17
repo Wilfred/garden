@@ -305,17 +305,17 @@ button[hidden] {
   color: #a12f2f;
 }
 .keyword {
-  color: #a34b28;
+  color: #873d22;
   font-weight: bold;
 }
 .string {
-  color: #285f8f;
+  color: #74394f;
 }
 .type {
-  color: #67458a;
+  color: #50345f;
 }
 .operator {
-  color: #776025;
+  color: #655019;
 }
 .comment {
   color: var(--muted);

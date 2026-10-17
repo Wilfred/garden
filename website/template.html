@@ -7,28 +7,32 @@
     <title>__TITLE</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
 
-    <link rel="stylesheet" href="/static/blocks.min.css" />
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <header>
-      <div class="title-container">
-        <a href="/">Garden 🌻</a>
-        <nav>
-          <a class="block" href="/blog.html">Blog</a>
-          <a class="block" href="/manual.html">Manual</a>
-          <a class="block" href="/playground.html">Playground</a>
-        </nav>
-      </div>
-    </header>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
 
-    <div class="container">__MAIN_CONTENT</div>
+      <main class="container">__MAIN_CONTENT</main>
 
-    <footer>
-      <a href="/blog.html">Blog</a>
-      🪴
-      <a href="https://github.com/Wilfred/garden">GitHub</a>
-    </footer>
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <span aria-hidden="true">🪴</span>
+      </footer>
+    </div>
 
     <script type="module" src="/static/playground.js"></script>
   </body>

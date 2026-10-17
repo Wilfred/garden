@@ -121,7 +121,7 @@ nav {
 header a[href] {
   text-decoration: none;
 }
-header a:hover {
+nav a:hover {
   text-decoration: underline;
 }
 .container {

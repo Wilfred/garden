@@ -421,6 +421,29 @@ footer {
     animation: none;
   }
 }
+@media (max-width: 600px) {
+  .title-container {
+    flex-wrap: nowrap;
+    gap: 12px;
+  }
+  .logo {
+    font-size: 28px;
+    white-space: nowrap;
+  }
+  .logo span {
+    margin-left: 6px;
+    font-size: 24px;
+  }
+  header nav {
+    flex-wrap: nowrap;
+    gap: 12px;
+    font-size: 16px;
+  }
+  header nav a[href="/blog.html"],
+  header nav a[href="https://github.com/Wilfred/garden"] {
+    display: none;
+  }
+}
 @media (max-width: 420px) {
   h1 {
     font-size: 36px;

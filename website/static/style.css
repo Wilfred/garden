@@ -454,7 +454,7 @@ footer {
   animation: water-drop 0.8s ease-in;
 }
 .footer-plant:is(:hover, :focus-visible, .is-active) .footer-plant-leaves {
-  animation: happy-plant 1.2s 0.7s ease-in-out;
+  animation: happy-plant 0.95s 0.76s ease-in-out;
 }
 @keyframes water-drop {
   10% {
@@ -470,23 +470,24 @@ footer {
   }
 }
 @keyframes happy-plant {
-  12% {
-    transform: scale(1.12, 0.86);
+  0% {
+    transform: none;
   }
-  30% {
-    transform: translateY(-9px) rotate(-8deg) scale(0.96, 1.08);
+  14% {
+    transform: scale(1.04, 0.95);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1);
   }
-  48% {
-    transform: scale(1.08, 0.92) rotate(5deg);
+  40% {
+    transform: translateY(-7px) rotate(-2deg);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.3);
   }
   64% {
-    transform: translateY(-4px) rotate(6deg);
+    transform: scale(1.035, 0.965);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1);
   }
-  78% {
-    transform: rotate(-4deg);
-  }
-  90% {
-    transform: rotate(2deg);
+  81% {
+    transform: translateY(-2px) rotate(1deg);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.3);
   }
   100% {
     transform: none;

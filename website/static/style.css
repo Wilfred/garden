@@ -293,7 +293,7 @@ button[hidden] {
 }
 .snippet-output,
 #playground-output {
-  border-top: 1px dashed var(--rule);
+  border-top: 1px solid var(--rule);
   background: #e9efe1;
   padding: 16px 20px;
   font-size: 16px;

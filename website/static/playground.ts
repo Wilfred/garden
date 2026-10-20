@@ -71,3 +71,18 @@ function setupPlayground(): void {
 
 setupSnippetButtons();
 setupPlayground();
+
+const footerPlant = document.querySelector<HTMLButtonElement>(".footer-plant");
+if (footerPlant) {
+  let wateringTimer: ReturnType<typeof setTimeout> | undefined;
+  footerPlant.addEventListener("click", () => {
+    clearTimeout(wateringTimer);
+    footerPlant.classList.remove("is-active");
+    void footerPlant.offsetWidth;
+    footerPlant.classList.add("is-active");
+    wateringTimer = setTimeout(
+      () => footerPlant.classList.remove("is-active"),
+      2400,
+    );
+  });
+}

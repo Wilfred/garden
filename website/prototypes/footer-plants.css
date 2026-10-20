@@ -1,0 +1,182 @@
+.plant-idea {
+  margin-top: 48px;
+}
+.plant-idea h2 {
+  margin: 0 0 12px;
+}
+.plant-idea > p {
+  margin-bottom: 20px;
+}
+.footer-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 112px;
+  padding: 24px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--pale-cream);
+}
+.plant-button {
+  position: relative;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  font-size: 28px;
+  line-height: 1;
+  touch-action: manipulation;
+}
+.plant-button:hover,
+.plant-button:active {
+  background: transparent;
+  border-color: transparent;
+}
+.plant,
+.pot {
+  display: inline-block;
+  transform-origin: 50% 90%;
+}
+.idea-wave:is(:hover, :focus-visible, .is-active) .plant {
+  animation: wave 1.2s ease-in-out;
+}
+@keyframes wave {
+  20% {
+    transform: rotate(-12deg);
+  }
+  45% {
+    transform: rotate(10deg);
+  }
+  70% {
+    transform: rotate(-5deg);
+  }
+}
+.new-leaf {
+  position: absolute;
+  bottom: 24px;
+  left: 13px;
+  opacity: 0;
+  transform: translateY(4px) scale(0.35);
+  transform-origin: bottom;
+  font-size: 22px;
+  transition:
+    opacity 0.2s,
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.idea-grow:is(:hover, :focus-visible, .is-active) .new-leaf {
+  opacity: 1;
+  transform: translateY(-17px) scale(1);
+}
+.drop {
+  position: absolute;
+  top: -12px;
+  left: 22px;
+  width: 8px;
+  height: 11px;
+  border-radius: 70% 30% 65% 35%;
+  background: var(--green-primary);
+  opacity: 0;
+}
+.idea-water:is(:hover, :focus-visible, .is-active) .drop {
+  animation: drink 0.8s ease-in;
+}
+.idea-water:is(:hover, :focus-visible, .is-active) .plant {
+  animation: perk 0.7s 0.65s ease-out;
+}
+@keyframes drink {
+  10% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(23px) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(27px) scale(0.3);
+  }
+}
+@keyframes perk {
+  40% {
+    transform: translateY(-4px) rotate(5deg);
+  }
+  70% {
+    transform: rotate(-3deg);
+  }
+}
+.leaf {
+  position: absolute;
+  top: 8px;
+  left: 20px;
+  opacity: 0;
+  font-size: 14px;
+  pointer-events: none;
+}
+.idea-leaves:is(:hover, :focus-visible, .is-active) .plant {
+  animation: wave 1.2s ease-in-out;
+}
+.idea-leaves:is(:hover, :focus-visible, .is-active) .leaf {
+  animation: drift 1.5s ease-out;
+}
+.idea-leaves:is(:hover, :focus-visible, .is-active) .leaf-two {
+  animation-delay: 0.25s;
+}
+@keyframes drift {
+  15% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-42px, 26px) rotate(-80deg);
+  }
+}
+.plant-note {
+  position: absolute;
+  right: -5px;
+  bottom: 57px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(5px);
+  transition:
+    opacity 0.2s,
+    transform 0.2s,
+    visibility 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.plant-note code {
+  display: block;
+  padding: 5px 10px;
+  background: var(--pale-cream);
+  box-shadow: 2px 3px 0 #293c2d0c;
+}
+.idea-code:is(:hover, :focus-visible, .is-active) .plant-note {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .plant-button *,
+  .plant-button:is(:hover, :focus-visible, .is-active) * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .idea-wave:is(:hover, :focus-visible, .is-active) .plant {
+    transform: rotate(-8deg);
+  }
+  .idea-water:is(:hover, :focus-visible, .is-active) .drop {
+    opacity: 1;
+  }
+  .idea-leaves:is(:hover, :focus-visible, .is-active) .leaf-one {
+    opacity: 1;
+    transform: translateX(-24px);
+  }
+}

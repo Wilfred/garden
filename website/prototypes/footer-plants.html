@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>Footer plant ideas — Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/footer-plants.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container">
+        <h1>A little life in the footer</h1>
+        <p>
+          Five small surprises for the plant. Hover, focus with the keyboard, or
+          tap to try each one.
+        </p>
+        <section class="plant-idea" id="wave">
+          <h2>1. A little hello</h2>
+          <p>A small sway, as though the plant noticed you.</p>
+          <div class="footer-preview">
+            <div class="footer-links">
+              <a href="/blog.html">Blog</a
+              ><a href="https://github.com/Wilfred/garden">GitHub</a>
+            </div>
+            <button
+              class="plant-button idea-wave"
+              type="button"
+              aria-label="A little hello"
+            >
+              <span class="plant">🪴</span>
+            </button>
+          </div>
+        </section>
+        <section class="plant-idea" id="grow">
+          <h2>2. Room to grow</h2>
+          <p>The leaves stretch upward, while the pot stays planted.</p>
+          <div class="footer-preview">
+            <div class="footer-links">
+              <a href="/blog.html">Blog</a
+              ><a href="https://github.com/Wilfred/garden">GitHub</a>
+            </div>
+            <button
+              class="plant-button idea-grow"
+              type="button"
+              aria-label="Room to grow"
+            >
+              <span class="pot">🪴</span
+              ><span class="new-leaf" aria-hidden="true">🌱</span>
+            </button>
+          </div>
+        </section>
+        <section class="plant-idea" id="water">
+          <h2>3. A little water</h2>
+          <p>One drop, then a pleased little bounce.</p>
+          <div class="footer-preview">
+            <div class="footer-links">
+              <a href="/blog.html">Blog</a
+              ><a href="https://github.com/Wilfred/garden">GitHub</a>
+            </div>
+            <button
+              class="plant-button idea-water"
+              type="button"
+              aria-label="A little water"
+            >
+              <span class="drop" aria-hidden="true"></span
+              ><span class="plant">🪴</span>
+            </button>
+          </div>
+        </section>
+        <section class="plant-idea" id="leaves">
+          <h2>4. A passing breeze</h2>
+          <p>A gentle lean releases two tiny leaves.</p>
+          <div class="footer-preview">
+            <div class="footer-links">
+              <a href="/blog.html">Blog</a
+              ><a href="https://github.com/Wilfred/garden">GitHub</a>
+            </div>
+            <button
+              class="plant-button idea-leaves"
+              type="button"
+              aria-label="A passing breeze"
+            >
+              <span class="plant">🪴</span
+              ><span class="leaf leaf-one" aria-hidden="true">🍃</span
+              ><span class="leaf leaf-two" aria-hidden="true">🍃</span>
+            </button>
+          </div>
+        </section>
+        <section class="plant-idea" id="code">
+          <h2>5. Hello, seedling</h2>
+          <p>A tiny Garden greeting, just for the plant.</p>
+          <div class="footer-preview">
+            <div class="footer-links">
+              <a href="/blog.html">Blog</a
+              ><a href="https://github.com/Wilfred/garden">GitHub</a>
+            </div>
+            <button
+              class="plant-button idea-code"
+              type="button"
+              aria-label="Hello, seedling"
+            >
+              <span class="plant">🪴</span
+              ><span class="plant-note" aria-hidden="true"
+                ><code>println("🌱")</code></span
+              >
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <span aria-hidden="true">🪴</span>
+      </footer>
+    </div>
+
+    <script>
+      document.querySelectorAll(".plant-button").forEach((button) => {
+        let timeout;
+        button.addEventListener("click", () => {
+          clearTimeout(timeout);
+          button.classList.remove("is-active");
+          void button.offsetWidth;
+          button.classList.add("is-active");
+          timeout = setTimeout(
+            () => button.classList.remove("is-active"),
+            2400,
+          );
+        });
+      });
+    </script>
+  </body>
+</html>

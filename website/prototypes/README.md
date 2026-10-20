@@ -38,3 +38,9 @@ of `localhost`, or forward port 8105.
 `bash website/prototypes/build.sh`, then visit
 http://localhost:8105/snippet-actions.html. The comparison uses the main site's
 stylesheet and playground bundle.
+
+## Footer plant comparison
+
+After running `bash website/prototypes/build.sh`, visit
+http://localhost:8105/footer-plants.html for five hover, keyboard-focus, and tap
+ideas. These use finite animations and respect reduced-motion preferences.

@@ -6,3 +6,5 @@ cd "$(dirname "$0")/../static"
   --outfile="../prototypes/05-night-garden/playground.js"
 
 cp ../prototypes/snippet-actions.html ../dist/snippet-actions.html
+
+cp ../prototypes/footer-plants.html ../prototypes/footer-plants.css ../dist/

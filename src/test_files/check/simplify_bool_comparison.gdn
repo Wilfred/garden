@@ -1,0 +1,37 @@
+public fun eq_true(x: Bool): Bool {
+  x == True
+}
+
+public fun eq_false(x: Bool): Bool {
+  x == False
+}
+
+public fun neq_true(x: Bool): Bool {
+  x != True
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: This comparison with `True` can be simplified. Use the boolean value on its own.
+// 
+// -| src/test_files/check/simplify_bool_comparison.gdn:2:3
+// 1| public fun eq_true(x: Bool): Bool {
+// 2|   x == True
+// 3| } ^^^^^^^^^
+// 
+// Warning: This comparison with `False` can be simplified. Use `not()` on the value instead.
+// 
+// -| src/test_files/check/simplify_bool_comparison.gdn:6:3
+// 5| public fun eq_false(x: Bool): Bool {
+// 6|   x == False
+// 7| } ^^^^^^^^^^
+// 
+// Warning: This comparison with `True` can be simplified. Use `not()` on the value instead.
+// 
+// --| src/test_files/check/simplify_bool_comparison.gdn:10:3
+//  9| public fun neq_true(x: Bool): Bool {
+// 10|   x != True
+// 11| } ^^^^^^^^^
+
+// expected stderr: 5 issues can be fixed automatically (use `--fix`).

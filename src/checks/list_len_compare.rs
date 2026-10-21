@@ -1,5 +1,7 @@
-//! Check for `xs.len() == 0` and `xs.len() != 0` on lists, which are
-//! better expressed as `xs.is_empty()` and `xs.is_non_empty()`.
+//! Check for comparisons of `xs.len()` against `0` or `1` on lists,
+//! which are better expressed as `xs.is_empty()` and
+//! `xs.is_non_empty()`. This covers `==` and `!=` as well as ordering
+//! comparisons such as `xs.len() > 0` and `xs.len() < 1`.
 
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::garden_type::Type;
@@ -50,8 +52,40 @@ fn list_len_call<'a>(
     Some((method_sym, args))
 }
 
-fn is_zero_literal(expr: &Expression) -> bool {
-    matches!(&expr.expr_, Expression_::IntLiteral(0))
+fn int_literal(expr: &Expression) -> Option<i64> {
+    match &expr.expr_ {
+        Expression_::IntLiteral(n) => Some(*n),
+        _ => None,
+    }
+}
+
+/// Given a comparison `recv.len() OP lit` (or the reversed
+/// `lit OP recv.len()` when `len_on_left` is false), return the
+/// equivalent method (`is_empty` or `is_non_empty`), if any.
+fn replacement_method(op: BinaryOperatorKind, lit: i64, len_on_left: bool) -> Option<&'static str> {
+    // Normalise to `len OP lit` by flipping the operator when the
+    // length is on the right-hand side.
+    let op = if len_on_left {
+        op
+    } else {
+        match op {
+            BinaryOperatorKind::LessThan => BinaryOperatorKind::GreaterThan,
+            BinaryOperatorKind::LessThanOrEqual => BinaryOperatorKind::GreaterThanOrEqual,
+            BinaryOperatorKind::GreaterThan => BinaryOperatorKind::LessThan,
+            BinaryOperatorKind::GreaterThanOrEqual => BinaryOperatorKind::LessThanOrEqual,
+            other => other,
+        }
+    };
+
+    match (op, lit) {
+        (BinaryOperatorKind::Equal, 0) => Some("is_empty"),
+        (BinaryOperatorKind::NotEqual, 0) => Some("is_non_empty"),
+        (BinaryOperatorKind::GreaterThan, 0) => Some("is_non_empty"),
+        (BinaryOperatorKind::GreaterThanOrEqual, 1) => Some("is_non_empty"),
+        (BinaryOperatorKind::LessThan, 1) => Some("is_empty"),
+        (BinaryOperatorKind::LessThanOrEqual, 0) => Some("is_empty"),
+        _ => None,
+    }
 }
 
 impl Visitor for ListLenCompareVisitor<'_> {
@@ -74,32 +108,18 @@ impl Visitor for ListLenCompareVisitor<'_> {
         }
 
         if let Expression_::BinaryOperator(lhs, op, rhs) = &expr.expr_ {
-            let new_method = match op.kind {
-                BinaryOperatorKind::Equal => Some("is_empty"),
-                BinaryOperatorKind::NotEqual => Some("is_non_empty"),
-                _ => None,
+            // Match `recv.len() OP lit` and `lit OP recv.len()`, where
+            // `lit` is an integer literal.
+            let call_and_lit = if let Some((method_sym, args)) = list_len_call(lhs, self.summary) {
+                int_literal(rhs).map(|lit| (method_sym, args, &**lhs, &**rhs, lit, true))
+            } else if let Some((method_sym, args)) = list_len_call(rhs, self.summary) {
+                int_literal(lhs).map(|lit| (method_sym, args, &**rhs, &**lhs, lit, false))
+            } else {
+                None
             };
 
-            if let Some(new_method) = new_method {
-                // Match `recv.len() == 0` and `0 == recv.len()`.
-                let call_and_zero =
-                    if let Some((method_sym, args)) = list_len_call(lhs, self.summary) {
-                        if is_zero_literal(rhs) {
-                            Some((method_sym, args, lhs, rhs))
-                        } else {
-                            None
-                        }
-                    } else if let Some((method_sym, args)) = list_len_call(rhs, self.summary) {
-                        if is_zero_literal(lhs) {
-                            Some((method_sym, args, rhs, lhs))
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    };
-
-                if let Some((method_sym, args, call_expr, zero_expr)) = call_and_zero {
+            if let Some((method_sym, args, call_expr, lit_expr, lit, len_on_left)) = call_and_lit {
+                if let Some(new_method) = replacement_method(op.kind, lit, len_on_left) {
                     // Fix 1: rename `len` to the new method.
                     let rename_fix = Autofix {
                         description: format!("Use `.{}()`", new_method),
@@ -107,31 +127,31 @@ impl Visitor for ListLenCompareVisitor<'_> {
                         new_text: new_method.to_owned(),
                     };
 
-                    // Fix 2: remove the ` == 0` portion (everything between
-                    // the call and the zero literal, on whichever side it
-                    // appears).
+                    // Fix 2: remove the comparison portion (everything
+                    // between the call and the literal, on whichever side
+                    // it appears).
                     let removal_position =
-                        if call_expr.position.start_offset < zero_expr.position.start_offset {
-                            // `recv.len() == 0` — delete from end of `)` to end of `0`.
+                        if call_expr.position.start_offset < lit_expr.position.start_offset {
+                            // `recv.len() OP lit` — delete from end of `)` to end of `lit`.
                             Position {
                                 start_offset: args.close_paren.end_offset,
-                                end_offset: zero_expr.position.end_offset,
+                                end_offset: lit_expr.position.end_offset,
                                 line_number: args.close_paren.end_line_number,
-                                end_line_number: zero_expr.position.end_line_number,
+                                end_line_number: lit_expr.position.end_line_number,
                                 column: args.close_paren.end_column,
-                                end_column: zero_expr.position.end_column,
+                                end_column: lit_expr.position.end_column,
                                 path: Rc::clone(&expr.position.path),
                                 vfs_path: expr.position.vfs_path.clone(),
                             }
                         } else {
-                            // `0 == recv.len()` — delete from start of `0` to
+                            // `lit OP recv.len()` — delete from start of `lit` to
                             // start of receiver.
                             Position {
-                                start_offset: zero_expr.position.start_offset,
+                                start_offset: lit_expr.position.start_offset,
                                 end_offset: call_expr.position.start_offset,
-                                line_number: zero_expr.position.line_number,
+                                line_number: lit_expr.position.line_number,
                                 end_line_number: call_expr.position.line_number,
-                                column: zero_expr.position.column,
+                                column: lit_expr.position.column,
                                 end_column: call_expr.position.column,
                                 path: Rc::clone(&expr.position.path),
                                 vfs_path: expr.position.vfs_path.clone(),
@@ -151,7 +171,7 @@ impl Visitor for ListLenCompareVisitor<'_> {
                             msgtext!(" over comparing "),
                             msgcode!(".len()"),
                             msgtext!(" with "),
-                            msgcode!("0"),
+                            msgcode!("{}", lit),
                             msgtext!("."),
                         ]),
                         position: expr.position.clone(),

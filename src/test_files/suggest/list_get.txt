@@ -1,0 +1,24 @@
+// Indexing into a list synthesizes the index argument.
+{"inputs": ["[10, 20, 30]"], "output": "Some(20)"}
+
+// args: suggest
+// expected stdout:
+// {
+//   "error": null,
+//   "inputs": [
+//     "[10, 20, 30]"
+//   ],
+//   "output": "Some(20)",
+//   "suggestions": [
+//     {
+//       "kind": "method",
+//       "name": "get",
+//       "call": "[10, 20, 30].get(1)",
+//       "signature": "(this: List<T>, index: Int): Option<T>",
+//       "constants": [
+//         "1"
+//       ]
+//     }
+//   ]
+// }
+

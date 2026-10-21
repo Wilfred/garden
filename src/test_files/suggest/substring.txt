@@ -1,0 +1,25 @@
+// Inputs can be tried in any order; only one arrangement of these
+// three produces the output.
+{"inputs": ["\"hello\"", "0", "2"], "output": "\"he\""}
+
+// args: suggest
+// expected stdout:
+// {
+//   "error": null,
+//   "inputs": [
+//     "\"hello\"",
+//     "0",
+//     "2"
+//   ],
+//   "output": "\"he\"",
+//   "suggestions": [
+//     {
+//       "kind": "method",
+//       "name": "substring",
+//       "call": "\"hello\".substring(0, 2)",
+//       "signature": "(this: String, from_index: Int, to_index: Int): String",
+//       "constants": []
+//     }
+//   ]
+// }
+

@@ -16,7 +16,8 @@ Dict["x" => 1, "y" => ]
 // -| src/test_files/check/dict_literal_syntax.gdn:7:13
 // 6| // Bad: forgotten comma.
 // 7| Dict["x" => 1 "y" => nono]
-// 8|             ^
+//  |             ^
+// 8| 
 // 9| Dict["x" => 1, "y" => ]
 // 
 // Error: Expected an expression after this.
@@ -25,4 +26,5 @@ Dict["x" => 1, "y" => ]
 //  7| Dict["x" => 1 "y" => nono]
 //  8| 
 //  9| Dict["x" => 1, "y" => ]
-// 10|                    ^^
+//   |                    ^^
+// 10|

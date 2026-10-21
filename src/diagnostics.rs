@@ -297,8 +297,6 @@ fn format_pos_in_fun(
             }
         }
 
-        let mut has_inline_carets = false;
-
         for span in &spans {
             // .lines() in the Rust stdlib discards the trailing
             // newline, so we end up with s_lines not having the last line.
@@ -322,30 +320,8 @@ fn format_pos_in_fun(
             if underline {
                 res.push('\n');
 
-                let short_next_line = s_lines
-                    .get(span.line.as_usize() + 1)
-                    .filter(|&line| line.len() < span.start_col as usize);
-
-                // If we're printing context and the following line
-                // has space for carets, use that line rather than
-                // inserting a line for the carets.
-                match short_next_line {
-                    Some(next_line) if context_lines > 0 && spans.len() == 1 => {
-                        has_inline_carets = true;
-
-                        res.push_str(&format_margin_num(
-                            &format!("{}", span.line.as_usize() + 2),
-                            margin_width,
-                            use_color,
-                        ));
-                        res.push_str(next_line);
-                        res.push_str(&" ".repeat(span.start_col as usize - next_line.len()));
-                    }
-                    _ => {
-                        res.push_str(&format_margin_num("", margin_width, use_color));
-                        res.push_str(&" ".repeat(span.start_col as usize));
-                    }
-                }
+                res.push_str(&format_margin_num("", margin_width, use_color));
+                res.push_str(&" ".repeat(span.start_col as usize));
 
                 let carets = "^".repeat((span.end_col - span.start_col) as usize);
                 if use_color {
@@ -374,9 +350,6 @@ fn format_pos_in_fun(
                 let Some(relevant_line) = s_lines.get(line_i) else {
                     break;
                 };
-                if line_i == span.line.as_usize() + 1 && has_inline_carets {
-                    continue;
-                }
 
                 // Skip the last context line if blank.
                 if line_i == span.line.as_usize() + context_lines && relevant_line.trim().is_empty()

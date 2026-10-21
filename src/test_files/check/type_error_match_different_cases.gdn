@@ -58,7 +58,8 @@ public fun bar(): Int {
 // 15| }
 // 16| 
 // 17| public fun bar(): Int {
-// 18|   match One {     ^^^ Note: expected `Int` because of this return type.
+//   |                   ^^^ Note: expected `Int` because of this return type.
+// 18|   match One {
 // 19|     One => "wrong",
 // 
 // Error: Expected an `Int` but got a `String`.
@@ -74,6 +75,7 @@ public fun bar(): Int {
 // 15| }
 // 16| 
 // 17| public fun bar(): Int {
-// 18|   match One {     ^^^ Note: expected `Int` because of this return type.
+//   |                   ^^^ Note: expected `Int` because of this return type.
+// 18|   match One {
 // 19|     One => "wrong",
 

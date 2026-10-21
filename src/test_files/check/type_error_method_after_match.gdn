@@ -16,4 +16,5 @@ public fun foo(x: Option<Int>) {
 // 5|     }
 // 6| 
 // 7|     i.foo()
-// 8| }     ^^^
+//  |       ^^^
+// 8| }

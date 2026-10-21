@@ -77,7 +77,8 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 32| // Normal assignment: should not warn.
 // 33| public fun assign_different(x: Int): Int {
 // 34|     let y = x
-// 35|     y       ^
+//   |             ^
+// 35|     y
 // 36| }
 // 
 // Warning: `x` is assigned to itself.
@@ -96,7 +97,8 @@ public fun compare_different(x: Int, y: Int): Bool {
 //  7| // Self-comparison with ==: should warn.
 //  8| public fun compare_equal(x: Int): Bool {
 //  9|     x == x
-// 10| }   ^^^^^^
+//   |     ^^^^^^
+// 10| }
 // 
 // Warning: Both sides of `!=` are identical.
 // 
@@ -104,7 +106,8 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 12| // Self-comparison with !=: should warn.
 // 13| public fun compare_not_equal(x: Int): Bool {
 // 14|     x != x
-// 15| }   ^^^^^^
+//   |     ^^^^^^
+// 15| }
 // 
 // Warning: Both sides of `<` are identical.
 // 
@@ -112,7 +115,8 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 17| // Self-comparison with <: should warn.
 // 18| public fun compare_less(x: Int): Bool {
 // 19|     x < x
-// 20| }   ^^^^^
+//   |     ^^^^^
+// 20| }
 // 
 // Warning: Both sides of `==` are identical.
 // 
@@ -120,7 +124,8 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 22| // Self-comparison with integer literals: should warn.
 // 23| public fun compare_literals(): Bool {
 // 24|     1 == 1
-// 25| }   ^^^^^^
+//   |     ^^^^^^
+// 25| }
 // 
 // Warning: Both sides of `==` are identical.
 // 
@@ -128,6 +133,7 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 27| // Self-comparison with float literals: should warn.
 // 28| public fun compare_float_literals(): Bool {
 // 29|     1.0 == 1.0
-// 30| }   ^^^^^^^^^^
+//   |     ^^^^^^^^^^
+// 30| }
 
 // expected stderr: 2 issues can be fixed automatically (use `--fix`).

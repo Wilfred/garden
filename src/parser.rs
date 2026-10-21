@@ -1515,7 +1515,7 @@ fn parse_definition(
         // TODO: Include the token in the error message.
         diagnostics.push(ParseError::Invalid {
             position: token.position,
-            message: ErrorMessage(vec![Text("Expected a definition".to_owned())]),
+            message: ErrorMessage(vec![Text("Expected a definition.".to_owned())]),
             notes: vec![],
         });
         return None;
@@ -1528,7 +1528,7 @@ fn parse_definition(
 
     diagnostics.push(ParseError::Incomplete {
         position,
-        message: ErrorMessage(vec![Text("Unfinished definition".to_owned())]),
+        message: ErrorMessage(vec![Text("Unfinished definition.".to_owned())]),
     });
     None
 }
@@ -1728,7 +1728,7 @@ fn parse_test(
             diagnostics.push(ParseError::Invalid {
                 position: Position::merge(&params.open_paren, &params.close_paren),
                 message: ErrorMessage(vec![
-                    msgtext!("Tests should not have arguments. A valid test look like this: "),
+                    msgtext!("Tests should not have arguments. A valid test looks like this: "),
                     msgcode!("test foo {{}}"),
                     msgtext!(". See "),
                     msglink!(
@@ -1766,7 +1766,7 @@ fn parse_import(
         diagnostics.push(ParseError::Incomplete {
             position: import_token.position.clone(),
             message: ErrorMessage(vec![
-                msgtext!("Unfinished"),
+                msgtext!("Unfinished "),
                 msgcode!("import"),
                 msgtext!("."),
             ]),
@@ -2069,7 +2069,7 @@ fn parse_type_hint(
             position: position.clone(),
             message: ErrorMessage(vec![
                 msgcode!("Tuple"),
-                msgtext!(" cannot be used a type hint. Use "),
+                msgtext!(" cannot be used as a type hint. Use "),
                 msgcode!("{}", equivalent_tuple_src),
                 msgtext!(" instead."),
             ]),
@@ -2852,7 +2852,7 @@ fn parse_let_destination(
                 diagnostics.push(ParseError::Invalid {
                     position: symbol.position.clone(),
                     message: ErrorMessage(vec![
-                        msgtext!("Duplicate variable  "),
+                        msgtext!("Duplicate variable "),
                         msgcode!("{}", name),
                         msgtext!(" in destructuring "),
                         msgcode!("let"),

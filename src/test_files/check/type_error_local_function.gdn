@@ -12,9 +12,11 @@ public fun takes_int(_v: Int) {}
 // -| src/test_files/check/type_error_local_function.gdn:4:15
 // 3| {
 // 4|     takes_int("foo")
-// 5| }             ^^^^^
+//  |               ^^^^^
+// 5| }
 // -| src/test_files/check/type_error_local_function.gdn:1:22
 // 1| public fun takes_int(_v: Int) {}
-// 2|                      ^^^^^^^ Note: the parameter `_v` is declared with type `Int` here.
+//  |                      ^^^^^^^ Note: the parameter `_v` is declared with type `Int` here.
+// 2| 
 // 3| {
 

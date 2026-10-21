@@ -66,5 +66,6 @@ fun bar() {}
 // 
 // -| src/test_files/parser/incomplete_fun_with_params.gdn:1:9
 // 1| fun foo()
-// 2|         ^
+//  |         ^
+// 2| 
 // 3| fun bar() {}

@@ -15,4 +15,5 @@
 // 4|   // the value it is used with, so we cannot tell that x is an integer
 // 5|   // when checking addition.
 // 6|   [1, 2, 3].map(fun(x) { x + 1 })
-// 7| }                        ^
+//  |                          ^
+// 7| }

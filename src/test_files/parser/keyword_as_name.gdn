@@ -10,4 +10,5 @@
 // -| src/test_files/parser/keyword_as_name.gdn:2:7
 // 1| {
 // 2|   for fun in funs {}
-// 3| }     ^^^
+//  |       ^^^
+// 3| }

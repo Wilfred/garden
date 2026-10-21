@@ -10,4 +10,5 @@ fun foo(arg: (A: B)) {
 // -| src/test_files/check/tuple_colon.gdn:2:16
 // 1| // Parser previously crashed on this input
 // 2| fun foo(arg: (A: B)) {
-// 3| }              ^
+//  |                ^
+// 3| }

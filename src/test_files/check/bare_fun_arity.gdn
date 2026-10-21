@@ -7,5 +7,6 @@ public fun apply(_g: Fun) {}
 // 
 // -| src/test_files/check/bare_fun_arity.gdn:1:22
 // 1| public fun apply(_g: Fun) {}
-// 2|                      ^^^
+//  |                      ^^^
+// 2|
 

@@ -33,4 +33,4 @@ struct
 //     CurrentFile,
 // )
 
-// expected stderr: Parse error (incomplete input): Unfinished definition
+// expected stderr: Parse error (incomplete input): Unfinished definition.

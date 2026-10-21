@@ -1850,9 +1850,9 @@ impl TypeCheckVisitor<'_> {
                     fixes,
                     severity: Severity::Error,
                     message: ErrorMessage(vec![
-                        msgtext!("Unbound symbol: "),
+                        msgtext!("No such function or variable "),
                         msgcode!("{}", sym.name),
-                        msgtext!("{}", suggest),
+                        msgtext!(".{}", suggest),
                     ]),
                     position: sym.position.clone(),
                 });

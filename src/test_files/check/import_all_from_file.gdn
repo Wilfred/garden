@@ -8,10 +8,11 @@ import "./lib.gdn"
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Unbound symbol: `bar`
+// Error: No such function or variable `bar`.
 // 
 // -| src/test_files/check/import_all_from_file.gdn:5:3
 // 3| {
 // 4|   foo()
 // 5|   bar()
-// 6| } ^^^
+//  |   ^^^
+// 6| }

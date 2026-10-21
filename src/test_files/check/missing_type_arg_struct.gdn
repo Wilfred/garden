@@ -13,5 +13,6 @@ public fun foo(): MyStruct {
 // 1| struct MyStruct<T> {}
 // 2| 
 // 3| public fun foo(): MyStruct {
-// 4|   throw("")       ^^^^^^^^
+//  |                   ^^^^^^^^
+// 4|   throw("")
 // 5| }

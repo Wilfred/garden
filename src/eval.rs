@@ -802,7 +802,7 @@ fn describe_read_error(path: &Path, e: &std::io::Error) -> ErrorMessage {
             vec![
                 msgtext!("Could not read file "),
                 msgcode!("{}", path.display()),
-                msgtext!(", got error {}", e.kind()),
+                msgtext!(", got error {}.", e.kind()),
             ]
         }
     };
@@ -1864,7 +1864,7 @@ fn eval_for_in(
                         EvalError::Exception(ExceptionInfo {
                             position: iteree_pos.clone(),
                             message: ErrorMessage(vec![Text(format!(
-                                "Expected a tuple with {} items, got a tuple with {} items.",
+                                "Expected a tuple of {} items, but got a tuple of {} items.",
                                 symbols.len(),
                                 items.len(),
                             ))]),
@@ -2021,7 +2021,11 @@ fn eval_let(
                     RestoreValues(vec![]),
                     EvalError::Exception(ExceptionInfo {
                         position: hint.position.clone(),
-                        message: ErrorMessage(vec![msgtext!("Unbound type in hint: "), Code(e)]),
+                        message: ErrorMessage(vec![
+                            msgtext!("Unbound type in hint: "),
+                            Code(e),
+                            msgtext!("."),
+                        ]),
                     }),
                 ));
             }
@@ -2049,7 +2053,7 @@ fn eval_let(
                         EvalError::Exception(ExceptionInfo {
                             position: init_value_pos.clone(),
                             message: ErrorMessage(vec![Text(format!(
-                                "Expected a tuple with {} items, got a tuple with {} items.",
+                                "Expected a tuple of {} items, but got a tuple of {} items.",
                                 symbols.len(),
                                 items.len(),
                             ))]),
@@ -2334,7 +2338,7 @@ fn eval_int_binop(
                     EvalError::Exception(ExceptionInfo {
                         position: position.clone(),
                         message: ErrorMessage(vec![Text(format!(
-                            "Cannot raise an integer to a negative power, got {}.^ {}",
+                            "Cannot raise an integer to a negative power, got {} ** {}.",
                             lhs_value.display(env),
                             rhs_value.display(env),
                         ))]),
@@ -2348,7 +2352,7 @@ fn eval_int_binop(
                     EvalError::Exception(ExceptionInfo {
                         position: position.clone(),
                         message: ErrorMessage(vec![Text(format!(
-                            "Exponent is too large, got {}.^ {}",
+                            "Exponent is too large, got {} ** {}.",
                             lhs_value.display(env),
                             rhs_value.display(env),
                         ))]),
@@ -2364,7 +2368,7 @@ fn eval_int_binop(
                         EvalError::Exception(ExceptionInfo {
                             position: position.clone(),
                             message: ErrorMessage(vec![Text(format!(
-                                "Integer overflow on raising to the power, got {}.^ {}",
+                                "Integer overflow on raising to the power, got {} ** {}.",
                                 lhs_value.display(env),
                                 rhs_value.display(env),
                             ))]),
@@ -2591,7 +2595,7 @@ fn check_arity(
             EvalError::Exception(ExceptionInfo {
                 position: error_position,
                 message: ErrorMessage(vec![Text(format!(
-                    "Function {} requires {} argument{}, but got {}",
+                    "Function {} requires {} argument{}, but got {}.",
                     fun_name,
                     expected,
                     if expected == 1 { "" } else { "s" },
@@ -4649,7 +4653,7 @@ fn eval_call(
                 }
 
                 let message = ErrorMessage(vec![Text(format!(
-                    "Closure expects {} argument{}, but got {}",
+                    "Closure expects {} argument{}, but got {}.",
                     fun_info.params.params.len(),
                     if fun_info.params.params.len() == 1 {
                         ""
@@ -5046,6 +5050,7 @@ fn check_param_types(
                             message: ErrorMessage(vec![
                                 msgtext!("Unbound type in hint: "),
                                 msgcode!("{}", e),
+                                msgtext!("."),
                             ]),
                         }),
                     ));
@@ -6440,7 +6445,7 @@ fn eval_built_in_method_call(
                         message: ErrorMessage(vec![
                             msgtext!("The first argument ({}) to ", from_arg),
                             msgcode!("String::substring()"),
-                            msgtext!(" cannot be greater than than the second ({}). ", to_arg),
+                            msgtext!(" cannot be greater than the second ({}). ", to_arg),
                             msgtext!(
                                 "The string itself is {} character{} long.",
                                 s_len,
@@ -7762,7 +7767,7 @@ fn eval_match_cases(
     } = scrutinee_value.as_ref()
     else {
         let msg = ErrorMessage(vec![Text(format!(
-            "Expected an enum value, but got {}: {}",
+            "Expected an enum value, but got {}: {}.",
             Type::from_value(&scrutinee_value),
             scrutinee_value.display(env)
         ))]);
@@ -7774,7 +7779,7 @@ fn eval_match_cases(
 
     let Some(_type) = env.get_type_def(value_type_name) else {
         let msg = ErrorMessage(vec![Text(format!(
-            "Could not find an enum type named {value_type_name}"
+            "Could not find an enum type named {value_type_name}."
         ))]);
         return Err(EvalError::Exception(ExceptionInfo {
             position: scrutinee_pos.clone(),
@@ -7814,7 +7819,7 @@ fn eval_match_cases(
             _ => {
                 // TODO: error messages should include examples of valid code.
                 let msg = ErrorMessage(vec![Text(format!(
-                    "Patterns must be enum variants, got `{}`",
+                    "Patterns must be enum variants, got `{}`.",
                     value.display(env)
                 ))]);
                 return Err(EvalError::Exception(ExceptionInfo {

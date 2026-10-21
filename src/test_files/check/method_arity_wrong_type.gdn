@@ -14,5 +14,6 @@
 // 3|   // Too few arguments, and the argument has the wrong type. Only the
 // 4|   // arity error should be reported, not a type mismatch.
 // 5|   x.slice("a")
-// 6| }            ^
+//  |              ^
+// 6| }
 

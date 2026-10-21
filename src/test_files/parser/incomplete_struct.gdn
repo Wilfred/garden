@@ -48,5 +48,6 @@ fun bar() {}
 // 
 // -| src/test_files/parser/incomplete_struct.gdn:1:8
 // 1| struct Foo
-// 2|        ^^^
+//  |        ^^^
+// 2| 
 // 3| fun bar() {}

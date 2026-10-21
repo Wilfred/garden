@@ -12,7 +12,8 @@ public fun bad(): Bool {
 // -| src/test_files/check/type_error_return_type.gdn:2:27
 // 1| public fun bad(): Bool {
 // 2|     let _f = fun(): Int { True }
-// 3|                           ^^^^
+//  |                           ^^^^
+// 3|     
 // 4|     "abc"
 // 
 // Error: Expected a `Bool` but got a `String`.
@@ -21,7 +22,8 @@ public fun bad(): Bool {
 // 2|     let _f = fun(): Int { True }
 // 3|     
 // 4|     "abc"
-// 5| }   ^^^^^
+//  |     ^^^^^
+// 5| }
 // -| src/test_files/check/type_error_return_type.gdn:1:19
 // 1| public fun bad(): Bool {
 //  |                   ^^^^ Note: expected `Bool` because of this return type.

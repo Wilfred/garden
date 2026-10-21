@@ -11,8 +11,10 @@ public method foo(this: String) {}
 // 1| public method foo(this: String) {}
 // 2| 
 // 3| public method foo(this: String) {}
-// 4|               ^^^
+//  |               ^^^
+// 4| 
 // -| src/test_files/check/duplicate_method.gdn:1:15
 // 1| public method foo(this: String) {}
-// 2|               ^^^ Note: Previous definition was here.
+//  |               ^^^ Note: Previous definition was here.
+// 2| 
 // 3| public method foo(this: String) {}

@@ -11,8 +11,10 @@ public fun foo() {}
 // 1| public fun foo() {}
 // 2| 
 // 3| public fun foo() {}
-// 4|            ^^^
+//  |            ^^^
+// 4| 
 // -| src/test_files/check/duplicate_function.gdn:1:12
 // 1| public fun foo() {}
-// 2|            ^^^ Note: Previous definition was here.
+//  |            ^^^ Note: Previous definition was here.
+// 2| 
 // 3| public fun foo() {}

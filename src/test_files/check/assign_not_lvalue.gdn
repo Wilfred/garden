@@ -13,7 +13,8 @@ public fun foo() {
 // 2|     let x = 1
 // 3|     // TODO: why does this produce duplicate errors?
 // 4|     x + 1 = 2
-// 5| }     ^
+//  |       ^
+// 5| }
 // 
 // Error: Expected a symbol after this.
 // 
@@ -21,7 +22,8 @@ public fun foo() {
 // 2|     let x = 1
 // 3|     // TODO: why does this produce duplicate errors?
 // 4|     x + 1 = 2
-// 5| }     ^
+//  |       ^
+// 5| }
 // 
 // Error: Expected `}` after this.
 // 
@@ -29,7 +31,8 @@ public fun foo() {
 // 2|     let x = 1
 // 3|     // TODO: why does this produce duplicate errors?
 // 4|     x + 1 = 2
-// 5| }     ^
+//  |       ^
+// 5| }
 // 
 // Error: Expected a symbol after this.
 // 
@@ -37,4 +40,5 @@ public fun foo() {
 // 2|     let x = 1
 // 3|     // TODO: why does this produce duplicate errors?
 // 4|     x + 1 = 2
-// 5| }     ^
+//  |       ^
+// 5| }

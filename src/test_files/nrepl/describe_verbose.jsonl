@@ -101,6 +101,17 @@
 //       "returns": {
 //         "sessions": "A list of all available session IDs."
 //       }
+//     },
+//     "ns-path": {
+//       "doc": "Return the file path of the source file that defines the given namespace. Used by cider-find-ns.",
+//       "optional": {},
+//       "requires": {
+//         "ns": "The namespace whose source path should be returned.",
+//         "session": "The ID of the session in which the namespace should be looked up."
+//       },
+//       "returns": {
+//         "path": "The path of the source file defining the namespace, if known."
+//       }
 //     }
 //   },
 //   "status": [

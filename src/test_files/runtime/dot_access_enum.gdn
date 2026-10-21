@@ -4,9 +4,11 @@
 }
 
 // args: run
+// expected exit status: 1
 // expected stderr:
 // Exception: Expected `struct` but `Some(1)` has type `Option<Int>`.
 // -| src/test_files/runtime/dot_access_enum.gdn:3:3	 __toplevel__
 // 3|   x.y
 //  |   ^
+//  | where x = Some(1)
 

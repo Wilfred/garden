@@ -263,9 +263,7 @@ fn eval_code_block(
             let error_msg = format_exception_with_stack(
                 &exception_info.message,
                 &exception_info.position,
-                &file_env.stack.0,
-                &file_env.vfs,
-                &file_env.project_root,
+                &file_env,
             );
             return Err(error_msg);
         }
@@ -314,9 +312,7 @@ fn eval_code_block(
                 let error_msg = format_exception_with_stack(
                     &exception_info.message,
                     &exception_info.position,
-                    &block_env.stack.0,
-                    &block_env.vfs,
-                    &block_env.project_root,
+                    &block_env,
                 );
                 return Err(error_msg);
             }

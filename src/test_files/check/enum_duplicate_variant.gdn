@@ -1,0 +1,24 @@
+enum Shape {
+    Circle,
+    Square,
+    Circle,
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Duplicate enum variant `Circle`.
+// 
+// -| src/test_files/check/enum_duplicate_variant.gdn:4:5
+// 2|     Circle,
+// 3|     Square,
+// 4|     Circle,
+// 5| }   ^^^^^^
+// -| src/test_files/check/enum_duplicate_variant.gdn:2:5
+// 1| enum Shape {
+// 2|     Circle,
+//  |     ^^^^^^ Note: The previous occurrence is here.
+// 3|     Square,
+// 4|     Circle,
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

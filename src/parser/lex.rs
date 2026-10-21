@@ -316,6 +316,7 @@ pub(crate) fn lex_between<'a>(
                     // TODO: include previous string position, which
                     // was probably not closed correctly.
                     notes: vec![],
+                    fixes: vec![],
                 });
 
                 tokens.push(Token {
@@ -376,6 +377,7 @@ pub(crate) fn lex_between<'a>(
                     msgcode!("{}", &s[0..1]),
                 ]),
                 notes: vec![],
+                fixes: vec![],
             });
 
             offset += 1;

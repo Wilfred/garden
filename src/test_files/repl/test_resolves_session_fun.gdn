@@ -1,0 +1,13 @@
+fun double(n: Int): Int { n * 2 }
+test double_is_wrong {
+  assert(double(3) == 7)
+}
+:test double_is_wrong
+
+// args: reftest-repl
+// expected stdout:
+// Exception: Expected `7` but got `6`.
+// -| __user.gdn:2:10	 test double_is_wrong
+// 2|   assert(double(3) == 7)
+//  |          ^^^^^^^^^^^^^^
+

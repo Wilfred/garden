@@ -1,0 +1,29 @@
+// Wrong delimiter for a dict literal: should be `Dict[]`. This
+// should report a single error, then parse the literal normally.
+Dict{}
+
+// Recovery continues parsing, so this later mistake is still
+// reported.
+Dict["x" => ]
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `[` after this.
+// 
+// -| src/test_files/check/dict_literal_brace.gdn:3:1
+// 1| // Wrong delimiter for a dict literal: should be `Dict[]`. This
+// 2| // should report a single error, then parse the literal normally.
+// 3| Dict{}
+//  | ^^^^
+// 4| 
+// 5| // Recovery continues parsing, so this later mistake is still
+// 
+// Error: Expected an expression after this.
+// 
+// -| src/test_files/check/dict_literal_brace.gdn:7:10
+// 5| // Recovery continues parsing, so this later mistake is still
+// 6| // reported.
+// 7| Dict["x" => ]
+// 8|          ^^
+

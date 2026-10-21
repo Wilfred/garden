@@ -126,12 +126,12 @@ impl UnusedVariableVisitor {
         for unused_var in &self.unused {
             let fix = match &unused_var.fix {
                 UnusedVarFix::Rename => Autofix {
-                    description: format!("Rename to `_{}`", unused_var.name),
+                    description: format!("Rename to `_{}`.", unused_var.name),
                     position: unused_var.name_position.clone(),
                     new_text: format!("_{}", unused_var.name),
                 },
                 UnusedVarFix::RemoveLet { removal_position } => Autofix {
-                    description: "Remove this let binding".to_owned(),
+                    description: "Remove this let binding.".to_owned(),
                     position: removal_position.clone(),
                     new_text: String::new(),
                 },
@@ -164,7 +164,7 @@ impl UnusedVariableVisitor {
                 message: ErrorMessage(vec![msgcode!("{name}"), msgtext!(" is unused.")]),
                 position: symbol_position.clone(),
                 fixes: vec![Autofix {
-                    description: "Remove this import".to_owned(),
+                    description: "Remove this import.".to_owned(),
                     position: import_position.clone(),
                     new_text: String::new(),
                 }],
@@ -182,7 +182,7 @@ impl UnusedVariableVisitor {
                 ]),
                 position: unused_type_param.name_position.clone(),
                 fixes: vec![Autofix {
-                    description: "Remove this type parameter".to_owned(),
+                    description: "Remove this type parameter.".to_owned(),
                     position: unused_type_param.removal_position.clone(),
                     new_text: String::new(),
                 }],

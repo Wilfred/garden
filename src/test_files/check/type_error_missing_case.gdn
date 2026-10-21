@@ -45,6 +45,7 @@ public fun foo(x: Option<Int>) {
 //   |           ^
 // 16|         Some(_) => {}
 // 17|     }
+// Help: Add missing case `None`.
 // 
 // Error: Duplicate case in pattern match.
 // 

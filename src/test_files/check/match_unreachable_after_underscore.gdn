@@ -19,6 +19,7 @@ public fun describe(c: Color): String {
 // 7|     Green => "green"
 // 8|   } ^^^^^
 // 9| }
+// Help: Remove unreachable case.
 // -| src/test_files/check/match_unreachable_after_underscore.gdn:6:5
 // 4|   match c {
 // 5|     Red => "red"

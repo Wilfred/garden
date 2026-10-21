@@ -46,7 +46,7 @@ impl<'a> UnusedLiteralVisitor<'a> {
 
         if is_literal {
             let fix = Autofix {
-                description: "Remove unused value".to_owned(),
+                description: "Remove unused value.".to_owned(),
                 position: self.get_line_position(&expr.position),
                 new_text: String::new(),
             };

@@ -20,6 +20,7 @@ public fun f(): Int {
 // 3|   let xy = 0
 // 4|       ^^
 // 5|   // should also warn
+// Help: Remove this let binding.
 // 
 // Warning: `x` is unused.
 // 
@@ -28,5 +29,6 @@ public fun f(): Int {
 // 6|   let x = 1
 // 7|       ^
 // 8|   let x = 1
+// Help: Remove this let binding.
 
 // expected stderr: 2 issues can be fixed automatically (use `--fix`).

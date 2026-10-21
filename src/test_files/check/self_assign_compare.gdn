@@ -79,6 +79,7 @@ public fun compare_different(x: Int, y: Int): Bool {
 // 34|     let y = x
 // 35|     y       ^
 // 36| }
+// Help: Remove unnecessary `let` binding.
 // 
 // Warning: `x` is assigned to itself.
 // 

@@ -37,7 +37,7 @@ impl Visitor for UnnecessaryReturnVisitor {
                     notes: vec![],
                     severity: Severity::Warning,
                     fixes: vec![Autofix {
-                        description: "Remove unnecessary `return`".to_owned(),
+                        description: "Remove unnecessary `return`.".to_owned(),
                         position: return_keyword_position,
                         new_text: String::new(),
                     }],

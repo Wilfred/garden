@@ -6,6 +6,9 @@ are ordered by production impact; their stable IDs link back to earlier commits.
 Confirmed defects, documented design choices and API/linter proposals are
 explicitly distinguished. No language implementation changes are included.
 
+For a fresh agent to repeat or extend the analysis, use the
+[review instructions](REVIEW_GUIDE.md).
+
 ## Run the working exercises
 
 From the repository root:

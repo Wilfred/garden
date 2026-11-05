@@ -1,0 +1,2 @@
+let values: List<Int> = []
+println(string_repr(values.first().or_throw()))

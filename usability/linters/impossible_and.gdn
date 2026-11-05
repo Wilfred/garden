@@ -1,0 +1,2 @@
+let n = 1
+if (n == 1) && (n == 2) { println("impossible") } else { println("never entered") }

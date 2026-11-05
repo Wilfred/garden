@@ -1,0 +1,3 @@
+let count = 0
+for i in range(5, 0) { count += i }
+println(string_repr(count))

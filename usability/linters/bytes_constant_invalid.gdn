@@ -1,0 +1,2 @@
+import "__fs.gdn" as fs
+println(string_repr(fs::write_bytes([256], Path{ p: "/tmp/garden-usability-invalid-byte-output" })))

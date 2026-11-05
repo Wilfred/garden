@@ -1,0 +1,2 @@
+let n = 25
+if n >= 10 { println("ten") } else if n >= 20 { println("twenty") } else { println("small") }

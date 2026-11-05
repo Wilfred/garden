@@ -1,0 +1,2 @@
+let allowed = False
+if allowed || True { println("allowed unconditionally") }

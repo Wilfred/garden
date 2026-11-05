@@ -1,0 +1,275 @@
+{
+  "always_true_or": {
+    "source": "let n = 1\nif (n != 1) || (n != 2) { println(\"always true\") }\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "always true\n",
+      "stderr": ""
+    }
+  },
+  "bytes_constant_invalid": {
+    "source": "import \"__fs.gdn\" as fs\nprintln(string_repr(fs::write_bytes([256], Path{ p: \"/tmp/garden-usability-invalid-byte-output\" })))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Byte values must be in the range 0 to 255, got `256`.\n-| usability/linters/bytes_constant_invalid.gdn:2:37\t __toplevel__\n2| println(string_repr(fs::write_bytes([256], Path{ p: \"/tmp/garden-usability-invalid-byte-output\" })))\n |                                     ^^^^^\n"
+    }
+  },
+  "constant_boolean_operand": {
+    "source": "let allowed = False\nif allowed || True { println(\"allowed unconditionally\") }\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "allowed unconditionally\n",
+      "stderr": ""
+    }
+  },
+  "constant_negative_power": {
+    "source": "println(string_repr(2 ** -1))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Cannot raise an integer to a negative power, got 2.^ -1\n-| usability/linters/constant_negative_power.gdn:1:21\t __toplevel__\n1| println(string_repr(2 ** -1))\n |                     ^^^^^^^\n"
+    }
+  },
+  "constant_zero_division": {
+    "source": "println(string_repr(10 / 0))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Tried to divide 10 by zero.\n-| usability/linters/constant_zero_division.gdn:1:21\t __toplevel__\n1| println(string_repr(10 / 0))\n |                     ^^^^^^\n"
+    }
+  },
+  "descending_range": {
+    "source": "let count = 0\nfor i in range(5, 0) { count += i }\nprintln(string_repr(count))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    }
+  },
+  "duplicate_branch": {
+    "source": "let n = 2\nif n == 1 { println(\"one\") } else if n == 1 { println(\"unreachable duplicate\") } else { println(\"other\") }\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "other\n",
+      "stderr": ""
+    }
+  },
+  "duplicate_match_arm": {
+    "source": "match Some(1) { Some(n) => println(string_repr(n)), Some(m) => println(string_repr(m)), None => {} }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Duplicate case in pattern match.\n\n-| usability/linters/duplicate_match_arm.gdn:1:53\n1| match Some(1) { Some(n) => println(string_repr(n)), Some(m) => println(string_repr(m)), None => {} }\n |                                                     ^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "empty_loop_body": {
+    "source": "let n = 0\nwhile n < 1 {}\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: This `while` loop's condition references only local variables, but none of them are modified in the body.\n\n-| usability/linters/empty_loop_body.gdn:2:7\n1| let n = 0\n2| while n < 1 {}\n |       ^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": "timeout",
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "float_equality": {
+    "source": "let equal = (0.1 +. 0.2) == 0.3\nprintln(string_repr(equal))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "False\n",
+      "stderr": ""
+    }
+  },
+  "float_precision_loss": {
+    "source": "let large = 9007199254740993\nprintln(string_repr(large.as_float().floor() == large))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "False\n",
+      "stderr": ""
+    }
+  },
+  "forgot_assignment": {
+    "source": "let n = 1\nn == 2\nprintln(string_repr(n))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "forgot_call": {
+    "source": "fun save(): Unit { println(\"saved\") }\nsave\nprintln(\"finished\")\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "finished\n",
+      "stderr": ""
+    }
+  },
+  "impossible_and": {
+    "source": "let n = 1\nif (n == 1) && (n == 2) { println(\"impossible\") } else { println(\"never entered\") }\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "never entered\n",
+      "stderr": ""
+    }
+  },
+  "return_inside_for": {
+    "source": "fun sum(xs: List<Int>): Int {\n  let total = 0\n  for n in xs { total += n return total }\n  total\n}\nprintln(string_repr(sum([1, 2, 3])))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "shadow_update": {
+    "source": "let total = 0\nfor n in [1, 2, 3] { let total = total + n println(string_repr(total)) }\nprintln(\"sum: \" ^ string_repr(total))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n2\n3\nsum: 0\n",
+      "stderr": ""
+    }
+  },
+  "subsumed_branch": {
+    "source": "let n = 25\nif n >= 10 { println(\"ten\") } else if n >= 20 { println(\"twenty\") } else { println(\"small\") }\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "ten\n",
+      "stderr": ""
+    }
+  },
+  "unreachable_match_arm": {
+    "source": "match Some(1) { _ => println(\"any\"), Some(n) => println(string_repr(n)) }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `match` cases after `_` are never executed.\n\n-| usability/linters/unreachable_match_arm.gdn:1:38\n1| match Some(1) { _ => println(\"any\"), Some(n) => println(string_repr(n)) }\n |                                      ^^^^\n-| usability/linters/unreachable_match_arm.gdn:1:17\n1| match Some(1) { _ => println(\"any\"), Some(n) => println(string_repr(n)) }\n |                 ^ Note: This `_` case matches everything.\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "any\n",
+      "stderr": ""
+    }
+  },
+  "unsafe_first": {
+    "source": "let values: List<Int> = []\nprintln(string_repr(values.first().or_throw()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Called `or_throw` on a `None` value.\n---| __prelude.gdn:813:13\t method or_throw(this: Option)()\n813|     None => throw(\"Called `or_throw` on a `None` value.\")\n   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n-| usability/linters/unsafe_first.gdn:2:21\t __toplevel__\n2| println(string_repr(values.first().or_throw()))\n |                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "unused_error_branch": {
+    "source": "let result: Result<Int, String> = Err(\"failed\")\nmatch result { Ok(n) => println(string_repr(n)), Err(_) => {} }\nprintln(\"done\")\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "done\n",
+      "stderr": ""
+    }
+  },
+  "unused_pure_call": {
+    "source": "\"not-a-number\".as_int()\nprintln(\"done\")\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "done\n",
+      "stderr": ""
+    }
+  }
+}

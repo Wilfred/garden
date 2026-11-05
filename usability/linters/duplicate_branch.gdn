@@ -1,0 +1,2 @@
+let n = 2
+if n == 1 { println("one") } else if n == 1 { println("unreachable duplicate") } else { println("other") }

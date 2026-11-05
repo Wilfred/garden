@@ -1,0 +1,2 @@
+let large = 9007199254740993
+println(string_repr(large.as_float().floor() == large))

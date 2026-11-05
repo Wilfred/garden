@@ -243,3 +243,62 @@ and nested generic constructors work. Specializing a List method to List<Int>
 is explicitly rejected with a useful requirement to use List<T>. The empty-
 container inference limitation (43) also applies to Dict, and is not counted
 a second time. The same applies to contextual lambda inference (18).
+
+Missing bug-catching linters
+
+Twenty-one cases are recorded in evidence/linters.json. Suggestions below
+prioritize deterministic mistakes, retain positive controls, and identify where
+false positives would make an unconditional warning inappropriate. These are
+separate from soundness bugs, which should be fixed rather than linted around.
+
+65. DISCARDED COMPARISON: `n == 2` as a statement passes check and leaves n
+    unchanged (forgot_assignment). Warn when a comparison result is discarded;
+    this is a common assignment/comparison typo and has no useful side effect
+    in this simple example. Do not automatically replace == with =.
+66. FORGOTTEN CALL: a bare `save` function reference is silently discarded
+    (forgot_call), so no save occurs and the program prints "finished".
+    Warn on unused callable values where the likely intent was `save()`.
+67. SHADOWED UPDATE: `let total = total + n` inside a loop shadows rather
+    than updates the outer accumulator, which remains 0 (shadow_update).
+    Prefer a targeted shadowing warning when the initializer reads the same
+    outer name and that outer value is used after the loop; ordinary useful
+    shadowing should remain quiet.
+68. BOOLEAN CONTRADICTIONS: `(n != 1) || (n != 2)` is always True, while
+    `(n == 1) && (n == 2)` is always False. Both pass check, as does
+    `allowed || True`. Catch simple same-variable contradictions and constant
+    operands, preserving side effects because Garden booleans are eager.
+69. DEAD CONDITIONAL BRANCHES: duplicate `else if n == 1` and an n >= 20
+    branch after n >= 10 get no warning (duplicate_branch/subsumed_branch).
+    Extend the useful unreachable-match guidance to repeated/subsumed if
+    conditions; start with pure comparisons, not an unrestricted theorem prover.
+70. COMPUTED FLOAT EQUALITY: `(0.1 +. 0.2) == 0.3` silently produces False
+    (float_equality). Float's doc already warns against computed exact
+    equality. An opt-in lint for equality involving arithmetic would turn that
+    advice into actionable feedback; retain exact comparison for intentional
+    sentinel/representation checks. An approximate-comparison helper is also
+    needed to make the recommendation easy to follow.
+71. PROVABLE RUNTIME FAILURES: literal division by zero, negative integer
+    exponents, invalid byte constants and or_throw on a known empty first()
+    all pass static checking. Check simple constant preconditions in normal
+    code and point to the exact argument (constant_*, bytes_constant_invalid,
+    unsafe_first). Avoid warning merely because a dynamic operation can fail,
+    or suppress in deliberately expected-failure tests if those become supported.
+72. EMPTY COUNTING RANGES: range(5, 0) executes zero iterations without any
+    diagnostic (descending_range). A hint on statically reversed endpoints
+    can help Python/Rust users who expect descending iteration. Normal dynamic
+    empty ranges should remain valid; a step-aware range API is a separate
+    possible extension, not a precondition for this lint.
+73. NUMERIC CONVERSION DOC: 9007199254740993.as_float().floor() loses one
+    (float_precision_loss). That is normal binary64 rounding, not an
+    arithmetic bug. Int.as_float's doc does not explain the loss of exactness
+    outside the safe integer range. Add a boundary example or checked exact
+    conversion for callers who need round trips.
+
+Positive controls: an unmodified-local while condition gets a useful invariant-
+loop warning; duplicate match variants are errors; cases after _ get a precise
+unreachable warning with a source note and fix. Those are already implemented,
+so this review does not propose adding them again. Early return inside a loop
+can be either a sum bug or a deliberate search; ignoring an Err arm may be
+intentional. They are retained as reasoning examples rather than additional
+default-lint recommendations. A useful linter should optimize for signal,
+not merely the number of warnings.

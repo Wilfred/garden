@@ -1,0 +1,3 @@
+let result: Result<Int, String> = Err("failed")
+match result { Ok(n) => println(string_repr(n)), Err(_) => {} }
+println("done")

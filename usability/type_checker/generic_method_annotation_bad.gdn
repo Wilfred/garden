@@ -1,4 +1,5 @@
 struct Box<T> { value: T }
+
 method replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }
 let b: Box<Int> = Box{ value: 1 }.replace("wrong")
 println(string_repr(b))

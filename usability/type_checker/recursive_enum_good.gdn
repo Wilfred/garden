@@ -1,3 +1,4 @@
 enum Nat { Zero, Succ(Nat) }
-fun count(n: Nat): Int { match n { Zero => 0, Succ(rest) => count(rest) + 1 } }
+
+  fun count(n: Nat): Int { match n { Zero => 0, Succ(rest) => count(rest) + 1 } }
 println(string_repr(count(Succ(Succ(Zero)))))

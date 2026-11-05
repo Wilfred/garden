@@ -1,2 +1,3 @@
 public struct Record { value: String }
+
 public fun from_beta(): Record { Record{ value: "beta" } }

@@ -1,4 +1,5 @@
 struct Box<T> { value: T }
+
 fun text(b: Box<String>): String { b.value }
 let b = Box{ value: 1 }
 println(text(b))

@@ -1,3 +1,5 @@
 public struct Record { value: Int }
+
 public fun from_alpha(): Record { Record{ value: 7 } }
+
 fun hidden(): Int { 7 }

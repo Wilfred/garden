@@ -182,7 +182,7 @@
     }
   },
   "forward_reference": {
-    "source": "println(string_repr(increment(1)))\nfun increment(n: Int): Int { n + 1 }\n",
+    "source": "println(string_repr(increment(1)))\n\nfun increment(n: Int): Int { n + 1 }\n",
     "check": {
       "exit": 0,
       "stdout": "",
@@ -195,7 +195,7 @@
     }
   },
   "function_enum_variance": {
-    "source": "enum Handler<T> { Handle(Fun<(T), Unit>) }\nfun send(h: Handler<List<Int>>): Unit { match h { Handle(f) => f([1]) } }\nlet h: Handler<List<NoValue>> = Handle(fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) })\nsend(h)\n",
+    "source": "enum Handler<T> { Handle(Fun<(T), Unit>) }\n\n  fun send(h: Handler<List<Int>>): Unit { match h { Handle(f) => f([1]) } }\nlet h: Handler<List<NoValue>> = Handle(fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) })\nsend(h)\n",
     "check": {
       "exit": 0,
       "stdout": "",
@@ -204,11 +204,11 @@
     "run": {
       "exit": 1,
       "stdout": "",
-      "stderr": "Exception: Assertion failed.\n-| usability/type_checker/function_enum_variance.gdn:3:78\t closure\n3| let h: Handler<List<NoValue>> = Handle(fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) })\n |                                                                              ^^^^^^^^^^^^^\n-| usability/type_checker/function_enum_variance.gdn:2:64\t fun send()\n2| fun send(h: Handler<List<Int>>): Unit { match h { Handle(f) => f([1]) } }\n |                                                                ^^^^^^\n-| usability/type_checker/function_enum_variance.gdn:4:1\t __toplevel__\n4| send(h)\n | ^^^^^^^\n"
+      "stderr": "Exception: Assertion failed.\n-| usability/type_checker/function_enum_variance.gdn:4:78\t closure\n4| let h: Handler<List<NoValue>> = Handle(fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) })\n |                                                                              ^^^^^^^^^^^^^\n-| usability/type_checker/function_enum_variance.gdn:3:66\t fun send()\n3|   fun send(h: Handler<List<Int>>): Unit { match h { Handle(f) => f([1]) } }\n |                                                                  ^^^^^^\n-| usability/type_checker/function_enum_variance.gdn:5:1\t __toplevel__\n5| send(h)\n | ^^^^^^^\n"
     }
   },
   "function_field_variance": {
-    "source": "struct Handler<T> { run: Fun<(T), Unit> }\nfun send(h: Handler<List<Int>>): Unit { (h.run)([1]) }\nlet h: Handler<List<NoValue>> = Handler{ run: fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) } }\nsend(h)\n",
+    "source": "struct Handler<T> { run: Fun<(T), Unit> }\n\nfun send(h: Handler<List<Int>>): Unit { (h.run)([1]) }\nlet h: Handler<List<NoValue>> = Handler{ run: fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) } }\nsend(h)\n",
     "check": {
       "exit": 0,
       "stdout": "",
@@ -217,7 +217,7 @@
     "run": {
       "exit": 1,
       "stdout": "",
-      "stderr": "Exception: Assertion failed.\n-| usability/type_checker/function_field_variance.gdn:3:85\t closure\n3| let h: Handler<List<NoValue>> = Handler{ run: fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) } }\n |                                                                                     ^^^^^^^^^^^^^\n-| usability/type_checker/function_field_variance.gdn:2:41\t fun send()\n2| fun send(h: Handler<List<Int>>): Unit { (h.run)([1]) }\n |                                         ^^^^^^^^^^^^\n-| usability/type_checker/function_field_variance.gdn:4:1\t __toplevel__\n4| send(h)\n | ^^^^^^^\n"
+      "stderr": "Exception: Assertion failed.\n-| usability/type_checker/function_field_variance.gdn:4:85\t closure\n4| let h: Handler<List<NoValue>> = Handler{ run: fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) } }\n |                                                                                     ^^^^^^^^^^^^^\n-| usability/type_checker/function_field_variance.gdn:3:41\t fun send()\n3| fun send(h: Handler<List<Int>>): Unit { (h.run)([1]) }\n |                                         ^^^^^^^^^^^^\n-| usability/type_checker/function_field_variance.gdn:5:1\t __toplevel__\n5| send(h)\n | ^^^^^^^\n"
     }
   },
   "function_reassignment": {
@@ -260,20 +260,20 @@
     }
   },
   "generic_method_annotation_bad": {
-    "source": "struct Box<T> { value: T }\nmethod replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\nlet b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\nprintln(string_repr(b))\n",
+    "source": "struct Box<T> { value: T }\n\nmethod replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\nlet b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\nprintln(string_repr(b))\n",
     "check": {
       "exit": 1,
-      "stdout": "Error: Expected `Box<Int>` but got `Box<String>`.\n\n-| usability/type_checker/generic_method_annotation_bad.gdn:3:19\n1| struct Box<T> { value: T }\n2| method replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\n3| let b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\n |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n4| println(string_repr(b))\n-| usability/type_checker/generic_method_annotation_bad.gdn:3:8\n1| struct Box<T> { value: T }\n2| method replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\n3| let b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\n |        ^^^^^^^^ Note: expected `Box<Int>` because of this type hint.\n4| println(string_repr(b))\n",
+      "stdout": "Error: Expected `Box<Int>` but got `Box<String>`.\n\n-| usability/type_checker/generic_method_annotation_bad.gdn:4:19\n3| method replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\n4| let b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\n |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n5| println(string_repr(b))\n-| usability/type_checker/generic_method_annotation_bad.gdn:4:8\n3| method replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\n4| let b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\n |        ^^^^^^^^ Note: expected `Box<Int>` because of this type hint.\n5| println(string_repr(b))\n",
       "stderr": ""
     },
     "run": {
       "exit": 1,
       "stdout": "",
-      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_method_annotation_bad.gdn:3:19\t __toplevel__\n3| let b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\n |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_method_annotation_bad.gdn:4:19\t __toplevel__\n4| let b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\n |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
     }
   },
   "generic_method_bad": {
-    "source": "struct Box<T> { value: T }\nmethod replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\nprintln(string_repr(Box{ value: 1 }.replace(\"wrong\")))\n",
+    "source": "struct Box<T> { value: T }\n\nmethod replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\nprintln(string_repr(Box{ value: 1 }.replace(\"wrong\")))\n",
     "check": {
       "exit": 0,
       "stdout": "",
@@ -325,7 +325,7 @@
     }
   },
   "generic_receiver_bound": {
-    "source": "struct Box<T> { value: T }\nmethod replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\nlet b: Box<Int> = Box{ value: 1 }\nprintln(string_repr(b.replace(\"wrong\")))\n",
+    "source": "struct Box<T> { value: T }\n\nmethod replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\nlet b: Box<Int> = Box{ value: 1 }\nprintln(string_repr(b.replace(\"wrong\")))\n",
     "check": {
       "exit": 0,
       "stdout": "",
@@ -377,7 +377,7 @@
     }
   },
   "generic_struct_bad": {
-    "source": "struct Box<T> { value: T }\nfun unbox(b: Box<Int>): Int { b.value }\nprintln(string_repr(unbox(Box{ value: \"wrong\" })))\n",
+    "source": "struct Box<T> { value: T }\n\nfun unbox(b: Box<Int>): Int { b.value }\nprintln(string_repr(unbox(Box{ value: \"wrong\" })))\n",
     "check": {
       "exit": 0,
       "stdout": "",
@@ -386,11 +386,11 @@
     "run": {
       "exit": 1,
       "stdout": "",
-      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_struct_bad.gdn:3:27\t __toplevel__\n3| println(string_repr(unbox(Box{ value: \"wrong\" })))\n |                           ^^^^^^^^^^^^^^^^^^^^^\n"
+      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_struct_bad.gdn:4:27\t __toplevel__\n4| println(string_repr(unbox(Box{ value: \"wrong\" })))\n |                           ^^^^^^^^^^^^^^^^^^^^^\n"
     }
   },
   "generic_struct_flow": {
-    "source": "struct Box<T> { value: T }\nfun text(b: Box<String>): String { b.value }\nlet b = Box{ value: 1 }\nprintln(text(b))\n",
+    "source": "struct Box<T> { value: T }\n\nfun text(b: Box<String>): String { b.value }\nlet b = Box{ value: 1 }\nprintln(text(b))\n",
     "check": {
       "exit": 0,
       "stdout": "",
@@ -399,11 +399,11 @@
     "run": {
       "exit": 1,
       "stdout": "",
-      "stderr": "Exception: Expected `Box<String>` but `Box{ value: 1 }` has type `Box<Int>`.\n-| usability/type_checker/generic_struct_flow.gdn:4:14\t __toplevel__\n4| println(text(b))\n |              ^\n"
+      "stderr": "Exception: Expected `Box<String>` but `Box{ value: 1 }` has type `Box<Int>`.\n-| usability/type_checker/generic_struct_flow.gdn:5:14\t __toplevel__\n5| println(text(b))\n |              ^\n"
     }
   },
   "generic_struct_variable_bad": {
-    "source": "struct Box<T> { value: T }\nfun unbox(b: Box<Int>): Int { b.value }\nlet b = Box{ value: \"wrong\" }\nprintln(string_repr(unbox(b)))\n",
+    "source": "struct Box<T> { value: T }\n\nfun unbox(b: Box<Int>): Int { b.value }\nlet b = Box{ value: \"wrong\" }\nprintln(string_repr(unbox(b)))\n",
     "check": {
       "exit": 0,
       "stdout": "",
@@ -412,7 +412,7 @@
     "run": {
       "exit": 1,
       "stdout": "",
-      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_struct_variable_bad.gdn:4:27\t __toplevel__\n4| println(string_repr(unbox(b)))\n |                           ^\n"
+      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_struct_variable_bad.gdn:5:27\t __toplevel__\n5| println(string_repr(unbox(b)))\n |                           ^\n"
     }
   },
   "heterogeneous_dict": {
@@ -468,7 +468,7 @@
     }
   },
   "list_metadata_retag": {
-    "source": "let xs = [1].append(\"wrong\")\nfun strings(xs: List<String>): Unit { for s in xs { println(s) } }\nstrings(xs)\n",
+    "source": "let xs = [1].append(\"wrong\")\n\nfun strings(xs: List<String>): Unit { for s in xs { println(s) } }\nstrings(xs)\n",
     "check": {
       "exit": 0,
       "stdout": "",
@@ -477,7 +477,7 @@
     "run": {
       "exit": 1,
       "stdout": "",
-      "stderr": "Exception: Expected `String` but `1` has type `Int`.\n-| usability/type_checker/list_metadata_retag.gdn:2:61\t fun strings()\n2| fun strings(xs: List<String>): Unit { for s in xs { println(s) } }\n |                                                             ^\n-| usability/type_checker/list_metadata_retag.gdn:3:1\t __toplevel__\n3| strings(xs)\n | ^^^^^^^^^^^\n"
+      "stderr": "Exception: Expected `String` but `1` has type `Int`.\n-| usability/type_checker/list_metadata_retag.gdn:3:61\t fun strings()\n3| fun strings(xs: List<String>): Unit { for s in xs { println(s) } }\n |                                                             ^\n-| usability/type_checker/list_metadata_retag.gdn:4:1\t __toplevel__\n4| strings(xs)\n | ^^^^^^^^^^^\n"
     }
   },
   "match_binding_leak": {
@@ -598,7 +598,7 @@
     }
   },
   "recursive_enum_good": {
-    "source": "enum Nat { Zero, Succ(Nat) }\nfun count(n: Nat): Int { match n { Zero => 0, Succ(rest) => count(rest) + 1 } }\nprintln(string_repr(count(Succ(Succ(Zero)))))\n",
+    "source": "enum Nat { Zero, Succ(Nat) }\n\n  fun count(n: Nat): Int { match n { Zero => 0, Succ(rest) => count(rest) + 1 } }\nprintln(string_repr(count(Succ(Succ(Zero)))))\n",
     "check": {
       "exit": 0,
       "stdout": "",

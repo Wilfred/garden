@@ -1,4 +1,5 @@
 struct Handler<T> { run: Fun<(T), Unit> }
+
 fun send(h: Handler<List<Int>>): Unit { (h.run)([1]) }
 let h: Handler<List<NoValue>> = Handler{ run: fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) } }
 send(h)

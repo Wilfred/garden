@@ -48,14 +48,14 @@
     "run": {
       "exit": 1,
       "stdout": "",
-      "stderr": "Exception: Incorrect type for field: Expected `String` but `7` has type `Int`.\n-| usability/broad/modules/alpha.gdn:2:50\t fun from_alpha()\n2| public fun from_alpha(): Record { Record{ value: 7 } }\n |                                                  ^\n-| usability/broad/module_collision.gdn:3:21\t __toplevel__\n3| println(string_repr(alpha::from_alpha()))\n |                     ^^^^^^^^^^^^^^^^^^^\n"
+      "stderr": "Exception: Incorrect type for field: Expected `String` but `7` has type `Int`.\n-| usability/broad/modules/alpha.gdn:3:50\t fun from_alpha()\n3| public fun from_alpha(): Record { Record{ value: 7 } }\n |                                                  ^\n-| usability/broad/module_collision.gdn:3:21\t __toplevel__\n3| println(string_repr(alpha::from_alpha()))\n |                     ^^^^^^^^^^^^^^^^^^^\n"
     }
   },
   "usability/broad/private_access.gdn": {
     "source": "import \"./modules/alpha.gdn\" as alpha\nprintln(string_repr(alpha::hidden()))\n",
     "check": {
       "exit": 1,
-      "stdout": "Error: `hidden` is not marked as `external` so it cannot be used outside the file that contains it.\n\n-| usability/broad/private_access.gdn:2:28\n1| import \"./modules/alpha.gdn\" as alpha\n2| println(string_repr(alpha::hidden()))\n |                            ^^^^^^\n-| usability/broad/modules/alpha.gdn:3:5\n1| public struct Record { value: Int }\n2| public fun from_alpha(): Record { Record{ value: 7 } }\n3| fun hidden(): Int { 7 }\n |     ^^^^^^ Note: `hidden` is defined here.\n",
+      "stdout": "Error: `hidden` is not marked as `external` so it cannot be used outside the file that contains it.\n\n-| usability/broad/private_access.gdn:2:28\n1| import \"./modules/alpha.gdn\" as alpha\n2| println(string_repr(alpha::hidden()))\n |                            ^^^^^^\n-| usability/broad/modules/alpha.gdn:5:5\n3| public fun from_alpha(): Record { Record{ value: 7 } }\n4| \n5| fun hidden(): Int { 7 }\n |     ^^^^^^ Note: `hidden` is defined here.\n",
       "stderr": ""
     },
     "run": {
@@ -87,7 +87,7 @@
     "run": {
       "exit": 1,
       "stdout": "",
-      "stderr": "Exception: Incorrect type for field: Expected `Int` but `\"beta\"` has type `String`.\n-| usability/broad/modules/beta.gdn:2:49\t fun from_beta()\n2| public fun from_beta(): Record { Record{ value: \"beta\" } }\n |                                                 ^^^^^^\n-| usability/broad/reverse_module_collision.gdn:3:21\t __toplevel__\n3| println(string_repr(beta::from_beta()))\n |                     ^^^^^^^^^^^^^^^^^\n"
+      "stderr": "Exception: Incorrect type for field: Expected `Int` but `\"beta\"` has type `String`.\n-| usability/broad/modules/beta.gdn:3:49\t fun from_beta()\n3| public fun from_beta(): Record { Record{ value: \"beta\" } }\n |                                                 ^^^^^^\n-| usability/broad/reverse_module_collision.gdn:3:21\t __toplevel__\n3| println(string_repr(beta::from_beta()))\n |                     ^^^^^^^^^^^^^^^^^\n"
     }
   },
   "usability/broad/single_module.gdn": {
@@ -123,14 +123,14 @@
   "lsp_oversized_length": {
     "exit": 101,
     "stdout": "",
-    "stderr": "\nthread 'main' (43) panicked at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/alloc/src/raw_vec/mod.rs:28:5:\ncapacity overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+    "stderr": "\nthread 'main' (419) panicked at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/alloc/src/raw_vec/mod.rs:28:5:\ncapacity overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
     "stdin_hex": "436f6e74656e742d4c656e6774683a2031383434363734343037333730393535313631350d0a0d0a",
     "command": "lsp"
   },
   "lsp_invalid_length": {
     "exit": 0,
     "stdout": "",
-    "stderr": "2026-11-05T23:18:48.621163Z ERROR garden::lsp: Error reading message: Invalid Content-Length: invalid digit found in string\n2026-11-05T23:18:48.621268Z ERROR garden::lsp: Error reading message: Missing Content-Length header\n",
+    "stderr": "2026-11-05T23:24:20.860788Z ERROR garden::lsp: Error reading message: Invalid Content-Length: invalid digit found in string\n2026-11-05T23:24:20.860859Z ERROR garden::lsp: Error reading message: Missing Content-Length header\n",
     "stdin_hex": "436f6e74656e742d4c656e6774683a206e6f70650d0a0d0a",
     "command": "lsp"
   },
@@ -144,27 +144,27 @@
   "json_invalid_length": {
     "exit": 101,
     "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: Small changes can make a big difference.\"}},\"position\":null}\n",
-    "stderr": "\nthread 'main' (49) panicked at src/json_session.rs:916:52:\nTODO: handle malformed length: ParseIntError { kind: InvalidDigit }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+    "stderr": "\nthread 'main' (425) panicked at src/json_session.rs:916:52:\nTODO: handle malformed length: ParseIntError { kind: InvalidDigit }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
     "stdin_hex": "436f6e74656e742d4c656e6774683a206e6f70650a",
     "command": "json"
   },
   "json_truncated_payload": {
     "exit": 101,
     "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: Good programs take time to grow.\"}},\"position\":null}\n",
-    "stderr": "\nthread 'main' (52) panicked at src/json_session.rs:922:18:\nCould not read payload: Error { kind: UnexpectedEof, message: \"failed to fill whole buffer\" }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+    "stderr": "\nthread 'main' (428) panicked at src/json_session.rs:922:18:\nCould not read payload: Error { kind: UnexpectedEof, message: \"failed to fill whole buffer\" }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
     "stdin_hex": "436f6e74656e742d4c656e6774683a2031300a7b7d",
     "command": "json"
   },
   "json_invalid_utf8": {
     "exit": 101,
-    "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: All programs go through seasons.\"}},\"position\":null}\n",
-    "stderr": "\nthread 'main' (55) panicked at src/json_session.rs:924:50:\ncalled `Result::unwrap()` on an `Err` value: FromUtf8Error { bytes: [255], error: Utf8Error { valid_up_to: 0, error_len: Some(1) } }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+    "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: Small changes can make a big difference.\"}},\"position\":null}\n",
+    "stderr": "\nthread 'main' (431) panicked at src/json_session.rs:924:50:\ncalled `Result::unwrap()` on an `Err` value: FromUtf8Error { bytes: [255], error: Utf8Error { valid_up_to: 0, error_len: Some(1) } }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
     "stdin_hex": "436f6e74656e742d4c656e6774683a20310aff",
     "command": "json"
   },
   "json_eof": {
     "exit": "timeout",
-    "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: All programs go through seasons.\"}},\"position\":null}\n",
+    "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: Small changes can make a big difference.\"}},\"position\":null}\n",
     "stderr": "",
     "stdin_hex": "",
     "command": "json"

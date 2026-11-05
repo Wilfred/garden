@@ -1,0 +1,32 @@
+PATH restricted to existing searchable directories; removed 11 entries.
+Exit: 0
+
+running 23 tests
+test tests::reftest_destructure ... ok
+test tests::reftest_add_type_annotation ... ok
+test tests::reftest_extract_variable ... ok
+test tests::reftest_extract_function ... ok
+test tests::reftest_check_fix ... ok
+test tests::reftest_json_session ... ok
+test tests::reftest_check ... ok
+test tests::reftest_lsp ... ok
+test tests::reftest_format ... ok
+test tests::reftest_eval_up_to ... ok
+test tests::reftest_highlight ... ok
+test tests::reftest_hover ... ok
+test tests::reftest_complete ... ok
+test tests::reftest_test ... ok
+test tests::reftest_rename ... ok
+test tests::reftest_sandboxed_test ... ok
+test tests::reftest_playground ... ok
+test tests::reftest_runtime ... ok
+test tests::reftest_wrap_in_dbg ... ok
+test tests::reftest_run_code_blocks ... ok
+test tests::reftest_position ... ok
+test tests::reftest_parser ... ok
+test tests::reftest_nrepl ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 87 filtered out; finished in 4.76s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running unittests src/main.rs (target/debug/deps/garden-35e0880b8a041770)

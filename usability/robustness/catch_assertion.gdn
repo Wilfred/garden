@@ -1,1 +1,1 @@
-try { assert(False) } catch(e) { println("caught: " ^ e) }
+try { assert(False) } catch(e) { println("caught: " ^ string_repr(e)) }

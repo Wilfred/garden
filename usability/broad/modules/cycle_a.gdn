@@ -1,0 +1,4 @@
+import "./cycle_b.gdn" as b
+public fun countdown(n: Int): Int {
+  if n == 0 { 0 } else { b::countdown(n - 1) }
+}

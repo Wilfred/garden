@@ -1,0 +1,2 @@
+import "./modules/broken.gdn" as broken
+println(string_repr(broken::broken()))

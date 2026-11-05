@@ -116,8 +116,8 @@ more attention. The inventory counts fences, not assertion quality.
     unspecified. Preserve relative paths and define absolute-argument handling.
 49. NUMERIC CONTRACT: division truncates toward zero but modulo is Euclidean:
     -4 / 3 is -1 and -4 % 3 is 2, so (a / b) * b + (a % b) != a (96).
-    `%` documents Euclidean behavior; the division page doesn't explain the
-    incompatible quotient convention. Document the pair or provide div_euclid.
+    Both rules are individually documented; their interaction is not explained.
+    Cross-link the pages with this counterexample or provide div_euclid.
 50. COLLECTION API GAPS: no fold, reverse or zip (101/103/104), forcing loops
     and indexing boilerplate in ordinary aggregate/pairwise tasks. This is an
     API request, not a demand for iterator syntax or a claim of impossibility.
@@ -302,3 +302,74 @@ can be either a sum bug or a deliberate search; ignoring an Err arm may be
 intentional. They are retained as reasoning examples rather than additional
 default-lint recommendations. A useful linter should optimize for signal,
 not merely the number of warnings.
+
+Broad review and blind spots
+
+74. BLOCKER, TRANSITIVE CHECKING: checking an entry file accepts a called
+    imported function declared Int whose body returns String. Checking the
+    imported module itself reports the error. Check the reachable module
+    graph, with caching/cycle handling, or make the single-file boundary
+    explicit and provide a project-wide check command. See broad/imported_type_error.
+75. BLOCKER, MODULE TYPE IDENTITY: importing two namespaces that independently
+    declare Record with different fields causes one definition to overwrite
+    the other's type behavior. Both entry programs check cleanly; construction
+    in the first module fails against the other module's field type. Reversing
+    import order reverses the affected module. One module alone works.
+    Key nominal type identity by defining module, not just the textual name.
+76. BLOCKER, PROTOCOL PANICS: an LSP Content-Length of usize::MAX panics with
+    capacity overflow before reading a body. The JSON-session transport also
+    panics on malformed lengths, truncated bodies and non-UTF-8 payloads.
+    Bound frame lengths before allocating, validate decoding and return
+    transport errors rather than expect/unwrap. Inputs are captured as exact
+    hex bytes in evidence/broad.json; these tests open no network listeners.
+77. PROCESS LIFECYCLE: the JSON session does not terminate on stdin EOF;
+    the two-second audit times out after its greeting. Its read loop treats
+    a zero-byte EOF read as an empty line and continues indefinitely. LSP's
+    equivalent EOF control exits normally. Handle EOF and join/stop workers.
+78. REFLECTION/DOC INVENTORY: & and | execute as integer bitwise operators
+    but are absent from reflect::operators(), which claims to list all
+    operators and drives the manual's operator links. Keep token recognition,
+    reflection and documentation inventories consistent. See reflect_inventory.
+79. DOCUMENTED SURFACE GAP: try/catch are returned as keywords and parsed,
+    but have no keyword pages. Other keywords have pages or redirect stubs.
+    Explain support status, error type and catchable failures when the feature
+    is implemented; until then reject it or explicitly mark it experimental.
+
+Positive controls: mutually recursive imports resolve and execute a bounded
+countdown. Private namespace access is rejected by both check and run. Invalid
+LSP lengths produce controlled read errors, and ordinary LSP EOF exits cleanly.
+Strings consistently count codepoints: e + combining accent is length 2 and a
+family emoji is 7, while a precomposed é is 1; canonical-equivalent strings are
+unequal. This follows the documented codepoint/value model, not an interpreter
+bug. Internationalized applications will still need normalization/grapheme APIs.
+
+The highest-value areas not yet comprehensively covered are:
+
+- Stateful REPL/live replacement: stale closures, changing type layouts,
+  resuming after errors, cancellation, memory retention and obsolete diagnostics.
+- Recovery across multiple protocol messages after a failed request, framing
+  size limits, backpressure and cancellation latency. Isolated inputs were
+  tested; no sustained adversarial session or networking audit was performed.
+- Resource limits across all entry points: parsing precedes evaluator budgets;
+  memory/output quotas and predictable stack limits need whole-pipeline tests.
+- Release versus debug arithmetic, Windows path/process behavior and macOS.
+  CI tests Linux debug builds but release packaging targets all three systems.
+- Performance under long Unicode strings, large immutable updates, deep
+  recursion, many modules and large diagnostics. No timings/complexity claims
+  beyond the recorded hangs are established here.
+- Filesystem failures: permission changes, partial writes, symlinks, non-UTF-8
+  paths, concurrent writers and disk-full behavior. These are suggested tests,
+  not assertions that Garden currently mishandles each situation.
+- Package installation from a clean machine and offline/reproducible builds;
+  dependency updates, standard-library/API compatibility and language-version
+  policy need a separate release-readiness review.
+- Property/differential tests: truncated-source generation found parser crashes
+  despite passing parser reftests. Add bounded Unicode/token mutation and
+  well-typed-program generation, then compare check/run and debug/release.
+
+The existing 23 Rust reftest groups pass after restricting PATH to existing,
+searchable directories. The original PATH produced Permission denied rather
+than the golden command-not-found string in shell_invalid_command.gdn; no source
+or golden output was changed. This is a useful test-portability observation,
+not evidence of another language runtime bug. evidence/rust_reftests.txt records
+the successful run and the removed-entry count.

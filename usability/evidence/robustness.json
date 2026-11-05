@@ -75,32 +75,32 @@
     }
   },
   "catch_assertion": {
-    "source": "try { assert(False) } catch(e) { println(\"caught: \" ^ e) }\n",
+    "source": "try { assert(False) } catch(e) { println(\"caught: \" ^ string_repr(e)) }\n",
     "reftest-ast": {
       "exit": 0,
       "stderr": ""
     },
     "run": {
       "exit": 1,
-      "stderr": "Exception: Assertion failed.\n-| usability/robustness/catch_assertion.gdn:1:14\t __toplevel__\n1| try { assert(False) } catch(e) { println(\"caught: \" ^ e) }\n |              ^^^^^\n"
+      "stderr": "Exception: Assertion failed.\n-| usability/robustness/catch_assertion.gdn:1:14\t __toplevel__\n1| try { assert(False) } catch(e) { println(\"caught: \" ^ string_repr(e)) }\n |              ^^^^^\n"
     },
     "check": {
-      "exit": 1,
+      "exit": 0,
       "stderr": ""
     }
   },
   "catch_exception": {
-    "source": "try { throw(\"expected\") } catch(e) { println(\"caught: \" ^ e) }\n",
+    "source": "try { throw(\"expected\") } catch(e) { println(\"caught: \" ^ string_repr(e)) }\n",
     "reftest-ast": {
       "exit": 0,
       "stderr": ""
     },
     "run": {
       "exit": 1,
-      "stderr": "Exception: expected\n-| usability/robustness/catch_exception.gdn:1:7\t __toplevel__\n1| try { throw(\"expected\") } catch(e) { println(\"caught: \" ^ e) }\n |       ^^^^^^^^^^^^^^^^^\n"
+      "stderr": "Exception: expected\n-| usability/robustness/catch_exception.gdn:1:7\t __toplevel__\n1| try { throw(\"expected\") } catch(e) { println(\"caught: \" ^ string_repr(e)) }\n |       ^^^^^^^^^^^^^^^^^\n"
     },
     "check": {
-      "exit": 1,
+      "exit": 0,
       "stderr": ""
     }
   },

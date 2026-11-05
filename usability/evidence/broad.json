@@ -1,0 +1,172 @@
+{
+  "usability/broad/graphemes.gdn": {
+    "source": "for s in [\"\u00e9\", \"e\u0301\", \"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\"] {\n  println(string_repr((s, s.len(), s.chars())))\n}\nprintln(string_repr(\"\u00e9\" == \"e\u0301\"))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "(\"\u00e9\", 1, [\"\u00e9\"])\n(\"e\u0301\", 2, [\"e\", \"\u0301\"])\n(\"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\", 7, [\"\ud83d\udc68\", \"\u200d\", \"\ud83d\udc69\", \"\u200d\", \"\ud83d\udc67\", \"\u200d\", \"\ud83d\udc66\"])\nFalse\n",
+      "stderr": ""
+    }
+  },
+  "usability/broad/import_cycle.gdn": {
+    "source": "import \"./modules/cycle_a.gdn\" as a\nprintln(string_repr(a::countdown(4)))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    }
+  },
+  "usability/broad/imported_type_error.gdn": {
+    "source": "import \"./modules/broken.gdn\" as broken\nprintln(string_repr(broken::broken()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"wrong\"` has type `String`.\n-| usability/broad/modules/broken.gdn:1:22\t fun broken()\n1| public fun broken(): Int { \"wrong\" }\n |                      ^^^\n-| usability/broad/imported_type_error.gdn:2:21\t __toplevel__\n2| println(string_repr(broken::broken()))\n |                     ^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "usability/broad/module_collision.gdn": {
+    "source": "import \"./modules/alpha.gdn\" as alpha\nimport \"./modules/beta.gdn\" as beta\nprintln(string_repr(alpha::from_alpha()))\nprintln(string_repr(beta::from_beta()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Incorrect type for field: Expected `String` but `7` has type `Int`.\n-| usability/broad/modules/alpha.gdn:2:50\t fun from_alpha()\n2| public fun from_alpha(): Record { Record{ value: 7 } }\n |                                                  ^\n-| usability/broad/module_collision.gdn:3:21\t __toplevel__\n3| println(string_repr(alpha::from_alpha()))\n |                     ^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "usability/broad/private_access.gdn": {
+    "source": "import \"./modules/alpha.gdn\" as alpha\nprintln(string_repr(alpha::hidden()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `hidden` is not marked as `external` so it cannot be used outside the file that contains it.\n\n-| usability/broad/private_access.gdn:2:28\n1| import \"./modules/alpha.gdn\" as alpha\n2| println(string_repr(alpha::hidden()))\n |                            ^^^^^^\n-| usability/broad/modules/alpha.gdn:3:5\n1| public struct Record { value: Int }\n2| public fun from_alpha(): Record { Record{ value: 7 } }\n3| fun hidden(): Int { 7 }\n |     ^^^^^^ Note: `hidden` is defined here.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `hidden` is not marked as `external` in `usability/broad/modules/alpha.gdn`. \n-| usability/broad/private_access.gdn:2:28\t __toplevel__\n2| println(string_repr(alpha::hidden()))\n |                            ^^^^^^\n"
+    }
+  },
+  "usability/broad/reflect_inventory.gdn": {
+    "source": "import \"__reflect.gdn\" as reflect\nprintln(\"Keywords: \" ^ string_repr(reflect::keywords()))\nprintln(\"Operators: \" ^ string_repr(reflect::operators()))\nprintln(\"Bitwise operations: \" ^ string_repr((6 & 3, 4 | 1)))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Keywords: [\"as\", \"assert\", \"break\", \"catch\", \"continue\", \"else\", \"enum\", \"for\", \"fun\", \"if\", \"import\", \"in\", \"let\", \"match\", \"method\", \"public\", \"return\", \"shared\", \"struct\", \"test\", \"try\", \"while\"]\nOperators: [\"==\", \"!=\", \">=\", \"<=\", \"&&\", \"||\", \"+=\", \"-=\", \"**\", \"+.\", \"-.\", \"*.\", \"/.\", \"+\", \"-\", \"*\", \"/\", \"%\", \"^\", \"=\", \"<\", \">\"]\nBitwise operations: (2, 5)\n",
+      "stderr": ""
+    }
+  },
+  "usability/broad/reverse_module_collision.gdn": {
+    "source": "import \"./modules/beta.gdn\" as beta\nimport \"./modules/alpha.gdn\" as alpha\nprintln(string_repr(beta::from_beta()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `alpha` is unused.\n\n-| usability/broad/reverse_module_collision.gdn:2:33\n1| import \"./modules/beta.gdn\" as beta\n2| import \"./modules/alpha.gdn\" as alpha\n |                                 ^^^^^\n3| println(string_repr(beta::from_beta()))\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Incorrect type for field: Expected `Int` but `\"beta\"` has type `String`.\n-| usability/broad/modules/beta.gdn:2:49\t fun from_beta()\n2| public fun from_beta(): Record { Record{ value: \"beta\" } }\n |                                                 ^^^^^^\n-| usability/broad/reverse_module_collision.gdn:3:21\t __toplevel__\n3| println(string_repr(beta::from_beta()))\n |                     ^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "usability/broad/single_module.gdn": {
+    "source": "import \"./modules/alpha.gdn\" as alpha\nprintln(string_repr(alpha::from_alpha()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Record{ value: 7 }\n",
+      "stderr": ""
+    }
+  },
+  "usability/broad/modules/broken.gdn": {
+    "source": "public fun broken(): Int { \"wrong\" }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/broad/modules/broken.gdn:1:28\n1| public fun broken(): Int { \"wrong\" }\n |                            ^^^^^^^\n-| usability/broad/modules/broken.gdn:1:22\n1| public fun broken(): Int { \"wrong\" }\n |                      ^^^ Note: expected `Int` because of this return type.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "keyword_pages_missing": [
+    "catch",
+    "try"
+  ],
+  "lsp_oversized_length": {
+    "exit": 101,
+    "stdout": "",
+    "stderr": "\nthread 'main' (43) panicked at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/alloc/src/raw_vec/mod.rs:28:5:\ncapacity overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+    "stdin_hex": "436f6e74656e742d4c656e6774683a2031383434363734343037333730393535313631350d0a0d0a",
+    "command": "lsp"
+  },
+  "lsp_invalid_length": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": "2026-11-05T23:18:48.621163Z ERROR garden::lsp: Error reading message: Invalid Content-Length: invalid digit found in string\n2026-11-05T23:18:48.621268Z ERROR garden::lsp: Error reading message: Missing Content-Length header\n",
+    "stdin_hex": "436f6e74656e742d4c656e6774683a206e6f70650d0a0d0a",
+    "command": "lsp"
+  },
+  "lsp_eof": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "stdin_hex": "",
+    "command": "lsp"
+  },
+  "json_invalid_length": {
+    "exit": 101,
+    "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: Small changes can make a big difference.\"}},\"position\":null}\n",
+    "stderr": "\nthread 'main' (49) panicked at src/json_session.rs:916:52:\nTODO: handle malformed length: ParseIntError { kind: InvalidDigit }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+    "stdin_hex": "436f6e74656e742d4c656e6774683a206e6f70650a",
+    "command": "json"
+  },
+  "json_truncated_payload": {
+    "exit": 101,
+    "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: Good programs take time to grow.\"}},\"position\":null}\n",
+    "stderr": "\nthread 'main' (52) panicked at src/json_session.rs:922:18:\nCould not read payload: Error { kind: UnexpectedEof, message: \"failed to fill whole buffer\" }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+    "stdin_hex": "436f6e74656e742d4c656e6774683a2031300a7b7d",
+    "command": "json"
+  },
+  "json_invalid_utf8": {
+    "exit": 101,
+    "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: All programs go through seasons.\"}},\"position\":null}\n",
+    "stderr": "\nthread 'main' (55) panicked at src/json_session.rs:924:50:\ncalled `Result::unwrap()` on an `Err` value: FromUtf8Error { bytes: [255], error: Utf8Error { valid_up_to: 0, error_len: Some(1) } }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+    "stdin_hex": "436f6e74656e742d4c656e6774683a20310aff",
+    "command": "json"
+  },
+  "json_eof": {
+    "exit": "timeout",
+    "stdout": "{\"kind\":{\"ready\":{\"message\":\"Garden: All programs go through seasons.\"}},\"position\":null}\n",
+    "stderr": "",
+    "stdin_hex": "",
+    "command": "json"
+  }
+}

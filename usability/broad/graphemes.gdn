@@ -1,0 +1,4 @@
+for s in ["é", "é", "👨‍👩‍👧‍👦"] {
+  println(string_repr((s, s.len(), s.chars())))
+}
+println(string_repr("é" == "é"))

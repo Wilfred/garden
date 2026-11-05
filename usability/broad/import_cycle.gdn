@@ -1,0 +1,2 @@
+import "./modules/cycle_a.gdn" as a
+println(string_repr(a::countdown(4)))

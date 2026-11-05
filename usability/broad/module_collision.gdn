@@ -1,0 +1,4 @@
+import "./modules/alpha.gdn" as alpha
+import "./modules/beta.gdn" as beta
+println(string_repr(alpha::from_alpha()))
+println(string_repr(beta::from_beta()))

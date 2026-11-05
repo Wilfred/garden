@@ -1,0 +1,2 @@
+import "./modules/alpha.gdn" as alpha
+println(string_repr(alpha::from_alpha()))

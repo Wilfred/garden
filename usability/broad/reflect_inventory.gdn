@@ -1,0 +1,4 @@
+import "__reflect.gdn" as reflect
+println("Keywords: " ^ string_repr(reflect::keywords()))
+println("Operators: " ^ string_repr(reflect::operators()))
+println("Bitwise operations: " ^ string_repr((6 & 3, 4 | 1)))

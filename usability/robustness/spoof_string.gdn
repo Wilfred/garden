@@ -1,0 +1,2 @@
+struct String { x: Int }
+println(string_repr(String{ x: 1 }.len()))

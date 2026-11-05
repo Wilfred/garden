@@ -1,0 +1,2 @@
+struct List { x: Int }
+println(string_repr(List{ x: 1 }.len()))

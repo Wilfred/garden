@@ -1,0 +1,1 @@
+println(string_repr("abc".substring(-9223372036854775808, 9223372036854775807)))

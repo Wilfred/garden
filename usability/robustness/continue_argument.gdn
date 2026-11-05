@@ -1,0 +1,2 @@
+for x in [1] { println(string_repr((x, continue))) }
+println("done")

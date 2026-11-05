@@ -1,0 +1,1 @@
+try { assert(False) } catch(e) { println("caught: " ^ e) }

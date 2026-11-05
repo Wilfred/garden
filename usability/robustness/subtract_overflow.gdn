@@ -1,0 +1,3 @@
+let n = -9223372036854775808
+n -= 1
+println(string_repr(n))

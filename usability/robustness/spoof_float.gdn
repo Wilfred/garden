@@ -1,0 +1,2 @@
+struct Float { x: Int }
+println(string_repr(Float{ x: 1 }.floor()))

@@ -1,0 +1,527 @@
+{
+  "bad_builtin_arity": {
+    "source": "println(string_repr([1].len(2)))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stderr": "Exception: Function List::len requires 0 arguments, but got 1\n-| usability/robustness/bad_builtin_arity.gdn:1:29\t __toplevel__\n1| println(string_repr([1].len(2)))\n |                             ^\n"
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "bad_enum_arity": {
+    "source": "enum E { V(Int) }\nprintln(string_repr(V()))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stderr": "Exception: Function E requires 1 argument, but got 0\n-| usability/robustness/bad_enum_arity.gdn:2:21\t __toplevel__\n2| println(string_repr(V()))\n |                     ^^^\n"
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "break_argument": {
+    "source": "for x in [1] { println(string_repr((x, break))) }\nprintln(\"done\")\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "break_closure": {
+    "source": "for x in [1] { fun() { break }() println(string_repr(x)) }\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "break_outside": {
+    "source": "break\nprintln(\"done\")\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "catch_assertion": {
+    "source": "try { assert(False) } catch(e) { println(\"caught: \" ^ e) }\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stderr": "Exception: Assertion failed.\n-| usability/robustness/catch_assertion.gdn:1:14\t __toplevel__\n1| try { assert(False) } catch(e) { println(\"caught: \" ^ e) }\n |              ^^^^^\n"
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "catch_exception": {
+    "source": "try { throw(\"expected\") } catch(e) { println(\"caught: \" ^ e) }\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stderr": "Exception: expected\n-| usability/robustness/catch_exception.gdn:1:7\t __toplevel__\n1| try { throw(\"expected\") } catch(e) { println(\"caught: \" ^ e) }\n |       ^^^^^^^^^^^^^^^^^\n"
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "continue_argument": {
+    "source": "for x in [1] { println(string_repr((x, continue))) }\nprintln(\"done\")\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (50) panicked at src/eval.rs:1795:13:\ninternal error: entered unreachable code: `for` loop index should always be an `Int`, got `<fun println __prelude.gdn:921>`: usability/robustness/continue_argument.gdn:1\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "continue_outside": {
+    "source": "continue\nprintln(\"done\")\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "deep_lists": {
+    "source": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]\n",
+    "reftest-ast": {
+      "exit": -6,
+      "stderr": "\nthread 'main' (60) has overflowed its stack\nfatal runtime error: stack overflow, aborting\n"
+    },
+    "run": {
+      "exit": -6,
+      "stderr": "\nthread 'main' (62) has overflowed its stack\nfatal runtime error: stack overflow, aborting\n"
+    },
+    "check": {
+      "exit": -6,
+      "stderr": "\nthread 'main' (64) has overflowed its stack\nfatal runtime error: stack overflow, aborting\n"
+    }
+  },
+  "deep_parentheses": {
+    "source": "((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((1))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))\n",
+    "reftest-ast": {
+      "exit": -6,
+      "stderr": "\nthread 'main' (66) has overflowed its stack\nfatal runtime error: stack overflow, aborting\n"
+    },
+    "run": {
+      "exit": -6,
+      "stderr": "\nthread 'main' (68) has overflowed its stack\nfatal runtime error: stack overflow, aborting\n"
+    },
+    "check": {
+      "exit": -6,
+      "stderr": "\nthread 'main' (70) has overflowed its stack\nfatal runtime error: stack overflow, aborting\n"
+    }
+  },
+  "empty_fun": {
+    "source": "fun f() {}\nprintln(string_repr(f()))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "for_break_iterator": {
+    "source": "for x in break { println(string_repr(x)) }\nprintln(\"done\")\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (80) panicked at src/eval.rs:54:9:\nassertion failed: !self.block_bindings.is_empty()\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "huge_float": {
+    "source": "println(string_repr(9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999.0))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "negative_slice": {
+    "source": "println(string_repr([1].slice(-9223372036854775808, -9223372036854775808)))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "negative_substring": {
+    "source": "println(string_repr(\"abc\".substring(-9223372036854775808, 9223372036854775807)))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stderr": "Exception: The first argument to `String::substring()` must be greater than 0, but got -9223372036854775808.\n-| usability/robustness/negative_substring.gdn:1:37\t __toplevel__\n1| println(string_repr(\"abc\".substring(-9223372036854775808, 9223372036854775807)))\n |                                     ^^^^^^^^^^^^^^^^^^^^\n"
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "newline_string": {
+    "source": "println(\"a\nb\")\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "no_match_cases": {
+    "source": "enum Empty {}\nfun f(x: Empty) { match x {} }\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "spoof_float": {
+    "source": "struct Float { x: Int }\nprintln(string_repr(Float{ x: 1 }.floor()))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (116) panicked at src/eval.rs:5553:39:\nindex out of bounds: the len is 0 but the index is 0\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "spoof_list": {
+    "source": "struct List { x: Int }\nprintln(string_repr(List{ x: 1 }.len()))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (122) panicked at src/eval.rs:5799:39:\nindex out of bounds: the len is 0 but the index is 0\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "spoof_string": {
+    "source": "struct String { x: Int }\nprintln(string_repr(String{ x: 1 }.len()))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stderr": "Exception: Expected `String` but `String{ x: 1 }` has type `String`.\n-| usability/robustness/spoof_string.gdn:2:21\t __toplevel__\n2| println(string_repr(String{ x: 1 }.len()))\n |                     ^^^^^^^^^^^^^^^^^^^^\n"
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "subtract_overflow": {
+    "source": "let n = -9223372036854775808\nn -= 1\nprintln(string_repr(n))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (134) panicked at src/eval.rs:1954:39:\nattempt to subtract with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "unfinished_enum": {
+    "source": "enum E { A,\n",
+    "reftest-ast": {
+      "exit": "timeout",
+      "stderr": ""
+    },
+    "run": {
+      "exit": "timeout",
+      "stderr": ""
+    },
+    "check": {
+      "exit": "timeout",
+      "stderr": ""
+    }
+  },
+  "unfinished_pattern": {
+    "source": "match x { Some((a\n",
+    "reftest-ast": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (144) panicked at src/parser.rs:2838:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (146) panicked at src/parser.rs:2838:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (148) panicked at src/parser.rs:2838:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  },
+  "unfinished_tuple": {
+    "source": "(1,\n",
+    "reftest-ast": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (150) panicked at src/parser.rs:328:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (152) panicked at src/parser.rs:328:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (154) panicked at src/parser.rs:328:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  },
+  "unicode_bom": {
+    "source": "\ufeffprintln(\"hello\")\n",
+    "reftest-ast": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (156) panicked at src/parser/lex.rs:376:38:\nend byte index 1 is not a char boundary; it is inside '\\u{feff}' (bytes 0..3) of `\ufeffprintln(\"hello\")\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (158) panicked at src/parser/lex.rs:376:38:\nend byte index 1 is not a char boundary; it is inside '\\u{feff}' (bytes 0..3) of `\ufeffprintln(\"hello\")\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (160) panicked at src/parser/lex.rs:376:38:\nend byte index 1 is not a char boundary; it is inside '\\u{feff}' (bytes 0..3) of `\ufeffprintln(\"hello\")\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  },
+  "unicode_identifier": {
+    "source": "let caf\u00e9 = 1\n",
+    "reftest-ast": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (162) panicked at src/parser/lex.rs:376:38:\nend byte index 1 is not a char boundary; it is inside '\u00e9' (bytes 0..2) of `\u00e9 = 1\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (164) panicked at src/parser/lex.rs:376:38:\nend byte index 1 is not a char boundary; it is inside '\u00e9' (bytes 0..2) of `\u00e9 = 1\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (166) panicked at src/parser/lex.rs:376:38:\nend byte index 1 is not a char boundary; it is inside '\u00e9' (bytes 0..2) of `\u00e9 = 1\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  },
+  "unicode_smart_quote": {
+    "source": "println(\u201chello\u201d)\n",
+    "reftest-ast": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (168) panicked at src/parser/lex.rs:376:38:\nend byte index 1 is not a char boundary; it is inside '\u201c' (bytes 0..3) of `\u201chello\u201d)\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (170) panicked at src/parser/lex.rs:376:38:\nend byte index 1 is not a char boundary; it is inside '\u201c' (bytes 0..3) of `\u201chello\u201d)\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (172) panicked at src/parser/lex.rs:376:38:\nend byte index 1 is not a char boundary; it is inside '\u201c' (bytes 0..3) of `\u201chello\u201d)\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  },
+  "unicode_whitespace": {
+    "source": "let\u00a0x = 1\n",
+    "reftest-ast": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (174) panicked at src/parser/lex.rs:121:19:\nstart byte index 4 is not a char boundary; it is inside '\\u{a0}' (bytes 3..5) of `let\u00a0x = 1\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "run": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (176) panicked at src/parser/lex.rs:121:19:\nstart byte index 4 is not a char boundary; it is inside '\\u{a0}' (bytes 3..5) of `let\u00a0x = 1\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    "check": {
+      "exit": 101,
+      "stderr": "\nthread 'main' (178) panicked at src/parser/lex.rs:121:19:\nstart byte index 4 is not a char boundary; it is inside '\\u{a0}' (bytes 3..5) of `let\u00a0x = 1\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  },
+  "unit_block_argument": {
+    "source": "println(string_repr(if True {} else {}))\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 0,
+      "stderr": ""
+    }
+  },
+  "while_break_condition": {
+    "source": "while break {}\nprintln(\"done\")\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "while_continue_condition": {
+    "source": "while continue {}\nprintln(\"done\")\n",
+    "reftest-ast": {
+      "exit": 0,
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stderr": "Exception: Expected `Bool` but got `Unit`.\n-| usability/robustness/while_continue_condition.gdn:1:7\t __toplevel__\n1| while continue {}\n |       ^^^^^^^^\n"
+    },
+    "check": {
+      "exit": 1,
+      "stderr": ""
+    }
+  },
+  "truncated_input_corpus": {
+    "count": 198,
+    "failures": [
+      {
+        "source": "enum E<T> { A,",
+        "exit": "timeout",
+        "stderr": ""
+      },
+      {
+        "source": "enum E<T> { A, ",
+        "exit": "timeout",
+        "stderr": ""
+      },
+      {
+        "source": "match Some((1,",
+        "exit": 101,
+        "stderr": "\nthread 'main' (390) panicked at src/parser.rs:328:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      },
+      {
+        "source": "match Some((1, ",
+        "exit": 101,
+        "stderr": "\nthread 'main' (392) panicked at src/parser.rs:328:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      },
+      {
+        "source": "match Some((1, 2)) { Some((a",
+        "exit": 101,
+        "stderr": "\nthread 'main' (418) panicked at src/parser.rs:2838:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      },
+      {
+        "source": "match Some((1, 2)) { Some((a,",
+        "exit": 101,
+        "stderr": "\nthread 'main' (420) panicked at src/parser.rs:2838:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      },
+      {
+        "source": "match Some((1, 2)) { Some((a, ",
+        "exit": 101,
+        "stderr": "\nthread 'main' (422) panicked at src/parser.rs:2838:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      },
+      {
+        "source": "match Some((1, 2)) { Some((a, b",
+        "exit": 101,
+        "stderr": "\nthread 'main' (424) panicked at src/parser.rs:2838:13:\nThe parser should always make forward progress.\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      }
+    ]
+  }
+}

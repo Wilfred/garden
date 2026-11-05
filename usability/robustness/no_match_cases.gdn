@@ -1,0 +1,2 @@
+enum Empty {}
+fun f(x: Empty) { match x {} }

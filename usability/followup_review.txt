@@ -139,3 +139,54 @@ surprise rather than an undocumented implementation error. The fun page says
 unannotated parameters accept any type, but its arithmetic example is marked
 nocheck; probe 107 demonstrates execution succeeding while checking rejects Any
 in arithmetic. That needs a clear explanation of the checker/runtime boundary.
+
+Parser and interpreter robustness
+
+The parser was exercised separately via reftest-ast, then each saved input was
+run in a fresh interpreter process. Core dumps were disabled and each process
+had a two-second limit. AST stdout is discarded to bound large diagnostic-tree
+output. A deterministic corpus additionally truncates seven plausible inputs
+at every character: 198 cases, with six panic cases and two hangs. Those eight
+observations reduce to three incomplete-input failure shapes, not eight issues.
+The saved minimal cases and raw exits/stderr are in robustness/ and
+evidence/robustness.json. There is no claim that bounded experiments prove the
+absence of other failures.
+
+53. BLOCKER, LEXER PANIC: an unsupported non-ASCII source character, such as
+    é in café, a smart quote, or a BOM, is sliced as &s[0..1]. Rust panics on
+    an invalid UTF-8 boundary instead of producing a Garden diagnostic.
+    Unicode whitespace takes a different one-byte advance path and also
+    panics. See unicode_identifier/whitespace/bom/smart_quote.gdn.
+54. BLOCKER, PARSER RECOVERY: incomplete `(1,` and
+    `match x { Some((a` trigger forward-progress assertions, in different
+    tuple/pattern parsing loops. These are normal partial editor states;
+    return an incomplete-input diagnostic rather than asserting progress.
+55. BLOCKER, PARSER HANG: `enum E { A,` never finishes parsing within the
+    two-second bound. This can freeze editing, checking and execution before
+    any Garden code runs. Recover or stop at EOF in enum variant parsing.
+56. BLOCKER, SYNTAX DEPTH: 2,048 parentheses or 1,024 nested lists abort with
+    Rust stack overflow. The files are only a few kilobytes. Apply explicit
+    nesting limits or iterative parsing/traversal; report a Garden error.
+57. BLOCKER, INTERPRETER STACK: `for x in [1] {
+    println(string_repr((x, continue))) }` passes check but run panics because
+    the next loop index is a function value. Pending argument values survive
+    continue. Unwind intermediate values together with expressions/bindings.
+    The saved continue_argument.gdn is a small runtime-stack regression case.
+58. ROBUSTNESS: `for x in break { ... }` is rejected by check but run panics
+    on an empty binding stack. Even unchecked invalid programs need a Garden
+    error rather than a host assertion. See for_break_iterator.gdn.
+59. BLOCKER, BUILT-IN TYPE COLLISION: redefining List or Float as a struct
+    passes check; calling the retained built-in len/floor method panics while
+    indexing the empty argument-position vector in its receiver-type error.
+    Reserve built-in type names or isolate namespace-local types, and use
+    receiver_pos for receiver errors in zero-argument methods. See spoof_*.
+60. INCORRECT EXECUTION: parsed `try { throw("expected") } catch(e) { ... }`
+    never runs its catch body. Assertions are not caught either. The evaluator
+    has a Try node but propagates errors immediately instead of unwinding to
+    a handler. Implement catch behavior or reject the incomplete feature.
+
+The existing arithmetic += and division crashes (03/20) remain reproducible;
+-= overflow follows the same compound-operation bug, not a new issue. Invalid
+arity produces Garden errors, extreme slice bounds are clamped safely, an
+empty function returns Unit, and literal Unicode inside strings works. These
+successful controls help distinguish host panics from normal Garden errors.

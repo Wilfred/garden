@@ -1,0 +1,3 @@
+let xs = [1].append("wrong")
+fun strings(xs: List<String>): Unit { for s in xs { println(s) } }
+strings(xs)

@@ -1,0 +1,4 @@
+enum Handler<T> { Handle(Fun<(T), Unit>) }
+fun send(h: Handler<List<Int>>): Unit { match h { Handle(f) => f([1]) } }
+let h: Handler<List<NoValue>> = Handle(fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) })
+send(h)

@@ -1,0 +1,4 @@
+struct Box<T> { value: T }
+fun unbox(b: Box<Int>): Int { b.value }
+let b = Box{ value: "wrong" }
+println(string_repr(unbox(b)))

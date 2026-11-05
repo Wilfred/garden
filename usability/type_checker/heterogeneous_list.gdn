@@ -1,0 +1,2 @@
+let xs = [1, "wrong"]
+println(string_repr(xs))

@@ -1,0 +1,2 @@
+if True { let secret = 1 println(string_repr(secret)) }
+println(string_repr(secret))

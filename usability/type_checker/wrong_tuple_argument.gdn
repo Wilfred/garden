@@ -1,0 +1,2 @@
+fun first(x: (Int, String)): Int { let (a, _) = x a }
+println(string_repr(first((1, 2))))

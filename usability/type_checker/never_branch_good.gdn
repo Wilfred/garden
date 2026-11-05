@@ -1,0 +1,2 @@
+fun one(b: Bool): Int { if b { 1 } else { throw("expected") } }
+println(string_repr(one(True)))

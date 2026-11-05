@@ -1,0 +1,2 @@
+fun size(x: List<Int, String>): Int { x.len() }
+println(string_repr(size([1])))

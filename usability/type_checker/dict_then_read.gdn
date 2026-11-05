@@ -1,0 +1,2 @@
+let d: Dict<String> = Dict["n" => 1].set("s", "wrong")
+println(d.get("n").or_throw())

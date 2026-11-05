@@ -1,0 +1,2 @@
+fun wrap<T>(x: T): List<T> { ["wrong"] }
+println(string_repr(wrap(42)))

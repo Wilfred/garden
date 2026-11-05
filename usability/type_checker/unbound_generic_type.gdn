@@ -1,0 +1,2 @@
+fun f(x: T): T { x }
+println(string_repr(f(1)))

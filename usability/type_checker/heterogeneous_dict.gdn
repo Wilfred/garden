@@ -1,0 +1,2 @@
+let d = Dict["n" => 1, "s" => "wrong"]
+println(string_repr(d))

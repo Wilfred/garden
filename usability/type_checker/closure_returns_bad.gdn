@@ -1,0 +1,2 @@
+let f = fun(): Int { "wrong" }
+println(string_repr(f()))

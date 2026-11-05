@@ -1,0 +1,2 @@
+fun add(x: Int): Int { x + 1 }
+println(string_repr(add("wrong")))

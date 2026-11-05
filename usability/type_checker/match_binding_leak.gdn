@@ -1,0 +1,2 @@
+match Some(1) { Some(n) => println(string_repr(n)), None => {} }
+println(string_repr(n))

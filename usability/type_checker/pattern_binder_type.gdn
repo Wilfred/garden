@@ -1,0 +1,1 @@
+match Some("wrong") { Some(n) => println(string_repr(n + 1)), None => {} }

@@ -1,0 +1,756 @@
+{
+  "append_then_read": {
+    "source": "let xs: List<String> = [1].append(\"wrong\")\nprintln(xs.get(0).or_throw())\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `String` but `1` has type `Int`.\n-| usability/type_checker/append_then_read.gdn:2:9\t __toplevel__\n2| println(xs.get(0).or_throw())\n |         ^^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "branch_mismatch": {
+    "source": "let x = if True { 1 } else { \"wrong\" }\nprintln(string_repr(x + 1))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `if` and `else` have incompatible types: `Int` and `String`.\n\n-| usability/type_checker/branch_mismatch.gdn:1:30\n1| let x = if True { 1 } else { \"wrong\" }\n2| println(string_repr(x + 1))  ^^^^^^^\n-| usability/type_checker/branch_mismatch.gdn:1:19\n1| let x = if True { 1 } else { \"wrong\" }\n |                   ^ Note: this branch has type `Int`.\n2| println(string_repr(x + 1))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    }
+  },
+  "branch_return": {
+    "source": "fun f(b: Bool): Int { if b { return 1 } else { return 2 } }\nprintln(string_repr(f(True)))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "callback_return_bad": {
+    "source": "let xs = [1, 2].filter(fun(n: Int): Int { n + 1 })\nprintln(string_repr(xs))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `Fun<(Int), Bool>` but got a `Fun<(Int), Int>`.\n\n-| usability/type_checker/callback_return_bad.gdn:1:24\n1| let xs = [1, 2].filter(fun(n: Int): Int { n + 1 })\n |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n2| println(string_repr(xs))\n---| __prelude.gdn:638:40\n636| /// Return a copy of this list with the items where `f(item)` returns\n637| /// True.\n638| public method filter<T>(this: List<T>, f: Fun<(T), Bool>): List<T> {\n639|   let result: List<T> = []             ^^^^^^^^^^^^^^^^^ Note: the parameter `f` is declared with type `Fun<(Int), Bool>` here.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Bool` but `2` has type `Int`.\n---| __prelude.gdn:642:8\t method filter(this: List)()\n642|     if f(item) {\n   |        ^^^^^^^\n-| usability/type_checker/callback_return_bad.gdn:1:10\t __toplevel__\n1| let xs = [1, 2].filter(fun(n: Int): Int { n + 1 })\n |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "catch_binding": {
+    "source": "try { 1 } catch(e) { println(string_repr(e)) }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `try` and `catch` have incompatible types: `Int` and `Unit`.\n\n-| usability/type_checker/catch_binding.gdn:1:7\n1| try { 1 } catch(e) { println(string_repr(e)) }\n |       ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "catch_return_type": {
+    "source": "fun number(): Int { try { 42 } catch(e) { \"wrong\" } }\nprintln(string_repr(number()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/type_checker/catch_return_type.gdn:1:43\n1| fun number(): Int { try { 42 } catch(e) { \"wrong\" } }\n2| println(string_repr(number()))            ^^^^^^^\n-| usability/type_checker/catch_return_type.gdn:1:15\n1| fun number(): Int { try { 42 } catch(e) { \"wrong\" } }\n |               ^^^ Note: expected `Int` because of this return type.\n2| println(string_repr(number()))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "closure_returns_bad": {
+    "source": "let f = fun(): Int { \"wrong\" }\nprintln(string_repr(f()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/type_checker/closure_returns_bad.gdn:1:22\n1| let f = fun(): Int { \"wrong\" }\n |                      ^^^^^^^\n2| println(string_repr(f()))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"wrong\"` has type `String`.\n-| usability/type_checker/closure_returns_bad.gdn:1:16\t closure\n1| let f = fun(): Int { \"wrong\" }\n |                ^^^\n-| usability/type_checker/closure_returns_bad.gdn:2:21\t __toplevel__\n2| println(string_repr(f()))\n |                     ^^^\n"
+    }
+  },
+  "constructor_payload_bad": {
+    "source": "enum Message { Text(String) }\nprintln(string_repr(Text(42)))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `String` but got an `Int`.\n\n-| usability/type_checker/constructor_payload_bad.gdn:2:26\n1| enum Message { Text(String) }\n2| println(string_repr(Text(42)))\n |                          ^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Text(42)\n",
+      "stderr": ""
+    }
+  },
+  "dict_set_bad": {
+    "source": "let d = Dict[\"n\" => 1].set(\"s\", \"wrong\")\nprintln(string_repr(d))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Dict[\"n\" => 1, \"s\" => \"wrong\"]\n",
+      "stderr": ""
+    }
+  },
+  "dict_then_read": {
+    "source": "let d: Dict<String> = Dict[\"n\" => 1].set(\"s\", \"wrong\")\nprintln(d.get(\"n\").or_throw())\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `String` but `1` has type `Int`.\n-| usability/type_checker/dict_then_read.gdn:2:9\t __toplevel__\n2| println(d.get(\"n\").or_throw())\n |         ^^^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "duplicate_type_parameter": {
+    "source": "fun f<T, T>(x: T): T { x }\nprintln(string_repr(f(1)))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `T` is unused.\n\n-| usability/type_checker/duplicate_type_parameter.gdn:1:10\n1| fun f<T, T>(x: T): T { x }\n |          ^\n2| println(string_repr(f(1)))\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "empty_container_good": {
+    "source": "fun empty(): List<Int> { [] }\nprintln(string_repr(empty()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "[]\n",
+      "stderr": ""
+    }
+  },
+  "empty_dict_inference": {
+    "source": "let d = Dict[]\nd = d.set(\"answer\", 42)\nprintln(string_repr(d))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `Dict<NoValue>` but got a `Dict<Int>`.\n\n-| usability/type_checker/empty_dict_inference.gdn:2:5\n1| let d = Dict[]\n2| d = d.set(\"answer\", 42)\n |     ^^^^^^^^^^^^^^^^^^^\n3| println(string_repr(d))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Dict[\"answer\" => 42]\n",
+      "stderr": ""
+    }
+  },
+  "for_binding_leak": {
+    "source": "for n in [1] { println(string_repr(n)) }\nprintln(string_repr(n))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unbound symbol: `n`\n\n-| usability/type_checker/for_binding_leak.gdn:2:21\n1| for n in [1] { println(string_repr(n)) }\n2| println(string_repr(n))\n |                     ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "1\n",
+      "stderr": "Exception: No such variable `n`.\n-| usability/type_checker/for_binding_leak.gdn:2:21\t __toplevel__\n2| println(string_repr(n))\n |                     ^\n"
+    }
+  },
+  "forward_reference": {
+    "source": "println(string_repr(increment(1)))\nfun increment(n: Int): Int { n + 1 }\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    }
+  },
+  "function_enum_variance": {
+    "source": "enum Handler<T> { Handle(Fun<(T), Unit>) }\nfun send(h: Handler<List<Int>>): Unit { match h { Handle(f) => f([1]) } }\nlet h: Handler<List<NoValue>> = Handle(fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) })\nsend(h)\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Assertion failed.\n-| usability/type_checker/function_enum_variance.gdn:3:78\t closure\n3| let h: Handler<List<NoValue>> = Handle(fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) })\n |                                                                              ^^^^^^^^^^^^^\n-| usability/type_checker/function_enum_variance.gdn:2:64\t fun send()\n2| fun send(h: Handler<List<Int>>): Unit { match h { Handle(f) => f([1]) } }\n |                                                                ^^^^^^\n-| usability/type_checker/function_enum_variance.gdn:4:1\t __toplevel__\n4| send(h)\n | ^^^^^^^\n"
+    }
+  },
+  "function_field_variance": {
+    "source": "struct Handler<T> { run: Fun<(T), Unit> }\nfun send(h: Handler<List<Int>>): Unit { (h.run)([1]) }\nlet h: Handler<List<NoValue>> = Handler{ run: fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) } }\nsend(h)\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Assertion failed.\n-| usability/type_checker/function_field_variance.gdn:3:85\t closure\n3| let h: Handler<List<NoValue>> = Handler{ run: fun(xs: List<NoValue>): Unit { assert(xs.is_empty()) } }\n |                                                                                     ^^^^^^^^^^^^^\n-| usability/type_checker/function_field_variance.gdn:2:41\t fun send()\n2| fun send(h: Handler<List<Int>>): Unit { (h.run)([1]) }\n |                                         ^^^^^^^^^^^^\n-| usability/type_checker/function_field_variance.gdn:4:1\t __toplevel__\n4| send(h)\n | ^^^^^^^\n"
+    }
+  },
+  "function_reassignment": {
+    "source": "let f = fun(n: Int): Int { n + 1 }\nf = fun(n: String): String { n }\nprintln(string_repr(f(1)))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/type_checker/function_reassignment.gdn:2:30\n1| let f = fun(n: Int): Int { n + 1 }\n2| f = fun(n: String): String { n }\n3| println(string_repr(f(1)))   ^\n\nError: Expected a `Fun<(Int), Int>` but got a `Fun<(String), __ERROR(String, Type mismatch)>`.\n\n-| usability/type_checker/function_reassignment.gdn:2:5\n1| let f = fun(n: Int): Int { n + 1 }\n2| f = fun(n: String): String { n }\n |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n3| println(string_repr(f(1)))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `String` but `1` has type `Int`.\n-| usability/type_checker/function_reassignment.gdn:2:21\t closure\n2| f = fun(n: String): String { n }\n |                     ^^^^^^\n-| usability/type_checker/function_reassignment.gdn:3:21\t __toplevel__\n3| println(string_repr(f(1)))\n |                     ^^^^\n"
+    }
+  },
+  "function_variance_bad": {
+    "source": "fun apply(f: Fun<(Int), String>): String { f(1) }\nprintln(apply(fun(n: String): String { n }))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `Fun<(Int), String>` but got a `Fun<(String), String>`.\n\n-| usability/type_checker/function_variance_bad.gdn:2:15\n1| fun apply(f: Fun<(Int), String>): String { f(1) }\n2| println(apply(fun(n: String): String { n }))\n |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n-| usability/type_checker/function_variance_bad.gdn:1:11\n1| fun apply(f: Fun<(Int), String>): String { f(1) }\n |           ^^^^^^^^^^^^^^^^^^^^^ Note: the parameter `f` is declared with type `Fun<(Int), String>` here.\n2| println(apply(fun(n: String): String { n }))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Fun<(Int), String>` but `<closure function_variance_bad.gdn:2>` has type `Fun<(String), String>`.\n-| usability/type_checker/function_variance_bad.gdn:2:15\t __toplevel__\n2| println(apply(fun(n: String): String { n }))\n |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "generic_identity_good": {
+    "source": "fun identity<T>(x: T): T { x }\nprintln(string_repr(identity(42)))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "generic_method_annotation_bad": {
+    "source": "struct Box<T> { value: T }\nmethod replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\nlet b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\nprintln(string_repr(b))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected `Box<Int>` but got `Box<String>`.\n\n-| usability/type_checker/generic_method_annotation_bad.gdn:3:19\n1| struct Box<T> { value: T }\n2| method replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\n3| let b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\n |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n4| println(string_repr(b))\n-| usability/type_checker/generic_method_annotation_bad.gdn:3:8\n1| struct Box<T> { value: T }\n2| method replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\n3| let b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\n |        ^^^^^^^^ Note: expected `Box<Int>` because of this type hint.\n4| println(string_repr(b))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_method_annotation_bad.gdn:3:19\t __toplevel__\n3| let b: Box<Int> = Box{ value: 1 }.replace(\"wrong\")\n |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "generic_method_bad": {
+    "source": "struct Box<T> { value: T }\nmethod replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\nprintln(string_repr(Box{ value: 1 }.replace(\"wrong\")))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Box{ value: \"wrong\" }\n",
+      "stderr": ""
+    }
+  },
+  "generic_nested_bad": {
+    "source": "fun wrap<T>(x: T): List<T> { [\"wrong\"] }\nprintln(string_repr(wrap(42)))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `x` is unused.\n\n-| usability/type_checker/generic_nested_bad.gdn:1:13\n1| fun wrap<T>(x: T): List<T> { [\"wrong\"] }\n |             ^\n2| println(string_repr(wrap(42)))\n\nError: Expected `T` but got a `String`.\n\n-| usability/type_checker/generic_nested_bad.gdn:1:31\n1| fun wrap<T>(x: T): List<T> { [\"wrong\"] }\n |                               ^^^^^^^\n2| println(string_repr(wrap(42)))\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "[\"wrong\"]\n",
+      "stderr": ""
+    }
+  },
+  "generic_nested_constructor": {
+    "source": "enum Tree<T> { Leaf(T), Branch(List<Tree<T>>) }\nlet t: Tree<Int> = Branch([Leaf(1)])\nprintln(string_repr(t))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Branch([Leaf(1)])\n",
+      "stderr": ""
+    }
+  },
+  "generic_parameter_order": {
+    "source": "fun pair<T, U>(x: T, y: U): (T, U) { (x, y) }\nlet p: (Int, String) = pair(1, \"ok\")\nprintln(string_repr(p))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "(1, \"ok\")\n",
+      "stderr": ""
+    }
+  },
+  "generic_receiver_bound": {
+    "source": "struct Box<T> { value: T }\nmethod replace<T>(this: Box<T>, value: T): Box<T> { Box{ value: value } }\nlet b: Box<Int> = Box{ value: 1 }\nprintln(string_repr(b.replace(\"wrong\")))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Box{ value: \"wrong\" }\n",
+      "stderr": ""
+    }
+  },
+  "generic_repeated_bad": {
+    "source": "fun choose<T>(x: T, _y: T): T { x }\nprintln(string_repr(choose(1, \"wrong\")))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `String` but got an `Int`.\n\n-| usability/type_checker/generic_repeated_bad.gdn:2:28\n1| fun choose<T>(x: T, _y: T): T { x }\n2| println(string_repr(choose(1, \"wrong\")))\n |                            ^\n-| usability/type_checker/generic_repeated_bad.gdn:1:15\n1| fun choose<T>(x: T, _y: T): T { x }\n |               ^^^^ Note: the parameter `x` is declared with type `String` here.\n2| println(string_repr(choose(1, \"wrong\")))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "generic_return_bad": {
+    "source": "fun identity<T>(x: T): T { \"wrong\" }\nprintln(string_repr(identity(42)))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `x` is unused.\n\n-| usability/type_checker/generic_return_bad.gdn:1:17\n1| fun identity<T>(x: T): T { \"wrong\" }\n |                 ^\n2| println(string_repr(identity(42)))\n\nError: Expected `T` but got a `String`.\n\n-| usability/type_checker/generic_return_bad.gdn:1:28\n1| fun identity<T>(x: T): T { \"wrong\" }\n |                            ^^^^^^^\n2| println(string_repr(identity(42)))\n-| usability/type_checker/generic_return_bad.gdn:1:24\n1| fun identity<T>(x: T): T { \"wrong\" }\n |                        ^ Note: expected `T` because of this return type.\n2| println(string_repr(identity(42)))\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "\"wrong\"\n",
+      "stderr": ""
+    }
+  },
+  "generic_struct_annotation_bad": {
+    "source": "struct Box<T> { value: T }\nlet b: Box<Int> = Box{ value: \"wrong\" }\nprintln(string_repr(b))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_struct_annotation_bad.gdn:2:19\t __toplevel__\n2| let b: Box<Int> = Box{ value: \"wrong\" }\n |                   ^^^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "generic_struct_bad": {
+    "source": "struct Box<T> { value: T }\nfun unbox(b: Box<Int>): Int { b.value }\nprintln(string_repr(unbox(Box{ value: \"wrong\" })))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_struct_bad.gdn:3:27\t __toplevel__\n3| println(string_repr(unbox(Box{ value: \"wrong\" })))\n |                           ^^^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "generic_struct_flow": {
+    "source": "struct Box<T> { value: T }\nfun text(b: Box<String>): String { b.value }\nlet b = Box{ value: 1 }\nprintln(text(b))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Box<String>` but `Box{ value: 1 }` has type `Box<Int>`.\n-| usability/type_checker/generic_struct_flow.gdn:4:14\t __toplevel__\n4| println(text(b))\n |              ^\n"
+    }
+  },
+  "generic_struct_variable_bad": {
+    "source": "struct Box<T> { value: T }\nfun unbox(b: Box<Int>): Int { b.value }\nlet b = Box{ value: \"wrong\" }\nprintln(string_repr(unbox(b)))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Box<Int>` but `Box{ value: \"wrong\" }` has type `Box<String>`.\n-| usability/type_checker/generic_struct_variable_bad.gdn:4:27\t __toplevel__\n4| println(string_repr(unbox(b)))\n |                           ^\n"
+    }
+  },
+  "heterogeneous_dict": {
+    "source": "let d = Dict[\"n\" => 1, \"s\" => \"wrong\"]\nprintln(string_repr(d))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Dict values have different types.\n\n-| usability/type_checker/heterogeneous_dict.gdn:1:31\n1| let d = Dict[\"n\" => 1, \"s\" => \"wrong\"]\n2| println(string_repr(d))       ^^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Dict[\"n\" => 1, \"s\" => \"wrong\"]\n",
+      "stderr": ""
+    }
+  },
+  "heterogeneous_list": {
+    "source": "let xs = [1, \"wrong\"]\nprintln(string_repr(xs))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: List elements have different types: an `Int` and a `String`.\n\n-| usability/type_checker/heterogeneous_list.gdn:1:14\n1| let xs = [1, \"wrong\"]\n |              ^^^^^^^\n2| println(string_repr(xs))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "[1, \"wrong\"]\n",
+      "stderr": ""
+    }
+  },
+  "if_binding_leak": {
+    "source": "if True { let secret = 1 println(string_repr(secret)) }\nprintln(string_repr(secret))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unbound symbol: `secret`\n\n-| usability/type_checker/if_binding_leak.gdn:2:21\n1| if True { let secret = 1 println(string_repr(secret)) }\n2| println(string_repr(secret))\n |                     ^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "1\n",
+      "stderr": "Exception: No such variable `secret`.\n-| usability/type_checker/if_binding_leak.gdn:2:21\t __toplevel__\n2| println(string_repr(secret))\n |                     ^^^^^^\n"
+    }
+  },
+  "list_append_bad": {
+    "source": "let xs = [1].append(\"wrong\")\nprintln(string_repr(xs))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "[1, \"wrong\"]\n",
+      "stderr": ""
+    }
+  },
+  "list_metadata_retag": {
+    "source": "let xs = [1].append(\"wrong\")\nfun strings(xs: List<String>): Unit { for s in xs { println(s) } }\nstrings(xs)\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `String` but `1` has type `Int`.\n-| usability/type_checker/list_metadata_retag.gdn:2:61\t fun strings()\n2| fun strings(xs: List<String>): Unit { for s in xs { println(s) } }\n |                                                             ^\n-| usability/type_checker/list_metadata_retag.gdn:3:1\t __toplevel__\n3| strings(xs)\n | ^^^^^^^^^^^\n"
+    }
+  },
+  "match_binding_leak": {
+    "source": "match Some(1) { Some(n) => println(string_repr(n)), None => {} }\nprintln(string_repr(n))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unbound symbol: `n`\n\n-| usability/type_checker/match_binding_leak.gdn:2:21\n1| match Some(1) { Some(n) => println(string_repr(n)), None => {} }\n2| println(string_repr(n))\n |                     ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "1\n",
+      "stderr": "Exception: No such variable `n`.\n-| usability/type_checker/match_binding_leak.gdn:2:21\t __toplevel__\n2| println(string_repr(n))\n |                     ^\n"
+    }
+  },
+  "method_parameter_shadow": {
+    "source": "method identify(this: Int, this: String): String { this }\nprintln(1.identify(\"wrong\"))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Duplicate parameter `this`.\n\n-| usability/type_checker/method_parameter_shadow.gdn:1:28\n1| method identify(this: Int, this: String): String { this }\n |                            ^^^^\n2| println(1.identify(\"wrong\"))\n-| usability/type_checker/method_parameter_shadow.gdn:1:17\n1| method identify(this: Int, this: String): String { this }\n |                 ^^^^ Note: The previous occurrence is here.\n2| println(1.identify(\"wrong\"))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Duplicate parameter `this`.\n\n-| usability/type_checker/method_parameter_shadow.gdn:1:28\n1| method identify(this: Int, this: String): String { this }\n |                            ^^^^\n2| println(1.identify(\"wrong\"))\n-| usability/type_checker/method_parameter_shadow.gdn:1:17\n1| method identify(this: Int, this: String): String { this }\n |                 ^^^^ Note: The previous occurrence is here.\n2| println(1.identify(\"wrong\"))\n"
+    }
+  },
+  "method_return_hint_bad": {
+    "source": "method wrong(this: Int): String { this }\nprintln(1.wrong())\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `String` but got an `Int`.\n\n-| usability/type_checker/method_return_hint_bad.gdn:1:35\n1| method wrong(this: Int): String { this }\n2| println(1.wrong())                ^^^^\n-| usability/type_checker/method_return_hint_bad.gdn:1:26\n1| method wrong(this: Int): String { this }\n2| println(1.wrong())       ^^^^^^ Note: expected `String` because of this return type.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `String` but `1` has type `Int`.\n-| usability/type_checker/method_return_hint_bad.gdn:1:26\t method wrong(this: Int)()\n1| method wrong(this: Int): String { this }\n |                          ^^^^^^\n-| usability/type_checker/method_return_hint_bad.gdn:2:9\t __toplevel__\n2| println(1.wrong())\n |         ^^^^^^^^^\n"
+    }
+  },
+  "nested_empty_inference": {
+    "source": "let xs: List<Option<Int>> = [None, Some(42)]\nprintln(string_repr(xs))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "[None, Some(42)]\n",
+      "stderr": ""
+    }
+  },
+  "never_branch_good": {
+    "source": "fun one(b: Bool): Int { if b { 1 } else { throw(\"expected\") } }\nprintln(string_repr(one(True)))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "no_value_return": {
+    "source": "fun fail(): Int { throw(\"expected\") }\nfail()\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: expected\n-| usability/type_checker/no_value_return.gdn:1:19\t fun fail()\n1| fun fail(): Int { throw(\"expected\") }\n |                   ^^^^^^^^^^^^^^^^^\n-| usability/type_checker/no_value_return.gdn:2:1\t __toplevel__\n2| fail()\n | ^^^^^^\n"
+    }
+  },
+  "option_binding_good": {
+    "source": "let n: Option<Int> = None\nn = Some(1)\nprintln(string_repr(n))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Some(1)\n",
+      "stderr": ""
+    }
+  },
+  "pattern_binder_type": {
+    "source": "match Some(\"wrong\") { Some(n) => println(string_repr(n + 1)), None => {} }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/type_checker/pattern_binder_type.gdn:1:54\n1| match Some(\"wrong\") { Some(n) => println(string_repr(n + 1)), None => {} }\n |                                                      ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"wrong\"` has type `String`.\n-| usability/type_checker/pattern_binder_type.gdn:1:54\t __toplevel__\n1| match Some(\"wrong\") { Some(n) => println(string_repr(n + 1)), None => {} }\n |                                                      ^\n"
+    }
+  },
+  "reassignment_bad": {
+    "source": "let n = 1\nn = \"wrong\"\nprintln(string_repr(n))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/type_checker/reassignment_bad.gdn:2:5\n1| let n = 1\n2| n = \"wrong\"\n |     ^^^^^^^\n3| println(string_repr(n))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "\"wrong\"\n",
+      "stderr": ""
+    }
+  },
+  "recursive_enum_good": {
+    "source": "enum Nat { Zero, Succ(Nat) }\nfun count(n: Nat): Int { match n { Zero => 0, Succ(rest) => count(rest) + 1 } }\nprintln(string_repr(count(Succ(Succ(Zero)))))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    }
+  },
+  "specialized_receiver_bad": {
+    "source": "method first_int(this: List<Int>): Int { this.get(0).or_throw() }\nprintln(string_repr([\"wrong\"].first_int()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Methods must be generic in all their type parameters, for example `List<T>` rather than `List<Int>`.\n\n-| usability/type_checker/specialized_receiver_bad.gdn:1:29\n1| method first_int(this: List<Int>): Int { this.get(0).or_throw() }\n |                             ^^^\n2| println(string_repr([\"wrong\"].first_int()))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"wrong\"` has type `String`.\n-| usability/type_checker/specialized_receiver_bad.gdn:1:36\t method first_int(this: List)()\n1| method first_int(this: List<Int>): Int { this.get(0).or_throw() }\n |                                    ^^^\n-| usability/type_checker/specialized_receiver_bad.gdn:2:21\t __toplevel__\n2| println(string_repr([\"wrong\"].first_int()))\n |                     ^^^^^^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "unbound_generic_type": {
+    "source": "fun f(x: T): T { x }\nprintln(string_repr(f(1)))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: No such type `T`.\n\n-| usability/type_checker/unbound_generic_type.gdn:1:10\n1| fun f(x: T): T { x }\n |          ^\n2| println(string_repr(f(1)))\n\nError: No such type `T`.\n\n-| usability/type_checker/unbound_generic_type.gdn:1:14\n1| fun f(x: T): T { x }\n |              ^\n2| println(string_repr(f(1)))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Unbound type in hint: `No such type: T`\n-| usability/type_checker/unbound_generic_type.gdn:2:23\t __toplevel__\n2| println(string_repr(f(1)))\n |                       ^\n"
+    }
+  },
+  "unknown_type": {
+    "source": "fun f(x: Missing): Int { 1 }\nprintln(string_repr(f(1)))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `x` is unused.\n\n-| usability/type_checker/unknown_type.gdn:1:7\n1| fun f(x: Missing): Int { 1 }\n |       ^\n2| println(string_repr(f(1)))\n\nError: No such type `Missing`.\n\n-| usability/type_checker/unknown_type.gdn:1:10\n1| fun f(x: Missing): Int { 1 }\n |          ^^^^^^^\n2| println(string_repr(f(1)))\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Unbound type in hint: `No such type: Missing`\n-| usability/type_checker/unknown_type.gdn:2:23\t __toplevel__\n2| println(string_repr(f(1)))\n |                       ^\n"
+    }
+  },
+  "wrong_closure_argument": {
+    "source": "let f = fun(x: Int): Int { x + 1 }\nprintln(string_repr(f(\"wrong\")))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/type_checker/wrong_closure_argument.gdn:2:23\n1| let f = fun(x: Int): Int { x + 1 }\n2| println(string_repr(f(\"wrong\")))\n |                       ^^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"wrong\"` has type `String`.\n-| usability/type_checker/wrong_closure_argument.gdn:1:28\t closure\n1| let f = fun(x: Int): Int { x + 1 }\n |                            ^\n-| usability/type_checker/wrong_closure_argument.gdn:2:21\t __toplevel__\n2| println(string_repr(f(\"wrong\")))\n |                     ^^^^^^^^^^\n"
+    }
+  },
+  "wrong_function_argument": {
+    "source": "fun add(x: Int): Int { x + 1 }\nprintln(string_repr(add(\"wrong\")))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/type_checker/wrong_function_argument.gdn:2:25\n1| fun add(x: Int): Int { x + 1 }\n2| println(string_repr(add(\"wrong\")))\n |                         ^^^^^^^\n-| usability/type_checker/wrong_function_argument.gdn:1:9\n1| fun add(x: Int): Int { x + 1 }\n |         ^^^^^^ Note: the parameter `x` is declared with type `Int` here.\n2| println(string_repr(add(\"wrong\")))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"wrong\"` has type `String`.\n-| usability/type_checker/wrong_function_argument.gdn:2:25\t __toplevel__\n2| println(string_repr(add(\"wrong\")))\n |                         ^^^^^^^\n"
+    }
+  },
+  "wrong_match_variant": {
+    "source": "enum Color { Red, Blue }\nmatch Some(1) { Red => println(\"red\"), _ => println(\"other\") }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Duplicate case in pattern match.\n\n-| usability/type_checker/wrong_match_variant.gdn:2:17\n1| enum Color { Red, Blue }\n2| match Some(1) { Red => println(\"red\"), _ => println(\"other\") }\n |                 ^^^\n\nError: This match case is for `Color`, but you're matching on a `Option`.\n\n-| usability/type_checker/wrong_match_variant.gdn:2:17\n1| enum Color { Red, Blue }\n2| match Some(1) { Red => println(\"red\"), _ => println(\"other\") }\n |                 ^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "other\n",
+      "stderr": ""
+    }
+  },
+  "wrong_method_argument": {
+    "source": "method add(this: Int, n: Int): Int { this + n }\nprintln(string_repr(1.add(\"wrong\")))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/type_checker/wrong_method_argument.gdn:2:27\n1| method add(this: Int, n: Int): Int { this + n }\n2| println(string_repr(1.add(\"wrong\")))\n |                           ^^^^^^^\n-| usability/type_checker/wrong_method_argument.gdn:1:23\n1| method add(this: Int, n: Int): Int { this + n }\n |                       ^^^^^^ Note: the parameter `n` is declared with type `Int` here.\n2| println(string_repr(1.add(\"wrong\")))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"wrong\"` has type `String`.\n-| usability/type_checker/wrong_method_argument.gdn:1:45\t method add(this: Int)()\n1| method add(this: Int, n: Int): Int { this + n }\n |                                             ^\n-| usability/type_checker/wrong_method_argument.gdn:2:21\t __toplevel__\n2| println(string_repr(1.add(\"wrong\")))\n |                     ^^^^^^^^^^^^^^\n"
+    }
+  },
+  "wrong_struct_field_read": {
+    "source": "struct Box<T> { value: T }\nlet b = Box{ value: \"wrong\" }\nprintln(string_repr(b.value + 1))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"wrong\"` has type `String`.\n-| usability/type_checker/wrong_struct_field_read.gdn:3:21\t __toplevel__\n3| println(string_repr(b.value + 1))\n |                     ^^^^^^^\n"
+    }
+  },
+  "wrong_tuple_argument": {
+    "source": "fun first(x: (Int, String)): Int { let (a, _) = x a }\nprintln(string_repr(first((1, 2))))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `(Int, String)` but got a `(Int, Int)`.\n\n-| usability/type_checker/wrong_tuple_argument.gdn:2:27\n1| fun first(x: (Int, String)): Int { let (a, _) = x a }\n2| println(string_repr(first((1, 2))))\n |                           ^^^^^^\n-| usability/type_checker/wrong_tuple_argument.gdn:1:11\n1| fun first(x: (Int, String)): Int { let (a, _) = x a }\n |           ^^^^^^^^^^^^^^^^ Note: the parameter `x` is declared with type `(Int, String)` here.\n2| println(string_repr(first((1, 2))))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `(Int, String)` but `(1, 2)` has type `(Int, Int)`.\n-| usability/type_checker/wrong_tuple_argument.gdn:2:27\t __toplevel__\n2| println(string_repr(first((1, 2))))\n |                           ^^^^^^\n"
+    }
+  },
+  "wrong_type_arity": {
+    "source": "fun size(x: List<Int, String>): Int { x.len() }\nprintln(string_repr(size([1])))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: List takes 1 type argument, but got 2 arguments.\n\n-| usability/type_checker/wrong_type_arity.gdn:1:23\n1| fun size(x: List<Int, String>): Int { x.len() }\n |                       ^^^^^^\n2| println(string_repr(size([1])))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "wrong_unused_method_argument": {
+    "source": "method keep(this: Int, _n: Int): Int { this }\nprintln(string_repr(1.keep(\"wrong\")))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/type_checker/wrong_unused_method_argument.gdn:2:28\n1| method keep(this: Int, _n: Int): Int { this }\n2| println(string_repr(1.keep(\"wrong\")))\n |                            ^^^^^^^\n-| usability/type_checker/wrong_unused_method_argument.gdn:1:24\n1| method keep(this: Int, _n: Int): Int { this }\n |                        ^^^^^^^ Note: the parameter `_n` is declared with type `Int` here.\n2| println(string_repr(1.keep(\"wrong\")))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  }
+}

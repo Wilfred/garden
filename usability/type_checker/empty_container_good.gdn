@@ -1,0 +1,2 @@
+fun empty(): List<Int> { [] }
+println(string_repr(empty()))

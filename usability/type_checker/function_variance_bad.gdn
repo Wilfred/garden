@@ -1,0 +1,2 @@
+fun apply(f: Fun<(Int), String>): String { f(1) }
+println(apply(fun(n: String): String { n }))

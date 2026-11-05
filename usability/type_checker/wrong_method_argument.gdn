@@ -1,0 +1,2 @@
+method add(this: Int, n: Int): Int { this + n }
+println(string_repr(1.add("wrong")))

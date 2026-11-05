@@ -1,0 +1,3 @@
+enum Tree<T> { Leaf(T), Branch(List<Tree<T>>) }
+let t: Tree<Int> = Branch([Leaf(1)])
+println(string_repr(t))

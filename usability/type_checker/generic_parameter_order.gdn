@@ -1,0 +1,3 @@
+fun pair<T, U>(x: T, y: U): (T, U) { (x, y) }
+let p: (Int, String) = pair(1, "ok")
+println(string_repr(p))

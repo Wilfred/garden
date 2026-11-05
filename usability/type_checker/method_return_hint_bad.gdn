@@ -1,0 +1,2 @@
+method wrong(this: Int): String { this }
+println(1.wrong())

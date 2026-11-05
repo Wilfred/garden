@@ -1,0 +1,2 @@
+fun identity<T>(x: T): T { x }
+println(string_repr(identity(42)))

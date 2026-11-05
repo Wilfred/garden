@@ -1,0 +1,3 @@
+let n: Option<Int> = None
+n = Some(1)
+println(string_repr(n))

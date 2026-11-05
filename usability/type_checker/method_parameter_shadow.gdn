@@ -1,0 +1,2 @@
+method identify(this: Int, this: String): String { this }
+println(1.identify("wrong"))

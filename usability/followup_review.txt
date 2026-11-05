@@ -190,3 +190,56 @@ The existing arithmetic += and division crashes (03/20) remain reproducible;
 arity produces Garden errors, extreme slice bounds are clamped safely, an
 empty function returns Unit, and literal Unicode inside strings works. These
 successful controls help distinguish host panics from normal Garden errors.
+
+Type-checker review
+
+Fifty-eight focused cases compare check with run in evidence/type_checker.json.
+A runtime failure alone is not a checker bug: an explicit throw, a failed
+assertion on input, or executing a program that already failed check may be
+expected. The following findings use missing static diagnostics or violations
+of explicit type relationships; their files show the complete conditions.
+
+61. BLOCKER, STRUCT TYPE ARGUMENT ERASURE: inferred generic struct literals
+    lose all type arguments. Box{ value: "wrong" } is accepted as Box<Int>,
+    including in an explicitly annotated binding. Generic field arithmetic
+    also passes check before failing at runtime. infer_struct_literal solves
+    field variables but returns args: []; subtyping zips argument lists
+    without checking equal length, accepting the empty list against any
+    instantiation. Preserve solved args and check type-argument arity.
+    See generic_struct_bad, generic_struct_annotation_bad, generic_struct_flow
+    and wrong_struct_field_read in type_checker/.
+62. BLOCKER, METHOD RECEIVER CONSTRAINTS: method inference overwrites a type
+    variable solved from the receiver with the argument's type, then validates
+    arguments without rechecking the receiver. Thus [1].append("wrong") and
+    Dict["n" => 1].set("s", "wrong") pass check as homogeneous String
+    containers; reading the original Int fails at runtime. User generic
+    methods behave the same even with an annotated Box<Int> receiver.
+    Keep receiver constraints during unification, validate conflicts and
+    preserve existing collection element metadata. See append_then_read,
+    dict_then_read, list_metadata_retag and generic_receiver_bound.
+63. BLOCKER, UNSOUND VARIANCE: immutable structs/enums are assumed covariant
+    in every parameter, including parameters used as callback arguments.
+    Handler<List<NoValue>> is accepted as Handler<List<Int>> although its
+    stored function only accepts an empty list. A checked program invokes it
+    with [1] and fails an empty-list assertion. Immutability alone does not
+    justify covariance through a function's argument position. Infer variance
+    from parameter occurrences or use invariance initially. See both
+    function_field_variance and function_enum_variance.
+64. RUNTIME CONTRACT INCONSISTENCY: ordinary function arguments and annotated
+    bindings enforce concrete types, but method arguments, enum payloads,
+    reassignment and generic return types can bypass equivalent checks.
+    Methods accepting an Int can receive an unused String argument; Text(42)
+    constructs a declared String payload; identity<T> can return a String
+    for T=Int at runtime. Their static errors are correctly caught, so this
+    is not another checker false negative. Choose a coherent checked/unchecked
+    execution policy; runtime checks or a mandatory preflight should enforce
+    the promised boundary. These cases matter for REPL/live replacement too.
+
+Positive controls: higher-order function variance is checked for direct Fun
+arguments; concrete closure/function arguments, enum payloads and incompatible
+branch types get useful errors. Match/if/for bindings do not leak scope.
+Annotated empty containers, recursive enums, forward references, generic pairs
+and nested generic constructors work. Specializing a List method to List<Int>
+is explicitly rejected with a useful requirement to use List<T>. The empty-
+container inference limitation (43) also applies to Dict, and is not counted
+a second time. The same applies to contextual lambda inference (18).

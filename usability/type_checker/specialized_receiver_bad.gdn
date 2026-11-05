@@ -1,0 +1,2 @@
+method first_int(this: List<Int>): Int { this.get(0).or_throw() }
+println(string_repr(["wrong"].first_int()))

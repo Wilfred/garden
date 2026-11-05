@@ -1,0 +1,2 @@
+method keep(this: Int, _n: Int): Int { this }
+println(string_repr(1.keep("wrong")))

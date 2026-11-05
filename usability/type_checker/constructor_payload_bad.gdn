@@ -1,0 +1,2 @@
+enum Message { Text(String) }
+println(string_repr(Text(42)))

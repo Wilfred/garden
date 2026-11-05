@@ -1,0 +1,2 @@
+fun choose<T>(x: T, _y: T): T { x }
+println(string_repr(choose(1, "wrong")))

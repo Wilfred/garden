@@ -1,0 +1,3 @@
+let d = Dict[]
+d = d.set("answer", 42)
+println(string_repr(d))

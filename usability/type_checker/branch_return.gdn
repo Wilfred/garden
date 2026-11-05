@@ -1,0 +1,2 @@
+fun f(b: Bool): Int { if b { return 1 } else { return 2 } }
+println(string_repr(f(True)))

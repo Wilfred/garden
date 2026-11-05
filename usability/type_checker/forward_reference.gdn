@@ -1,0 +1,2 @@
+println(string_repr(increment(1)))
+fun increment(n: Int): Int { n + 1 }

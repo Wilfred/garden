@@ -1,0 +1,3 @@
+let f = fun(n: Int): Int { n + 1 }
+f = fun(n: String): String { n }
+println(string_repr(f(1)))

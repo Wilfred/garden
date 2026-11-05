@@ -1,0 +1,2 @@
+fun number(): Int { try { 42 } catch(e) { "wrong" } }
+println(string_repr(number()))

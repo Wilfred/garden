@@ -1,0 +1,2 @@
+let x = if True { 1 } else { "wrong" }
+println(string_repr(x + 1))

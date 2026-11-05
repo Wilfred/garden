@@ -1,0 +1,2 @@
+for n in [1] { println(string_repr(n)) }
+println(string_repr(n))

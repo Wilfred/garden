@@ -1,0 +1,3 @@
+struct Box<T> { value: T }
+let b: Box<Int> = Box{ value: "wrong" }
+println(string_repr(b))

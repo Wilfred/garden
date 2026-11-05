@@ -1,0 +1,2 @@
+let xs: List<String> = [1].append("wrong")
+println(xs.get(0).or_throw())

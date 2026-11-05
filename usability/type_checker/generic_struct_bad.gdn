@@ -1,0 +1,3 @@
+struct Box<T> { value: T }
+fun unbox(b: Box<Int>): Int { b.value }
+println(string_repr(unbox(Box{ value: "wrong" })))

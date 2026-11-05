@@ -1,0 +1,2 @@
+enum Color { Red, Blue }
+match Some(1) { Red => println("red"), _ => println("other") }

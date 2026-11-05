@@ -1,0 +1,2 @@
+fun f(x: Missing): Int { 1 }
+println(string_repr(f(1)))

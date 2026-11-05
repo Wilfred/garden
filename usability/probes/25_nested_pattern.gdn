@@ -1,2 +1,2 @@
 let x: Result<Option<Int>, String> = Ok(Some(42))
-match x { Ok(Some(n)) => println(string_repr(n)), _ => println("none") }
+match x { Ok(Some (n)) => println(string_repr(n)), _ => println("none") }

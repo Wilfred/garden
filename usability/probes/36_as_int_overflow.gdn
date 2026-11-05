@@ -1,0 +1,2 @@
+println(string_repr("9223372036854775808".as_int()))
+println(string_repr("not-a-number".as_int()))

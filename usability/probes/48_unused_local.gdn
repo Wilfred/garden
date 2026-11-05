@@ -1,0 +1,2 @@
+fun answer(): Int { let forgotten = 42 1 }
+println(string_repr(answer()))

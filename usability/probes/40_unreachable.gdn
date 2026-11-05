@@ -1,0 +1,6 @@
+fun answer(): Int {
+  return 42
+  println("unreachable")
+  0
+}
+println(string_repr(answer()))

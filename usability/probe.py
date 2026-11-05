@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent
 GARDEN = ROOT.parent / 'target/debug/garden'
 
 
-def capture(command, timeout=3, stdin=None):
+def capture(command, timeout=3, stdin=""):
     try:
         p = subprocess.run(command, input=stdin, text=True, capture_output=True, timeout=timeout, cwd=ROOT.parent)
         return dict(exit=p.returncode, stdout=p.stdout, stderr=p.stderr)
@@ -24,7 +24,7 @@ if __name__ == '__main__':
         results[path.stem] = {
             'source': path.read_text(),
             'check': capture([str(GARDEN), 'check', relative]),
-            'run': capture([str(GARDEN), 'run', relative]),
+            'run': capture([str(GARDEN), 'run', relative], stdin='hello\r\n' if path.stem == '43_readline_crlf' else ''),
         }
     (ROOT / 'evidence/probes.json').write_text(json.dumps(results, indent=2) + '\n')
     for name, r in results.items():

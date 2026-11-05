@@ -1,2 +1,5 @@
-fun number(): Result<Int, String> { Ok("42".as_int().or_throw()?) }
+fun number(): Result<Int, String> {
+  let s = Ok("42")?
+  Ok(s.as_int().or_throw())
+}
 println(string_repr(number()))

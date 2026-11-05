@@ -1,0 +1,7 @@
+fun counter(): Fun<(), Int> {
+  let n = 0
+  fun() { n += 1 n }
+}
+let next = counter()
+println(string_repr(next()))
+println(string_repr(next()))

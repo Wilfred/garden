@@ -1,0 +1,48 @@
+// Mandelbrot escape-time rendering. A positive magnitude's floor is below 4
+// exactly when the magnitude is below 4, avoiding Float comparison operators.
+fun escape(cx: Float, cy: Float, limit: Int): Int {
+  let x = 0.0
+  let y = 0.0
+  let iteration = 0
+  while iteration < limit {
+    if ((x *. x) +. (y *. y)).floor() >= 4 { return iteration }
+    let next_x = ((x *. x) -. (y *. y)) +. cx
+    y = ((2.0 *. x) *. y) +. cy
+    x = next_x
+    iteration += 1
+  }
+  limit
+}
+
+fun render(width: Int, height: Int, limit: Int): List<String> {
+  let palette = " .:-=+*#%@".chars()
+  let rows: List<String> = []
+  for row in range(0, height) {
+    let line = ""
+    for col in range(0, width) {
+      let cx = -2.0 +. ((col.as_float() *. 3.0) /. (width - 1).as_float())
+      let cy = -1.0 +. ((row.as_float() *. 2.0) /. (height - 1).as_float())
+      let n = escape(cx, cy, limit)
+      let index = (n * (palette.len() - 1)) / limit
+      line = line ^ palette.get(index).or_throw()
+    }
+    rows = rows.append(line)
+  }
+  rows
+}
+
+test known_points {
+  assert(escape(0.0, 0.0, 30) == 30)
+  assert(escape(-1.0, 0.0, 30) == 30)
+  assert(escape(2.0, 0.0, 30) == 1)
+  assert(escape(1.0, 1.0, 30) == 2)
+}
+
+test image_shape {
+  let rows = render(12, 7, 20)
+  assert(rows.len() == 7)
+  for row in rows { assert(row.len() == 12) }
+  assert(rows.get(0) == rows.get(6))
+}
+
+println("\n".join(render(64, 25, 30)))

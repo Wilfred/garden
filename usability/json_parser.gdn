@@ -1,0 +1,149 @@
+// Numbers retain their lexemes to avoid precision loss and integer overflow.
+enum Json {
+  JsonNull,
+  JsonBool(Bool),
+  JsonNumber(String),
+  JsonString(String),
+  JsonArray(List<Json>),
+  JsonObject(List<(String, Json)>),
+}
+
+fun at(s: String, i: Int): String { s.substring(i, i + 1) }
+
+fun skip_space(s: String, i: Int): Int {
+  while (i < s.len()) && [" ", "\t", "\r", "\n"].contains(at(s, i)) { i += 1 }
+  i
+}
+
+fun digit(c: String): Bool { c != "" && "0123456789".contains(c) }
+
+fun parse_string(s: String, start: Int): Result<(String, Int), String> {
+  if at(s, start) != "\"" { return Err("Expected string at " ^ string_repr(start)) }
+  let i = start + 1
+  let text = ""
+  while i < s.len() {
+    let c = at(s, i)
+    if c == "\"" { return Ok((text, i + 1)) }
+    if ["\n", "\t", "\r"].contains(c) { return Err("Unescaped control at " ^ string_repr(i)) }
+    if c == "\\" {
+      i += 1
+      let escaped = at(s, i)
+      if escaped == "n" { text = text ^ "\n" }
+      else if escaped == "r" { text = text ^ "\r" }
+      else if escaped == "t" { text = text ^ "\t" }
+      else if ["\"", "\\", "/"].contains(escaped) { text = text ^ escaped }
+      else if ["u", "b", "f"].contains(escaped) {
+        return Err("Unsupported JSON escape: \\" ^ escaped)
+      } else { return Err("Invalid escape at " ^ string_repr(i)) }
+    } else { text = text ^ c }
+    i += 1
+  }
+  Err("Unterminated string at " ^ string_repr(start))
+}
+
+fun parse_number(s: String, start: Int): Result<(Json, Int), String> {
+  let i = start
+  if at(s, i) == "-" { i += 1 }
+  if at(s, i) == "0" { i += 1 }
+  else {
+    if not(digit(at(s, i))) { return Err("Expected digit at " ^ string_repr(i)) }
+    while digit(at(s, i)) { i += 1 }
+  }
+  if at(s, i) == "." {
+    i += 1
+    if not(digit(at(s, i))) { return Err("Expected fractional digit at " ^ string_repr(i)) }
+    while digit(at(s, i)) { i += 1 }
+  }
+  if ["e", "E"].contains(at(s, i)) {
+    i += 1
+    if ["+", "-"].contains(at(s, i)) { i += 1 }
+    if not(digit(at(s, i))) { return Err("Expected exponent digit at " ^ string_repr(i)) }
+    while digit(at(s, i)) { i += 1 }
+  }
+  Ok((JsonNumber(s.substring(start, i)), i))
+}
+
+fun parse_value(s: String, start: Int, depth: Int): Result<(Json, Int), String> {
+  if depth > 64 { return Err("Nesting limit exceeded") }
+  let i = skip_space(s, start)
+  let c = at(s, i)
+  if c == "" { return Err("Expected value at " ^ string_repr(i)) }
+  if c == "\"" {
+    return match parse_string(s, i) {
+      Err(e) => Err(e)
+      Ok((text, end)) => Ok((JsonString(text), end))
+    }
+  }
+  if c == "[" {
+    let values: List<Json> = []
+    i = skip_space(s, i + 1)
+    if at(s, i) == "]" { return Ok((JsonArray(values), i + 1)) }
+    while True {
+      match parse_value(s, i, depth + 1) {
+        Err(e) => return Err(e)
+        Ok((value, end)) => { values = values.append(value) i = skip_space(s, end) }
+      }
+      if at(s, i) == "]" { return Ok((JsonArray(values), i + 1)) }
+      if at(s, i) != "," { return Err("Expected comma or ] at " ^ string_repr(i)) }
+      i = skip_space(s, i + 1)
+    }
+  }
+  if c == "{" {
+    let entries: List<(String, Json)> = []
+    i = skip_space(s, i + 1)
+    if at(s, i) == "}" { return Ok((JsonObject(entries), i + 1)) }
+    while True {
+      let key = ""
+      match parse_string(s, i) {
+        Err(e) => return Err(e)
+        Ok((text, end)) => { key = text i = skip_space(s, end) }
+      }
+      if at(s, i) != ":" { return Err("Expected colon at " ^ string_repr(i)) }
+      match parse_value(s, i + 1, depth + 1) {
+        Err(e) => return Err(e)
+        Ok((value, end)) => { entries = entries.append((key, value)) i = skip_space(s, end) }
+      }
+      if at(s, i) == "}" { return Ok((JsonObject(entries), i + 1)) }
+      if at(s, i) != "," { return Err("Expected comma or } at " ^ string_repr(i)) }
+      i = skip_space(s, i + 1)
+    }
+  }
+  for (word, value) in [("null", JsonNull), ("true", JsonBool(True)), ("false", JsonBool(False))] {
+    if s.substring(i, i + word.len()) == word { return Ok((value, i + word.len())) }
+  }
+  if c == "-" || digit(c) { return parse_number(s, i) }
+  Err("Unexpected character " ^ string_repr(c) ^ " at " ^ string_repr(i))
+}
+
+fun parse_json(s: String): Result<Json, String> {
+  match parse_value(s, 0, 0) {
+    Err(e) => Err(e)
+    Ok((value, end)) => {
+      if skip_space(s, end) != s.len() { return Err("Trailing input at " ^ string_repr(end)) }
+      Ok(value)
+    }
+  }
+}
+
+test valid_json {
+  assert(parse_json(" {\"items\": [null, true, -1.25e+3, \"é🙂\"]} \n") == Ok(JsonObject([
+    ("items", JsonArray([JsonNull, JsonBool(True), JsonNumber("-1.25e+3"), JsonString("é🙂")]))
+  ])))
+  assert(parse_json("[]") == Ok(JsonArray([])))
+  assert(parse_json("{}") == Ok(JsonObject([])))
+  assert(parse_json("\"a\\n\\\"b\"") == Ok(JsonString("a\n\"b")))
+  assert(parse_json("123456789012345678901234567890") == Ok(JsonNumber("123456789012345678901234567890")))
+}
+
+test invalid_json {
+  assert(parse_json("") == Err("Expected value at 0"))
+  assert(parse_json("[1,]") == Err("Unexpected character \"]\" at 3"))
+  assert(parse_json("01") == Err("Trailing input at 1"))
+  assert(parse_json("1.") == Err("Expected fractional digit at 2"))
+  assert(parse_json("1e+") == Err("Expected exponent digit at 3"))
+  assert(parse_json("{\"a\" 1}") == Err("Expected colon at 5"))
+  assert(parse_json("\"unterminated") == Err("Unterminated string at 0"))
+  assert(parse_json("\"\\u0041\"") == Err("Unsupported JSON escape: \\u"))
+}
+
+println(string_repr(parse_json("{\"language\":\"Garden\",\"scores\":[1,2.5e2,null]}")))

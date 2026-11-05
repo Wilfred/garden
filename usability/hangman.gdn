@@ -1,0 +1,93 @@
+import "__random.gdn" as random
+
+struct Game {
+  secret: String,
+  guesses: List<String>,
+  misses: Int,
+}
+
+fun start(secret: String): Game {
+  Game{ secret: secret, guesses: [], misses: 0 }
+}
+
+fun masked(game: Game): String {
+  let letters: List<String> = []
+  for c in game.secret.chars() {
+    letters = letters.append(if game.guesses.contains(c) { c } else { "_" })
+  }
+  " ".join(letters)
+}
+
+fun won(game: Game): Bool {
+  for c in game.secret.chars() {
+    if not(game.guesses.contains(c)) { return False }
+  }
+  True
+}
+
+fun guess(game: Game, text: String): Result<Game, String> {
+  if won(game) || (game.misses >= 6) { return Err("Game is over") }
+  let c = text.trim().to_ascii_lowercase()
+  if c.len() != 1 || not("abcdefghijklmnopqrstuvwxyz".contains(c)) {
+    return Err("Enter one ASCII letter")
+  }
+  if game.guesses.contains(c) { return Err("Already guessed: " ^ c) }
+  Ok(Game{
+    secret: game.secret,
+    guesses: game.guesses.append(c),
+    misses: game.misses + if game.secret.contains(c) { 0 } else { 1 },
+  })
+}
+
+fun play(): Unit {
+  let secret = random::choose(["garden", "parser", "closure"]).or_throw()
+  let game = start(secret)
+  while not(won(game)) && (game.misses < 6) {
+    println(masked(game) ^ "  misses: " ^ string_repr(game.misses))
+    print("Letter: ")
+    match read_line() {
+      Err(e) => { println(e) return Unit }
+      Ok(line) => {
+        match guess(game, line) {
+          Err(e) => println(e)
+          Ok(next) => game = next
+        }
+      }
+    }
+  }
+  println(if won(game) { "You won!" } else { "The word was " ^ secret })
+}
+
+test repeated_and_invalid_guesses {
+  let game = guess(start("garden"), "G").or_throw()
+  assert(masked(game) == "g _ _ _ _ _")
+  assert(game.misses == 0)
+  assert(guess(game, "g") == Err("Already guessed: g"))
+  assert(guess(game, "ab") == Err("Enter one ASCII letter"))
+  assert(guess(game, "é") == Err("Enter one ASCII letter"))
+  assert(guess(game, "x").or_throw().misses == 1)
+}
+
+test win_and_loss {
+  let game = start("aba")
+  game = guess(game, "a").or_throw()
+  assert(masked(game) == "a _ a")
+  game = guess(game, "b").or_throw()
+  assert(won(game))
+  assert(guess(game, "c") == Err("Game is over"))
+  game = start("aba")
+  for c in "cdefgh".chars() { game = guess(game, c).or_throw() }
+  assert(game.misses == 6)
+  assert(not(won(game)))
+  assert(guess(game, "a") == Err("Game is over"))
+}
+
+if shell_arguments().contains("--play") {
+  play()
+} else {
+  let game = start("garden")
+  for c in "garxden".chars() {
+    game = guess(game, c).or_throw()
+    println(masked(game) ^ "  misses: " ^ string_repr(game.misses))
+  }
+}

@@ -1,0 +1,3 @@
+let guesses: List<String> = []
+guesses.append("a")
+println(string_repr(guesses))

@@ -1,0 +1,144 @@
+{
+  "http_headers": {
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test": {
+      "exit": 0,
+      "stdout": "Ran 1 test: it passed.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Ok([Header{ name: \"host\", value: \"example.test\" }, Header{ name: \"accept\", value: \"*/*\" }])\n",
+      "stderr": ""
+    },
+    "format": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "hangman": {
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test": {
+      "exit": 0,
+      "stdout": "Ran 2 tests: they all passed.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "g _ _ _ _ _  misses: 0\ng a _ _ _ _  misses: 0\ng a r _ _ _  misses: 0\ng a r _ _ _  misses: 1\ng a r d _ _  misses: 1\ng a r d e _  misses: 1\ng a r d e n  misses: 1\n",
+      "stderr": ""
+    },
+    "format": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "brainfuck": {
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test": {
+      "exit": 0,
+      "stdout": "Ran 2 tests: they all passed.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Ok(Execution{ output: [65], tape: [0, 65, 0, 0, 0, 0, 0, 0], steps: 108 })\n",
+      "stderr": ""
+    },
+    "format": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "json_parser": {
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test": {
+      "exit": 0,
+      "stdout": "Ran 2 tests: they all passed.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Ok(JsonObject([(\"language\", JsonString(\"Garden\")), (\"scores\", JsonArray([JsonNumber(\"1\"), JsonNumber(\"2.5e2\"), JsonNull]))]))\n",
+      "stderr": ""
+    },
+    "format": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "fractal": {
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test": {
+      "exit": 0,
+      "stdout": "Ran 2 tests: they all passed.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "                            ..........:-:-@.....                \n                          ...........::-+::.......              \n                        ...........:+%*@@*@:.......             \n                      ...........:::-@@@@@@::.......            \n                    .........==*::@-+=@@@*=+-+::::=..           \n                 ...........::=@@#@@@@@@@@@@@@@*@@=:..          \n              .............:--@@@@@@@@@@@@@@@@@@@+:....         \n          .....--......:::::=@@@@@@@@@@@@@@@@@@@@@-:...         \n     ..........:---:=-::::-+@@@@@@@@@@@@@@@@@@@@@@@*:...        \n   ...........:::*@*@@@@=--@@@@@@@@@@@@@@@@@@@@@@@@-....        \n ...........:::-@@@@@@@@@@+@@@@@@@@@@@@@@@@@@@@@@@*:.....       \n .........:::+++@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-......       \n @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@=::......       \n .........:::+++@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-......       \n ...........:::-@@@@@@@@@@+@@@@@@@@@@@@@@@@@@@@@@@*:.....       \n   ...........:::*@*@@@@=--@@@@@@@@@@@@@@@@@@@@@@@@-....        \n     ..........:---:=-::::-+@@@@@@@@@@@@@@@@@@@@@@@*:...        \n          .....--......:::::=@@@@@@@@@@@@@@@@@@@@@-:...         \n              .............:--@@@@@@@@@@@@@@@@@@@+:....         \n                 ...........::=@@#@@@@@@@@@@@@@*@@=:..          \n                    .........==*::@-+=@@@*=+-+::::=..           \n                      ...........:::-@@@@@@::.......            \n                        ...........:+%*@@*@:.......             \n                          ...........::-+::.......              \n                            ..........:-:-@.....                \n",
+      "stderr": ""
+    },
+    "format": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "csv": {
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test": {
+      "exit": 0,
+      "stdout": "Ran 2 tests: they all passed.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Ok([[\"name\", \"score\"], [\"Garden, language\", \"42\"]])\n",
+      "stderr": ""
+    },
+    "format": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "hangman_eof": {
+    "exit": 0,
+    "stdout": "_ _ _ _ _ _ _  misses: 0\nLetter: End of input.\n",
+    "stderr": ""
+  },
+  "hangman_console": {
+    "exit": 0,
+    "stdout": "_ _ _ _ _ _  misses: 0\nLetter: Enter one ASCII letter\n_ _ _ _ _ _  misses: 0\nLetter: _ _ _ _ _ _  misses: 1\nLetter: Already guessed: z\n_ _ _ _ _ _  misses: 1\nLetter: _ a _ _ _ _  misses: 1\nLetter: _ a _ _ _ _  misses: 2\nLetter: _ a _ _ _ _  misses: 3\nLetter: _ a _ _ _ _  misses: 4\nLetter: _ a _ _ e _  misses: 4\nLetter: _ a _ _ e _  misses: 5\nLetter: The word was parser\n",
+    "stderr": ""
+  }
+}

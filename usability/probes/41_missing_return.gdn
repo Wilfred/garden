@@ -1,0 +1,2 @@
+fun parse(): Int { if True { return 1 } }
+println(string_repr(parse()))

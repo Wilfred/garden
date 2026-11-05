@@ -1,0 +1,3 @@
+let d: Dict<Int> = Dict[]
+d.set("score", 42)
+println(string_repr(d))

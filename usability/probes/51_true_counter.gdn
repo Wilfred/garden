@@ -1,0 +1,7 @@
+fun counter(): Fun<(), Int> {
+  let n = 0
+  fun() { n += 1 n }
+}
+let next = counter()
+assert(next() == 1)
+assert(next() == 2)

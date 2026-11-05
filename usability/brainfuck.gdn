@@ -1,0 +1,92 @@
+// Byte-oriented interpreter: 8-bit wrapping cells and a bounded tape.
+struct Execution {
+  output: List<Int>,
+  tape: List<Int>,
+  steps: Int,
+}
+
+fun replace_cell(cells: List<Int>, index: Int, value: Int): List<Int> {
+  cells.slice(0, index).append(value).concat(cells.slice(index + 1, cells.len()))
+}
+
+fun bracket_jumps(code: String): Result<Dict<Int>, String> {
+  let stack: List<Int> = []
+  let jumps: Dict<Int> = Dict[]
+  for (i, c) in code.chars().enumerate() {
+    if c == "[" { stack = stack.append(i) }
+    if c == "]" {
+      match stack.last() {
+        None => return Err("Unmatched ] at " ^ string_repr(i))
+        Some(open) => {
+          jumps = jumps.set(string_repr(open), i).set(string_repr(i), open)
+          stack = stack.slice(0, stack.len() - 1)
+        }
+      }
+    }
+  }
+  if stack.is_non_empty() { return Err("Unmatched [ at " ^ string_repr(stack.last().or_throw())) }
+  Ok(jumps)
+}
+
+fun execute(code: String, input: List<Int>, size: Int, limit: Int): Result<Execution, String> {
+  if size <= 0 { return Err("Tape must be nonempty") }
+  for byte in input {
+    if (byte < 0) || (byte > 255) { return Err("Input is not a byte") }
+  }
+  let jumps: Dict<Int> = match bracket_jumps(code) {
+    Err(e) => return Err(e)
+    Ok(value) => value
+  }
+  let tape = range(0, size).map(fun(_: Int) { 0 })
+  let pc = 0
+  let pointer = 0
+  let consumed = 0
+  let steps = 0
+  let output: List<Int> = []
+  while pc < code.len() {
+    if steps >= limit { return Err("Instruction limit reached") }
+    steps += 1
+    let c = code.substring(pc, pc + 1)
+    let value = tape.get(pointer).or_throw()
+    if c == ">" {
+      pointer += 1
+      if pointer >= size { return Err("Pointer past end of tape") }
+    } else if c == "<" {
+      if pointer == 0 { return Err("Pointer before start of tape") }
+      pointer -= 1
+    } else if c == "+" {
+      tape = replace_cell(tape, pointer, (value + 1) % 256)
+    } else if c == "-" {
+      tape = replace_cell(tape, pointer, (value + 255) % 256)
+    } else if c == "." {
+      output = output.append(value)
+    } else if c == "," {
+      tape = replace_cell(tape, pointer, input.get(consumed).or_value(0))
+      consumed += 1
+    } else if c == "[" {
+      if value == 0 { pc = jumps.get(string_repr(pc)).or_throw() }
+    } else if c == "]" {
+      if value != 0 { pc = jumps.get(string_repr(pc)).or_throw() }
+    }
+    pc += 1
+  }
+  Ok(Execution{ output: output, tape: tape, steps: steps })
+}
+
+test loops_and_bytes {
+  assert(execute("++++++++[>++++++++<-]>+.", [], 8, 1000).or_throw().output == [65])
+  assert(execute("-.,.,.", [66], 2, 100).or_throw().output == [255, 66, 0])
+  assert(execute("[[]]+.", [], 2, 100).or_throw().output == [1])
+  assert(execute("++[>++[>+<-]<-]>>.", [], 3, 1000).or_throw().output == [4])
+}
+
+test invalid_programs {
+  assert(execute("]", [], 2, 100) == Err("Unmatched ] at 0"))
+  assert(execute("[", [], 2, 100) == Err("Unmatched [ at 0"))
+  assert(execute("<", [], 2, 100) == Err("Pointer before start of tape"))
+  assert(execute(">>", [], 2, 100) == Err("Pointer past end of tape"))
+  assert(execute("+[]", [], 2, 20) == Err("Instruction limit reached"))
+  assert(execute("", [256], 2, 20) == Err("Input is not a byte"))
+}
+
+println(string_repr(execute("++++++++[>++++++++<-]>+.", [], 8, 1000)))

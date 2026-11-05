@@ -18,3 +18,23 @@ See review.txt for project experiences and numbered findings. The evidence
 contains diagnostics verbatim so reports can be re-evaluated after changes.
 Existing untracked workspace files were left alone. No language implementation
 changes are included in this review.
+
+Exercises and verification
+
+  python3 usability/verify.py
+
+This checks, tests, runs and checks formatting of all six exercises; it also
+smoke-tests hangman's interactive input validation, duplicate guesses, game
+over and EOF. Evidence is saved in evidence/projects.json. Run interactive
+hangman yourself with:
+
+  ./target/debug/garden run usability/hangman.gdn -- --play
+
+Other demos are json_parser.gdn, brainfuck.gdn, fractal.gdn and csv.gdn.
+The JSON parser is intentionally incomplete: see review.txt for exact limits.
+The Brainfuck API takes/returns bytes as Int lists. Fractal output is ASCII.
+Both Python runners use only the standard library and write evidence locally.
+The exercise verifier must pass; the deliberately failing probes are an
+observational record, not a passing regression test suite. Probe 43 supplies
+CRLF input; other probes receive EOF on stdin. Format valid probes with Garden;
+invalid syntax probes retain their original attempts.

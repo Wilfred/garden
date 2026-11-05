@@ -1,0 +1,2 @@
+println(string_repr(False && throw("must not evaluate")))
+println(string_repr(True || throw("must not evaluate")))

@@ -1,0 +1,2 @@
+struct Point { x: Int, y: Int }
+println(string_repr(Point{ x: 1, x: 2, y: 3 }))

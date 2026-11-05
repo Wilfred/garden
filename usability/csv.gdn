@@ -1,0 +1,73 @@
+// CSV records with comma separators, quoted newlines, and doubled quotes.
+enum Phase { Start, Bare, Quoted, Closed }
+
+fun parse_csv(text: String): Result<List<List<String>>, String> {
+  let records: List<List<String>> = []
+  let fields: List<String> = []
+  let field = ""
+  let phase = Start
+  let i = 0
+  let record_open = False
+  while i < text.len() {
+    let c = text.substring(i, i + 1)
+    record_open = True
+    if phase == Quoted {
+      if c == "\"" { phase = Closed } else { field = field ^ c }
+    } else if (c == "\r") || (c == "\n") {
+      if c == "\r" {
+        if text.substring(i + 1, i + 2) != "\n" { return Err("Bare CR at " ^ string_repr(i)) }
+        i += 1
+      }
+      records = records.append(fields.append(field))
+      fields = []
+      field = ""
+      phase = Start
+      record_open = False
+    } else if c == "," {
+      fields = fields.append(field)
+      field = ""
+      phase = Start
+    } else {
+      match phase {
+        Start => {
+          if c == "\"" { phase = Quoted }
+          else { field = field ^ c phase = Bare }
+        }
+        Bare => {
+          if c == "\"" { return Err("Quote inside bare field at " ^ string_repr(i)) }
+          field = field ^ c
+        }
+        Closed => {
+          if c != "\"" { return Err("Text after closing quote at " ^ string_repr(i)) }
+          field = field ^ "\""
+          phase = Quoted
+        }
+        Quoted => return Err("Unexpected quoted state")
+      }
+    }
+    i += 1
+  }
+  if phase == Quoted { return Err("Unterminated quoted field") }
+  if record_open { records = records.append(fields.append(field)) }
+  Ok(records)
+}
+
+test csv_records {
+  assert(parse_csv("") == Ok([]))
+  assert(parse_csv("\n") == Ok([[""]]))
+  assert(parse_csv("a,b\r\nc,d\r\n") == Ok([["a", "b"], ["c", "d"]]))
+  assert(parse_csv("a,,") == Ok([["a", "", ""]]))
+  assert(parse_csv("\"a,b\",\"say \"\"hi\"\"\"\n\"two\nlines\",🙂") == Ok([
+    ["a,b", "say \"hi\""], ["two\nlines", "🙂"]
+  ]))
+  assert(parse_csv("\"\"") == Ok([[""]]))
+}
+
+test malformed_csv {
+  assert(parse_csv("a\rb") == Err("Bare CR at 1"))
+  assert(parse_csv("\"a\"x") == Err("Text after closing quote at 3"))
+  assert(parse_csv("a\"b") == Err("Quote inside bare field at 1"))
+  assert(parse_csv("\"a") == Err("Unterminated quoted field"))
+}
+
+println(string_repr(parse_csv("name,score\r\n\"Garden, language\",42\r\n")))

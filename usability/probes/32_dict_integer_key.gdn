@@ -1,0 +1,2 @@
+let tape = Dict[0 => 65]
+println(string_repr(tape))

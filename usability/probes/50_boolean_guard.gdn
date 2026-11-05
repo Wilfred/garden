@@ -1,0 +1,2 @@
+let items: List<Int> = []
+if items.is_non_empty() && (items.first().or_throw() == 42) { println("found") }

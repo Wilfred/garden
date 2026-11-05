@@ -1,0 +1,2 @@
+fun number(): Result<Int, String> { Ok("42".as_int().or_throw()?) }
+println(string_repr(number()))

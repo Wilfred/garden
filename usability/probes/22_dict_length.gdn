@@ -1,0 +1,2 @@
+let counts: Dict<Int> = Dict[]
+println(string_repr(counts.len()))

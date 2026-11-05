@@ -1,0 +1,3 @@
+let cells = [0, 0]
+cells[0] = 1
+println(string_repr(cells))

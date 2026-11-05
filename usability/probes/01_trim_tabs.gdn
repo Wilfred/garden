@@ -1,0 +1,1 @@
+println(string_repr("\t value \r\n".trim()))

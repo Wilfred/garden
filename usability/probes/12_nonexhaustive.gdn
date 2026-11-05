@@ -1,0 +1,3 @@
+enum Color { Red, Blue }
+fun name(c: Color): String { match c { Red => "red" } }
+println(name(Blue))

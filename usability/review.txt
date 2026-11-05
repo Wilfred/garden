@@ -1,0 +1,64 @@
+Garden usability review
+
+Scope: hands-on small programs with different programming styles. Confirmed
+runtime bugs, diagnostic papercuts, and design/library requests are distinguished.
+Reproductions live in probes/ with full check/run results in evidence/probes.json.
+
+HTTP field parser (protocol programmer)
+
+Working: ordered duplicate-preserving header list, colon splitting, ASCII name
+validation, case normalization, explicit tab/space trimming, malformed-line
+errors. This is a field-section exercise, not an HTTP message parser: no request
+line, body framing, or byte-level control-character validation.
+
+Good: split_once returns a destructurable Option tuple; chars and substring
+agree on character offsets; enums and structural equality make tests readable.
+The type checker caught a missing pair of parentheses in an expression combining
+comparison and subtraction. That prevented wrong execution, but the diagnostic
+only describes Int/Bool mismatches, not the unexpected grouping.
+
+Findings confirmed in the first checkpoint
+
+01. BUG: nonempty_string.split("") never terminates. Probe 02 times out.
+    Reject an empty separator or define a terminating character-split behavior.
+02. BUG: nonempty_string.replace("", replacement) never terminates. Probe 03.
+    This is a separate operation with its own progress loop, not just split's
+    diagnostic. Define insertion semantics or reject the argument.
+03. BUG: Int += overflow panics in the Rust interpreter (exit 101), while +
+    wraps. Probes 14/15. Make compound and ordinary arithmetic consistent and
+    keep Garden failures within Garden's diagnostic machinery.
+04. SEMANTICS/WARNING: assigning a captured variable inside a map callback
+    changes a captured copy, leaving the outer value 0 without warning (11).
+    Explain capture-by-value in tooling or warn on misleading captured writes.
+05. LIBRARY/DOC: String.trim only removes ASCII space, despite documenting
+    whitespace. Tabs and newlines survive (01). HTTP needs a local trim_ows.
+    Clarify the contract or offer whitespace and explicit-character variants.
+06. WARNING: an ignored fs::write_file Err gets no warning; a program prints
+    "saved" after an unsuccessful write (13). Consider a discarded-Result check.
+07. DESIGN: all binary operators have equal precedence. During the header
+    parser, i != lines.len() - 1 grouped as (i != lines.len()) - 1. Even when
+    the checker rejects it, the message doesn't explain grouping. Probe 29
+    captures arithmetic and mixed comparison. Standard precedence or a warning
+    on mixed operators would reduce surprises.
+08. LIBRARY: String has as_int but no as_float (06). JSON decimal/exponent
+    values cannot use the obvious symmetric conversion. Add checked parsing.
+09. LIBRARY: no integer-to-character conversion (07; prelude API inspected).
+    Escaped JSON Unicode and Brainfuck character output need a workaround.
+10. DESIGN/DIAGNOSTIC: field assignment s.n = 1 gives "Expected an expression
+    after this" at n (09). Immutable state is viable, but this deserves an
+    explicit message suggesting construction of a replacement struct.
+11. LIBRARY/DESIGN: indexed list assignment is unavailable (08), and List has
+    no replacement method. Tape algorithms must rebuild a list or use a dict.
+    A persistent list set(index, value) would suit the current value semantics.
+12. SYNTAX: nested enum patterns Ok(Some(n)) produce seven parser errors (25).
+    Nested matches work, but a precise unsupported-pattern message would help;
+    supporting nested patterns would make Result/Option-heavy parsers smaller.
+
+Useful diagnostics and behavior, not counted as problems
+
+Probe 04: Float + error names +. and offers --fix. Probe 16: invalid escape
+reports the actual sequence and lists supported escapes. Probe 17: typo offers
+the correct in-scope name and --fix. Probe 18: argument error points both to the
+call and the prelude parameter declaration. Probe 19: assertion prints actual
+and expected lists. Probe 12: exhaustive-match check names the missing variant.
+Probe 27: Unicode len/index_of/substring consistently use codepoint positions.

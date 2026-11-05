@@ -1,0 +1,64 @@
+// Strict HTTP/1 field lines; preserve duplicate fields and their order.
+struct Header {
+  name: String,
+  value: String,
+}
+
+fun trim_ows(s: String): String {
+  let start = 0
+  let end = s.len()
+  while start < end && [" ", "\t"].contains(s.substring(start, start + 1)) {
+    start += 1
+  }
+  while end > start && [" ", "\t"].contains(s.substring(end - 1, end)) {
+    end -= 1
+  }
+  s.substring(start, end)
+}
+
+fun valid_name(s: String): Bool {
+  if s == "" { return False }
+  let allowed = "abcdefghijklmnopqrstuvwxyz0123456789!#$%&'*+-.^_`|~"
+  for c in s.to_ascii_lowercase().chars() {
+    if not(allowed.contains(c)) { return False }
+  }
+  True
+}
+
+fun parse_headers(text: String): Result<List<Header>, String> {
+  let headers: List<Header> = []
+  let lines = text.split("\r\n")
+  for (i, line) in lines.enumerate() {
+    if line == "" {
+      if i != (lines.len() - 1) { return Err("Unexpected empty field line") }
+      return Ok(headers)
+    }
+    match line.split_once(":") {
+      None => return Err("Missing colon: " ^ line)
+      Some((name, value)) => {
+        if not(valid_name(name)) { return Err("Invalid field name: " ^ name) }
+        if value.contains("\r") || value.contains("\n") {
+          return Err("Invalid newline in field value")
+        }
+        headers = headers.append(Header{ name: name.to_ascii_lowercase(), value: trim_ows(value) })
+      }
+    }
+  }
+  Ok(headers)
+}
+
+test headers {
+  assert(parse_headers("Host: example.test\r\nX-Note:\t a:b \t\r\n") == Ok([
+    Header{ name: "host", value: "example.test" },
+    Header{ name: "x-note", value: "a:b" },
+  ]))
+  assert(parse_headers("Set-Cookie: a=1\r\nSet-Cookie: b=2") == Ok([
+    Header{ name: "set-cookie", value: "a=1" },
+    Header{ name: "set-cookie", value: "b=2" },
+  ]))
+  assert(parse_headers("Missing colon") == Err("Missing colon: Missing colon"))
+  assert(parse_headers(" Bad: x") == Err("Invalid field name:  Bad"))
+  assert(parse_headers("X: a\nInjected: b") == Err("Invalid newline in field value"))
+}
+
+println(string_repr(parse_headers("Host: example.test\r\nAccept: */*\r\n")))

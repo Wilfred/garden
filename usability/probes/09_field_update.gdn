@@ -1,0 +1,4 @@
+struct State { n: Int }
+let s = State{ n: 0 }
+s.n = 1
+println(string_repr(s))

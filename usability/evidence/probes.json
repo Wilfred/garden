@@ -1,0 +1,379 @@
+{
+  "01_trim_tabs": {
+    "source": "println(string_repr(\"\\t value \\r\\n\".trim()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "\"\t value \\r\\n\"\n",
+      "stderr": ""
+    }
+  },
+  "02_split_empty": {
+    "source": "println(string_repr(\"abc\".split(\"\")))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": "timeout",
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "03_replace_empty": {
+    "source": "println(\"abc\".replace(\"\", \"-\"))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": "timeout",
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "04_float_arithmetic": {
+    "source": "println(string_repr(1.5 + 2.5))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: You can only use `+` for `Int` values. For `Float` values, use `+.` instead.\n\n-| usability/probes/04_float_arithmetic.gdn:1:25\n1| println(string_repr(1.5 + 2.5))\n |                         ^\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `1.5` has type `Float`. Consider using a float operator (such as `+.` instead of `+`) or using rounding methods like `.floor()`.\n-| usability/probes/04_float_arithmetic.gdn:1:21\t __toplevel__\n1| println(string_repr(1.5 + 2.5))\n |                     ^^^\n"
+    }
+  },
+  "05_float_compare": {
+    "source": "println(string_repr(1.5 < 2.5))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `Float`.\n\n-| usability/probes/05_float_compare.gdn:1:21\n1| println(string_repr(1.5 < 2.5))\n |                     ^^^\n\nError: Expected an `Int` but got a `Float`.\n\n-| usability/probes/05_float_compare.gdn:1:27\n1| println(string_repr(1.5 < 2.5))\n |                           ^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `1.5` has type `Float`. Consider using a float operator (such as `+.` instead of `+`) or using rounding methods like `.floor()`.\n-| usability/probes/05_float_compare.gdn:1:21\t __toplevel__\n1| println(string_repr(1.5 < 2.5))\n |                     ^^^\n"
+    }
+  },
+  "06_float_parse": {
+    "source": "println(string_repr(\"1.25\".as_float()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `String` has no method `as_float`.\n\n-| usability/probes/06_float_parse.gdn:1:28\n1| println(string_repr(\"1.25\".as_float()))\n |                            ^^^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `\"1.25\"` has type `String` which has no method named `as_float`.\n-| usability/probes/06_float_parse.gdn:1:28\t __toplevel__\n1| println(string_repr(\"1.25\".as_float()))\n |                            ^^^^^^^^\n"
+    }
+  },
+  "07_char_decode": {
+    "source": "println(string_repr(65.as_char()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `Int` has no method `as_char`.\n\n-| usability/probes/07_char_decode.gdn:1:24\n1| println(string_repr(65.as_char()))\n |                        ^^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `65` has type `Int` which has no method named `as_char`.\n-| usability/probes/07_char_decode.gdn:1:24\t __toplevel__\n1| println(string_repr(65.as_char()))\n |                        ^^^^^^^\n"
+    }
+  },
+  "08_list_update": {
+    "source": "let cells = [0, 0]\ncells[0] = 1\nprintln(string_repr(cells))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an expression after this.\n\n-| usability/probes/08_list_update.gdn:2:8\n1| let cells = [0, 0]\n2| cells[0] = 1\n |        ^\n3| println(string_repr(cells))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected an expression after this.\n\n-| usability/probes/08_list_update.gdn:2:8\n1| let cells = [0, 0]\n2| cells[0] = 1\n |        ^\n3| println(string_repr(cells))\n"
+    }
+  },
+  "09_field_update": {
+    "source": "struct State { n: Int }\nlet s = State{ n: 0 }\ns.n = 1\nprintln(string_repr(s))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an expression after this.\n\n-| usability/probes/09_field_update.gdn:3:3\n1| struct State { n: Int }\n2| let s = State{ n: 0 }\n3| s.n = 1\n |   ^\n4| println(string_repr(s))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected an expression after this.\n\n-| usability/probes/09_field_update.gdn:3:3\n1| struct State { n: Int }\n2| let s = State{ n: 0 }\n3| s.n = 1\n |   ^\n4| println(string_repr(s))\n"
+    }
+  },
+  "10_try_result": {
+    "source": "fun number(): Result<Int, String> { Ok(\"42\".as_int().or_throw()?) }\nprintln(string_repr(number()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unrecognized syntax `?`\n\n-| usability/probes/10_try_result.gdn:1:64\n1| fun number(): Result<Int, String> { Ok(\"42\".as_int().or_throw()?) }\n2| println(string_repr(number()))                                 ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Unrecognized syntax `?`\n\n-| usability/probes/10_try_result.gdn:1:64\n1| fun number(): Result<Int, String> { Ok(\"42\".as_int().or_throw()?) }\n2| println(string_repr(number()))                                 ^\n"
+    }
+  },
+  "11_mutable_capture": {
+    "source": "let n = 0\n[1, 2, 3].map(fun(x: Int) { n += x })\nprintln(string_repr(n))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    }
+  },
+  "12_nonexhaustive": {
+    "source": "enum Color { Red, Blue }\nfun name(c: Color): String { match c { Red => \"red\" } }\nprintln(name(Blue))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: This match expression does not cover all the cases of `Color`. It's missing `Blue`. See the documentation (https://www.garden-lang.org/keyword:match.html).\n\n-| usability/probes/12_nonexhaustive.gdn:2:36\n1| enum Color { Red, Blue }\n2| fun name(c: Color): String { match c { Red => \"red\" } }\n3| println(name(Blue))                ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: No cases in this `match` statement were reached.\n-| usability/probes/12_nonexhaustive.gdn:2:36\t fun name()\n2| fun name(c: Color): String { match c { Red => \"red\" } }\n |                                    ^\n-| usability/probes/12_nonexhaustive.gdn:3:9\t __toplevel__\n3| println(name(Blue))\n |         ^^^^^^^^^^\n"
+    }
+  },
+  "13_unused_result": {
+    "source": "import \"__fs.gdn\" as fs\nfs::write_file(\"x\", Path{ p: \"/directory-that-does-not-exist/usability\" })\nprintln(\"saved\")\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "saved\n",
+      "stderr": ""
+    }
+  },
+  "14_overflow_update": {
+    "source": "let n = 9223372036854775807\nn += 1\nprintln(string_repr(n))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (59) panicked at src/eval.rs:1953:34:\nattempt to add with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  },
+  "15_overflow_add": {
+    "source": "println(string_repr(9223372036854775807 + 1))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "-9223372036854775808\n",
+      "stderr": ""
+    }
+  },
+  "16_invalid_escape": {
+    "source": "println(\"\\q\")\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Invalid escape sequence `\\q`. Only `\\\\`, `\\\"`, `\\n`, `\\t` and `\\r` are supported.\n\n-| usability/probes/16_invalid_escape.gdn:1:9\n1| println(\"\\q\")\n |         ^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Invalid escape sequence `\\q`. Only `\\\\`, `\\\"`, `\\n`, `\\t` and `\\r` are supported.\n\n-| usability/probes/16_invalid_escape.gdn:1:9\n1| println(\"\\q\")\n |         ^^^^\n"
+    }
+  },
+  "17_unknown_variable": {
+    "source": "let guesses = []\nprintln(string_repr(gueses))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unbound symbol: `gueses` Did you mean `guesses`?\n\n-| usability/probes/17_unknown_variable.gdn:2:21\n1| let guesses = []\n2| println(string_repr(gueses))\n |                     ^^^^^^\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: No such variable `gueses`. Did you mean `guesses` instead?\n-| usability/probes/17_unknown_variable.gdn:2:21\t __toplevel__\n2| println(string_repr(gueses))\n |                     ^^^^^^\n"
+    }
+  },
+  "18_wrong_argument": {
+    "source": "println(42)\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `String` but got an `Int`.\n\n-| usability/probes/18_wrong_argument.gdn:1:9\n1| println(42)\n |         ^^\n---| __prelude.gdn:926:20\n924| /// println(\"hello world\")\n925| /// ```\n926| public fun println(_: String): Unit {\n   |                    ^^^^^^^^^ Note: the parameter `_` is declared with type `String` here.\n927|   __BUILT_IN_IMPLEMENTATION\n928| }\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `String` but `42` has type `Int`.\n-| usability/probes/18_wrong_argument.gdn:1:9\t __toplevel__\n1| println(42)\n |         ^^\n"
+    }
+  },
+  "19_assert_detail": {
+    "source": "assert([1, 2] == [1, 3])\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `[1, 3]` but got `[1, 2]`.\n-| usability/probes/19_assert_detail.gdn:1:8\t __toplevel__\n1| assert([1, 2] == [1, 3])\n |        ^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "20_scientific_literal": {
+    "source": "println(string_repr(1e-3))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected `,` or `)` after this.\n\n-| usability/probes/20_scientific_literal.gdn:1:21\n1| println(string_repr(1e-3))\n |                     ^\n\nError: Expected `,` or `)` after this.\n\n-| usability/probes/20_scientific_literal.gdn:1:22\n1| println(string_repr(1e-3))\n |                      ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected `,` or `)` after this.\n\n-| usability/probes/20_scientific_literal.gdn:1:21\n1| println(string_repr(1e-3))\n |                     ^\nError: Parse error: Expected `,` or `)` after this.\n\n-| usability/probes/20_scientific_literal.gdn:1:22\n1| println(string_repr(1e-3))\n |                      ^\n"
+    }
+  },
+  "21_string_order": {
+    "source": "println(string_repr(\"a\" < \"b\"))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `String`.\n\n-| usability/probes/21_string_order.gdn:1:21\n1| println(string_repr(\"a\" < \"b\"))\n |                     ^^^\n\nError: Expected an `Int` but got a `String`.\n\n-| usability/probes/21_string_order.gdn:1:27\n1| println(string_repr(\"a\" < \"b\"))\n |                           ^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"a\"` has type `String`.\n-| usability/probes/21_string_order.gdn:1:21\t __toplevel__\n1| println(string_repr(\"a\" < \"b\"))\n |                     ^^^\n"
+    }
+  },
+  "22_dict_length": {
+    "source": "let counts: Dict<Int> = Dict[]\nprintln(string_repr(counts.len()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `Dict` has no method `len`.\n\n-| usability/probes/22_dict_length.gdn:2:28\n1| let counts: Dict<Int> = Dict[]\n2| println(string_repr(counts.len()))\n |                            ^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `Dict[]` has type `Dict` which has no method named `len`.\n-| usability/probes/22_dict_length.gdn:2:28\t __toplevel__\n2| println(string_repr(counts.len()))\n |                            ^^^\n"
+    }
+  },
+  "23_float_order": {
+    "source": "println(string_repr(1.5 <. 2.5))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an expression after this.\n\n-| usability/probes/23_float_order.gdn:1:25\n1| println(string_repr(1.5 <. 2.5))\n |                         ^\n\nError: Expected a method or field name after this.\n\n-| usability/probes/23_float_order.gdn:1:26\n1| println(string_repr(1.5 <. 2.5))\n |                          ^\n\nError: Expected `,` or `)` after this.\n\n-| usability/probes/23_float_order.gdn:1:21\n1| println(string_repr(1.5 <. 2.5))\n |                     ^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected an expression after this.\n\n-| usability/probes/23_float_order.gdn:1:25\n1| println(string_repr(1.5 <. 2.5))\n |                         ^\nError: Parse error: Expected a method or field name after this.\n\n-| usability/probes/23_float_order.gdn:1:26\n1| println(string_repr(1.5 <. 2.5))\n |                          ^\nError: Parse error: Expected `,` or `)` after this.\n\n-| usability/probes/23_float_order.gdn:1:21\n1| println(string_repr(1.5 <. 2.5))\n |                     ^^^^^^\n"
+    }
+  },
+  "24_tuple_access": {
+    "source": "let pair = (1, \"x\")\nprintln(string_repr(pair.0))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Garden does not support tuple field access like `.0` or `.1`. Use destructuring instead, for example: `let (x, y) = value`.\n\n-| usability/probes/24_tuple_access.gdn:2:25\n1| let pair = (1, \"x\")\n2| println(string_repr(pair.0))\n |                         ^\n\nError: Expected `,` or `)` after this.\n\n-| usability/probes/24_tuple_access.gdn:2:21\n1| let pair = (1, \"x\")\n2| println(string_repr(pair.0))\n |                     ^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Garden does not support tuple field access like `.0` or `.1`. Use destructuring instead, for example: `let (x, y) = value`.\n\n-| usability/probes/24_tuple_access.gdn:2:25\n1| let pair = (1, \"x\")\n2| println(string_repr(pair.0))\n |                         ^\nError: Parse error: Expected `,` or `)` after this.\n\n-| usability/probes/24_tuple_access.gdn:2:21\n1| let pair = (1, \"x\")\n2| println(string_repr(pair.0))\n |                     ^^^^^^\n"
+    }
+  },
+  "25_nested_pattern": {
+    "source": "let x: Result<Option<Int>, String> = Ok(Some(42))\nmatch x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected `)` after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:14\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |              ^^^^\n\nError: Expected `=>` after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:14\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |              ^^^^\n\nError: Expected a variant name after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\n\nError: Expected `=>` after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\n\nError: Expected an expression after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\n\nError: Expected `}` after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\n\nError: Expected an expression after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected `)` after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:14\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |              ^^^^\nError: Parse error: Expected `=>` after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:14\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |              ^^^^\nError: Parse error: Expected a variant name after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\nError: Parse error: Expected `=>` after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\nError: Parse error: Expected an expression after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\nError: Parse error: Expected `}` after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\nError: Parse error: Expected an expression after this.\n\n-| usability/probes/25_nested_pattern.gdn:2:20\n1| let x: Result<Option<Int>, String> = Ok(Some(42))\n2| match x { Ok(Some(n)) => println(string_repr(n)), _ => println(\"none\") }\n |                    ^\n"
+    }
+  },
+  "26_shadow": {
+    "source": "let answer = 1\nlet answer = 2\nprintln(string_repr(answer))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    }
+  },
+  "27_utf8": {
+    "source": "println(string_repr((\"\u00e9\ud83d\ude42\".len(), \"\u00e9\ud83d\ude42\".index_of(\"\ud83d\ude42\"), \"\u00e9\ud83d\ude42\".substring(1, 2))))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "(2, Some(1), \"\ud83d\ude42\")\n",
+      "stderr": ""
+    }
+  },
+  "28_float_update": {
+    "source": "let x = 1.5\nx += 1.0\nprintln(string_repr(x))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `+=` can only be used with `Int` variables, but got a `Float`.\n\n-| usability/probes/28_float_update.gdn:2:1\n1| let x = 1.5\n2| x += 1.0\n | ^\n3| println(string_repr(x))\n\nError: Expected an `Int` but got a `Float`.\n\n-| usability/probes/28_float_update.gdn:2:6\n1| let x = 1.5\n2| x += 1.0\n |      ^^^\n3| println(string_repr(x))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `1.5` has type `Float`.\n-| usability/probes/28_float_update.gdn:2:1\t __toplevel__\n2| x += 1.0\n | ^^^^^^^^\n"
+    }
+  },
+  "29_precedence": {
+    "source": "println(string_repr(1 + 2 * 3))\nprintln(string_repr(1 == 3 - 2))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got a `Bool`.\n\n-| usability/probes/29_precedence.gdn:2:21\n1| println(string_repr(1 + 2 * 3))\n2| println(string_repr(1 == 3 - 2))\n |                     ^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "9\n",
+      "stderr": "Exception: Expected `Int` but `False` has type `Bool`.\n-| usability/probes/29_precedence.gdn:2:21\t __toplevel__\n2| println(string_repr(1 == 3 - 2))\n |                     ^^^^^^\n"
+    }
+  }
+}

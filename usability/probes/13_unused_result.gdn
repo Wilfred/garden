@@ -1,0 +1,3 @@
+import "__fs.gdn" as fs
+fs::write_file("x", Path{ p: "/directory-that-does-not-exist/usability" })
+println("saved")

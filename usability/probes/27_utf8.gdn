@@ -1,0 +1,1 @@
+println(string_repr(("é🙂".len(), "é🙂".index_of("🙂"), "é🙂".substring(1, 2))))

@@ -1,0 +1,2 @@
+fn greet(name: String) { println(name) }
+greet("Garden")

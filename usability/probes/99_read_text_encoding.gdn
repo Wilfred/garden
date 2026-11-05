@@ -1,0 +1,2 @@
+import "__fs.gdn" as fs
+println(string_repr(fs::read_file(Path{ p: "usability/fixtures/invalid_utf8.bin" })))

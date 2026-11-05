@@ -1,0 +1,141 @@
+Garden usability follow-up
+
+This pass focuses on warnings, quickfixes, documentation and familiar mistakes
+from other languages. New numbered findings continue after review.txt's 29.
+Sources and check/run results are in evidence/probes.json. Quickfix replays are
+in evidence/fixes.json; the audit uses --stdout and leaves source probes intact.
+
+Documentation correction
+
+The && and || operator pages explicitly explain eager evaluation and show
+side-effecting examples. Initial finding 19 is a documented design surprise,
+not an implementation bug or a missing explanation on those pages. The original
+review has been corrected accordingly.
+
+Warnings and fixes
+
+30. BUG: check --fix --stdout panics on b || b || b (84). Check emits three
+    duplicate-expression warnings, including two for the same occurrence.
+    Applying overlapping deletions uses invalid byte offsets and exits 101.
+    Deduplicate diagnostics and edits, and reject/merge conflicting changes
+    before applying a batch. This failure happens even in preview mode.
+31. FIX WORKFLOW: an unused-literal binding becomes a bare unused literal
+    after one --fix invocation (48/87), requiring another check/fix round.
+    Keeping an effectful initializer is correct (90), but known pure literals
+    could be removed in one step or remaining warnings could be reported.
+32. FIX STATUS: --fix exits 0 without diagnostics for syntax errors that it
+    cannot fix, including Python def and semicolons (59/66). Output is unchanged
+    and still fails check/run. Automation cannot treat successful fixing as
+    successful checking. Report remaining diagnostics or document/provide an
+    option for a failing exit status when issues remain.
+33. WARNING NOISE: the same-literal-return warning triggers for deliberate
+    status-code returns after different logging side effects (82). It is true
+    that both return 0, but different branches still matter. Consider making
+    this a configurable style hint rather than an unavoidable failing check.
+34. WARNING GAP: a local's initial value overwritten before any read gets
+    no warning (80). The variable name is used, so an unused-variable check
+    does not catch the likely mistaken initialization or forgotten branch.
+35. WARNING GAP: List.len() >= 0 is accepted silently and always True (81).
+    Catch impossible/tautological length comparisons, not just empty-list
+    spellings. This is useful for users confusing >= with >.
+
+Migration mistakes
+
+36. DIAGNOSTIC: def/function/fn declarations are treated as expressions or
+    variable references, yielding misplaced punctuation or unbound-symbol
+    errors (59/64/65). Recognize common declaration prefixes and suggest
+    `fun greet(name: String) { ... }` rather than cascading through the body.
+37. DIAGNOSTIC: `elif` is an unknown variable (63), and Python `and` reports
+    a missing brace at True (109). Suggest `else if` and `&&`, with a reminder
+    of eager evaluation where appropriate. A known foreign keyword deserves
+    a more actionable message than a generic unbound-symbol diagnostic.
+38. DIAGNOSTIC: `let mut x = 1` reports a missing colon before a type hint
+    (77). Say Garden bindings can be reassigned without `mut`, rather than
+    implying the author should write a type annotation after `mut`.
+39. DIAGNOSTIC: `for i in 0..3` suggests tuple destructuring (70). The problem
+    is the Rust-style range. Suggest `range(0, 3)` and leave tuple-access
+    guidance for actual tuple expressions.
+40. DIAGNOSTIC: `if !False` only says unrecognized `!` (72). Point to
+    `not(False)`, just as String + already points to ^. Semicolons (66) could
+    similarly suggest removal instead of only rejecting the character.
+41. DIAGNOSTIC: `items[0]` reports missing comma/parenthesis (69). This is
+    distinct from the earlier list-update gap: ordinary reads have a working
+    API, `items.get(0)`, and the message could explain its Option result.
+42. SILENT MIGRATION TRAP: "Hello ${name}" runs and prints the placeholder
+    literally (68), with no warning despite an in-scope name. A conservative
+    optional interpolation-lookalike hint could suggest ^ concatenation.
+43. TYPE INFERENCE: binding [] then reassigning an append result fails check
+    with List<NoValue> versus List<String>, while execution works (98).
+    Suggest annotating `let names: List<String> = []`; ideally infer from use.
+    This is a separate inference limitation from lambda parameters (18).
+
+Positive controls
+
+`true` gets a precise True suggestion and an effective fix (60). String +
+gets a ^ replacement that checks and runs (67). Assignment in a condition is
+rejected as Unit rather than accepted as truthy (74). `main` gets an excellent
+warning explicitly explaining top-level expressions (91). A newline after
+return is caught with both a return-type error and unreachable-code warning
+(97). Truthiness is rejected with concrete types (73).
+
+Self-assignment and Unit-binding warnings are specific (79/83). Unused-tuple
+and final-return fixes preserve results (86/88). Removing an unused binding
+preserves its print side effect (90); this is an important successful case,
+not a reason to remove initializers indiscriminately. Grouped duplicate boolean
+operands are fixed correctly in the smaller non-overlapping example (85).
+
+Documentation coverage and library contracts
+
+Reflection finds documentation for all 53 public methods and all 47 public
+functions across the prelude, fs, random, reflect, shell and time namespaces.
+41 methods and 29 functions contain fenced examples. Fourteen of 15 reflected
+types have doc comments; Tuple's documentation is instead in website/type:Tuple.md,
+so its absence from reflection is not evidence of missing website documentation.
+Doc presence is strong; execution coverage and precise edge-case contracts need
+more attention. The inventory counts fences, not assertion quality.
+
+44. DOC VALIDATION BUG: run-code-blocks skips title-only fences used by the
+    keyword pages. fun and let report zero checked blocks. A title-only fence
+    containing assert(False) passes; `garden title:Example` fails as expected.
+    Align the checker with the website's code-fence convention, and report
+    skipped Garden-looking examples. evidence/doc_examples.json captures both.
+45. DOC VALIDATION GAP: a fenced `test incorrect { assert(False) }` is counted
+    as a checked block and passes without executing the test. The fun page's
+    embedded test therefore has no effect even if its fence is recognized.
+    Execute contained tests or distinguish loaded examples from tested ones.
+46. PATH BUG: extension() returns Some("README") for a filename with no dot
+    (92), contradicting the contract requiring a dot. Dotfiles and trailing
+    dots also need an explicit policy/examples.
+47. PATH BUG/DOC: parent() on /file returns Some(Path{ p: "" }), losing the
+    root (93). The doc prose says parent always returns a Path and root is
+    returned as-is, but its signature/example/runtime return None for root.
+    Correct the absolute single-component result and contradictory prose.
+48. PATH CONTRACT: joining "" with "file" produces absolute /file; joining
+    /tmp with /etc/config yields /tmp//etc/config (94). The one-line doc
+    "Append component" leaves empty-base and absolute-component behavior
+    unspecified. Preserve relative paths and define absolute-argument handling.
+49. NUMERIC CONTRACT: division truncates toward zero but modulo is Euclidean:
+    -4 / 3 is -1 and -4 % 3 is 2, so (a / b) * b + (a % b) != a (96).
+    `%` documents Euclidean behavior; the division page doesn't explain the
+    incompatible quotient convention. Document the pair or provide div_euclid.
+50. COLLECTION API GAPS: no fold, reverse or zip (101/103/104), forcing loops
+    and indexing boilerplate in ordinary aggregate/pairwise tasks. This is an
+    API request, not a demand for iterator syntax or a claim of impossibility.
+51. RESULT API GAP: Result has no map (105); routine success-value adaptation
+    needs repeated match arms, separate from early-return propagation (15).
+    Option/Result combinators would support concise parser composition.
+52. TOKENIZATION API GAP: no split_whitespace (102). Replacing tabs/newlines
+    and filtering empty strings works, but every text-processing script must
+    choose and implement its own whitespace policy. A documented tokenizer
+    would pair well with clarifying trim's existing ASCII-space behavior (05).
+
+Additional observations, not counted as new issues: Dict membership is possible
+with get(key).is_some() although contains is absent (106). Shell spawn failure
+returns the documented -1 tuple with the OS error (100), and invalid UTF-8 text
+reads return Err without panicking (99). set_extension replaces everything
+from the first dot and appends a trailing dot for an empty extension (95): the
+multi-extension behavior is explicitly documented, so this is a migration
+surprise rather than an undocumented implementation error. The fun page says
+unannotated parameters accept any type, but its arithmetic example is marked
+nocheck; probe 107 demonstrates execution succeeding while checking rejects Any
+in arithmetic. That needs a clear explanation of the checker/runtime boundary.

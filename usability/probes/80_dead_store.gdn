@@ -1,0 +1,6 @@
+fun calculate(): Int {
+  let n = 1
+  n = 2
+  n + 0
+}
+println(string_repr(calculate()))

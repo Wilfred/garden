@@ -1,0 +1,6 @@
+fun log_and_status(b: Bool): Int {
+  if b { println("success") return 0 }
+  println("failure logged")
+  0
+}
+println(string_repr(log_and_status(True)))

@@ -1,0 +1,6 @@
+fun answer(): Int {
+  let unused = 1
+  let result = 42
+  result
+}
+println(string_repr(answer()))

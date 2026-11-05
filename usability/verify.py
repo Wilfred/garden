@@ -6,7 +6,7 @@ import subprocess
 ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent
 GARDEN = REPO / 'target/debug/garden'
-PROJECTS = ['http_headers', 'hangman', 'brainfuck', 'json_parser', 'fractal', 'csv']
+PROJECTS = ['http_headers', 'hangman', 'brainfuck', 'json_parser', 'fractal', 'csv', 'doc_inventory']
 
 
 def run(args, stdin=''):

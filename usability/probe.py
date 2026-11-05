@@ -19,7 +19,7 @@ def capture(command, timeout=3, stdin=""):
 
 if __name__ == '__main__':
     results = {}
-    for path in sorted((ROOT / 'probes').glob('*.gdn')):
+    for path in sorted((ROOT / 'probes').glob('*.gdn'), key=lambda p: int(p.stem.split('_')[0])):
         relative = str(path.relative_to(ROOT.parent))
         results[path.stem] = {
             'source': path.read_text(),

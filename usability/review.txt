@@ -4,7 +4,7 @@ Garden can support small text-processing programs with clear value-based state,
 readable tests and useful static diagnostics. The largest obstacles in these
 exercises were unexpected evaluation rules, failures escaping the interpreter,
 and gaps between text, bytes, characters and numeric APIs. The review records
-29 improvement candidates rather than treating every rejected syntax as a bug.
+29 initial improvement candidates rather than treating every rejected syntax as a bug.
 
 All six projects run. JSON is an explicitly incomplete subset; Brainfuck exposes
 a byte-list API; the fractal renders ASCII. Those limits are documented with
@@ -176,10 +176,11 @@ Numbered improvement candidates
     despite the receiver List<Int> and successful execution (39). The same
     expression works when x: Int is written explicitly. Use callback context
     in lambda parameter inference, or suggest the missing annotation.
-19. BOOLEAN SEMANTICS: && and || eagerly evaluate both sides (47/49). The
-    practical guarded first().or_throw() on an empty list throws (50).
-    Short-circuiting would support safe guards; if eagerness is intentional,
-    the operators need prominent documentation and tooling feedback.
+19. DOCUMENTED DESIGN SURPRISE: && and || eagerly evaluate both sides
+    (47/49). The guarded first().or_throw() on an empty list throws (50).
+    Follow-up review confirmed both operator pages explicitly document this.
+    This is a request for familiar short-circuit behavior or guard-oriented
+    tooling guidance, not a claim that the documented semantics are broken.
 20. BUG: minimum Int divided by -1 panics in Rust (30), unlike division by
     zero's Garden exception. This is a division overflow case distinct from
     the compound-assignment inconsistency in finding 03.

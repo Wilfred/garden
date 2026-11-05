@@ -1,0 +1,57 @@
+import "__reflect.gdn" as reflect
+import "__prelude.gdn" as prelude
+import "__fs.gdn" as fs
+import "__random.gdn" as random
+import "__shell.gdn" as shell
+import "__time.gdn" as time
+
+struct Coverage {
+  documented: Int,
+  examples: Int,
+  total: Int,
+}
+
+fun coverage(docs: List<Option<String>>): Coverage {
+  let documented = 0
+  let examples = 0
+  for doc in docs {
+    match doc {
+      None => {}
+      Some(text) => {
+        if text.trim() != "" { documented += 1 }
+        if text.contains("```") { examples += 1 }
+      }
+    }
+  }
+  Coverage{ documented: documented, examples: examples, total: docs.len() }
+}
+
+test inventory_counts {
+  assert(coverage([None, Some("A doc"), Some("Example\n```\n42\n```")]) == Coverage{
+    documented: 2, examples: 1, total: 3,
+  })
+}
+
+let type_docs: List<Option<String>> = []
+let method_docs: List<Option<String>> = []
+for name in reflect::prelude_types() {
+  let type_doc = reflect::doc_comment_for_type(name)
+  type_docs = type_docs.append(type_doc)
+  if type_doc.is_none() { println("MISSING reflected type " ^ name) }
+  for method_name in reflect::methods_for_type(name) {
+    let doc = reflect::doc_comment_for_method(name, method_name)
+    method_docs = method_docs.append(doc)
+    if doc.is_none() { println("MISSING method " ^ name ^ "::" ^ method_name) }
+  }
+}
+println("Types: " ^ string_repr(coverage(type_docs)))
+println("Methods: " ^ string_repr(coverage(method_docs)))
+for (label, ns) in [("prelude", prelude), ("fs", fs), ("random", random), ("reflect", reflect), ("shell", shell), ("time", time)] {
+  let docs: List<Option<String>> = []
+  for name in reflect::namespace_functions(ns) {
+    let doc = reflect::doc_comment(ns, name)
+    docs = docs.append(doc)
+    if doc.is_none() { println("MISSING function " ^ label ^ "::" ^ name) }
+  }
+  println(label ^ ": " ^ string_repr(coverage(docs)))
+}

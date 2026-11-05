@@ -1,0 +1,5 @@
+fun greet(): Unit {
+  let greeting = println("hello")
+  println(string_repr(greeting))
+}
+greet()

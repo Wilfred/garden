@@ -1,0 +1,3 @@
+let names = []
+names = names.append("a")
+println(string_repr(names))

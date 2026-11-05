@@ -1,0 +1,2 @@
+println(string_repr(Path{ p: "" }.join("file")))
+println(string_repr(Path{ p: "/tmp" }.join("/etc/config")))

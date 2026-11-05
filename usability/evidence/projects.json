@@ -131,9 +131,31 @@
       "stderr": ""
     }
   },
+  "doc_inventory": {
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test": {
+      "exit": 0,
+      "stdout": "Ran 1 test: it passed.\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "MISSING reflected type Tuple\nTypes: Coverage{ documented: 14, examples: 3, total: 15 }\nMethods: Coverage{ documented: 53, examples: 41, total: 53 }\nprelude: Coverage{ documented: 15, examples: 13, total: 15 }\nfs: Coverage{ documented: 11, examples: 11, total: 11 }\nrandom: Coverage{ documented: 2, examples: 0, total: 2 }\nreflect: Coverage{ documented: 15, examples: 1, total: 15 }\nshell: Coverage{ documented: 3, examples: 3, total: 3 }\ntime: Coverage{ documented: 1, examples: 1, total: 1 }\n",
+      "stderr": ""
+    },
+    "format": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
   "hangman_eof": {
     "exit": 0,
-    "stdout": "_ _ _ _ _ _ _  misses: 0\nLetter: End of input.\n",
+    "stdout": "_ _ _ _ _ _  misses: 0\nLetter: End of input.\n",
     "stderr": ""
   },
   "hangman_console": {

@@ -1,0 +1,2 @@
+let values = [1, 2]
+println(string_repr(values.len() >= 0))

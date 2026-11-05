@@ -1,0 +1,3 @@
+for p in ["README", ".gitignore", "file.", "archive.tar.gz"] {
+  println(string_repr((p, Path{ p: p }.extension())))
+}

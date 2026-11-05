@@ -1,0 +1,2 @@
+import "__shell.gdn" as shell
+println(string_repr(shell::run("/this-program-does-not-exist", [])))

@@ -1,0 +1,2 @@
+let n = 1
+match n { 1 => println("one"), _ => println("other") }

@@ -1,0 +1,5 @@
+fun answer(): Int {
+  let result: Int = 42
+  result
+}
+println(string_repr(answer()))

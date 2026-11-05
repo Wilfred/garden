@@ -1,0 +1,5 @@
+fun answer(): Int {
+  let unused = println("must remain")
+  42
+}
+println(string_repr(answer()))

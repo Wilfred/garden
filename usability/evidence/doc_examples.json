@@ -1,0 +1,35 @@
+{
+  "website/keyword:fun.md": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": "Checked 0 blocks in 1 file.\n"
+  },
+  "website/keyword:let.md": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": "Checked 0 blocks in 1 file.\n"
+  },
+  "website/operator:+.md": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": "Checked 2 blocks in 1 file.\n"
+  },
+  "title_only": {
+    "source": "```title:Example\nassert(False)\n```\n",
+    "exit": 0,
+    "stdout": "",
+    "stderr": "Checked 0 blocks in 1 file.\n"
+  },
+  "garden_label": {
+    "source": "```garden title:Example\nassert(False)\n```\n",
+    "exit": 1,
+    "stdout": "",
+    "stderr": "Evaluation error: AssertionFailed(Position { ... }, ErrorMessage([Text(\"Assertion failed.\")]))\nChecked 1 block in 1 file.\n"
+  },
+  "failing_test": {
+    "source": "```garden\ntest incorrect { assert(False) }\n```\n",
+    "exit": 0,
+    "stdout": "",
+    "stderr": "Checked 1 block in 1 file.\n"
+  }
+}

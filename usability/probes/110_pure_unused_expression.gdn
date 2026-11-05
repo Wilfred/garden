@@ -1,0 +1,5 @@
+fun answer(): Int {
+  1 + 2
+  42
+}
+println(string_repr(answer()))

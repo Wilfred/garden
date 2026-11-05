@@ -1,0 +1,2 @@
+let items = [10, 20]
+println(string_repr(items[0]))

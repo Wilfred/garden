@@ -1,0 +1,1 @@
+try { throw("oops") } catch e { println(e) }

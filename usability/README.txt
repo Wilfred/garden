@@ -38,3 +38,16 @@ The exercise verifier must pass; the deliberately failing probes are an
 observational record, not a passing regression test suite. Probe 43 supplies
 CRLF input; other probes receive EOF on stdin. Format valid probes with Garden;
 invalid syntax probes retain their original attempts.
+
+Follow-up audits
+
+followup_review.txt covers warnings, quickfixes, migration mistakes and docs.
+The suite also includes doc_inventory.gdn, which measures reflected API doc
+and example coverage. Tuple's separate website page is outside reflection.
+
+  python3 usability/audit_fixes.py
+
+This previews quickfixes on selected probes, checks and runs the output, and
+records evidence/fixes.json. It deliberately observes failures as well as
+successful fixes and does not edit the input probes. The probe fixtures include
+two invalid UTF-8 bytes for the read-file error case.

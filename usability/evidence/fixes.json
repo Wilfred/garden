@@ -1,0 +1,332 @@
+{
+  "04_float_arithmetic": {
+    "original_source": "println(string_repr(1.5 + 2.5))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "println(string_repr(1.5 +. 2.5))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "4.0\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `1.5` has type `Float`. Consider using a float operator (such as `+.` instead of `+`) or using rounding methods like `.floor()`.\n-| usability/probes/04_float_arithmetic.gdn:1:21\t __toplevel__\n1| println(string_repr(1.5 + 2.5))\n |                     ^^^\n"
+    }
+  },
+  "17_unknown_variable": {
+    "original_source": "let guesses = []\nprintln(string_repr(gueses))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "let guesses = []\nprintln(string_repr(guesses))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "[]\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: No such variable `gueses`. Did you mean `guesses` instead?\n-| usability/probes/17_unknown_variable.gdn:2:21\t __toplevel__\n2| println(string_repr(gueses))\n |                     ^^^^^^\n"
+    }
+  },
+  "48_unused_local": {
+    "original_source": "fun answer(): Int { let forgotten = 42 1 }\nprintln(string_repr(answer()))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "fun answer(): Int { 42 1 }\nprintln(string_repr(answer()))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 1,
+      "stdout": "Warning: Unused value.\n\n-| <fixed-source-directory>/48_unused_local.gdn:1:21\n1| fun answer(): Int { 42 1 }\n |                     ^^\n2| println(string_repr(answer()))\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "59_python_def": {
+    "original_source": "def greet(name):\n  print(name)\ngreet(\"Garden\")\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "def greet(name):\n  print(name)\ngreet(\"Garden\")\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 1,
+      "stdout": "Error: Expected an expression after this.\n\n-| <fixed-source-directory>/59_python_def.gdn:1:15\n1| def greet(name):\n2|   print(name) ^\n3| greet(\"Garden\")\n",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected an expression after this.\n\n-| <fixed-source-directory>/59_python_def.gdn:1:15\n1| def greet(name):\n2|   print(name) ^\n3| greet(\"Garden\")\n"
+    },
+    "original_run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected an expression after this.\n\n-| usability/probes/59_python_def.gdn:1:15\n1| def greet(name):\n2|   print(name) ^\n3| greet(\"Garden\")\n"
+    }
+  },
+  "60_lowercase_bool": {
+    "original_source": "if true { println(\"yes\") }\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "if True { println(\"yes\") }\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "yes\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: No such variable `true`. Did you mean `True` instead?\n-| usability/probes/60_lowercase_bool.gdn:1:4\t __toplevel__\n1| if true { println(\"yes\") }\n |    ^^^^\n"
+    }
+  },
+  "66_semicolons": {
+    "original_source": "let x = 1;\nprintln(string_repr(x));\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "let x = 1;\nprintln(string_repr(x));\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 1,
+      "stdout": "Error: Unrecognized syntax `;`\n\n-| <fixed-source-directory>/66_semicolons.gdn:1:10\n1| let x = 1;\n |          ^\n2| println(string_repr(x));\n\nError: Unrecognized syntax `;`\n\n-| <fixed-source-directory>/66_semicolons.gdn:2:24\n1| let x = 1;\n2| println(string_repr(x));\n |                        ^\n",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Unrecognized syntax `;`\n\n-| <fixed-source-directory>/66_semicolons.gdn:1:10\n1| let x = 1;\n |          ^\n2| println(string_repr(x));\nError: Parse error: Unrecognized syntax `;`\n\n-| <fixed-source-directory>/66_semicolons.gdn:2:24\n1| let x = 1;\n2| println(string_repr(x));\n |                        ^\n"
+    },
+    "original_run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Unrecognized syntax `;`\n\n-| usability/probes/66_semicolons.gdn:1:10\n1| let x = 1;\n |          ^\n2| println(string_repr(x));\nError: Parse error: Unrecognized syntax `;`\n\n-| usability/probes/66_semicolons.gdn:2:24\n1| let x = 1;\n2| println(string_repr(x));\n |                        ^\n"
+    }
+  },
+  "67_string_plus": {
+    "original_source": "println(\"Hello \" + \"Garden\")\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "println(\"Hello \" ^ \"Garden\")\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "Hello Garden\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"Hello \"` has type `String`.\n-| usability/probes/67_string_plus.gdn:1:9\t __toplevel__\n1| println(\"Hello \" + \"Garden\")\n |         ^^^^^^^^\n"
+    }
+  },
+  "79_self_assignment": {
+    "original_source": "fun calculate(): Int {\n  let n = 1\n  n = n\n  n\n}\nprintln(string_repr(calculate()))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "fun calculate(): Int {\n  let n = 1\n  n = n\n  n\n}\nprintln(string_repr(calculate()))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 1,
+      "stdout": "Warning: `n` is assigned to itself.\n\n-| <fixed-source-directory>/79_self_assignment.gdn:3:3\n1| fun calculate(): Int {\n2|   let n = 1\n3|   n = n\n |   ^^^^^\n4|   n\n5| }\n",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "84_repeated_bool": {
+    "original_source": "let b = True\nprintln(string_repr(b || b || b))\n",
+    "fix": {
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (68) panicked at src/syntax_check.rs:51:75:\nstart byte index 39 is out of bounds of `let b = True\nprintln(string_repr(b))\n`\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  },
+  "85_repeated_grouped": {
+    "original_source": "let a = True\nlet b = False\nprintln(string_repr((a || b) || a))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "let a = True\nlet b = False\nprintln(string_repr((a || b)))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "True\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 0,
+      "stdout": "True\n",
+      "stderr": ""
+    }
+  },
+  "86_unused_tuple": {
+    "original_source": "fun answer(): Int {\n  let (unused, value) = (1, 42)\n  value\n}\nprintln(string_repr(answer()))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "fun answer(): Int {\n  let (_unused, value) = (1, 42)\n  value\n}\nprintln(string_repr(answer()))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "87_overlapping_warnings": {
+    "original_source": "fun answer(): Int {\n  let unused = 1\n  let result = 42\n  result\n}\nprintln(string_repr(answer()))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "fun answer(): Int {\n  1\n  42\n}\nprintln(string_repr(answer()))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 1,
+      "stdout": "Warning: Unused value.\n\n-| <fixed-source-directory>/87_overlapping_warnings.gdn:2:3\n1| fun answer(): Int {\n2|   1\n |   ^\n3|   42\n4| }\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "88_final_return": {
+    "original_source": "fun answer(): Int {\n  return 42\n}\nprintln(string_repr(answer()))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "fun answer(): Int {\n  42\n}\nprintln(string_repr(answer()))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "89_typed_binding": {
+    "original_source": "fun answer(): Int {\n  let result: Int = 42\n  result\n}\nprintln(string_repr(answer()))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "fun answer(): Int {\n  42\n}\nprintln(string_repr(answer()))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "90_unused_side_effect": {
+    "original_source": "fun answer(): Int {\n  let unused = println(\"must remain\")\n  42\n}\nprintln(string_repr(answer()))\n",
+    "fix": {
+      "exit": 0,
+      "stdout": "fun answer(): Int {\n  println(\"must remain\")\n  42\n}\nprintln(string_repr(answer()))\n",
+      "stderr": ""
+    },
+    "fixed_check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "fixed_run": {
+      "exit": 0,
+      "stdout": "must remain\n42\n",
+      "stderr": ""
+    },
+    "original_run": {
+      "exit": 0,
+      "stdout": "must remain\n42\n",
+      "stderr": ""
+    }
+  }
+}

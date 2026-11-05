@@ -178,7 +178,7 @@
     "run": {
       "exit": 101,
       "stdout": "",
-      "stderr": "\nthread 'main' (187) panicked at src/eval.rs:1953:34:\nattempt to add with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      "stderr": "\nthread 'main' (60) panicked at src/eval.rs:1953:34:\nattempt to add with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
     }
   },
   "15_overflow_add": {
@@ -386,7 +386,7 @@
     "run": {
       "exit": 101,
       "stdout": "",
-      "stderr": "\nthread 'main' (251) panicked at src/eval.rs:2313:36:\nattempt to divide with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      "stderr": "\nthread 'main' (124) panicked at src/eval.rs:2313:36:\nattempt to divide with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
     }
   },
   "31_remainder_overflow": {
@@ -750,6 +750,682 @@
     "run": {
       "exit": 0,
       "stdout": "\"\t\"\n",
+      "stderr": ""
+    }
+  },
+  "59_python_def": {
+    "source": "def greet(name):\n  print(name)\ngreet(\"Garden\")\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an expression after this.\n\n-| usability/probes/59_python_def.gdn:1:15\n1| def greet(name):\n2|   print(name) ^\n3| greet(\"Garden\")\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected an expression after this.\n\n-| usability/probes/59_python_def.gdn:1:15\n1| def greet(name):\n2|   print(name) ^\n3| greet(\"Garden\")\n"
+    }
+  },
+  "60_lowercase_bool": {
+    "source": "if true { println(\"yes\") }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unbound symbol: `true` Did you mean `True`?\n\n-| usability/probes/60_lowercase_bool.gdn:1:4\n1| if true { println(\"yes\") }\n |    ^^^^\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: No such variable `true`. Did you mean `True` instead?\n-| usability/probes/60_lowercase_bool.gdn:1:4\t __toplevel__\n1| if true { println(\"yes\") }\n |    ^^^^\n"
+    }
+  },
+  "61_null": {
+    "source": "let item = null\nprintln(string_repr(item))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unbound symbol: `null`\n\n-| usability/probes/61_null.gdn:1:12\n1| let item = null\n |            ^^^^\n2| println(string_repr(item))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: No such variable `null`.\n-| usability/probes/61_null.gdn:1:12\t __toplevel__\n1| let item = null\n |            ^^^^\n"
+    }
+  },
+  "62_python_if": {
+    "source": "if True:\n  println(\"yes\")\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected `{` after this.\n\n-| usability/probes/62_python_if.gdn:1:4\n1| if True:\n |    ^^^^\n2|   println(\"yes\")\n\nError: Expected an expression after this.\n\n-| usability/probes/62_python_if.gdn:1:4\n1| if True:\n |    ^^^^\n2|   println(\"yes\")\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected `{` after this.\n\n-| usability/probes/62_python_if.gdn:1:4\n1| if True:\n |    ^^^^\n2|   println(\"yes\")\nError: Parse error: Expected an expression after this.\n\n-| usability/probes/62_python_if.gdn:1:4\n1| if True:\n |    ^^^^\n2|   println(\"yes\")\n"
+    }
+  },
+  "63_python_elif": {
+    "source": "let n = 2\nif n == 1 { println(\"one\") } elif n == 2 { println(\"two\") }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unbound symbol: `elif`\n\n-| usability/probes/63_python_elif.gdn:2:30\n1| let n = 2\n2| if n == 1 { println(\"one\") } elif n == 2 { println(\"two\") }\n |                              ^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: No such variable `elif`.\n-| usability/probes/63_python_elif.gdn:2:30\t __toplevel__\n2| if n == 1 { println(\"one\") } elif n == 2 { println(\"two\") }\n |                              ^^^^\n"
+    }
+  },
+  "64_js_function": {
+    "source": "function greet(name) { println(name) }\ngreet(\"Garden\")\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unbound symbol: `function`\n\n-| usability/probes/64_js_function.gdn:1:1\n1| function greet(name) { println(name) }\n | ^^^^^^^^\n2| greet(\"Garden\")\n\nError: Unbound symbol: `greet`\n\n-| usability/probes/64_js_function.gdn:1:10\n1| function greet(name) { println(name) }\n |          ^^^^^\n2| greet(\"Garden\")\n\nError: Unbound symbol: `name`\n\n-| usability/probes/64_js_function.gdn:1:16\n1| function greet(name) { println(name) }\n |                ^^^^\n2| greet(\"Garden\")\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: No such variable `function`.\n-| usability/probes/64_js_function.gdn:1:1\t __toplevel__\n1| function greet(name) { println(name) }\n | ^^^^^^^^\n"
+    }
+  },
+  "65_rust_fn": {
+    "source": "fn greet(name: String) { println(name) }\ngreet(\"Garden\")\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected `,` or `)` after this.\n\n-| usability/probes/65_rust_fn.gdn:1:10\n1| fn greet(name: String) { println(name) }\n |          ^^^^\n2| greet(\"Garden\")\n\nError: Expected an expression after this.\n\n-| usability/probes/65_rust_fn.gdn:1:10\n1| fn greet(name: String) { println(name) }\n |          ^^^^\n2| greet(\"Garden\")\n\nError: Expected an expression after this.\n\n-| usability/probes/65_rust_fn.gdn:1:10\n1| fn greet(name: String) { println(name) }\n |          ^^^^\n2| greet(\"Garden\")\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected `,` or `)` after this.\n\n-| usability/probes/65_rust_fn.gdn:1:10\n1| fn greet(name: String) { println(name) }\n |          ^^^^\n2| greet(\"Garden\")\nError: Parse error: Expected an expression after this.\n\n-| usability/probes/65_rust_fn.gdn:1:10\n1| fn greet(name: String) { println(name) }\n |          ^^^^\n2| greet(\"Garden\")\nError: Parse error: Expected an expression after this.\n\n-| usability/probes/65_rust_fn.gdn:1:10\n1| fn greet(name: String) { println(name) }\n |          ^^^^\n2| greet(\"Garden\")\n"
+    }
+  },
+  "66_semicolons": {
+    "source": "let x = 1;\nprintln(string_repr(x));\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unrecognized syntax `;`\n\n-| usability/probes/66_semicolons.gdn:1:10\n1| let x = 1;\n |          ^\n2| println(string_repr(x));\n\nError: Unrecognized syntax `;`\n\n-| usability/probes/66_semicolons.gdn:2:24\n1| let x = 1;\n2| println(string_repr(x));\n |                        ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Unrecognized syntax `;`\n\n-| usability/probes/66_semicolons.gdn:1:10\n1| let x = 1;\n |          ^\n2| println(string_repr(x));\nError: Parse error: Unrecognized syntax `;`\n\n-| usability/probes/66_semicolons.gdn:2:24\n1| let x = 1;\n2| println(string_repr(x));\n |                        ^\n"
+    }
+  },
+  "67_string_plus": {
+    "source": "println(\"Hello \" + \"Garden\")\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: You can only use `+` for `Int` values. For `String` values, use `^` instead.\n\n-| usability/probes/67_string_plus.gdn:1:18\n1| println(\"Hello \" + \"Garden\")\n |                  ^\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but `\"Hello \"` has type `String`.\n-| usability/probes/67_string_plus.gdn:1:9\t __toplevel__\n1| println(\"Hello \" + \"Garden\")\n |         ^^^^^^^^\n"
+    }
+  },
+  "68_string_interpolation": {
+    "source": "let name = \"Garden\"\nprintln(\"Hello ${name}\")\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Hello ${name}\n",
+      "stderr": ""
+    }
+  },
+  "69_index_read": {
+    "source": "let items = [10, 20]\nprintln(string_repr(items[0]))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected `,` or `)` after this.\n\n-| usability/probes/69_index_read.gdn:2:21\n1| let items = [10, 20]\n2| println(string_repr(items[0]))\n |                     ^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected `,` or `)` after this.\n\n-| usability/probes/69_index_read.gdn:2:21\n1| let items = [10, 20]\n2| println(string_repr(items[0]))\n |                     ^^^^^\n"
+    }
+  },
+  "70_rust_range": {
+    "source": "for i in 0..3 { println(string_repr(i)) }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a method name after this.\n\n-| usability/probes/70_rust_range.gdn:1:11\n1| for i in 0..3 { println(string_repr(i)) }\n |           ^\n\nError: Garden does not support tuple field access like `.0` or `.1`. Use destructuring instead, for example: `let (x, y) = value`.\n\n-| usability/probes/70_rust_range.gdn:1:12\n1| for i in 0..3 { println(string_repr(i)) }\n |            ^\n\nError: Expected `{` after this.\n\n-| usability/probes/70_rust_range.gdn:1:12\n1| for i in 0..3 { println(string_repr(i)) }\n |            ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected a method name after this.\n\n-| usability/probes/70_rust_range.gdn:1:11\n1| for i in 0..3 { println(string_repr(i)) }\n |           ^\nError: Parse error: Garden does not support tuple field access like `.0` or `.1`. Use destructuring instead, for example: `let (x, y) = value`.\n\n-| usability/probes/70_rust_range.gdn:1:12\n1| for i in 0..3 { println(string_repr(i)) }\n |            ^\nError: Parse error: Expected `{` after this.\n\n-| usability/probes/70_rust_range.gdn:1:12\n1| for i in 0..3 { println(string_repr(i)) }\n |            ^\n"
+    }
+  },
+  "71_c_for": {
+    "source": "for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unrecognized syntax `;`\n\n-| usability/probes/71_c_for.gdn:1:15\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |               ^\n\nError: Unrecognized syntax `;`\n\n-| usability/probes/71_c_for.gdn:1:22\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |                      ^\n\nError: `let` is a keyword and cannot be used as a variable name.\n\n-| usability/probes/71_c_for.gdn:1:6\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |      ^^^\n\nError: Expected `in` after this.\n\n-| usability/probes/71_c_for.gdn:1:6\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |      ^^^\n\nError: Expected `{` after this.\n\n-| usability/probes/71_c_for.gdn:1:14\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |              ^\n\nError: Expected an expression after this.\n\n-| usability/probes/71_c_for.gdn:1:25\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |                         ^\n\nError: Expected an expression after this.\n\n-| usability/probes/71_c_for.gdn:1:26\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |                          ^\n\nError: Expected an expression after this.\n\n-| usability/probes/71_c_for.gdn:1:26\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |                          ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Unrecognized syntax `;`\n\n-| usability/probes/71_c_for.gdn:1:15\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |               ^\nError: Parse error: Unrecognized syntax `;`\n\n-| usability/probes/71_c_for.gdn:1:22\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |                      ^\nError: Parse error: `let` is a keyword and cannot be used as a variable name.\n\n-| usability/probes/71_c_for.gdn:1:6\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |      ^^^\nError: Parse error: Expected `in` after this.\n\n-| usability/probes/71_c_for.gdn:1:6\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |      ^^^\nError: Parse error: Expected `{` after this.\n\n-| usability/probes/71_c_for.gdn:1:14\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |              ^\nError: Parse error: Expected an expression after this.\n\n-| usability/probes/71_c_for.gdn:1:25\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |                         ^\nError: Parse error: Expected an expression after this.\n\n-| usability/probes/71_c_for.gdn:1:26\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |                          ^\nError: Parse error: Expected an expression after this.\n\n-| usability/probes/71_c_for.gdn:1:26\n1| for (let i = 0; i < 3; i++) { println(string_repr(i)) }\n |                          ^\n"
+    }
+  },
+  "72_bang_not": {
+    "source": "if !False { println(\"yes\") }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unrecognized syntax `!`\n\n-| usability/probes/72_bang_not.gdn:1:4\n1| if !False { println(\"yes\") }\n |    ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Unrecognized syntax `!`\n\n-| usability/probes/72_bang_not.gdn:1:4\n1| if !False { println(\"yes\") }\n |    ^\n"
+    }
+  },
+  "73_truthiness": {
+    "source": "if 1 { println(\"yes\") }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `Bool` but got an `Int`.\n\n-| usability/probes/73_truthiness.gdn:1:4\n1| if 1 { println(\"yes\") }\n |    ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Bool` but `1` has type `Int`.\n-| usability/probes/73_truthiness.gdn:1:4\t __toplevel__\n1| if 1 { println(\"yes\") }\n |    ^\n"
+    }
+  },
+  "74_assignment_condition": {
+    "source": "let x = 0\nif x = 1 { println(\"yes\") }\nprintln(string_repr(x))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `Bool` but got `Unit`.\n\n-| usability/probes/74_assignment_condition.gdn:2:4\n1| let x = 0\n2| if x = 1 { println(\"yes\") }\n |    ^^^^^\n3| println(string_repr(x))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Bool` but got `Unit`.\n-| usability/probes/74_assignment_condition.gdn:2:4\t __toplevel__\n2| if x = 1 { println(\"yes\") }\n |    ^^^^^\n"
+    }
+  },
+  "75_try_catch": {
+    "source": "try { throw(\"oops\") } catch e { println(e) }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected `(` after this.\n\n-| usability/probes/75_try_catch.gdn:1:23\n1| try { throw(\"oops\") } catch e { println(e) }\n |                       ^^^^^\n\nError: Expected `)` after this.\n\n-| usability/probes/75_try_catch.gdn:1:29\n1| try { throw(\"oops\") } catch e { println(e) }\n |                             ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected `(` after this.\n\n-| usability/probes/75_try_catch.gdn:1:23\n1| try { throw(\"oops\") } catch e { println(e) }\n |                       ^^^^^\nError: Parse error: Expected `)` after this.\n\n-| usability/probes/75_try_catch.gdn:1:29\n1| try { throw(\"oops\") } catch e { println(e) }\n |                             ^\n"
+    }
+  },
+  "76_const": {
+    "source": "const limit = 10\nprintln(string_repr(limit))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Unbound symbol: `const`\n\n-| usability/probes/76_const.gdn:1:1\n1| const limit = 10\n | ^^^^^\n2| println(string_repr(limit))\n\nError: No such variable `limit`. If you want to define a new local variable, write `let limit =`.\n\n-| usability/probes/76_const.gdn:1:7\n1| const limit = 10\n |       ^^^^^\n2| println(string_repr(limit))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: No such variable `const`.\n-| usability/probes/76_const.gdn:1:1\t __toplevel__\n1| const limit = 10\n | ^^^^^\n"
+    }
+  },
+  "77_mut": {
+    "source": "let mut x = 1\nx += 1\nprintln(string_repr(x))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `:` before this type hint.\n\n-| usability/probes/77_mut.gdn:1:9\n1| let mut x = 1\n2| x += 1  ^\n3| println(string_repr(x))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected a `:` before this type hint.\n\n-| usability/probes/77_mut.gdn:1:9\n1| let mut x = 1\n2| x += 1  ^\n3| println(string_repr(x))\n"
+    }
+  },
+  "78_match_literal": {
+    "source": "let n = 1\nmatch n { 1 => println(\"one\"), _ => println(\"other\") }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a variant name after this.\n\n-| usability/probes/78_match_literal.gdn:2:9\n1| let n = 1\n2| match n { 1 => println(\"one\"), _ => println(\"other\") }\n |         ^\n\nError: Expected `=>` after this.\n\n-| usability/probes/78_match_literal.gdn:2:9\n1| let n = 1\n2| match n { 1 => println(\"one\"), _ => println(\"other\") }\n |         ^\n\nError: Expected a variant name after this.\n\n-| usability/probes/78_match_literal.gdn:2:11\n1| let n = 1\n2| match n { 1 => println(\"one\"), _ => println(\"other\") }\n |           ^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected a variant name after this.\n\n-| usability/probes/78_match_literal.gdn:2:9\n1| let n = 1\n2| match n { 1 => println(\"one\"), _ => println(\"other\") }\n |         ^\nError: Parse error: Expected `=>` after this.\n\n-| usability/probes/78_match_literal.gdn:2:9\n1| let n = 1\n2| match n { 1 => println(\"one\"), _ => println(\"other\") }\n |         ^\nError: Parse error: Expected a variant name after this.\n\n-| usability/probes/78_match_literal.gdn:2:11\n1| let n = 1\n2| match n { 1 => println(\"one\"), _ => println(\"other\") }\n |           ^\n"
+    }
+  },
+  "79_self_assignment": {
+    "source": "fun calculate(): Int {\n  let n = 1\n  n = n\n  n\n}\nprintln(string_repr(calculate()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `n` is assigned to itself.\n\n-| usability/probes/79_self_assignment.gdn:3:3\n1| fun calculate(): Int {\n2|   let n = 1\n3|   n = n\n |   ^^^^^\n4|   n\n5| }\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  },
+  "80_dead_store": {
+    "source": "fun calculate(): Int {\n  let n = 1\n  n = 2\n  n + 0\n}\nprintln(string_repr(calculate()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    }
+  },
+  "81_len_nonnegative": {
+    "source": "let values = [1, 2]\nprintln(string_repr(values.len() >= 0))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "True\n",
+      "stderr": ""
+    }
+  },
+  "82_same_literal_sideeffects": {
+    "source": "fun log_and_status(b: Bool): Int {\n  if b { println(\"success\") return 0 }\n  println(\"failure logged\")\n  0\n}\nprintln(string_repr(log_and_status(True)))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: All code paths in `log_and_status()` return the same value `0`.\n\n-| usability/probes/82_same_literal_sideeffects.gdn:1:5\n1| fun log_and_status(b: Bool): Int {\n |     ^^^^^^^^^^^^^^\n2|   if b { println(\"success\") return 0 }\n3|   println(\"failure logged\")\n-| usability/probes/82_same_literal_sideeffects.gdn:2:36\n1| fun log_and_status(b: Bool): Int {\n2|   if b { println(\"success\") return 0 }\n3|   println(\"failure logged\")        ^ Note: Same value here.\n4|   0\n-| usability/probes/82_same_literal_sideeffects.gdn:4:3\n2|   if b { println(\"success\") return 0 }\n3|   println(\"failure logged\")\n4|   0\n5| } ^ Note: Same value here.\n6| println(string_repr(log_and_status(True)))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "success\n0\n",
+      "stderr": ""
+    }
+  },
+  "83_unit_binding": {
+    "source": "fun greet(): Unit {\n  let greeting = println(\"hello\")\n  println(string_repr(greeting))\n}\ngreet()\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: Binding a value of type `Unit` to a variable is rarely useful.\n\n-| usability/probes/83_unit_binding.gdn:2:18\n1| fun greet(): Unit {\n2|   let greeting = println(\"hello\")\n |                  ^^^^^^^^^^^^^^^^\n3|   println(string_repr(greeting))\n4| }\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "hello\nUnit\n",
+      "stderr": ""
+    }
+  },
+  "84_repeated_bool": {
+    "source": "let b = True\nprintln(string_repr(b || b || b))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: This expression has already appeared in this `||` chain.\n\n-| usability/probes/84_repeated_bool.gdn:2:26\n1| let b = True\n2| println(string_repr(b || b || b))\n |                          ^\n\nWarning: This expression has already appeared in this `||` chain.\n\n-| usability/probes/84_repeated_bool.gdn:2:31\n1| let b = True\n2| println(string_repr(b || b || b))\n |                               ^\n\nWarning: This expression has already appeared in this `||` chain.\n\n-| usability/probes/84_repeated_bool.gdn:2:26\n1| let b = True\n2| println(string_repr(b || b || b))\n |                          ^\n",
+      "stderr": "\n3 issues can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "True\n",
+      "stderr": ""
+    }
+  },
+  "85_repeated_grouped": {
+    "source": "let a = True\nlet b = False\nprintln(string_repr((a || b) || a))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: This expression has already appeared in this `||` chain.\n\n-| usability/probes/85_repeated_grouped.gdn:3:33\n1| let a = True\n2| let b = False\n3| println(string_repr((a || b) || a))\n |                                 ^\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "True\n",
+      "stderr": ""
+    }
+  },
+  "86_unused_tuple": {
+    "source": "fun answer(): Int {\n  let (unused, value) = (1, 42)\n  value\n}\nprintln(string_repr(answer()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `unused` is unused.\n\n-| usability/probes/86_unused_tuple.gdn:2:8\n1| fun answer(): Int {\n2|   let (unused, value) = (1, 42)\n |        ^^^^^^\n3|   value\n4| }\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "87_overlapping_warnings": {
+    "source": "fun answer(): Int {\n  let unused = 1\n  let result = 42\n  result\n}\nprintln(string_repr(answer()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `unused` is unused.\n\n-| usability/probes/87_overlapping_warnings.gdn:2:7\n1| fun answer(): Int {\n2|   let unused = 1\n |       ^^^^^^\n3|   let result = 42\n4|   result\n\nWarning: Unnecessary `let`, this value is immediately returned.\n\n-| usability/probes/87_overlapping_warnings.gdn:3:16\n1| fun answer(): Int {\n2|   let unused = 1\n3|   let result = 42\n4|   result       ^^\n5| }\n",
+      "stderr": "\n3 issues can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "88_final_return": {
+    "source": "fun answer(): Int {\n  return 42\n}\nprintln(string_repr(answer()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: Unnecessary `return` at the end of a function body.\n\n-| usability/probes/88_final_return.gdn:2:3\n1| fun answer(): Int {\n2|   return 42\n3| } ^^^^^^^^^\n4| println(string_repr(answer()))\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "89_typed_binding": {
+    "source": "fun answer(): Int {\n  let result: Int = 42\n  result\n}\nprintln(string_repr(answer()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: Unnecessary `let`, this value is immediately returned.\n\n-| usability/probes/89_typed_binding.gdn:2:21\n1| fun answer(): Int {\n2|   let result: Int = 42\n3|   result            ^^\n4| }\n",
+      "stderr": "\n2 issues can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    }
+  },
+  "90_unused_side_effect": {
+    "source": "fun answer(): Int {\n  let unused = println(\"must remain\")\n  42\n}\nprintln(string_repr(answer()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `unused` is unused.\n\n-| usability/probes/90_unused_side_effect.gdn:2:7\n1| fun answer(): Int {\n2|   let unused = println(\"must remain\")\n3|   42  ^^^^^^\n4| }\n\nWarning: Binding a value of type `Unit` to a variable is rarely useful.\n\n-| usability/probes/90_unused_side_effect.gdn:2:16\n1| fun answer(): Int {\n2|   let unused = println(\"must remain\")\n3|   42           ^^^^^^^^^^^^^^^^^^^^^^\n4| }\n",
+      "stderr": "\n1 issue can be fixed automatically (use `--fix`).\n"
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "must remain\n42\n",
+      "stderr": ""
+    }
+  },
+  "91_main_not_called": {
+    "source": "fun main() { println(\"Hello from main\") }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Warning: `main` is never called. Garden does not treat `main` functions specially. To run code, write expressions directly in the file (e.g., `println(\"Hello\")`), or call `main()` from a top-level block.\n\n-| usability/probes/91_main_not_called.gdn:1:5\n1| fun main() { println(\"Hello from main\") }\n |     ^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "92_path_extension": {
+    "source": "for p in [\"README\", \".gitignore\", \"file.\", \"archive.tar.gz\"] {\n  println(string_repr((p, Path{ p: p }.extension())))\n}\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "(\"README\", Some(\"README\"))\n(\".gitignore\", Some(\"gitignore\"))\n(\"file.\", Some(\"\"))\n(\"archive.tar.gz\", Some(\"gz\"))\n",
+      "stderr": ""
+    }
+  },
+  "93_root_parent": {
+    "source": "println(string_repr(Path{ p: \"/\" }.parent()))\nprintln(string_repr(Path{ p: \"/file\" }.parent()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "None\nSome(Path{ p: \"\" })\n",
+      "stderr": ""
+    }
+  },
+  "94_path_join": {
+    "source": "println(string_repr(Path{ p: \"\" }.join(\"file\")))\nprintln(string_repr(Path{ p: \"/tmp\" }.join(\"/etc/config\")))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Path{ p: \"/file\" }\nPath{ p: \"/tmp//etc/config\" }\n",
+      "stderr": ""
+    }
+  },
+  "95_replace_suffix": {
+    "source": "println(string_repr(Path{ p: \"archive.tar.gz\" }.set_extension(\"xz\")))\nprintln(string_repr(Path{ p: \"file.txt\" }.set_extension(\"\")))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Path{ p: \"archive.xz\" }\nPath{ p: \"file.\" }\n",
+      "stderr": ""
+    }
+  },
+  "96_divmod_sign": {
+    "source": "println(string_repr((-4 / 3, -4 % 3)))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "(-1, 2)\n",
+      "stderr": ""
+    }
+  },
+  "97_newline_before_return_value": {
+    "source": "fun answer(): Int {\n  return\n  42\n}\nprintln(string_repr(answer()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected this function to return an `Int` but got `Unit`.\n\n-| usability/probes/97_newline_before_return_value.gdn:2:3\n1| fun answer(): Int {\n2|   return\n |   ^^^^^^\n3|   42\n4| }\n\nWarning: Unreachable code after `return`.\n\n-| usability/probes/97_newline_before_return_value.gdn:3:3\n1| fun answer(): Int {\n2|   return\n3|   42\n4| } ^^\n5| println(string_repr(answer()))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: Expected `Int` but got `Unit`.\n-| usability/probes/97_newline_before_return_value.gdn:1:15\t fun answer()\n1| fun answer(): Int {\n |               ^^^\n-| usability/probes/97_newline_before_return_value.gdn:5:21\t __toplevel__\n5| println(string_repr(answer()))\n |                     ^^^^^^^^\n"
+    }
+  },
+  "98_empty_option_inference": {
+    "source": "let names = []\nnames = names.append(\"a\")\nprintln(string_repr(names))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected a `List<NoValue>` but got a `List<String>`.\n\n-| usability/probes/98_empty_option_inference.gdn:2:9\n1| let names = []\n2| names = names.append(\"a\")\n |         ^^^^^^^^^^^^^^^^^\n3| println(string_repr(names))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "[\"a\"]\n",
+      "stderr": ""
+    }
+  },
+  "99_read_text_encoding": {
+    "source": "import \"__fs.gdn\" as fs\nprintln(string_repr(fs::read_file(Path{ p: \"usability/fixtures/invalid_utf8.bin\" })))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "Err(\"Could not read `usability/fixtures/invalid_utf8.bin` (relative to `/home/claudebox/garden`). invalid data.\")\n",
+      "stderr": ""
+    }
+  },
+  "100_shell_missing": {
+    "source": "import \"__shell.gdn\" as shell\nprintln(string_repr(shell::run(\"/this-program-does-not-exist\", [])))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "(-1, \"\", \"No such file or directory (os error 2)\")\n",
+      "stderr": ""
+    }
+  },
+  "101_list_reduce": {
+    "source": "println(string_repr([1, 2, 3].fold(0, fun(a: Int, b: Int) { a + b })))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `List` has no method `fold`.\n\n-| usability/probes/101_list_reduce.gdn:1:31\n1| println(string_repr([1, 2, 3].fold(0, fun(a: Int, b: Int) { a + b })))\n |                               ^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `[1, 2, 3]` has type `List` which has no method named `fold`.\n-| usability/probes/101_list_reduce.gdn:1:31\t __toplevel__\n1| println(string_repr([1, 2, 3].fold(0, fun(a: Int, b: Int) { a + b })))\n |                               ^^^^\n"
+    }
+  },
+  "102_string_split_whitespace": {
+    "source": "println(string_repr(\"one\\t two\\nthree\".split_whitespace()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `String` has no method `split_whitespace`.\n\n-| usability/probes/102_string_split_whitespace.gdn:1:40\n1| println(string_repr(\"one\\t two\\nthree\".split_whitespace()))\n |                                        ^^^^^^^^^^^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `\"one\t two\\nthree\"` has type `String` which has no method named `split_whitespace`.\n-| usability/probes/102_string_split_whitespace.gdn:1:40\t __toplevel__\n1| println(string_repr(\"one\\t two\\nthree\".split_whitespace()))\n |                                        ^^^^^^^^^^^^^^^^\n"
+    }
+  },
+  "103_list_reverse": {
+    "source": "println(string_repr([1, 2, 3].reverse()))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `List` has no method `reverse`.\n\n-| usability/probes/103_list_reverse.gdn:1:31\n1| println(string_repr([1, 2, 3].reverse()))\n |                               ^^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `[1, 2, 3]` has type `List` which has no method named `reverse`.\n-| usability/probes/103_list_reverse.gdn:1:31\t __toplevel__\n1| println(string_repr([1, 2, 3].reverse()))\n |                               ^^^^^^^\n"
+    }
+  },
+  "104_list_zip": {
+    "source": "println(string_repr([1, 2].zip([\"a\", \"b\"])))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `List` has no method `zip`.\n\n-| usability/probes/104_list_zip.gdn:1:28\n1| println(string_repr([1, 2].zip([\"a\", \"b\"])))\n |                            ^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `[1, 2]` has type `List` which has no method named `zip`.\n-| usability/probes/104_list_zip.gdn:1:28\t __toplevel__\n1| println(string_repr([1, 2].zip([\"a\", \"b\"])))\n |                            ^^^\n"
+    }
+  },
+  "105_result_map": {
+    "source": "let value: Result<Int, String> = Ok(1)\nprintln(string_repr(value.map(fun(n: Int) { n + 1 })))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `Result` has no method `map`.\n\n-| usability/probes/105_result_map.gdn:2:27\n1| let value: Result<Int, String> = Ok(1)\n2| println(string_repr(value.map(fun(n: Int) { n + 1 })))\n |                           ^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `Ok(1)` has type `Result` which has no method named `map`.\n-| usability/probes/105_result_map.gdn:2:27\t __toplevel__\n2| println(string_repr(value.map(fun(n: Int) { n + 1 })))\n |                           ^^^\n"
+    }
+  },
+  "106_dict_contains": {
+    "source": "println(string_repr(Dict[\"a\" => 1].contains(\"a\")))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: `Dict` has no method `contains`.\n\n-| usability/probes/106_dict_contains.gdn:1:36\n1| println(string_repr(Dict[\"a\" => 1].contains(\"a\")))\n |                                    ^^^^^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Exception: `Dict[\"a\" => 1]` has type `Dict` which has no method named `contains`.\n-| usability/probes/106_dict_contains.gdn:1:36\t __toplevel__\n1| println(string_repr(Dict[\"a\" => 1].contains(\"a\")))\n |                                    ^^^^^^^^\n"
+    }
+  },
+  "107_return_without_annotation": {
+    "source": "fun increment(x) { x + 1 }\nprintln(string_repr(increment(1)))\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected an `Int` but got an `Any`.\n\n-| usability/probes/107_return_without_annotation.gdn:1:20\n1| fun increment(x) { x + 1 }\n |                    ^\n2| println(string_repr(increment(1)))\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    }
+  },
+  "108_empty_parens": {
+    "source": "println(string_repr(()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "()\n",
+      "stderr": ""
+    }
+  },
+  "109_python_and": {
+    "source": "if True and False { println(\"yes\") }\n",
+    "check": {
+      "exit": 1,
+      "stdout": "Error: Expected `{` after this.\n\n-| usability/probes/109_python_and.gdn:1:4\n1| if True and False { println(\"yes\") }\n |    ^^^^\n",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "Error: Parse error: Expected `{` after this.\n\n-| usability/probes/109_python_and.gdn:1:4\n1| if True and False { println(\"yes\") }\n |    ^^^^\n"
+    }
+  },
+  "110_pure_unused_expression": {
+    "source": "fun answer(): Int {\n  1 + 2\n  42\n}\nprintln(string_repr(answer()))\n",
+    "check": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "run": {
+      "exit": 0,
+      "stdout": "42\n",
       "stderr": ""
     }
   }

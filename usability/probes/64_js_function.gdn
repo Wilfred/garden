@@ -1,0 +1,2 @@
+function greet(name) { println(name) }
+greet("Garden")

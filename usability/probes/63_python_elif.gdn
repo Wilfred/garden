@@ -1,0 +1,2 @@
+let n = 2
+if n == 1 { println("one") } elif n == 2 { println("two") }

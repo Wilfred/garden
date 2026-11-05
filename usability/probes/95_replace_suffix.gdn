@@ -1,0 +1,2 @@
+println(string_repr(Path{ p: "archive.tar.gz" }.set_extension("xz")))
+println(string_repr(Path{ p: "file.txt" }.set_extension("")))

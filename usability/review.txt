@@ -1,8 +1,38 @@
 Garden usability review
 
-Scope: hands-on small programs with different programming styles. Confirmed
-runtime bugs, diagnostic papercuts, and design/library requests are distinguished.
-Reproductions live in probes/ with full check/run results in evidence/probes.json.
+Garden can support small text-processing programs with clear value-based state,
+readable tests and useful static diagnostics. The largest obstacles in these
+exercises were unexpected evaluation rules, failures escaping the interpreter,
+and gaps between text, bytes, characters and numeric APIs. The review records
+29 improvement candidates rather than treating every rejected syntax as a bug.
+
+All six projects run. JSON is an explicitly incomplete subset; Brainfuck exposes
+a byte-list API; the fractal renders ASCII. Those limits are documented with
+the corresponding project below. Program completion was secondary to finding
+language-design and tooling problems.
+
+Highest-priority areas to consider
+
+- Interpreter robustness: empty-separator hangs (01/02), arithmetic panics
+  (03/20) and the incorrect remainder error (21).
+- Silent surprises: closure writes (04), equal operator precedence (07), eager
+  boolean operands (19), and ignored error/update values (06/23).
+- Usable parser/numeric APIs: character construction (09), text/bytes (28),
+  Float parsing/order/math (08/13/27), and callback inference (18).
+
+Method: act as a beginner, protocol programmer, library author, systems
+programmer, scientific programmer and data-processing programmer. Write and run
+small programs, retain failed first attempts as probes, inspect the available
+prelude APIs, and distinguish bugs from deliberate semantics or API requests.
+Reproductions live in probes/; evidence/probes.json contains source, exit status,
+stdout and stderr for both check and run. Nonterminating probes have a three-
+second limit. evidence/projects.json records exercise checks, tests and demos.
+No performance measurements or editor/LSP session were part of this review.
+
+Environment: Garden 0.26.0, source baseline 7beda2a86cec0e9ede3a480ced14748c7b4ddd50,
+rustc 1.95.0, debug build, Linux. Exercise commits change no language source.
+
+Project experiences
 
 HTTP field parser (protocol programmer)
 
@@ -16,52 +46,6 @@ agree on character offsets; enums and structural equality make tests readable.
 The type checker caught a missing pair of parentheses in an expression combining
 comparison and subtraction. That prevented wrong execution, but the diagnostic
 only describes Int/Bool mismatches, not the unexpected grouping.
-
-Findings confirmed in the first checkpoint
-
-01. BUG: nonempty_string.split("") never terminates. Probe 02 times out.
-    Reject an empty separator or define a terminating character-split behavior.
-02. BUG: nonempty_string.replace("", replacement) never terminates. Probe 03.
-    This is a separate operation with its own progress loop, not just split's
-    diagnostic. Define insertion semantics or reject the argument.
-03. BUG: Int += overflow panics in the Rust interpreter (exit 101), while +
-    wraps. Probes 14/15. Make compound and ordinary arithmetic consistent and
-    keep Garden failures within Garden's diagnostic machinery.
-04. SEMANTICS/WARNING: assigning a captured variable inside a map callback
-    changes a captured copy, leaving the outer value 0 without warning (11).
-    Explain capture-by-value in tooling or warn on misleading captured writes.
-05. LIBRARY/DOC: String.trim only removes ASCII space, despite documenting
-    whitespace. Tabs and newlines survive (01). HTTP needs a local trim_ows.
-    Clarify the contract or offer whitespace and explicit-character variants.
-06. WARNING: an ignored fs::write_file Err gets no warning; a program prints
-    "saved" after an unsuccessful write (13). Consider a discarded-Result check.
-07. DESIGN: all binary operators have equal precedence. During the header
-    parser, i != lines.len() - 1 grouped as (i != lines.len()) - 1. Even when
-    the checker rejects it, the message doesn't explain grouping. Probe 29
-    captures arithmetic and mixed comparison. Standard precedence or a warning
-    on mixed operators would reduce surprises.
-08. LIBRARY: String has as_int but no as_float (06). JSON decimal/exponent
-    values cannot use the obvious symmetric conversion. Add checked parsing.
-09. LIBRARY: no integer-to-character conversion (07; prelude API inspected).
-    Escaped JSON Unicode and Brainfuck character output need a workaround.
-10. DESIGN/DIAGNOSTIC: field assignment s.n = 1 gives "Expected an expression
-    after this" at n (09). Immutable state is viable, but this deserves an
-    explicit message suggesting construction of a replacement struct.
-11. LIBRARY/DESIGN: indexed list assignment is unavailable (08), and List has
-    no replacement method. Tape algorithms must rebuild a list or use a dict.
-    A persistent list set(index, value) would suit the current value semantics.
-12. SYNTAX: nested enum patterns Ok(Some(n)) produce seven parser errors (25).
-    Nested matches work, but a precise unsupported-pattern message would help;
-    supporting nested patterns would make Result/Option-heavy parsers smaller.
-
-Useful diagnostics and behavior, not counted as problems
-
-Probe 04: Float + error names +. and offers --fix. Probe 16: invalid escape
-reports the actual sequence and lists supported escapes. Probe 17: typo offers
-the correct in-scope name and --fix. Probe 18: argument error points both to the
-call and the prelude parameter declaration. Probe 19: assertion prints actual
-and expected lists. Probe 12: exhaustive-match check names the missing variant.
-Probe 27: Unicode len/index_of/substring consistently use codepoint positions.
 
 Hangman (beginner making a console game)
 
@@ -122,7 +106,55 @@ is unusually helpful. In contrast, float comparisons are impossible with
 ordinary operators; <. is not syntax either. There is no sqrt/log/trigonometry
 API in the prelude for smooth coloring or common other fractals.
 
-Additional findings
+CSV parser (data-processing programmer)
+
+Working: explicit four-state parser for comma-separated rows, quoted commas,
+quoted multiline fields, doubled quotes, CRLF or LF separators, empty fields,
+and precise failures for malformed quoting. It preserves spaces and permits
+ragged rows; schema/column-count validation is outside this exercise.
+
+Good: enum state, straightforward loops, exhaustive matches and equality-based
+tests were sufficient without framework code. No new language issue was needed
+to implement this after learning the preceding constraints. Compared with the
+recursive JSON parser, a local state machine is less affected by Result
+propagation boilerplate. Character-by-character substring scans still impose
+the same likely scaling limitation; this review has not benchmarked it.
+Numbered improvement candidates
+
+01. BUG: nonempty_string.split("") never terminates. Probe 02 times out.
+    Reject an empty separator or define a terminating character-split behavior.
+02. BUG: nonempty_string.replace("", replacement) never terminates. Probe 03.
+    This is a separate operation with its own progress loop, not just split's
+    diagnostic. Define insertion semantics or reject the argument.
+03. BUG: Int += overflow panics in the debug Rust interpreter (exit 101), while
+    + wraps. Probes 14/15. Make compound and ordinary arithmetic consistent and
+    keep Garden failures within Garden's diagnostic machinery.
+04. SEMANTICS/WARNING: assigning a captured variable inside a map callback
+    changes a captured copy, leaving the outer value 0 without warning (11).
+    Explain capture-by-value in tooling or warn on misleading captured writes.
+05. LIBRARY/DOC: String.trim only removes ASCII space, despite documenting
+    whitespace. Tabs and newlines survive (01). HTTP needs a local trim_ows.
+    Clarify the contract or offer whitespace and explicit-character variants.
+06. WARNING: an ignored fs::write_file Err gets no warning; a program prints
+    "saved" after an unsuccessful write (13). Consider a discarded-Result check.
+07. DESIGN: all binary operators have equal precedence. During the header
+    parser, i != lines.len() - 1 grouped as (i != lines.len()) - 1. Even when
+    the checker rejects it, the message doesn't explain grouping. Probe 29
+    captures arithmetic and mixed comparison. Standard precedence or a warning
+    on mixed operators would reduce surprises.
+08. LIBRARY: String has as_int but no as_float (06). JSON decimal/exponent
+    values cannot use the obvious symmetric conversion. Add checked parsing.
+09. LIBRARY: no integer-to-character conversion (07; prelude API inspected).
+    Escaped JSON Unicode and Brainfuck character output need a workaround.
+10. DESIGN/DIAGNOSTIC: field assignment s.n = 1 gives "Expected an expression
+    after this" at n (09). Immutable state is viable, but this deserves an
+    explicit message suggesting construction of a replacement struct.
+11. LIBRARY/DESIGN: indexed list assignment is unavailable (08), and List has
+    no replacement method. Tape algorithms must rebuild a list or use a dict.
+    A persistent list set(index, value) would suit the current value semantics.
+12. SYNTAX: nested enum patterns Ok(Some(n)) produce seven parser errors (25).
+    Nested matches work, but a precise unsupported-pattern message would help;
+    supporting nested patterns would make Result/Option-heavy parsers smaller.
 
 13. MISSING OPERATION: Float has no ordering operators, including <. (05/23).
     Arithmetic has useful dedicated operators but a renderer cannot directly
@@ -173,7 +205,7 @@ Additional findings
     hard to read and copy reliably. Escape tabs as \t in representations.
 27. NUMERIC LIBRARY: no Float.sqrt (54) or transcendental functions in the
     prelude. Escape-time rendering works, but smooth coloring, distances,
-    rotations and Julia variants need common math functions.
+    rotations need common math functions.
 28. TEXT/BYTE INTEROP: String has no bytes conversion (56), and the API
     inventory has no UTF-8 encode/decode pair. __fs has byte file I/O, but
     protocol and interpreter code cannot bridge it to text without a manual
@@ -188,6 +220,15 @@ as confirmed bugs. Findings 01/02, 03/20 and 09/28 are related but affect differ
 operations. Even treating each of those pairs as a single area leaves 26 areas;
 this review does not count every failing probe as a new issue.
 
+Useful diagnostics and behavior, not counted as problems
+
+Probe 04: Float + error names +. and offers --fix. Probe 16: invalid escape
+reports the actual sequence and lists supported escapes. Probe 17: typo offers
+the correct in-scope name and --fix. Probe 18: argument error points both to the
+call and the prelude parameter declaration. Probe 19: assertion prints actual
+and expected lists. Probe 12: exhaustive-match check names the missing variant.
+Probe 27: Unicode len/index_of/substring consistently use codepoint positions.
+
 Further useful tooling observations
 
 Unused local variables and unreachable code get specific warnings (40/48).
@@ -201,16 +242,18 @@ own validation if that should signal a programming error. as_int returns None
 for both malformed and overflowing input (36), so parsers cannot explain which
 occurred. These observations are not additional numbered findings.
 
-CSV parser (data-processing programmer)
+Validation
 
-Working: explicit four-state parser for comma-separated rows, quoted commas,
-quoted multiline fields, doubled quotes, CRLF or LF separators, empty fields,
-and precise failures for malformed quoting. It preserves spaces and permits
-ragged rows; schema/column-count validation is outside this exercise.
+python3 usability/verify.py passes: six static checks, all 11 unit tests, six
+runnable demos, six format checks, plus interactive hangman validation,
+duplicate-guess, game-over and EOF smoke checks. Its word choice is random;
+assertions cover outcomes common to all configured words.
 
-Good: enum state, straightforward loops, exhaustive matches and equality-based
-tests were sufficient without framework code. No new language issue was needed
-to implement this after learning the preceding constraints. Compared with the
-recursive JSON parser, a local state machine is less affected by Result
-propagation boilerplate. Character-by-character substring scans still impose
-the same likely scaling limitation; this review has not benchmarked it.
+python3 usability/probe.py captured all 58 probes. The deliberately invalid
+programs, two timed-out calls and two host panics are expected observations;
+this is not a passing regression suite.
+
+cargo fmt --check and cargo clippy pass. Rustfmt emits the existing stable-
+toolchain warning about imports_granularity. No implementation changes were
+made, and the Rust reftest suite was not rerun. Existing unrelated untracked
+workspace files were left alone. See README.txt for exact reproduction commands.

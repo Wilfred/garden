@@ -26,6 +26,10 @@ Replaced the `not` method on `Bool` with a `not()` function. Write
 
 Added `String::to_ascii_lowercase()` and `String::to_ascii_uppercase()`.
 
+## Checks
+
+Fixed an issue with generic type arguments being ignored by the type checker.
+
 # 0.25 (released 29th May 2026)
 **Goal: Better REPL experience.**
 **Goal: Better runtime performance.**

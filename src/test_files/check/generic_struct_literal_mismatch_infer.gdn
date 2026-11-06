@@ -1,0 +1,25 @@
+struct Box<T> {
+  value: T
+}
+
+let b: Box<Int> = Box{ value: "wrong" }
+println(string_repr(b))
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Box<Int>` but got `Box<String>`.
+// 
+// -| src/test_files/check/generic_struct_literal_mismatch_infer.gdn:5:19
+// 3| }
+// 4| 
+// 5| let b: Box<Int> = Box{ value: "wrong" }
+//  |                   ^^^^^^^^^^^^^^^^^^^^^
+// 6| println(string_repr(b))
+// -| src/test_files/check/generic_struct_literal_mismatch_infer.gdn:5:8
+// 3| }
+// 4| 
+// 5| let b: Box<Int> = Box{ value: "wrong" }
+//  |        ^^^^^^^^ Note: expected `Box<Int>` because of this type hint.
+// 6| println(string_repr(b))
+

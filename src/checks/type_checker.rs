@@ -2196,10 +2196,20 @@ impl TypeCheckVisitor<'_> {
                 }
             }
 
+            let mut resolved_arguments = vec![];
+            for type_param in &struct_info.type_params {
+                let mut resolved_argument = Type::error("not found in env after solving");
+                if let Some(Some(bound_ty)) = ty_var_env.get(&type_param.name) {
+                    resolved_argument = bound_ty.clone();
+                }
+
+                resolved_arguments.push(resolved_argument);
+            }
+
             Type::UserDefined {
                 kind: TypeDefKind::Struct,
                 name: name_sym.name.clone(),
-                args: vec![],
+                args: resolved_arguments,
             }
         } else {
             Type::Error {

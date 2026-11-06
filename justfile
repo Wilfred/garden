@@ -1,6 +1,10 @@
 default:
     @just --list
 
+# Regenerate all reference tests.
+regen-tests:
+    REGENERATE=y cargo t reftest
+
 # Build and run reftest files.
 watch:
     REGENERATE=y cargo watch -x 't reftest' --watch-when-idle

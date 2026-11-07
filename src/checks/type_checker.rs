@@ -16,6 +16,7 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use std::rc::Rc;
 
+use normalize_path::NormalizePath as _;
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
@@ -231,6 +232,16 @@ impl TypeCheckVisitor<'_> {
             ToplevelItem::Enum(enum_info) => self.visit_enum_info(enum_info),
             ToplevelItem::Struct(struct_info) => self.visit_struct_info(struct_info),
             ToplevelItem::Import(info) => {
+                let path = if info.path.display().to_string().starts_with("__") {
+                    info.path.clone()
+                } else {
+                    info.pos
+                        .path
+                        .parent()
+                        .unwrap_or(&self.env.working_directory)
+                        .join(&info.path)
+                        .normalize()
+                };
                 self.id_to_def_pos.insert(
                     info.id,
                     Position {
@@ -240,9 +251,9 @@ impl TypeCheckVisitor<'_> {
                         end_line_number: 0,
                         column: 0,
                         end_column: 0,
-                        path: info.path.clone().into(),
+                        path: Rc::new(path.clone()),
                         vfs_path: VfsPathBuf {
-                            path: Rc::new(info.path.clone()),
+                            path: Rc::new(path),
                             id: VfsId(0), // TODO
                         },
                     },

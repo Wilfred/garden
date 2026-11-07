@@ -1467,16 +1467,26 @@ pub(crate) fn reftest_nrepl(src: &str) {
     let mut conn = Connection::new(tx);
 
     let mut request_count = 0;
+    let mut responses = Vec::new();
     for line in src.lines() {
         let trimmed = line.trim();
 
-        // Test directive: `// sleep <ms>` pauses the reftest harness
-        // for the given number of milliseconds. Useful when a request
-        // needs to land while a previous async op is still in flight,
-        // e.g. firing `interrupt` against a running `eval`.
-        if let Some(rest) = trimmed.strip_prefix("// sleep ") {
-            if let Ok(ms) = rest.trim().parse::<u64>() {
-                std::thread::sleep(Duration::from_millis(ms));
+        // Wait for stdout from this request before sending the next one.
+        if let Some(id) = trimmed.strip_prefix("// wait-for-output ") {
+            loop {
+                let response = rx
+                    .recv_timeout(Duration::from_secs(5))
+                    .unwrap_or_else(|_| panic!("Timed out waiting for output from request {id}"));
+                let has_output = matches!(
+                    &response,
+                    Value::Dict(d)
+                        if dict_get(d, "id").and_then(as_str) == Some(id)
+                            && d.contains_key(b"out".as_slice())
+                );
+                responses.push(response);
+                if has_output {
+                    break;
+                }
             }
             continue;
         }
@@ -1517,8 +1527,12 @@ pub(crate) fn reftest_nrepl(src: &str) {
     // message carrying a `status` field. Drain the channel until
     // we've seen one per request so the fixture captures
     // asynchronous worker responses too.
-    let mut responses = Vec::new();
-    let mut status_seen = 0;
+    let mut status_seen = responses
+        .iter()
+        .filter(
+            |response| matches!(response, Value::Dict(d) if d.contains_key(b"status".as_slice())),
+        )
+        .count();
     while status_seen < request_count {
         let Ok(response) = rx.recv_timeout(Duration::from_secs(5)) else {
             break;

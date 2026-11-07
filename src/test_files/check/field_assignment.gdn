@@ -1,0 +1,55 @@
+struct S {
+  n: Int
+}
+
+struct Outer {
+  inner: S
+}
+
+public fun assign(s: S) {
+  s.n = 1
+}
+
+public fun add_assign(s: S) {
+  s.n += 1
+}
+
+public fun subtract_assign(s: S) {
+  s.n -= 1
+}
+
+public fun nested_assign(s: Outer) {
+  s.inner.n = 1
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Cannot assign to field `n`: struct fields are immutable. Construct a replacement struct instead.
+// 
+// --| src/test_files/check/field_assignment.gdn:10:7
+//  9| public fun assign(s: S) {
+// 10|   s.n = 1
+// 11| }     ^
+// 
+// Error: Cannot assign to field `n`: struct fields are immutable. Construct a replacement struct instead.
+// 
+// --| src/test_files/check/field_assignment.gdn:14:7
+// 13| public fun add_assign(s: S) {
+// 14|   s.n += 1
+// 15| }     ^^
+// 
+// Error: Cannot assign to field `n`: struct fields are immutable. Construct a replacement struct instead.
+// 
+// --| src/test_files/check/field_assignment.gdn:18:7
+// 17| public fun subtract_assign(s: S) {
+// 18|   s.n -= 1
+// 19| }     ^^
+// 
+// Error: Cannot assign to field `n`: struct fields are immutable. Construct a replacement struct instead.
+// 
+// --| src/test_files/check/field_assignment.gdn:22:13
+// 21| public fun nested_assign(s: Outer) {
+// 22|   s.inner.n = 1
+// 23| }           ^
+

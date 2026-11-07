@@ -1331,6 +1331,31 @@ fn parse_expression(
                     );
                 }
             }
+            Some(token) if matches!(token.text, "=" | "+=" | "-=") => {
+                // Reject field assignments such as `s.n = 1` or `s.n += 1`.
+                let Expression_::DotAccess(_, field) = &expr.expr_ else {
+                    break;
+                };
+
+                diagnostics.push(ParseError::Invalid {
+                    position: token.position.clone(),
+                    message: ErrorMessage(vec![
+                        msgtext!("Cannot assign to field "),
+                        msgcode!("{}", field.name),
+                        msgtext!(
+                            ": struct fields are immutable. Construct a replacement struct instead."
+                        ),
+                    ]),
+                    notes: vec![],
+                });
+
+                tokens.pop();
+                let rhs = parse_expression(tokens, id_gen, diagnostics);
+                expr = Expression::invalid(
+                    Position::merge(&expr.position, &rhs.position),
+                    id_gen.next(),
+                );
+            }
             Some(token) if token_as_binary_op(&token).is_some() => {
                 // Parse an infix binary operator, such as `foo +
                 // bar`. We currently assume that every operator has

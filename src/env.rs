@@ -553,6 +553,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         (
             "String",
             vec![
+                ("as_float", BuiltInMethodKind::StringAsFloat),
                 ("as_int", BuiltInMethodKind::StringAsInt),
                 ("chars", BuiltInMethodKind::StringChars),
                 ("ends_with", BuiltInMethodKind::StringEndsWith),

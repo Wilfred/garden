@@ -1,0 +1,23 @@
+{
+  dbg("12.5".as_float())
+  dbg("0".as_float())
+  dbg("-42.5".as_float())
+  dbg("1e3".as_float())
+  dbg("abc".as_float())
+  dbg("".as_float())
+  dbg(" 12.5 ".as_float())
+  dbg("12.5x".as_float())
+  "1.5".as_float()
+  "invalid".as_float()
+}
+
+// args: run
+// expected stderr:
+// [src/test_files/runtime/string_as_float.gdn:2:3] "12.5".as_float() //-> Some(12.5)
+// [src/test_files/runtime/string_as_float.gdn:3:3] "0".as_float() //-> Some(0.0)
+// [src/test_files/runtime/string_as_float.gdn:4:3] "-42.5".as_float() //-> Some(-42.5)
+// [src/test_files/runtime/string_as_float.gdn:5:3] "1e3".as_float() //-> Some(1000.0)
+// [src/test_files/runtime/string_as_float.gdn:6:3] "abc".as_float() //-> None
+// [src/test_files/runtime/string_as_float.gdn:7:3] "".as_float() //-> None
+// [src/test_files/runtime/string_as_float.gdn:8:3] " 12.5 ".as_float() //-> None
+// [src/test_files/runtime/string_as_float.gdn:9:3] "12.5x".as_float() //-> None

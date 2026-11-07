@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>public - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container"><h1><code>public</code> keyword</h1>
+<p>You can use <code>public</code> to declare the visibility of your functions and
+methods.</p>
+<p>If a function or method does not have <code>public</code>, it can only be used in
+the current file where it is defined.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example 1</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> visible_in_the_current_file() {}</code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p>If you use <code>public</code>, you are declaring a function that can be used
+anywhere.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">File: other_file.gdn</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> visible_everywhere() {}</code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example 2</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./other_file.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> other_file
+
+other_file::visible_everywhere()</code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p>The keyword <code>shared</code> is currently reserved for an additional
+visibility level.</p></main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <button class="footer-plant" type="button" aria-label="Water the plant">
+          <span class="footer-plant-drop" aria-hidden="true"></span>
+          <span class="footer-plant-leaves" aria-hidden="true">🪴</span>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

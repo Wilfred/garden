@@ -44,9 +44,9 @@ export const gardenLanguage = StreamLanguage.define({
 // Syntax highlighting style for Garden
 export const gardenHighlighting = syntaxHighlighting(
   HighlightStyle.define([
-    { tag: tags.comment, color: "gray" },
-    { tag: tags.string, color: "#910a0a" },
-    { tag: tags.keyword, color: "#d05416", fontWeight: "bold" },
-    { tag: tags.typeName, color: "#57269c" },
+    { tag: tags.comment, class: "comment" },
+    { tag: tags.string, class: "string" },
+    { tag: tags.keyword, class: "keyword" },
+    { tag: tags.typeName, class: "type" },
   ]),
 );

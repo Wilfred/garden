@@ -47,6 +47,19 @@ public fun good2(): Int {
   1
 }
 
+public fun returns_from_loop(): Int {
+  while True {
+    return 1
+  }
+}
+
+public fun breaks_then_returns(): Int {
+  while True {
+    break
+  }
+  2
+}
+
 // args: check
 // expected exit status: 1
 // expected stdout:

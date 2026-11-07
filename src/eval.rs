@@ -1950,8 +1950,8 @@ fn eval_assign_update(
     };
 
     let new_value_num = match op {
-        AssignUpdateKind::Add => *var_value_num + *rhs_num,
-        AssignUpdateKind::Subtract => *var_value_num - *rhs_num,
+        AssignUpdateKind::Add => var_value_num.wrapping_add(*rhs_num),
+        AssignUpdateKind::Subtract => var_value_num.wrapping_sub(*rhs_num),
     };
     env.current_frame_mut()
         .bindings
@@ -2310,11 +2310,10 @@ fn eval_int_binop(
                 ));
             }
 
-            Value::new(Value_::Int(lhs_num / rhs_num))
+            Value::new(Value_::Int(lhs_num.wrapping_div(rhs_num)))
         }
-        BinaryOperatorKind::Modulo => match lhs_num.checked_rem_euclid(rhs_num) {
-            Some(num) => Value::new(Value_::Int(num)),
-            None => {
+        BinaryOperatorKind::Modulo => {
+            if rhs_num == 0 {
                 return Err((
                     RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
                     EvalError::Exception(ExceptionInfo {
@@ -2326,7 +2325,9 @@ fn eval_int_binop(
                     }),
                 ));
             }
-        },
+
+            Value::new(Value_::Int(lhs_num.wrapping_rem_euclid(rhs_num)))
+        }
         BinaryOperatorKind::Exponent => {
             if rhs_num < 0 {
                 return Err((
@@ -2356,22 +2357,7 @@ fn eval_int_binop(
                 ));
             }
 
-            match lhs_num.checked_pow(rhs_num as u32) {
-                Some(num) => Value::new(Value_::Int(num)),
-                None => {
-                    return Err((
-                        RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
-                        EvalError::Exception(ExceptionInfo {
-                            position: position.clone(),
-                            message: ErrorMessage(vec![Text(format!(
-                                "Integer overflow on raising to the power, got {}.^ {}",
-                                lhs_value.display(env),
-                                rhs_value.display(env),
-                            ))]),
-                        }),
-                    ));
-                }
-            }
+            Value::new(Value_::Int(lhs_num.wrapping_pow(rhs_num as u32)))
         }
         BinaryOperatorKind::BitwiseAnd => Value::new(Value_::Int(lhs_num & rhs_num)),
         BinaryOperatorKind::BitwiseOr => Value::new(Value_::Int(lhs_num | rhs_num)),

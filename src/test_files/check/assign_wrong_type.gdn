@@ -1,15 +1,25 @@
 public fun foo() {
-    let x = 1
-    x = ""
+  let x = 1
+  x = ""
 }
 
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Warning: The value assigned to `x` is overwritten before it is read.
+// 
+// -| src/test_files/check/assign_wrong_type.gdn:2:7
+// 1| public fun foo() {
+// 2|   let x = 1
+//  |       ^
+// 3|   x = ""
+// 4| } ^ Note: Overwritten here.
+// 
 // Error: Expected an `Int` but got a `String`.
 // 
-// -| src/test_files/check/assign_wrong_type.gdn:3:9
+// -| src/test_files/check/assign_wrong_type.gdn:3:7
 // 1| public fun foo() {
-// 2|     let x = 1
-// 3|     x = ""
-// 4| }       ^^
+// 2|   let x = 1
+// 3|   x = ""
+// 4| }     ^^
+

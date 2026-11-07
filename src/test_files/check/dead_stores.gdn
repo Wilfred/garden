@@ -1,0 +1,208 @@
+public fun overwritten(): Int {
+  let n = 1
+  n = 2
+  n
+}
+
+// Both the initializer and the first assignment are overwritten.
+public fun repeated(): Int {
+  let n = 1
+  n = 2
+  n = 3
+  n
+}
+
+// Reading a value on the right hand side consumes the earlier store.
+public fun read_and_update(): Int {
+  let n = 1
+  n = n + 1
+  n += 1
+  n
+}
+
+public fun overwritten_update(): Int {
+  let n = 1
+  n += 1
+  n = 3
+  n
+}
+
+public fun destructure(): Int {
+  let (n, m) = (1, 2)
+  n = 3
+  n + m
+}
+
+// Shadowing creates a separate binding.
+public fun shadow() {
+  let _n = 1
+  let _n = 2
+  assert(_n == 2)
+}
+
+// A conditional read must not be confused with an unconditional write.
+public fun conditional(flag: Bool): Int {
+  let n = 1
+  if flag {
+    n = 2
+  }
+  n
+}
+
+public fun loop_read(): Int {
+  let n = 1
+  while n < 2 {
+    n = 2
+  }
+  n
+}
+
+// A closure reads the value captured at its creation.
+public fun closure_read(): Int {
+  let n = 1
+  let read = fun(): Int { n }
+  n = 2
+  assert(read() == 1)
+  n = 3
+  n
+}
+
+// Stores in a branch are still checked locally.
+public fun branch_store(flag: Bool): Int {
+  if flag {
+    let n = 1
+    n = 2
+    n
+  } else {
+    0
+  }
+}
+
+public fun loop_shadow() {
+  let n = 1
+  assert(n == 1)
+  for n in [n = 2] {
+    assert(n == Unit)
+  }
+  assert(n == 2)
+}
+
+fun identity(n: Int): Int { n }
+
+public fun call_assignment(): Int {
+  let n = 1
+  n = identity(2)
+  n
+}
+
+public fun method_assignment(): Int {
+  let n = 1
+  n = "hi".len()
+  n
+}
+
+public fun call_read(): Int {
+  let n = 1
+  assert(identity(n) == 1)
+  n = 2
+  n
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: The value assigned to `n` is overwritten before it is read.
+// 
+// -| src/test_files/check/dead_stores.gdn:2:7
+// 1| public fun overwritten(): Int {
+// 2|   let n = 1
+//  |       ^
+// 3|   n = 2
+//  |   ^ Note: Overwritten here.
+// 4|   n
+// 
+// Warning: The value assigned to `n` is overwritten before it is read.
+// 
+// --| src/test_files/check/dead_stores.gdn:9:7
+//  7| // Both the initializer and the first assignment are overwritten.
+//  8| public fun repeated(): Int {
+//  9|   let n = 1
+//   |       ^
+// 10|   n = 2
+//   |   ^ Note: Overwritten here.
+// 11|   n = 3
+// 
+// Warning: The value assigned to `n` is overwritten before it is read.
+// 
+// --| src/test_files/check/dead_stores.gdn:10:3
+//  8| public fun repeated(): Int {
+//  9|   let n = 1
+// 10|   n = 2
+//   |   ^
+// 11|   n = 3
+//   |   ^ Note: Overwritten here.
+// 12|   n
+// 
+// Warning: The value assigned to `n` is overwritten before it is read.
+// 
+// --| src/test_files/check/dead_stores.gdn:25:3
+// 23| public fun overwritten_update(): Int {
+// 24|   let n = 1
+// 25|   n += 1
+//   |   ^
+// 26|   n = 3
+//   |   ^ Note: Overwritten here.
+// 27|   n
+// 
+// Warning: The value assigned to `n` is overwritten before it is read.
+// 
+// --| src/test_files/check/dead_stores.gdn:31:8
+// 30| public fun destructure(): Int {
+// 31|   let (n, m) = (1, 2)
+//   |        ^
+// 32|   n = 3
+//   |   ^ Note: Overwritten here.
+// 33|   n + m
+// 
+// Warning: The value assigned to `n` is overwritten before it is read.
+// 
+// --| src/test_files/check/dead_stores.gdn:64:3
+// 62|   let n = 1
+// 63|   let read = fun(): Int { n }
+// 64|   n = 2
+//   |   ^
+// 65|   assert(read() == 1)
+// 66|   n = 3
+//   |   ^ Note: Overwritten here.
+// 
+// Warning: The value assigned to `n` is overwritten before it is read.
+// 
+// --| src/test_files/check/dead_stores.gdn:73:9
+// 71| public fun branch_store(flag: Bool): Int {
+// 72|   if flag {
+// 73|     let n = 1
+//   |         ^
+// 74|     n = 2
+//   |     ^ Note: Overwritten here.
+// 75|     n
+// 
+// Warning: The value assigned to `n` is overwritten before it is read.
+// 
+// --| src/test_files/check/dead_stores.gdn:93:7
+// 92| public fun call_assignment(): Int {
+// 93|   let n = 1
+//   |       ^
+// 94|   n = identity(2)
+//   |   ^ Note: Overwritten here.
+// 95|   n
+// 
+// Warning: The value assigned to `n` is overwritten before it is read.
+// 
+// ---| src/test_files/check/dead_stores.gdn:99:7
+//  98| public fun method_assignment(): Int {
+//  99|   let n = 1
+//    |       ^
+// 100|   n = "hi".len()
+//    |   ^ Note: Overwritten here.
+// 101|   n
+

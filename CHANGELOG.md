@@ -37,6 +37,8 @@ Added `String::to_ascii_lowercase()` and `String::to_ascii_uppercase()`.
 
 Warn on unused pure expressions, such as variable references and comparisons.
 
+Added a check for values overwritten before they are read.
+
 Fixed an issue with generic type arguments being ignored by the type checker.
 
 # 0.25 (released 29th May 2026)

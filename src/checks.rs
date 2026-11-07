@@ -1,3 +1,4 @@
+mod dead_stores;
 mod duplicates;
 mod hints;
 mod infinite_while;
@@ -41,6 +42,7 @@ use unnecessary_return::check_unnecessary_return;
 use unreachable::check_unreachable;
 use unused_defs::check_unused_defs;
 
+use self::dead_stores::check_dead_stores;
 use self::duplicates::check_duplicates;
 use self::hints::check_hints;
 use self::struct_fields::check_struct_fields;
@@ -76,6 +78,7 @@ pub(crate) fn check_toplevel_items_in_env(
     let mut diagnostics = vec![];
 
     diagnostics.extend(check_unused_variables(items));
+    diagnostics.extend(check_dead_stores(items));
     diagnostics.extend(check_unused_values(items, env));
     diagnostics.extend(check_struct_fields(items, env));
     diagnostics.extend(check_hints(items, env));

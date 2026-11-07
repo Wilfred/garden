@@ -15,12 +15,12 @@ LABEL org.opencontainers.image.licenses=MIT
 
 WORKDIR /app
 
-COPY --from=garden-builder /build/target/release/garden /usr/local/bin/garden
-
 COPY playground/package*.json ./
 RUN npm ci
 COPY playground/tsconfig.json playground/index.ts ./
 RUN npm run build && npm prune --omit=dev
+
+COPY --from=garden-builder /build/target/release/garden /usr/local/bin/garden
 
 EXPOSE 3000
 CMD ["node", "dist/index.js"]

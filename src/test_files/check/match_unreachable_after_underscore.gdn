@@ -14,7 +14,6 @@ public fun describe(c: Color): String {
 // Warning: `match` cases after `_` are never executed.
 // 
 // -| src/test_files/check/match_unreachable_after_underscore.gdn:7:5
-// 4|   match c {
 // 5|     Red => "red"
 // 6|     _ => "other"
 //  |     ^ Note: This `_` case matches everything.

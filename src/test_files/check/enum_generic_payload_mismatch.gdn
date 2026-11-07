@@ -14,8 +14,6 @@ public fun unwrap(w: Wrap<Int>): String {
 // Error: Expected a `String` but got a `List<Int>`.
 // 
 // -| src/test_files/check/enum_generic_payload_mismatch.gdn:7:20
-// 3| }
-// 4| 
 // 5| public fun unwrap(w: Wrap<Int>): String {
 // 6|   match w {                      ^^^^^^ Note: Expected `String` because of this return type.
 // 7|     Wrapped(xs) => xs

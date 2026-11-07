@@ -20,8 +20,6 @@ public fun make_pair(): Pair<String> {
 // Error: Expected `Pair<String>` but got `Pair<Int>`.
 // 
 // -| src/test_files/check/generic_struct_literal_mismatch.gdn:7:3
-// 4| }
-// 5| 
 // 6| public fun make_pair(): Pair<String> {
 //  |                         ^^^^^^^^^^^^ Note: Expected `Pair<String>` because of this return type.
 // 7|   Pair{ first: "foo", second: 1 }

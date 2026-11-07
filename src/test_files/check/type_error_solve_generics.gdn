@@ -23,5 +23,4 @@ public fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
 // --| src/test_files/check/type_error_solve_generics.gdn:1:29
 //  1| public fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
 //  2|                             ^^^^^^^^^^^^^ Note: The parameter `_x` is declared with type `Option<Int>` here.
-//  3| {
 

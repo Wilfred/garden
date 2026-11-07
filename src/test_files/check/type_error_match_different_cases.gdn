@@ -31,8 +31,6 @@ public fun bar(): Int {
 // Error: `match` cases have different types.
 // 
 // --| src/test_files/check/type_error_match_different_cases.gdn:12:7
-//  7| {
-//  8|   match One {
 //  9|     One => [],
 //   |            ^^ Note: This branch has type `List<NoValue>`.
 // 10|     Two => throw(""),
@@ -45,8 +43,6 @@ public fun bar(): Int {
 // Error: Expected an `Int` but got a `String`.
 // 
 // --| src/test_files/check/type_error_match_different_cases.gdn:19:12
-// 15| }
-// 16| 
 // 17| public fun bar(): Int {
 // 18|   match One {     ^^^ Note: Expected `Int` because of this return type.
 // 19|     One => "wrong",
@@ -57,8 +53,6 @@ public fun bar(): Int {
 // Error: Expected an `Int` but got a `String`.
 // 
 // --| src/test_files/check/type_error_match_different_cases.gdn:20:12
-// 15| }
-// 16| 
 // 17| public fun bar(): Int {
 // 18|   match One {     ^^^ Note: Expected `Int` because of this return type.
 // 19|     One => "wrong",

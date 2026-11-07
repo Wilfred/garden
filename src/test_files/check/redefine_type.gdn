@@ -31,6 +31,4 @@ struct Foo {
 // --| src/test_files/check/redefine_type.gdn:1:8
 //  1| struct Foo {
 //   |        ^^^ Note: Previous definition was here.
-//  2|   first_name: String,
-//  3| }
 

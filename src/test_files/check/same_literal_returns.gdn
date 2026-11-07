@@ -123,7 +123,6 @@ public fun different_variants(b: Bool): Bool {
 // 29|     } else {
 // 30|         1
 // 31|     }   ^ Note: Same value here.
-// 32| }
 // 
 // Warning: All code paths in `match_same()` return the same value `"yes"`.
 // 
@@ -136,7 +135,6 @@ public fun different_variants(b: Bool): Bool {
 //   |                   ^^^^^ Note: Same value here.
 // 38|         Some(_) => { "yes" }
 // 39|     }                ^^^^^ Note: Same value here.
-// 40| }
 // 
 // Warning: All code paths in `always_true()` return the same value `True`.
 // 

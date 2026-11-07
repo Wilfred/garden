@@ -4,6 +4,10 @@
 
 ## Language
 
+Integer compound assignments (`+=` and `-=`), division, remainder, and
+exponentiation now wrap on overflow, matching addition, subtraction,
+and multiplication.
+
 Added `&` and `|` operators for bitwise AND and OR on `Int` values.
 
 Added the `\r` (carriage return) escape sequence in string literals.

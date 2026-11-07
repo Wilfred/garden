@@ -1,0 +1,22 @@
+let max = 9223372036854775807
+let min = -9223372036854775808
+
+assert((max + 1) == min)
+assert((min - 1) == max)
+assert((max * 2) == -2)
+assert((min / -1) == min)
+assert((min % -1) == 0)
+assert((2 ** 63) == min)
+assert((2 ** 64) == 0)
+
+let n = max
+n += 1
+assert(n == (max + 1))
+n -= 1
+assert(n == (min - 1))
+n -= -1
+assert(n == (max + 1))
+n += -1
+assert(n == (min - 1))
+
+// args: run

@@ -226,7 +226,7 @@ fun render_code_block(snippet: Snippet, self_url: Option<String>): String {
 
   let header = match snippet.title {
     Some(title) => {
-      "<span class=\"code-title\">" ^ title ^ "</span>"
+      "<span class=\"code-title\">" ^ escape_angle_brackets(title) ^ "</span>"
     }
     None => ""
   }
@@ -788,6 +788,7 @@ test render_triple_backtick {
 }
 
 test render_triple_backtick_escape_html {
+  assert(render("```nocheck title:\"Type <T>\"\nfoo\n```", None, None) == "<div class=\"snippet\"><span class=\"code-title\">Type &lt;T&gt;</span><pre><code>foo</code></pre></div>")
   assert(render("```nocheck\nfoo <bar>\n```", None, None) == "<div class=\"snippet\"><pre><code>foo &lt;bar&gt;</code></pre></div>")
 }
 

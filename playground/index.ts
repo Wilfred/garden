@@ -29,7 +29,7 @@ let gardenVersion = "unknown";
 // value, or something the program printed. See `PlaygroundResponse` in
 // src/sandboxed_playground.rs and `ResponseKind` in src/json_session.rs.
 type RunResult =
-  | { error: string | null; value: string | null }
+  | { error: string | null; value: string | null; type: string | null }
   | { printed: { s: string } }
   | { printed_stderr: { s: string } };
 

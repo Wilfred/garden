@@ -8,4 +8,4 @@ for flavor in flavors {
 }
 
 // args: playground-run
-// expected stdout: {"error":null,"value":"Unit"}
+// expected stdout: {"error":null,"value":"Unit","type":"Unit"}

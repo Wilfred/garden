@@ -17,6 +17,9 @@ as `"\\"`, where the closing quote was incorrectly treated as escaped.
 
 ## Standard Library
 
+`Path::parent()` now preserves the root for paths such as `/file`,
+returning `Some(Path{ p: "/" })`.
+
 `__shell::run()` now returns `(Int, String, String)`, always providing
 the exit code, stdout and stderr. Previously it returned a `Result`
 with different tuple shapes for success and failure.

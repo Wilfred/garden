@@ -1117,6 +1117,17 @@ mod tests {
     }
 
     #[test]
+    fn test_json_session_eof() {
+        assert_cmd::Command::cargo_bin("garden")
+            .unwrap()
+            .arg("json")
+            .timeout(std::time::Duration::from_secs(2))
+            .write_stdin("")
+            .assert()
+            .success();
+    }
+
+    #[test]
     fn reftest_json_session() -> TestResult<()> {
         run_reftests("json_session")
     }

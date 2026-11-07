@@ -1,0 +1,49 @@
+match x { Some((a
+
+// args: reftest-ast
+// expected stdout:
+// Match(
+//     Expression {
+//         position: Position { ... },
+//         expr_: Variable(
+//             Symbol"x",
+//         ),
+//         value_is_used: true,
+//         id: SyntaxId(1),
+//     },
+//     [
+//         (
+//             Pattern {
+//                 variant_sym: Symbol"Some",
+//                 payload: Some(
+//                     Destructure(
+//                         [
+//                             Symbol"a",
+//                         ],
+//                     ),
+//                 ),
+//             },
+//             Block {
+//                 open_brace: Position { ... },
+//                 exprs: [
+//                     Expression {
+//                         position: Position { ... },
+//                         expr_: Invalid,
+//                         value_is_used: true,
+//                         id: SyntaxId(4),
+//                     },
+//                 ],
+//                 close_brace: Position { ... },
+//             },
+//         ),
+//     ],
+// )
+
+// expected stderr:
+// Parse error (incomplete input): Expected `,`, but reached the end of the file.
+// Parse error (incomplete input): Expected `)`, but reached the end of the file.
+// Parse error (incomplete input): Expected `)`, but reached the end of the file.
+// Parse error (incomplete input): Expected `=>`, but reached the end of the file.
+// Parse error (incomplete input): Expected an expression after this.
+// Parse error (incomplete input): Expected `}` here, but reached the end of the file.
+// Parse error (incomplete input): Expected `}`, but reached the end of the file.

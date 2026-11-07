@@ -1,0 +1,20 @@
+(1,
+
+// args: reftest-ast
+// expected stdout:
+// TupleLiteral(
+//     [
+//         Expression {
+//             position: Position { ... },
+//             expr_: IntLiteral(
+//                 1,
+//             ),
+//             value_is_used: true,
+//             id: SyntaxId(0),
+//         },
+//     ],
+// )
+
+// expected stderr:
+// Parse error (incomplete input): Expected an expression after this.
+// Parse error (incomplete input): Expected `)`, but reached the end of the file.

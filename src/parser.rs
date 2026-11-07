@@ -324,7 +324,11 @@ fn parse_tuple_literal_or_parentheses(
             }
 
             let start_idx = tokens.idx;
-            exprs.push(parse_expression(tokens, id_gen, diagnostics));
+            let expr = parse_expression(tokens, id_gen, diagnostics);
+            if expr.expr_.is_invalid_or_placeholder() {
+                break;
+            }
+            exprs.push(expr);
             assert!(
                 tokens.idx > start_idx,
                 "The parser should always make forward progress."
@@ -2818,8 +2822,8 @@ fn parse_let_destination(
 
         let mut symbols = vec![];
         loop {
-            if peeked_symbol_is(tokens, ")") {
-                tokens.pop();
+            if tokens.is_empty() || peeked_symbol_is(tokens, ")") {
+                require_token(tokens, diagnostics, ")");
                 break;
             }
 

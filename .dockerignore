@@ -1,0 +1,11 @@
+*
+!Cargo.toml
+!Cargo.lock
+!build.rs
+!src/
+!playground/
+playground/*
+!playground/package.json
+!playground/package-lock.json
+!playground/tsconfig.json
+!playground/index.ts

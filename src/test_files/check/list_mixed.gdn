@@ -25,7 +25,7 @@ public fun returns_bools(): List<Bool> {
 // 
 // -| src/test_files/check/list_mixed.gdn:5:17
 // 1| public fun takes_bools(_: List<Bool>) {}
-// 2|                        ^^^^^^^^^^^^^ Note: The parameter `_` is declared with type `List<Bool>` here.
+// 2|                           ^^^^^^^^^^ Note: The parameter `_` is declared with type `List<Bool>` here.
 // 3| {
 // 4|     let x = [1, True]
 // 5|     takes_bools(x)

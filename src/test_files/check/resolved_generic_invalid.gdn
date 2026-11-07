@@ -17,7 +17,7 @@ public fun h() {
 //  3| }
 //  4| 
 //  5| fun takes_int(_: Int) {}
-//  6|               ^^^^^^ Note: The parameter `_` is declared with type `Int` here.
+//  6|                  ^^^ Note: The parameter `_` is declared with type `Int` here.
 //  7| public fun h() {
 //  8|   takes_int(id(""))
 //  9| }           ^^^^^^

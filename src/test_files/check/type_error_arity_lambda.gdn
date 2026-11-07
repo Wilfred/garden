@@ -11,7 +11,7 @@
 // 1| {
 // 2|     [1, 2].filter(fun() { True })
 // 3| }                 ^^^^^^^^^^^^^^
-// ---| __prelude.gdn:678:43
-// 678| public method filter<T>(this: List<T>, f: Fun<(T), Bool>): List<T> {
-// 679|   let result: List<T> = []                ^^^^^^^^^^^^^^ Note: The parameter `f` is declared with type `Fun<(Int), Bool>` here.
+// ---| __prelude.gdn:699:43
+// 699| public method filter<T>(this: List<T>, f: Fun<(T), Bool>): List<T> {
+// 700|   let result: List<T> = []                ^^^^^^^^^^^^^^ Note: The parameter `f` is declared with type `Fun<(Int), Bool>` here.
 

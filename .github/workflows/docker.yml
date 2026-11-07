@@ -14,10 +14,11 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
-      - uses: extractions/setup-just@v2
+      - uses: docker/setup-buildx-action@v4
 
-      - name: Build Docker image
-        run: just build-docker
+      - name: Set image tag
+        id: image
+        run: echo "tag=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/garden-playground:latest" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -27,12 +28,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Tag and push to ghcr.io
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        # ghcr.io requires image repository names to be lowercase, but
-        # my GitHub username is unfortunately capitalised.
-        run: |
-          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          docker tag wilfred/garden-playground:latest "ghcr.io/${OWNER_LC}/garden-playground:latest"
-          docker push "ghcr.io/${OWNER_LC}/garden-playground:latest"
-          echo Published to https://github.com/Wilfred/garden/pkgs/container/garden-playground
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: playground/Dockerfile
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.image.outputs.tag }}
+          cache-from: type=gha,scope=garden-playground
+          cache-to: type=gha,scope=garden-playground,mode=max

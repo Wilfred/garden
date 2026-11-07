@@ -3,4 +3,4 @@ import "./some_lib.gdn"
 
 // args: reftest-position
 // expected stdout:
-// {"start_offset":0,"end_offset":0,"line_number":0,"end_line_number":0,"column":0,"end_column":0,"path":"GDN_TEST_ROOT/./some_lib.gdn"}
+// {"start_offset":0,"end_offset":0,"line_number":0,"end_line_number":0,"column":0,"end_column":0,"path":"GDN_TEST_ROOT/src/test_files/go_to_def/some_lib.gdn"}

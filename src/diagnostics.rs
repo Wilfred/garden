@@ -84,6 +84,7 @@ pub(crate) fn format_exception_with_stack(
         false,
         0,
         &[],
+        0,
     ));
 
     // For the rest of the stack, we want the positions of calls.
@@ -101,6 +102,7 @@ pub(crate) fn format_exception_with_stack(
                 false,
                 0,
                 &[],
+                0,
             ));
         }
     }
@@ -156,6 +158,23 @@ pub(crate) fn format_diagnostic(
     let context_lines = 2;
     let mut excerpts = vec![];
     for file in files {
+        let src = vfs
+            .file_src(&file[0].position.vfs_path)
+            .map_or("", |src| src.as_str());
+        let line_count = src.lines().count();
+        let max_line_shown = file
+            .iter()
+            .map(|annotation| {
+                let pos = annotation.position;
+                if pos.start_offset > pos.end_offset || pos.end_offset >= src.len() {
+                    line_count
+                } else {
+                    (pos.end_line_number + context_lines + 1).min(line_count)
+                }
+            })
+            .max()
+            .unwrap_or(0);
+        let margin_width = max_line_shown.to_string().len();
         let mut sorted: Vec<_> = file.into_iter().enumerate().collect();
         sorted.sort_by_key(|(_, annotation)| annotation.position.line_number);
         let mut groups: Vec<Vec<(usize, SourceAnnotation<'_>)>> = vec![];
@@ -176,10 +195,10 @@ pub(crate) fn format_diagnostic(
             group.sort_by_key(|(index, _)| *index);
         }
         groups.sort_by_key(|group| group[0].0);
-        excerpts.extend(groups);
+        excerpts.extend(groups.into_iter().map(|group| (group, margin_width)));
     }
 
-    for (i, annotations) in excerpts.iter().enumerate() {
+    for (i, (annotations, margin_width)) in excerpts.iter().enumerate() {
         if i > 0 {
             s.push('\n');
         }
@@ -199,6 +218,7 @@ pub(crate) fn format_diagnostic(
             first.message.is_some(),
             context_lines,
             &notes,
+            *margin_width,
         ));
     }
 
@@ -251,6 +271,7 @@ fn format_pos_in_fun(
     is_note: bool,
     context_lines: usize,
     notes: &[&SourceAnnotation<'_>],
+    min_margin_width: usize,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
     let primary = SourceAnnotation {
@@ -308,7 +329,10 @@ fn format_pos_in_fun(
     }
     // Size the left margin to fit the largest line number we will print,
     // not the largest line number in the file overall.
-    let margin_width = format!("{}", max_line_shown).len().max(1);
+    let margin_width = format!("{}", max_line_shown)
+        .len()
+        .max(min_margin_width)
+        .max(1);
     let mut res = String::new();
 
     let formatted_pos = format!(

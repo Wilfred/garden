@@ -1,0 +1,12 @@
+method keep(this: Int, _n: Int): Int { this }
+println(string_repr(1.keep(2)))
+println(string_repr(1.keep("wrong")))
+
+// args: run
+// expected stdout: 1
+
+// expected stderr:
+// Exception: Expected `Int` but `"wrong"` has type `String`.
+// -| src/test_files/runtime/method_argument_type.gdn:3:28	 __toplevel__
+// 3| println(string_repr(1.keep("wrong")))
+//  |                            ^^^^^^^

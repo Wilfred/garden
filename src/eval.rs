@@ -5233,6 +5233,21 @@ fn eval_method_call(
         &arg_values,
     )?;
 
+    let mut type_bindings = TypeVarEnv::default();
+    for type_param in &fun_info.type_params {
+        // TODO: compute the value of these type params properly.
+        type_bindings.insert(type_param.name.clone(), Some(Type::Any));
+    }
+
+    check_param_types(
+        env,
+        &receiver_value,
+        &fun_info.params.params,
+        &arg_positions,
+        &arg_values,
+        &type_bindings,
+    )?;
+
     // TODO: check for duplicate parameter names.
     // TODO: parameter names must not clash with the receiver name.
     let mut fun_bindings: FxHashMap<InternedSymbolId, Value> = FxHashMap::default();
@@ -5240,12 +5255,6 @@ fn eval_method_call(
         fun_bindings.insert(param.symbol.interned_id, value.clone());
     }
     fun_bindings.insert(receiver_method.receiver_sym.interned_id, receiver_value);
-
-    let mut type_bindings = TypeVarEnv::default();
-    for type_param in &fun_info.type_params {
-        // TODO: compute the value of these type params properly.
-        type_bindings.insert(type_param.name.clone(), Some(Type::Any));
-    }
 
     let return_hint = fun_info.return_hint.clone();
 

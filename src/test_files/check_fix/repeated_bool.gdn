@@ -1,26 +1,51 @@
 public fun repeated_or(x: Bool, y: Bool): Bool {
-    x || y || x
+  x || y || x
 }
 
 public fun repeated_and(x: Bool, y: Bool): Bool {
-    x && y && x
+  x && y && x
 }
 
 public fun repeated_paren(a: Bool, b: Bool): Bool {
-    (a || b) || a
+  (a || b) || a
+}
+
+public fun repeated_or_three(b: Bool): Bool {
+  b || b || b
+}
+
+public fun repeated_and_three(b: Bool): Bool {
+  b && b && b
+}
+
+public fun unused_duplicate(b: Bool): Bool {
+  b || b
+  b
 }
 
 // args: check --fix --stdout
 // expected stdout:
 // public fun repeated_or(x: Bool, y: Bool): Bool {
-//     x || y
+//   x || y
 // }
 // 
 // public fun repeated_and(x: Bool, y: Bool): Bool {
-//     x && y
+//   x && y
 // }
 // 
 // public fun repeated_paren(a: Bool, b: Bool): Bool {
-//     (a || b)
+//   (a || b)
 // }
-
+// 
+// public fun repeated_or_three(b: Bool): Bool {
+//   b
+// }
+// 
+// public fun repeated_and_three(b: Bool): Bool {
+//   b
+// }
+// 
+// public fun unused_duplicate(b: Bool): Bool {
+//   b
+//   b
+// }

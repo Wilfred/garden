@@ -1066,6 +1066,34 @@ fn parse_pattern(
     let payload = if peeked_symbol_is(tokens, "(") {
         require_token(tokens, diagnostics, "(");
         let dest = parse_let_destination(tokens, id_gen, diagnostics);
+        if let LetDestination::Symbol(symbol) = &dest {
+            if peeked_symbol_is(tokens, "(") {
+                let mut position = symbol.position.clone();
+                let mut depth = 0;
+                while let Some(token) = tokens.peek() {
+                    match token.text {
+                        "(" => depth += 1,
+                        ")" => depth -= 1,
+                        "=>" | "{" | "}" => break,
+                        _ => {}
+                    }
+                    tokens.pop();
+                    position = Position::merge(&position, &token.position);
+                    if depth == 0 {
+                        break;
+                    }
+                }
+                diagnostics.push(ParseError::Invalid {
+                    position,
+                    message: ErrorMessage(vec![
+                        msgtext!("Nested patterns are not supported. Use a nested "),
+                        msgcode!("match"),
+                        msgtext!(" instead."),
+                    ]),
+                    notes: vec![],
+                });
+            }
+        }
         require_token(tokens, diagnostics, ")");
         Some(dest)
     } else {

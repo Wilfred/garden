@@ -1,0 +1,51 @@
+match Ok(Some(1)) {
+  Ok(Some(n)) => n
+  Ok(Some(Some(n))) => n
+  Err(_) => 0
+}
+
+match Ok(Some(1)) {
+  Ok(Some(n => n
+  Err(_) => 0
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Nested patterns are not supported. Use a nested `match` instead.
+// 
+// -| src/test_files/check/match_nested_pattern.gdn:2:6
+// 1| match Ok(Some(1)) {
+// 2|   Ok(Some(n)) => n
+//  |      ^^^^^^^
+// 3|   Ok(Some(Some(n))) => n
+// 4|   Err(_) => 0
+// 
+// Error: Nested patterns are not supported. Use a nested `match` instead.
+// 
+// -| src/test_files/check/match_nested_pattern.gdn:3:6
+// 1| match Ok(Some(1)) {
+// 2|   Ok(Some(n)) => n
+// 3|   Ok(Some(Some(n))) => n
+//  |      ^^^^^^^^^^^^^
+// 4|   Err(_) => 0
+// 5| }
+// 
+// Error: Nested patterns are not supported. Use a nested `match` instead.
+// 
+// --| src/test_files/check/match_nested_pattern.gdn:8:6
+//  7| match Ok(Some(1)) {
+//  8|   Ok(Some(n => n
+//   |      ^^^^^^
+//  9|   Err(_) => 0
+// 10| }
+// 
+// Error: Expected `)` after this.
+// 
+// --| src/test_files/check/match_nested_pattern.gdn:8:11
+//  7| match Ok(Some(1)) {
+//  8|   Ok(Some(n => n
+//   |           ^
+//  9|   Err(_) => 0
+// 10| }
+

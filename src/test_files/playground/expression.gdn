@@ -1,4 +1,4 @@
 1 + 2
 
 // args: playground-run
-// expected stdout: {"error":null,"value":"3"}
+// expected stdout: {"error":null,"value":"3","type":"Int"}

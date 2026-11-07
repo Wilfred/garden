@@ -3,4 +3,4 @@ fun foo() { foo() }
 foo()
 
 // args: playground-run
-// expected stdout: {"error":"Reached the stack limit","value":null}
+// expected stdout: {"error":"Reached the stack limit","value":null,"type":null}

@@ -19,6 +19,8 @@ use std::rc::Rc;
 use normalize_path::NormalizePath as _;
 use rustc_hash::FxHashMap;
 
+use super::loops::while_diverges;
+
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::env::Env;
 use crate::eval::most_similar;
@@ -1045,7 +1047,11 @@ impl TypeCheckVisitor<'_> {
                     None,
                 );
                 self.infer_block(block, type_bindings, expected_return_ty);
-                Type::unit()
+                if while_diverges(cond_expr, block) {
+                    Type::no_value()
+                } else {
+                    Type::unit()
+                }
             }
             Expression_::ForIn(dest, expr, body) => {
                 let expr_ty = self.check_expr(

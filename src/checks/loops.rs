@@ -97,3 +97,33 @@ pub(crate) fn check_loops(items: &[ToplevelItem]) -> Vec<Diagnostic> {
     }
     visitor.diagnostics
 }
+
+/// Whether this while loop diverges.
+pub(super) fn while_diverges(cond: &Expression, body: &Block) -> bool {
+    // TODO: Resolve True to distinguish the prelude variant from a shadowing binding.
+    if !matches!(&cond.expr_, Expression_::Variable(sym) if sym.name.text == "True") {
+        return false;
+    }
+
+    struct BreakVisitor {
+        has_break: bool,
+    }
+
+    impl Visitor for BreakVisitor {
+        fn visit_expr(&mut self, expr: &Expression) {
+            match &expr.expr_ {
+                Expression_::Break => self.has_break = true,
+                // Breaks in nested loop bodies target those loops.
+                Expression_::While(cond, _) | Expression_::ForIn(_, cond, _) => {
+                    self.visit_expr(cond);
+                }
+                Expression_::FunLiteral(_) => {}
+                _ => self.visit_expr_(&expr.expr_),
+            }
+        }
+    }
+
+    let mut visitor = BreakVisitor { has_break: false };
+    visitor.visit_block(body);
+    !visitor.has_break
+}

@@ -14,7 +14,7 @@ use normalize_path::NormalizePath as _;
 use rand::Rng;
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::checks::{check_toplevel_items, check_toplevel_items_in_env};
+use crate::checks::{check_loops, check_toplevel_items, check_toplevel_items_in_env};
 use crate::diagnostics::{format_exception_with_stack, Diagnostic, Severity};
 use crate::env::{EnclosingSymbol, Env, StackFrame};
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
@@ -838,6 +838,7 @@ pub(crate) fn eval_toplevel_items(
 
     let ns = env.current_namespace();
     let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env, Rc::clone(&ns));
+    diagnostics.extend(check_loops(items));
     for diagnostic in diagnostics.iter() {
         if matches!(diagnostic.severity, Severity::Error) {
             return Err(EvalError::Exception(ExceptionInfo {

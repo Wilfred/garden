@@ -1,0 +1,10 @@
+for x in break { println(string_repr(x)) }
+println("done")
+
+// args: run
+// expected exit status: 1
+// expected stderr:
+// Exception: `break` can only be used inside `for` or `while` loops.
+// -| src/test_files/runtime/break_in_iterator.gdn:1:10	 __toplevel__
+// 1| for x in break { println(string_repr(x)) }
+//  |          ^^^^^

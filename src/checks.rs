@@ -29,7 +29,7 @@ use crate::parser::ast::ToplevelItem;
 use crate::parser::vfs::VfsPathBuf;
 use infinite_while::check_infinite_while;
 use list_len_compare::check_list_len_compare;
-use loops::check_loops;
+pub(crate) use loops::check_loops;
 use recursion::check_recursion;
 use recursion_variable::check_recursion_variables;
 use repeated_bool::check_repeated_bool;

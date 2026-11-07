@@ -2,6 +2,7 @@ fun url_safe_mapping(): Dict<String> {
   // TODO: add support for constants so we don't need a function here.
   Dict[
     "/" => "slash",
+    "&" => "amp",
     "&&" => "ampamp",
     "||" => "pipepipe",
     "+." => "plusdot",

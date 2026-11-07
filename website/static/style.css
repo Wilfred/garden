@@ -311,8 +311,7 @@ button[hidden] {
 .string {
   color: #74394f;
 }
-.type,
-.playground-value {
+.type {
   color: #8536a8;
 }
 .operator {

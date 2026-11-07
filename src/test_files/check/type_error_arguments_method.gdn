@@ -13,9 +13,9 @@
 // 2|     let s = ""
 // 3|     s.substring("", "")
 // 4| }               ^^
-// ----| __prelude.gdn:1071:51
-// 1071| public method substring(this: String, from_index: Int, to_index: Int): String {
-// 1072|   __BUILT_IN_IMPLEMENTATION                       ^^^ Note: The parameter `from_index` is declared with type `Int` here.
+// ----| __prelude.gdn:1080:51
+// 1080| public method substring(this: String, from_index: Int, to_index: Int): String {
+// 1081|   __BUILT_IN_IMPLEMENTATION                       ^^^ Note: The parameter `from_index` is declared with type `Int` here.
 // 
 // Error: Expected an `Int` but got a `String`.
 // 
@@ -24,7 +24,7 @@
 // 2|     let s = ""
 // 3|     s.substring("", "")
 // 4| }                   ^^
-// ----| __prelude.gdn:1071:66
-// 1071| public method substring(this: String, from_index: Int, to_index: Int): String {
-// 1072|   __BUILT_IN_IMPLEMENTATION                                      ^^^ Note: The parameter `to_index` is declared with type `Int` here.
+// ----| __prelude.gdn:1080:66
+// 1080| public method substring(this: String, from_index: Int, to_index: Int): String {
+// 1081|   __BUILT_IN_IMPLEMENTATION                                      ^^^ Note: The parameter `to_index` is declared with type `Int` here.
 

@@ -897,15 +897,19 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
 
     let (sender, receiver) = channel::<String>();
 
-    start_eval_thread(session, receiver);
+    let handle = start_eval_thread(session, receiver);
 
     loop {
         let mut line = String::new();
         let stdin = std::io::stdin();
-        stdin
+        let bytes_read = stdin
             .lock()
             .read_line(&mut line)
             .expect("Could not read line");
+
+        if bytes_read == 0 {
+            break;
+        }
 
         if line.trim() == "" {
             // TODO: Once Emacs flushes properly, we won't see blank lines.
@@ -945,4 +949,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
             print_as_json(&err_response, pretty_print_json);
         }
     }
+
+    drop(sender);
+    handle.join().unwrap();
 }

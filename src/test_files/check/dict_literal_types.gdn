@@ -20,6 +20,60 @@ Dict["x" => 1, "y" => ""]
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Warning: Unused value.
+// 
+// -| src/test_files/check/dict_literal_types.gdn:2:1
+// 1| // Good.
+// 2| Dict[]
+//  | ^^^^^^
+// 3| 
+// 4| // Bad: undefined key.
+// 
+// Warning: Unused value.
+// 
+// -| src/test_files/check/dict_literal_types.gdn:5:1
+// 4| // Bad: undefined key.
+// 5| Dict[no_such => 1]
+//  | ^^^^^^^^^^^^^^^^^^
+// 6| 
+// 7| // Bad: undefined value.
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/dict_literal_types.gdn:8:1
+//  7| // Bad: undefined value.
+//  8| Dict["foo" => no_such2]
+//   | ^^^^^^^^^^^^^^^^^^^^^^^
+//  9| 
+// 10| // Bad: key isn't a string.
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/dict_literal_types.gdn:11:1
+// 10| // Bad: key isn't a string.
+// 11| Dict[1 => 2]
+//   | ^^^^^^^^^^^^
+// 12| 
+// 13| // Good: all values the same type.
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/dict_literal_types.gdn:14:1
+// 13| // Good: all values the same type.
+// 14| Dict["x" => 1, "y" => 2]
+//   | ^^^^^^^^^^^^^^^^^^^^^^^^
+// 15| Dict["x" => "xx", "y" => "yy"]
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/dict_literal_types.gdn:15:1
+// 13| // Good: all values the same type.
+// 14| Dict["x" => 1, "y" => 2]
+// 15| Dict["x" => "xx", "y" => "yy"]
+//   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+// 16| 
+// 17| // Bad: mixed value types.
+// 
 // Error: Unbound symbol: `no_such`
 // 
 // -| src/test_files/check/dict_literal_types.gdn:5:6
@@ -50,3 +104,5 @@ Dict["x" => 1, "y" => ""]
 // 17| // Bad: mixed value types.
 // 18| Dict["x" => 1, "y" => ""]
 // 19|                       ^^
+
+// expected stderr: 6 issues can be fixed automatically (use `--fix`).

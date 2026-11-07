@@ -9,6 +9,40 @@ public fun example() {
   x
 }
 
+fun save(): Unit { println("saved") }
+save
+println("finished")
+let n = 1
+n == 2
+println(string_repr(n))
+
+public fun comparisons(n: Int): Bool {
+  n
+  (n == 2)
+  n + 1
+  while n < 0 {
+    n != 2
+    break
+  }
+  n == 2
+}
+
+fun effect(): Int {
+  println("effect")
+  1
+}
+
+// These expressions must preserve their calls.
+effect() == 2
+[effect()]
+Dict[string_repr(effect()) => 1]
+Dict["key" => effect()]
+(effect(), 1)
+Path{ p: string_repr(effect()) }
+"hello".len()
+let _ = n == 2
+assert(comparisons(n) == False)
+
 // args: check
 // expected exit status: 1
 // expected stdout:
@@ -59,6 +93,63 @@ public fun example() {
 // 7|   ^^^^^^
 // 8|   let x = 10
 // 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/unused_literal.gdn:13:1
+// 12| fun save(): Unit { println("saved") }
+// 13| save
+//   | ^^^^
+// 14| println("finished")
+// 15| let n = 1
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/unused_literal.gdn:16:1
+// 14| println("finished")
+// 15| let n = 1
+// 16| n == 2
+//   | ^^^^^^
+// 17| println(string_repr(n))
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/unused_literal.gdn:20:3
+// 19| public fun comparisons(n: Int): Bool {
+// 20|   n
+//   |   ^
+// 21|   (n == 2)
+// 22|   n + 1
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/unused_literal.gdn:21:3
+// 19| public fun comparisons(n: Int): Bool {
+// 20|   n
+// 21|   (n == 2)
+//   |   ^^^^^^^^
+// 22|   n + 1
+// 23|   while n < 0 {
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/unused_literal.gdn:22:3
+// 20|   n
+// 21|   (n == 2)
+// 22|   n + 1
+//   |   ^^^^^
+// 23|   while n < 0 {
+// 24|     n != 2
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/unused_literal.gdn:24:5
+// 22|   n + 1
+// 23|   while n < 0 {
+// 24|     n != 2
+//   |     ^^^^^^
+// 25|     break
+// 26|   }
+// 
 // Warning: Unnecessary `let`, this value is immediately returned.
 // 
 // --| src/test_files/check/unused_literal.gdn:8:11
@@ -68,4 +159,4 @@ public fun example() {
 //  9|   x       ^^
 // 10| }
 
-// expected stderr: 7 issues can be fixed automatically (use `--fix`).
+// expected stderr: 13 issues can be fixed automatically (use `--fix`).

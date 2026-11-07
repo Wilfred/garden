@@ -3,8 +3,28 @@ public fun nums(): List<Int> {
   [3, 4]
 }
 
+let n = 1
+n == 2
+println(string_repr(n))
+
+public fun comparison(n: Int): Int {
+  n == 2 // Keep this comment.
+  n + 1
+}
+[println("keep")]
+
 // args: check --fix --stdout
 // expected stdout:
 // public fun nums(): List<Int> {
 //   [3, 4]
 // }
+// 
+// let n = 1
+// println(string_repr(n))
+// 
+// public fun comparison(n: Int): Int {
+//    // Keep this comment.
+//   n + 1
+// }
+// [println("keep")]
+

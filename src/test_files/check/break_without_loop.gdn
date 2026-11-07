@@ -14,6 +14,13 @@ public fun foo() {
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Warning: Unused value.
+// 
+// --| src/test_files/check/break_without_loop.gdn:9:9
+//  8|         // Bad
+//  9|         fun() { break }
+// 10|     }   ^^^^^^^^^^^^^^^
+// 
 // Error: `break` can only be used inside `for` or `while` loops.
 // 
 // -| src/test_files/check/break_without_loop.gdn:2:5
@@ -28,3 +35,5 @@ public fun foo() {
 //  8|         // Bad
 //  9|         fun() { break }
 // 10|     }           ^^^^^
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

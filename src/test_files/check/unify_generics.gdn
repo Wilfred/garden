@@ -13,3 +13,16 @@
 }
 
 // args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Unused value.
+// 
+// -| src/test_files/check/unify_generics.gdn:3:9
+// 1| {
+// 2|     if True {
+// 3|         None
+//  |         ^^^^
+// 4|     } else {
+// 5|         Some(123)
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

@@ -432,8 +432,20 @@ test path_parent {
   assert(Path{ p: "/foo/bar/" }.parent() == Some(Path{ p: "/foo" }))
 }
 
-/// Append `component` to this path.
+/// Append `component` to this path, inserting `/` if needed.
+/// If this path is empty, return `component` unchanged. An absolute
+/// `component` (starting with `/`) replaces this path.
+///
+/// ```
+/// Path{ p: "" }.join("file") //-> Path{ p: "file" }
+/// Path{ p: "dir" }.join("file") //-> Path{ p: "dir/file" }
+/// Path{ p: "/tmp" }.join("/etc/config") //-> Path{ p: "/etc/config" }
+/// ```
 public method join(this: Path, component: String): Path {
+  if this.p == "" || component.starts_with("/") {
+    return Path{ p: component }
+  }
+
   let p = if this.p.ends_with("/") {
     this.p ^ component
   } else {
@@ -452,6 +464,15 @@ test path_join {
 
   let root = Path{ p: "/" }
   assert(root.join("baz").p == "/baz")
+
+  let empty = Path{ p: "" }
+  assert(empty.join("file").p == "file")
+  assert(empty.join("").p == "")
+
+  assert(directory.join("/etc/config").p == "/etc/config")
+  assert(relative_directory.join("/etc/config").p == "/etc/config")
+  assert(Path{ p: "/tmp/" }.join("/etc/config").p == "/etc/config")
+  assert(Path{ p: "foo/" }.join("bar").p == "foo/bar")
 }
 
 /// The part of the filename after the last dot, or `None` if there is

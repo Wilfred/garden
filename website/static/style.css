@@ -59,12 +59,6 @@
 
   --snippet-margin: 12px;
 }
-
-::selection {
-  background-color: var(--green-primary);
-  color: var(--cream);
-}
-
 body {
   max-width: 700px;
   margin: 24px auto 52px auto;
@@ -74,82 +68,22 @@ body {
   font-optical-sizing: auto;
   font-weight: 400;
 }
-
-p {
-  line-height: 30px;
-  margin-top: 0;
-  margin-bottom: 26px;
-}
-
-h1,
-h2,
-h3,
-h4,
-h6,
-h6 {
-  font-family: "Protest Riot", sans-serif;
-  font-weight: 400;
-  margin-bottom: 0;
-}
-
-header > a,
-header .title-container > a {
-  padding-left: 10px;
+::selection {
+  background-color: var(--green-primary);
   color: var(--cream);
-  font-size: 34px;
 }
-
+a {
+  color: var(--green-primary);
+  text-decoration: none;
+  border-bottom: 2px dotted var(--green-primary);
+}
+a:hover {
+  border-bottom: 2px solid var(--green-primary);
+}
 .title-container {
   width: 100%;
   max-width: 700px;
   padding-top: 10px;
-}
-
-code {
-  border-radius: 5px;
-  border: 1px solid #bcbec0;
-  padding: 2px;
-}
-
-a > code:hover {
-  border-color: var(--green-primary);
-}
-a:has(> code) {
-  border-bottom: 0;
-}
-
-pre > code {
-  border: initial;
-  padding: initial;
-  background-color: initial;
-}
-
-pre,
-code,
-.snippet-output,
-#playground-output {
-  font-family: monospace;
-}
-
-pre {
-  /* The monospace font appears a bit bigger, so choose a slightly
-   smaller font size. */
-  font-size: 16px;
-  line-height: 20px;
-}
-
-pre.block:hover {
-  transform: none;
-}
-pre.block {
-  cursor: initial;
-  padding: 8px;
-}
-
-.container {
-  margin-top: 100px;
-  margin-left: 10px;
-  margin-right: 10px;
 }
 header {
   font-family: "Protest Riot", sans-serif;
@@ -164,60 +98,6 @@ header {
   background: var(--green-primary);
   border-bottom: 4px solid rgba(0, 0, 0, 0.1);
 }
-
-.block,
-.block::before {
-  background-color: var(--cream);
-}
-
-a {
-  color: var(--green-primary);
-  text-decoration: none;
-  border-bottom: 2px dotted var(--green-primary);
-}
-a:hover {
-  border-bottom: 2px solid var(--green-primary);
-}
-
-a:has(> code):hover {
-  border-bottom: 0;
-}
-
-pre a {
-  border-bottom: 0;
-}
-pre a:hover {
-  border-bottom: 0;
-  text-decoration: underline;
-  text-decoration-color: inherit;
-}
-
-h1 {
-  margin-bottom: 10px;
-}
-
-h2 {
-  margin-top: 20px;
-  margin-bottom: 12px;
-}
-
-pre {
-  /* Fix excessively small fonts on mobile.
-
-  https://stackoverflow.com/a/75839939/
-  https://horstmann.com/unblog/2023-03-25/index.html
-  */
-  white-space: pre-wrap;
-}
-
-nav {
-  display: flex;
-  flex-direction: row;
-  flex-shrink: 1;
-  overflow-x: auto;
-  float: right;
-}
-
 header {
   position: fixed;
   top: 0;
@@ -226,77 +106,111 @@ header {
   z-index: 100;
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
 }
-
+header > a,
+header .title-container > a {
+  padding-left: 10px;
+  color: var(--cream);
+  font-size: 34px;
+}
+nav {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 1;
+  overflow-x: auto;
+  float: right;
+}
 header a {
   text-decoration: none;
 }
+.container {
+  margin-top: 100px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+h1,
+h2,
+h3,
+h4,
+h6,
+h6 {
+  font-family: "Protest Riot", sans-serif;
+  font-weight: 400;
+  margin-bottom: 0;
+}
+h1 {
+  margin-bottom: 10px;
+}
+h2 {
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+p {
+  line-height: 30px;
+  margin-top: 0;
+  margin-bottom: 26px;
+}
+pre,
+code,
+.snippet-output,
+#playground-output {
+  font-family: monospace;
+}
+code {
+  border-radius: 5px;
+  border: 1px solid #bcbec0;
+  padding: 2px;
+}
+a > code:hover {
+  border-color: var(--green-primary);
+}
+pre {
+  /* The monospace font appears a bit bigger, so choose a slightly
+   smaller font size. */
+  font-size: 16px;
+  line-height: 20px;
+}
+pre.block:hover {
+  transform: none;
+}
+pre.block {
+  cursor: initial;
+  padding: 8px;
+}
+pre {
+  /* Fix excessively small fonts on mobile.
 
-.keyword {
-  font-weight: bold;
-  color: #d05416;
+  https://stackoverflow.com/a/75839939/
+  https://horstmann.com/unblog/2023-03-25/index.html
+  */
+  white-space: pre-wrap;
 }
-
-.operator {
-  color: #880;
+pre > code {
+  border: initial;
+  padding: initial;
+  background-color: initial;
 }
-
-.comment {
-  color: gray;
+a:has(> code) {
+  border-bottom: 0;
 }
-.string {
-  color: #910a0a;
+a:has(> code):hover {
+  border-bottom: 0;
 }
-.type {
-  color: #57269c;
+pre a {
+  border-bottom: 0;
 }
-
+pre a:hover {
+  border-bottom: 0;
+  text-decoration: underline;
+  text-decoration-color: inherit;
+}
+.block,
+.block::before {
+  background-color: var(--cream);
+}
 #playground-wrapper {
   border: 3px solid #00000030;
   border-radius: 5px;
 }
-
-#playground-wrapper .cm-editor {
-  margin: 10px;
-}
-
-#playground-run,
-#playground-format {
-  margin-top: 10px;
-}
-
-#playground-format {
-  margin-left: 5px;
-}
-
-textarea {
-  font-size: 17px;
-
-  margin: 10px;
-  width: calc(100% - 30px);
-}
-
-#playground-output {
-  padding: 10px;
-  border-top: 3px solid #00000030;
-  white-space: pre;
-}
-
-.snippet-output {
-  white-space: pre-wrap;
-  padding: var(--snippet-margin);
-  border-top: 3px solid #00000030;
-}
-
-.snippet-output .stderr,
-#playground-output .stderr {
-  color: #910a0a;
-}
-
-.snippet-output .playground-value,
-#playground-output .playground-value {
-  color: #57269c;
-}
-
 .snippet {
   border: 3px solid #00000030;
   border-radius: 5px;
@@ -311,36 +225,10 @@ textarea {
 
   z-index: 1;
 }
-
 .snippet pre {
   font-weight: 700;
   margin: var(--snippet-margin);
 }
-
-.snippet .snippet-output {
-  white-space: pre;
-}
-
-button {
-  border: 3px solid #00000030;
-  border-radius: 5px;
-  min-width: 70px;
-
-  padding: 10px 10px;
-  margin-left: var(--snippet-margin);
-
-  margin-right: 0;
-  margin-bottom: var(--snippet-margin);
-
-  background-color: var(--pale-cream);
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #00000060;
-  background-color: #dfe2d5;
-}
-
 .code-title {
   padding: 4px 8px;
   position: absolute;
@@ -357,48 +245,71 @@ button:hover {
   font-family: "Lora", serif;
   font-weight: initial;
 }
+button {
+  border: 3px solid #00000030;
+  border-radius: 5px;
+  min-width: 70px;
 
-hr {
-  border: none;
+  padding: 10px 10px;
+  margin-left: var(--snippet-margin);
+
+  margin-right: 0;
+  margin-bottom: var(--snippet-margin);
+
+  background-color: var(--pale-cream);
+  cursor: pointer;
+}
+button:hover {
+  border-color: #00000060;
+  background-color: #dfe2d5;
+}
+#playground-run,
+#playground-format {
+  margin-top: 10px;
+}
+#playground-format {
+  margin-left: 5px;
+}
+#playground-output {
+  padding: 10px;
   border-top: 3px solid #00000030;
-  margin: 30px 0;
+  white-space: pre;
 }
-
-footer {
-  padding-top: 40px;
-  text-align: center;
+.snippet-output {
+  white-space: pre-wrap;
+  padding: var(--snippet-margin);
+  border-top: 3px solid #00000030;
 }
-
-video {
-  max-width: 100%;
+.snippet .snippet-output {
+  white-space: pre;
 }
-
-ul {
-  padding-left: 20px;
+.snippet-output .stderr,
+#playground-output .stderr {
+  color: #910a0a;
 }
-
-ul li {
-  margin-bottom: 1em;
+.keyword {
+  font-weight: bold;
+  color: #d05416;
 }
-
-.cm-tooltip-lint li,
-.cm-panel-lint li {
-  margin-bottom: 0;
+.string {
+  color: #910a0a;
 }
-
-/* Nested lists should still be indented. */
-ul ul {
-  margin-left: 1em;
+.type {
+  color: #57269c;
 }
-
-/* Hide blog link on narrow screens, manual and playground matter
-   more. */
-@media (max-width: 600px) {
-  nav a:first-child {
-    display: none;
-  }
+.snippet-output .playground-value,
+#playground-output .playground-value {
+  color: #57269c;
 }
-
+.operator {
+  color: #880;
+}
+.comment {
+  color: gray;
+}
+#playground-wrapper .cm-editor {
+  margin: 10px;
+}
 /* CodeMirror Integration */
 .cm-editor {
   font-family: monospace;
@@ -408,52 +319,74 @@ ul ul {
   outline: none;
   background-color: var(--pale-cream);
 }
-
-.cm-focused {
-  outline: none !important;
+.snippet .cm-editor {
+  font-weight: 700;
+  margin: 10px;
 }
-
 .cm-scroller {
   font-family: monospace;
   overflow: auto;
 }
-
 .cm-content {
   padding: 10px;
   min-height: 100px;
   caret-color: var(--green-primary);
 }
-
+.cm-line {
+  padding: 0;
+}
+.cm-focused {
+  outline: none !important;
+}
 .cm-focused {
   outline: 2px solid var(--green-primary);
   outline-offset: 2px;
 }
-
-.cm-selectionBackground {
-  background-color: var(--green-primary) !important;
-  opacity: 0.3;
-}
-
-.snippet .cm-editor {
-  font-weight: 700;
-  margin: 10px;
-}
-
-.cm-line {
-  padding: 0;
-}
-
 /* Gutters (line numbers, etc) */
 .cm-gutters {
   background-color: var(--cream);
   border-right: 1px solid #00000030;
 }
-
 /* Active line highlighting with pale green to match theme */
 .cm-activeLine {
   background-color: #a8dda855 !important;
 }
+.cm-selectionBackground {
+  background-color: var(--green-primary) !important;
+  opacity: 0.3;
+}
+textarea {
+  font-size: 17px;
 
+  margin: 10px;
+  width: calc(100% - 30px);
+}
+ul {
+  padding-left: 20px;
+}
+/* Nested lists should still be indented. */
+ul ul {
+  margin-left: 1em;
+}
+ul li {
+  margin-bottom: 1em;
+}
+.cm-tooltip-lint li,
+.cm-panel-lint li {
+  margin-bottom: 0;
+}
+video {
+  max-width: 100%;
+}
+hr {
+  border: none;
+  border-top: 3px solid #00000030;
+  margin: 30px 0;
+}
+footer {
+  padding-top: 40px;
+  text-align: center;
+}
 .spinner {
   border: 3px solid #00000030;
   border-top: 3px solid var(--green-primary);
@@ -463,12 +396,18 @@ ul ul {
   animation: spin 0.8s linear infinite;
   margin: 0 auto;
 }
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+/* Hide blog link on narrow screens, manual and playground matter
+   more. */
+@media (max-width: 600px) {
+  nav a:first-child {
+    display: none;
   }
 }

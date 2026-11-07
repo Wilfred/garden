@@ -23,11 +23,16 @@ type StderrOutput = {
 type PlaygroundResult = {
   error: string | null;
   value: string | null;
+  type: string | null;
+};
+
+type PreludeTypes = {
+  prelude_types: string[];
 };
 
 type PlaygroundResponse = {
   success: boolean;
-  results?: (StdoutOutput | StderrOutput | PlaygroundResult)[];
+  results?: (StdoutOutput | StderrOutput | PlaygroundResult | PreludeTypes)[];
   error?: string;
   rawOutput?: string;
 };
@@ -47,6 +52,22 @@ type CheckResponse = {
   error?: string;
   rawOutput?: string;
 };
+
+function renderType(type: string, preludeTypes: ReadonlySet<string>): string {
+  return type
+    .split(/([A-Za-z_][A-Za-z0-9_]*)/)
+    .map((part) => {
+      const text = escapeHtml(part);
+      if (preludeTypes.has(part)) {
+        return `<a class="type" href="/type:${encodeURIComponent(part)}.html">${text}</a>`;
+      }
+      if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(part)) {
+        return `<span class="type">${text}</span>`;
+      }
+      return text;
+    })
+    .join("");
+}
 
 export function evalSnippet(src: string, snippetDiv: HTMLElement): void {
   snippetDiv.hidden = false;
@@ -76,9 +97,12 @@ export function evalSnippet(src: string, snippetDiv: HTMLElement): void {
       const outputParts: string[] = [];
       const valueParts: string[] = [];
       let hasError = false;
+      let preludeTypes = new Set<string>();
 
       for (const item of data.results) {
-        if ("printed" in item) {
+        if ("prelude_types" in item) {
+          preludeTypes = new Set(item.prelude_types);
+        } else if ("printed" in item) {
           outputParts.push(
             `<span class="stdout">${escapeHtml(item.printed.s)}</span>`,
           );
@@ -96,8 +120,11 @@ export function evalSnippet(src: string, snippetDiv: HTMLElement): void {
           }
 
           if (result.value) {
+            const type = result.type
+              ? `<span class="playground-type">${renderType(result.type, preludeTypes)}</span>`
+              : "";
             valueParts.push(
-              `<span class="playground-value">${escapeHtml(result.value)}</span>`,
+              `<div class="playground-result"><span class="playground-value">${escapeHtml(result.value)}</span>${type}</div>`,
             );
           }
         }
@@ -112,7 +139,7 @@ export function evalSnippet(src: string, snippetDiv: HTMLElement): void {
           if (output.length > 0) {
             output += "\n";
           }
-          output += valueParts.join("\n");
+          output += valueParts.join("");
         }
 
         snippetDiv.innerHTML = output;

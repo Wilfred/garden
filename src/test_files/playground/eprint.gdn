@@ -2,5 +2,6 @@ eprintln("hello stderr")
 
 // args: playground-run
 // expected stdout:
+// {"prelude_types":["Bool","Dict","Float","Fun","Int","List","Namespace","NoValue","Option","Path","PathInfo","Result","String","Tuple","Unit"]}
 // {"printed_stderr":{"s":"hello stderr\n"}}
 // {"error":null,"value":"Unit","type":"Unit"}

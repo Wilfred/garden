@@ -39,6 +39,16 @@ pub(crate) fn run_sandboxed_playground(
 
     let mut env = Env::new(id_gen, vfs);
 
+    let mut prelude_types = env
+        .prelude_namespace
+        .borrow()
+        .types
+        .keys()
+        .map(|name| name.text.clone())
+        .collect::<Vec<_>>();
+    prelude_types.sort();
+    println!("{}", serde_json::json!({ "prelude_types": prelude_types }));
+
     // Set the toplevel stack frame as also in the file namespace.
     let ns = env.get_or_create_namespace(path);
     let frame = env.current_frame_mut();

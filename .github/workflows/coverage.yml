@@ -13,6 +13,7 @@ jobs:
 
       - name: Install Rust
         run: rustup toolchain install stable --component llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 

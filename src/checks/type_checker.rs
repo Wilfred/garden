@@ -3519,7 +3519,7 @@ fn as_notes(note: Option<&(ErrorMessage, Position)>) -> Vec<(ErrorMessage, Posit
 /// argument at a call site doesn't match its declared type.
 fn param_declared_note(param: &SymbolWithHint, param_ty: &Type) -> (ErrorMessage, Position) {
     let position = match &param.hint {
-        Some(hint) => Position::merge(&param.symbol.position, &hint.position),
+        Some(hint) => hint.position.clone(),
         None => param.symbol.position.clone(),
     };
 

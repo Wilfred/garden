@@ -4,5 +4,6 @@ test arithmetic {
 
 // args: playground-run
 // expected stdout:
+// {"prelude_types":["Bool","Dict","Float","Fun","Int","List","Namespace","NoValue","Option","Path","PathInfo","Result","String","Tuple","Unit"]}
 // {"error":null,"value":"Ran 1 test: it passed.\n","type":null}
 // {"error":null,"value":"Unit","type":"Unit"}

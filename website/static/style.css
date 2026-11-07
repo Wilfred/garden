@@ -301,6 +301,25 @@ button[hidden] {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.playground-result {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 16px;
+}
+.playground-value {
+  min-width: 0;
+}
+.playground-type {
+  min-width: 0;
+  margin-left: auto;
+  text-align: right;
+}
+.playground-type a {
+  text-decoration: none;
+}
+.playground-type a:hover {
+  text-decoration: underline;
+}
 .stderr {
   color: #a12f2f;
 }

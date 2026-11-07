@@ -25,10 +25,10 @@ const PORT = process.env["PORT"] || 3000;
 
 let gardenVersion = "unknown";
 
-// One JSON line of `garden playground-run` output. The evaluated
-// value, or something the program printed. See `PlaygroundResponse` in
+// One JSON line of `garden playground-run` output. See
 // src/sandboxed_playground.rs and `ResponseKind` in src/json_session.rs.
 type RunResult =
+  | { prelude_types: string[] }
   | { error: string | null; value: string | null; type: string | null }
   | { printed: { s: string } }
   | { printed_stderr: { s: string } };

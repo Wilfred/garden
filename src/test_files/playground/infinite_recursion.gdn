@@ -3,4 +3,6 @@ fun foo() { foo() }
 foo()
 
 // args: playground-run
-// expected stdout: {"error":"Reached the stack limit","value":null,"type":null}
+// expected stdout:
+// {"prelude_types":["Bool","Dict","Float","Fun","Int","List","Namespace","NoValue","Option","Path","PathInfo","Result","String","Tuple","Unit"]}
+// {"error":"Reached the stack limit","value":null,"type":null}

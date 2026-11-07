@@ -393,13 +393,15 @@ struct Path {
 /// Get the parent for this path. For directories, this is the parent
 /// directory. For files, this is the containing directory.
 ///
-/// This always returns a `Path`, so the root directory (i.e. `/`) is
-/// returned as-is.
+/// Returns `None` for the root directory (i.e. `/`) or a path with no
+/// parent component.
 ///
 /// ```
 /// Path{ p: "/foo/bar.txt" }.parent() //-> Some(Path{ p: "/foo" })
 /// Path{ p: "/foo/bar/" }.parent() //-> Some(Path{ p: "/foo" })
+/// Path{ p: "/file" }.parent() //-> Some(Path{ p: "/" })
 /// Path{ p: "/" }.parent() //-> None
+/// Path{ p: "foo.txt" }.parent() //-> None
 /// ```
 public method parent(this: Path): Option<Path> {
   let p = this.p.strip_suffix("/")
@@ -412,12 +414,19 @@ public method parent(this: Path): Option<Path> {
     return None
   }
 
+  if parts == [""] {
+    return Some(Path{ p: "/" })
+  }
+
   Some(Path{ p: "/".join(parts) })
 }
 
 test path_parent {
   assert(Path{ p: "/" }.parent() == None)
   assert(Path{ p: "foo.txt" }.parent() == None)
+
+  assert(Path{ p: "/file" }.parent() == Some(Path{ p: "/" }))
+  assert(Path{ p: "/foo/" }.parent() == Some(Path{ p: "/" }))
 
   assert(Path{ p: "/foo/bar.txt" }.parent() == Some(Path{ p: "/foo" }))
   assert(Path{ p: "/foo/bar/" }.parent() == Some(Path{ p: "/foo" }))

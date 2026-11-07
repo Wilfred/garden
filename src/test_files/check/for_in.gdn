@@ -18,6 +18,31 @@ public fun foo(items: List<Int>) {
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Warning: Unused value.
+// 
+// -| src/test_files/check/for_in.gdn:4:5
+// 2|   // Good
+// 3|   for x in items {
+// 4|     x + 1
+// 5|   } ^^^^^
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/for_in.gdn:9:5
+//  7|   // Good
+//  8|   for (x, y) in [(1, 2)] {
+//  9|     x + y
+// 10|   } ^^^^^
+// 
+// Warning: Unused value.
+// 
+// --| src/test_files/check/for_in.gdn:14:5
+// 12|   // Bad
+// 13|   for (x, y) in items {
+// 14|     x + y
+// 15|   } ^^^^^
+// 16| }
+// 
 // Error: Expected a tuple but got an `Int`.
 // 
 // --| src/test_files/check/for_in.gdn:13:17
@@ -25,3 +50,5 @@ public fun foo(items: List<Int>) {
 // 13|   for (x, y) in items {
 // 14|     x + y       ^^^^^
 // 15|   }
+
+// expected stderr: 3 issues can be fixed automatically (use `--fix`).

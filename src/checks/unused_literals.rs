@@ -1,6 +1,6 @@
 use crate::diagnostics::{Autofix, Diagnostic, Severity};
 use crate::env::Env;
-use crate::parser::ast::{Block, Expression, Expression_, LetDestination, ToplevelItem};
+use crate::parser::ast::{Expression, Expression_, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
@@ -8,7 +8,13 @@ use crate::parser::visitor::Visitor;
 
 pub(crate) fn check_unused_literals(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = UnusedLiteralVisitor::new(env);
-    for item in items {
+    for (i, item) in items.iter().enumerate() {
+        // The final toplevel expression supplies the result in interactive sessions.
+        if i + 1 < items.len() {
+            if let ToplevelItem::Expr(expr) = item {
+                visitor.check_expression(&expr.0);
+            }
+        }
         visitor.visit_toplevel_item(item);
     }
     visitor.diagnostics()
@@ -33,18 +39,7 @@ impl<'a> UnusedLiteralVisitor<'a> {
     }
 
     fn check_expression(&mut self, expr: &Expression) {
-        let is_literal = matches!(
-            &expr.expr_,
-            Expression_::IntLiteral(_)
-                | Expression_::FloatLiteral(_)
-                | Expression_::StringLiteral(_)
-                | Expression_::ListLiteral(_)
-                | Expression_::DictLiteral(_)
-                | Expression_::TupleLiteral(_)
-                | Expression_::StructLiteral(_, _)
-        );
-
-        if is_literal {
+        if is_pure(expr) {
             let fix = Autofix {
                 description: "Remove unused value".to_owned(),
                 position: self.get_line_position(&expr.position),
@@ -79,7 +74,12 @@ impl<'a> UnusedLiteralVisitor<'a> {
             .map(|pos| position.end_offset + pos + 1)
             .unwrap_or(src.len());
 
-        // Create a new position spanning the entire line
+        if !src[line_start..position.start_offset].trim().is_empty()
+            || !src[position.end_offset..line_end].trim().is_empty()
+        {
+            return position.clone();
+        }
+
         let mut line_position = position.clone();
         line_position.start_offset = line_start;
         line_position.end_offset = line_end;
@@ -89,41 +89,32 @@ impl<'a> UnusedLiteralVisitor<'a> {
     }
 }
 
+/// Calls and control flow are conservatively treated as having effects.
+fn is_pure(expr: &Expression) -> bool {
+    match &expr.expr_ {
+        Expression_::IntLiteral(_)
+        | Expression_::FloatLiteral(_)
+        | Expression_::StringLiteral(_)
+        | Expression_::Variable(_)
+        | Expression_::FunLiteral(_) => true,
+        Expression_::Parentheses(paren) => is_pure(&paren.expr),
+        Expression_::BinaryOperator(lhs, _, rhs) => is_pure(lhs) && is_pure(rhs),
+        Expression_::DotAccess(lhs, _) | Expression_::NamespaceAccess(lhs, _) => is_pure(lhs),
+        Expression_::ListLiteral(items) => items.iter().all(|item| is_pure(&item.expr)),
+        Expression_::DictLiteral(items) => items
+            .iter()
+            .all(|item| is_pure(&item.key) && is_pure(&item.value)),
+        Expression_::TupleLiteral(items) => items.iter().all(|item| is_pure(item)),
+        Expression_::StructLiteral(_, fields) => fields.iter().all(|(_, value)| is_pure(value)),
+        _ => false,
+    }
+}
+
 impl Visitor for UnusedLiteralVisitor<'_> {
-    fn visit_block(&mut self, block: &Block) {
-        let exprs_len = block.exprs.len();
-        for (i, expr) in block.exprs.iter().enumerate() {
-            // A literal written as a statement (any expression in a
-            // block except the last) has its value discarded, so it
-            // serves no purpose. The final expression is the block's
-            // value, so we leave it alone.
-            let is_last = i + 1 == exprs_len;
-            if !is_last {
-                self.check_expression(expr);
-            }
-
-            self.visit_expr(expr);
+    fn visit_expr(&mut self, expr: &Expression) {
+        if !expr.value_is_used {
+            self.check_expression(expr);
         }
-    }
-
-    fn visit_expr_while(&mut self, cond: &Expression, body: &Block) {
-        // A loop evaluates to Unit, so its body's final value is also
-        // discarded.
-        if let Some(last) = body.exprs.last() {
-            self.check_expression(last);
-        }
-
-        self.visit_expr(cond);
-        self.visit_block(body);
-    }
-
-    fn visit_expr_for_in(&mut self, dest: &LetDestination, iteree: &Expression, body: &Block) {
-        if let Some(last) = body.exprs.last() {
-            self.check_expression(last);
-        }
-
-        self.visit_dest(dest);
-        self.visit_expr(iteree);
-        self.visit_block(body);
+        self.visit_expr_(&expr.expr_);
     }
 }

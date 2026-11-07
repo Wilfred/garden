@@ -6,6 +6,15 @@ public fun foo() {
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Warning: Unused value.
+// 
+// -| src/test_files/check/string_conat.gdn:2:3
+// 1| public fun foo() {
+// 2|   "a" ^ "b"
+//  |   ^^^^^^^^^
+// 3|   1 ^ 2
+// 4| }
+// 
 // Error: Expected a `String` but got an `Int`.
 // 
 // -| src/test_files/check/string_conat.gdn:3:3
@@ -21,3 +30,5 @@ public fun foo() {
 // 2|   "a" ^ "b"
 // 3|   1 ^ 2
 // 4| }     ^
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

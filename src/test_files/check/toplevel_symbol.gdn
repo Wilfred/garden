@@ -7,6 +7,14 @@ greeet()
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Warning: Unused value.
+// 
+// -| src/test_files/check/toplevel_symbol.gdn:1:1
+// 1| foo
+//  | ^^^
+// 2| 
+// 3| fun greet(): Unit {}
+// 
 // Warning: `greet` is never called.
 // 
 // -| src/test_files/check/toplevel_symbol.gdn:3:5
@@ -33,4 +41,4 @@ greeet()
 //  | ^^^^^^
 // 6|
 
-// expected stderr: 1 issue can be fixed automatically (use `--fix`).
+// expected stderr: 2 issues can be fixed automatically (use `--fix`).

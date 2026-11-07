@@ -454,15 +454,46 @@ test path_join {
   assert(root.join("baz").p == "/baz")
 }
 
-/// The extension of this path, if this path is a file whose name
-/// includes a ".".
+/// The part of the filename after the last dot, or `None` if there is
+/// no dot other than a leading dot.
+///
+/// ```
+/// Path{ p: "README" }.extension() //-> None
+/// Path{ p: "archive.tar.gz" }.extension() //-> Some("gz")
+/// Path{ p: ".gitignore" }.extension() //-> None
+/// Path{ p: ".config.json" }.extension() //-> Some("json")
+/// Path{ p: "file." }.extension() //-> Some("")
+/// ```
 public method extension(this: Path): Option<String> {
   let name = match this.file_name() {
     Some(name) => name
     None => return None
   }
 
-  name.split(".").last()
+  if name == ".." {
+    return None
+  }
+
+  let parts = name.strip_prefix(".").split(".")
+  if parts.len() < 2 {
+    return None
+  }
+
+  parts.last()
+}
+
+test path_extension {
+  assert(Path{ p: "README" }.extension() == None)
+  assert(Path{ p: "archive.tar.gz" }.extension() == Some("gz"))
+  assert(Path{ p: ".gitignore" }.extension() == None)
+  assert(Path{ p: ".config.json" }.extension() == Some("json"))
+  assert(Path{ p: "file." }.extension() == Some(""))
+  assert(Path{ p: "/" }.extension() == None)
+  assert(Path{ p: "" }.extension() == None)
+  assert(Path{ p: "." }.extension() == None)
+  assert(Path{ p: ".." }.extension() == None)
+  assert(Path{ p: "/dir.txt/README" }.extension() == None)
+  assert(Path{ p: "/dir/file.txt" }.extension() == Some("txt"))
 }
 
 /// The last component of this path.

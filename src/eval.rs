@@ -6061,6 +6061,34 @@ fn eval_built_in_method_call(
                 env.push_value(v);
             }
         }
+        BuiltInMethodKind::StringAsFloat => {
+            check_arity(
+                &SymbolName {
+                    text: "String::as_float".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
+            let value = match s.parse::<f64>() {
+                Ok(parsed_float) => Value::some(Value::new(Value_::Float(parsed_float))),
+                Err(_) => Value::none(),
+            };
+
+            if expr_value_is_used {
+                env.push_value(value);
+            }
+        }
         BuiltInMethodKind::StringAsInt => {
             check_arity(
                 &SymbolName {

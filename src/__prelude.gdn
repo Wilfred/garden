@@ -1098,6 +1098,19 @@ test string_index_of {
   assert("☃c".index_of("c") == Some(1))
 }
 
+/// Parse this string as a floating point number, returning Some if successful.
+/// Decimal and exponent notation are supported. Leading and trailing
+/// whitespace are not accepted.
+///
+/// ```
+/// "12.5".as_float() //-> Some(12.5)
+/// "1e3".as_float() //-> Some(1000.0)
+/// "abc".as_float() //-> None
+/// ```
+public method as_float(this: String): Option<Float> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
 /// Parse this string as an integer, returning Some if successful.
 ///
 /// ```

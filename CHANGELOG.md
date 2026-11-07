@@ -33,6 +33,8 @@ Replaced the `not` method on `Bool` with a `not()` function. Write
 
 Added `String::to_ascii_lowercase()` and `String::to_ascii_uppercase()`.
 
+Added `String::as_float()` to parse strings as `Option<Float>`.
+
 ## Checks
 
 Warn on unused pure expressions, such as variable references and comparisons.

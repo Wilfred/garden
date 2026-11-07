@@ -986,6 +986,7 @@ pub(crate) enum BuiltInMethodKind {
     ListSlice,
     PathExists,
     PathInfo,
+    StringAsFloat,
     StringAsInt,
     StringChars,
     StringIndexOf,

@@ -166,6 +166,7 @@ pub(crate) fn format_diagnostic(
             .iter()
             .map(|annotation| {
                 let pos = annotation.position;
+                let context_lines = annotation.context_lines(context_lines);
                 if pos.start_offset > pos.end_offset || pos.end_offset >= src.len() {
                     line_count
                 } else {
@@ -257,6 +258,16 @@ struct SourceAnnotation<'a> {
     message: Option<String>,
 }
 
+impl SourceAnnotation<'_> {
+    fn context_lines(&self, primary_context_lines: usize) -> usize {
+        if self.message.is_none() {
+            primary_context_lines
+        } else {
+            0
+        }
+    }
+}
+
 /// Return a string of the source code around this position, with a
 /// left margin of line numbers, and an underline of the relevant
 /// portion.
@@ -292,6 +303,7 @@ fn format_pos_in_fun(
 
     for annotation in std::iter::once(&primary).chain(notes.iter().copied()) {
         let pos = annotation.position;
+        let context_lines = annotation.context_lines(context_lines);
         if s_lines.is_empty()
             || pos.start_offset > pos.end_offset
             || pos.start_offset >= src.len()
@@ -322,6 +334,31 @@ fn format_pos_in_fun(
                 .or_insert_with(Vec::new)
                 .push((span, annotation, single_line));
         }
+    }
+
+    // A single underline can share the following source line
+    // when there is space beside its text.
+    let inline_lines: BTreeSet<_> = highlights
+        .iter()
+        .filter_map(|(&line_i, line_highlights)| {
+            let [(span, _, single_line)] = line_highlights.as_slice() else {
+                return None;
+            };
+            s_lines
+                .get(line_i + 1)
+                .filter(|line| {
+                    context_lines > 0 && *single_line && line.len() < span.start_col as usize
+                })
+                .map(|_| line_i + 1)
+        })
+        .collect();
+    lines.extend(&inline_lines);
+    if let Some(&last) = lines.last() {
+        max_line_shown = max_line_shown.max(last + 1);
+    }
+
+    if let (Some(&first), Some(&last)) = (lines.first(), lines.last()) {
+        lines.extend(first..=last);
     }
 
     if max_line_shown == 0 {
@@ -386,16 +423,11 @@ fn format_pos_in_fun(
         let Some(line_highlights) = highlights.get(&line_i) else {
             continue;
         };
-        for (span, annotation, single_line) in line_highlights {
+        for (span, annotation, _) in line_highlights {
             res.push('\n');
-            // A single underline can share the following source line
-            // when there is space beside its text.
-            let next_line = s_lines.get(line_i + 1).filter(|line| {
-                context_lines > 0
-                    && *single_line
-                    && line_highlights.len() == 1
-                    && line.len() < span.start_col as usize
-            });
+            let next_line = s_lines
+                .get(line_i + 1)
+                .filter(|_| inline_lines.contains(&(line_i + 1)));
             if let Some(next_line) = next_line {
                 inline_line = Some(line_i + 1);
                 res.push_str(&format_margin_num(

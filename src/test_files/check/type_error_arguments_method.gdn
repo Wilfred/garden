@@ -14,11 +14,8 @@
 // 3|     s.substring("", "")
 // 4| }               ^^
 // ----| __prelude.gdn:1010:39
-// 1008| /// "abc".substring(1, 99) //-> "bc"
-// 1009| /// ```
 // 1010| public method substring(this: String, from_index: Int, to_index: Int): String {
 // 1011|   __BUILT_IN_IMPLEMENTATION           ^^^^^^^^^^^^^^^ Note: The parameter `from_index` is declared with type `Int` here.
-// 1012| }
 // 
 // Error: Expected an `Int` but got a `String`.
 // 
@@ -28,9 +25,6 @@
 // 3|     s.substring("", "")
 // 4| }                   ^^
 // ----| __prelude.gdn:1010:56
-// 1008| /// "abc".substring(1, 99) //-> "bc"
-// 1009| /// ```
 // 1010| public method substring(this: String, from_index: Int, to_index: Int): String {
 // 1011|   __BUILT_IN_IMPLEMENTATION                            ^^^^^^^^^^^^^ Note: The parameter `to_index` is declared with type `Int` here.
-// 1012| }
 

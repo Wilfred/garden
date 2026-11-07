@@ -35,6 +35,8 @@ Added `String::to_ascii_lowercase()` and `String::to_ascii_uppercase()`.
 
 Added `String::as_float()` to parse strings as `Option<Float>`.
 
+Added `Dict::len()` to return the number of entries in a dict.
+
 ## Checks
 
 Warn on unused pure expressions, such as variable references and comparisons.

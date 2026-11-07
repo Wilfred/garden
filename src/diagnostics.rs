@@ -1,5 +1,6 @@
 //! Error and warning data types, along with logic to display them.
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::IsTerminal as _;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -82,6 +83,7 @@ pub(crate) fn format_exception_with_stack(
         true,
         false,
         0,
+        &[],
     ));
 
     // For the rest of the stack, we want the positions of calls.
@@ -98,6 +100,7 @@ pub(crate) fn format_exception_with_stack(
                 false,
                 false,
                 0,
+                &[],
             ));
         }
     }
@@ -126,35 +129,76 @@ pub(crate) fn format_diagnostic(
             message.as_string()
         }
     );
-    s.push_str(&format_pos_in_fun(
+    let mut files = vec![vec![SourceAnnotation {
         position,
-        vfs,
-        None,
-        project_root,
-        true,
-        None,
-        matches!(severity, Severity::Error),
-        false,
-        2,
-    ));
-
+        message: None,
+    }]];
     for (message, position) in notes {
-        s.push('\n');
-
-        s.push_str(&format_pos_in_fun(
+        let annotation = SourceAnnotation {
             position,
-            vfs,
-            None,
-            project_root,
-            true,
-            Some(if use_color {
+            message: Some(if use_color {
                 message.as_styled_string()
             } else {
                 message.as_string()
             }),
-            false,
+        };
+        // Versions of a file can have different source text.
+        if let Some(file) = files
+            .iter_mut()
+            .find(|file| file[0].position.vfs_path == position.vfs_path)
+        {
+            file.push(annotation);
+        } else {
+            files.push(vec![annotation]);
+        }
+    }
+
+    let context_lines = 2;
+    let mut excerpts = vec![];
+    for file in files {
+        let mut sorted: Vec<_> = file.into_iter().enumerate().collect();
+        sorted.sort_by_key(|(_, annotation)| annotation.position.line_number);
+        let mut groups: Vec<Vec<(usize, SourceAnnotation<'_>)>> = vec![];
+        let mut end_line = 0;
+        for (index, annotation) in sorted {
+            let pos = annotation.position;
+            if groups.is_empty()
+                || pos.line_number.saturating_sub(context_lines) > end_line + context_lines + 1
+            {
+                groups.push(vec![]);
+                end_line = pos.end_line_number;
+            } else {
+                end_line = end_line.max(pos.end_line_number);
+            }
+            groups.last_mut().unwrap().push((index, annotation));
+        }
+        for group in &mut groups {
+            group.sort_by_key(|(index, _)| *index);
+        }
+        groups.sort_by_key(|group| group[0].0);
+        excerpts.extend(groups);
+    }
+
+    for (i, annotations) in excerpts.iter().enumerate() {
+        if i > 0 {
+            s.push('\n');
+        }
+        let first = &annotations[0].1;
+        let notes: Vec<_> = annotations[1..]
+            .iter()
+            .map(|(_, annotation)| annotation)
+            .collect();
+        s.push_str(&format_pos_in_fun(
+            first.position,
+            vfs,
+            None,
+            project_root,
             true,
-            2,
+            first.message.clone(),
+            matches!(severity, Severity::Error),
+            first.message.is_some(),
+            context_lines,
+            &notes,
         ));
     }
 
@@ -188,6 +232,11 @@ fn format_note_severity(use_color: bool) -> String {
     }
 }
 
+struct SourceAnnotation<'a> {
+    position: &'a Position,
+    message: Option<String>,
+}
+
 /// Return a string of the source code around this position, with a
 /// left margin of line numbers, and an underline of the relevant
 /// portion.
@@ -201,37 +250,66 @@ fn format_pos_in_fun(
     is_error: bool,
     is_note: bool,
     context_lines: usize,
+    notes: &[&SourceAnnotation<'_>],
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
-
-    let mut res = String::new();
-
+    let primary = SourceAnnotation {
+        position,
+        message: underline_msg,
+    };
     let pos_path = to_project_relative(&position.path, project_root);
-
     let src = match vfs.file_src(&position.vfs_path) {
         Some(src) => src,
         None => "",
     };
 
     let s_lines: Vec<_> = src.lines().collect();
+    let line_positions = LinePositions::from(src);
+    let mut lines = BTreeSet::new();
+    let mut highlights = BTreeMap::new();
+    let mut max_line_shown = 0;
 
-    let offset = position.start_offset;
-    let end_offset = position.end_offset;
+    for annotation in std::iter::once(&primary).chain(notes.iter().copied()) {
+        let pos = annotation.position;
+        if s_lines.is_empty()
+            || pos.start_offset > pos.end_offset
+            || pos.start_offset >= src.len()
+            || pos.end_offset >= src.len()
+        {
+            continue;
+        }
+        let spans = line_positions.from_region(pos.start_offset, pos.end_offset);
+        if let (Some(first), Some(last)) = (spans.first(), spans.last()) {
+            let mut start = first.line.as_usize().saturating_sub(context_lines);
+            let mut end = (last.line.as_usize() + context_lines + 1).min(s_lines.len());
+            max_line_shown = max_line_shown.max(end);
+            while start < first.line.as_usize() && s_lines[start].trim().is_empty() {
+                start += 1;
+            }
+            if context_lines > 0
+                && last.line.as_usize() + context_lines < s_lines.len()
+                && s_lines[end - 1].trim().is_empty()
+            {
+                end -= 1;
+            }
+            lines.extend(start..end);
+        }
+        let single_line = spans.len() == 1;
+        for span in spans {
+            highlights
+                .entry(span.line.as_usize())
+                .or_insert_with(Vec::new)
+                .push((span, annotation, single_line));
+        }
+    }
 
-    let valid_offsets = !s_lines.is_empty() && offset < src.len() && end_offset < src.len();
-    let spans = if valid_offsets {
-        LinePositions::from(src).from_region(offset, end_offset)
-    } else {
-        vec![]
-    };
-
+    if max_line_shown == 0 {
+        max_line_shown = s_lines.len();
+    }
     // Size the left margin to fit the largest line number we will print,
     // not the largest line number in the file overall.
-    let max_line_shown = match spans.last() {
-        Some(last_span) => (last_span.line.as_usize() + context_lines + 1).min(s_lines.len()),
-        None => s_lines.len(),
-    };
     let margin_width = format!("{}", max_line_shown).len().max(1);
+    let mut res = String::new();
 
     let formatted_pos = format!(
         "{}| {}:{}:{}",
@@ -257,145 +335,75 @@ fn format_pos_in_fun(
     }
     res.push('\n');
 
-    if s_lines.is_empty() {
-        // Nothing to do.
-    } else if !valid_offsets {
-        // TODO: this can occur when the Vfs is stale relative to the
-        // last time these functions were re-evaluated.
-        let relevant_line = s_lines[0].to_owned();
-
+    if lines.is_empty() && !s_lines.is_empty() {
         res.push_str(&format_margin_num("?", margin_width, use_color));
-        res.push_str(&format_src_line(&relevant_line, use_color));
-    } else {
-        let mut is_first = true;
+        res.push_str(&format_src_line(s_lines[0], use_color));
+    }
 
-        if let Some(span) = spans.first() {
-            let min_line =
-                std::cmp::max(span.line.as_usize() as isize - context_lines as isize, 0) as usize;
-            for line_i in min_line..span.line.as_usize() {
-                let Some(relevant_line) = s_lines.get(line_i) else {
-                    continue;
-                };
-
-                // Skip the leading context lines if blank.
-                if is_first && relevant_line.trim().is_empty() {
-                    continue;
-                }
-
-                if is_first {
-                    is_first = false;
-                } else {
-                    res.push('\n');
-                }
-
-                res.push_str(&format_margin_num(
-                    &format!("{}", line_i + 1),
-                    margin_width,
-                    use_color,
-                ));
-                res.push_str(&format_src_line(relevant_line, use_color));
-            }
-        }
-
-        let mut has_inline_carets = false;
-
-        for span in &spans {
-            // .lines() in the Rust stdlib discards the trailing
-            // newline, so we end up with s_lines not having the last line.
-            let Some(relevant_line) = s_lines.get(span.line.as_usize()) else {
-                continue;
-            };
-
-            if is_first {
-                is_first = false;
-            } else {
+    let mut is_first = true;
+    let mut inline_line = None;
+    for line_i in lines.iter().copied() {
+        if inline_line != Some(line_i) {
+            if !is_first {
                 res.push('\n');
             }
-
             res.push_str(&format_margin_num(
-                &span.line.display(),
+                &(line_i + 1).to_string(),
                 margin_width,
                 use_color,
             ));
-            res.push_str(&format_src_line(relevant_line, use_color));
-
-            if underline {
-                res.push('\n');
-
-                let short_next_line = s_lines
-                    .get(span.line.as_usize() + 1)
-                    .filter(|&line| line.len() < span.start_col as usize);
-
-                // If we're printing context and the following line
-                // has space for carets, use that line rather than
-                // inserting a line for the carets.
-                match short_next_line {
-                    Some(next_line) if context_lines > 0 && spans.len() == 1 => {
-                        has_inline_carets = true;
-
-                        res.push_str(&format_margin_num(
-                            &format!("{}", span.line.as_usize() + 2),
-                            margin_width,
-                            use_color,
-                        ));
-                        res.push_str(next_line);
-                        res.push_str(&" ".repeat(span.start_col as usize - next_line.len()));
-                    }
-                    _ => {
-                        res.push_str(&format_margin_num("", margin_width, use_color));
-                        res.push_str(&" ".repeat(span.start_col as usize));
-                    }
-                }
-
-                let carets = "^".repeat((span.end_col - span.start_col) as usize);
-                if use_color {
-                    res.push_str(&if is_note {
-                        carets.bold().dimmed().to_string()
-                    } else if is_error {
-                        carets.bold().red().to_string()
-                    } else {
-                        carets.bold().yellow().to_string()
-                    });
-                } else {
-                    res.push_str(&carets);
-                }
-
-                if let Some(ref msg) = underline_msg {
-                    res.push(' ');
-                    res.push_str(&format_note_severity(use_color));
-                    res.push_str(": ");
-                    res.push_str(msg);
-                }
-            }
+            res.push_str(&format_src_line(s_lines[line_i], use_color));
         }
+        is_first = false;
 
-        if let Some(span) = spans.last() {
-            for line_i in span.line.as_usize() + 1..span.line.as_usize() + 1 + context_lines {
-                let Some(relevant_line) = s_lines.get(line_i) else {
-                    break;
-                };
-                if line_i == span.line.as_usize() + 1 && has_inline_carets {
-                    continue;
-                }
-
-                // Skip the last context line if blank.
-                if line_i == span.line.as_usize() + context_lines && relevant_line.trim().is_empty()
-                {
-                    break;
-                }
-
-                res.push('\n');
-
+        if !underline {
+            continue;
+        }
+        let Some(line_highlights) = highlights.get(&line_i) else {
+            continue;
+        };
+        for (span, annotation, single_line) in line_highlights {
+            res.push('\n');
+            // A single underline can share the following source line
+            // when there is space beside its text.
+            let next_line = s_lines.get(line_i + 1).filter(|line| {
+                context_lines > 0
+                    && *single_line
+                    && line_highlights.len() == 1
+                    && line.len() < span.start_col as usize
+            });
+            if let Some(next_line) = next_line {
+                inline_line = Some(line_i + 1);
                 res.push_str(&format_margin_num(
-                    &format!("{}", line_i + 1),
+                    &(line_i + 2).to_string(),
                     margin_width,
                     use_color,
                 ));
-                res.push_str(&format_src_line(relevant_line, use_color));
+                res.push_str(next_line);
+                res.push_str(&" ".repeat(span.start_col as usize - next_line.len()));
+            } else {
+                res.push_str(&format_margin_num("", margin_width, use_color));
+                res.push_str(&" ".repeat(span.start_col as usize));
+            }
+            let carets = "^".repeat((span.end_col - span.start_col) as usize);
+            res.push_str(&if !use_color {
+                carets
+            } else if is_note || annotation.message.is_some() {
+                carets.bold().dimmed().to_string()
+            } else if is_error {
+                carets.bold().red().to_string()
+            } else {
+                carets.bold().yellow().to_string()
+            });
+            if let Some(message) = &annotation.message {
+                res.push_str(&format!(
+                    " {}: {}",
+                    format_note_severity(use_color),
+                    message
+                ));
             }
         }
     }
-
     res
 }
 
@@ -467,4 +475,67 @@ fn format_src_line(line: &str, use_color: bool) -> String {
     // that start on the previous line.
 
     with_syntax_highlighting(line, false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::msgtext;
+
+    fn position(vfs_path: &VfsPathBuf, start: usize, end: usize) -> Position {
+        Position {
+            start_offset: start,
+            end_offset: end,
+            column: start,
+            end_column: end,
+            ..Position::todo(vfs_path)
+        }
+    }
+
+    #[test]
+    fn group_interleaved_notes_by_file() {
+        let (mut vfs, a) = Vfs::singleton("/a.gdn".into(), "let a = b\n".into());
+        let b = vfs.insert(Rc::new("/b.gdn".into()), "let c = d\n".into());
+        let message = ErrorMessage(vec![msgtext!("Unknown variable.")]);
+        let notes = vec![
+            (
+                ErrorMessage(vec![msgtext!("First note.")]),
+                position(&b, 4, 5),
+            ),
+            (
+                ErrorMessage(vec![msgtext!("Second note.")]),
+                position(&a, 4, 5),
+            ),
+            (
+                ErrorMessage(vec![msgtext!("Third note.")]),
+                position(&b, 8, 9),
+            ),
+            (
+                ErrorMessage(vec![msgtext!("Overlapping note.")]),
+                position(&a, 8, 9),
+            ),
+        ];
+        assert_eq!(
+            format_diagnostic(
+                &message,
+                &position(&a, 8, 9),
+                Path::new("/"),
+                Severity::Error,
+                &notes,
+                &vfs
+            ),
+            concat!(
+                "Error: Unknown variable.\n\n",
+                "-| a.gdn:1:9\n",
+                "1| let a = b\n",
+                " |         ^\n",
+                " |     ^ Note: Second note.\n",
+                " |         ^ Note: Overlapping note.\n",
+                "-| b.gdn:1:5\n",
+                "1| let c = d\n",
+                " |     ^ Note: First note.\n",
+                " |         ^ Note: Third note.",
+            )
+        );
+    }
 }

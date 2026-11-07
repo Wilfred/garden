@@ -15,11 +15,6 @@ println(string_repr(b))
 // 4| 
 // 5| let b: Box<Int> = Box{ value: "wrong" }
 //  |                   ^^^^^^^^^^^^^^^^^^^^^
-// 6| println(string_repr(b))
-// -| src/test_files/check/generic_struct_literal_mismatch_infer.gdn:5:8
-// 3| }
-// 4| 
-// 5| let b: Box<Int> = Box{ value: "wrong" }
 //  |        ^^^^^^^^ Note: expected `Box<Int>` because of this type hint.
 // 6| println(string_repr(b))
 

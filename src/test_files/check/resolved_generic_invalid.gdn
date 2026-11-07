@@ -14,13 +14,11 @@ public fun h() {
 // Error: Expected an `Int` but got a `String`.
 // 
 // --| src/test_files/check/resolved_generic_invalid.gdn:8:13
+//  3| }
+//  4| 
+//  5| fun takes_int(_: Int) {}
+//  6|               ^^^^^^ Note: the parameter `_` is declared with type `Int` here.
 //  7| public fun h() {
 //  8|   takes_int(id(""))
 //  9| }           ^^^^^^
-// -| src/test_files/check/resolved_generic_invalid.gdn:5:15
-// 3| }
-// 4| 
-// 5| fun takes_int(_: Int) {}
-// 6|               ^^^^^^ Note: the parameter `_` is declared with type `Int` here.
-// 7| public fun h() {
 

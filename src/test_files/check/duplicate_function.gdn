@@ -9,10 +9,6 @@ public fun foo() {}
 // 
 // -| src/test_files/check/duplicate_function.gdn:3:12
 // 1| public fun foo() {}
-// 2| 
-// 3| public fun foo() {}
-// 4|            ^^^
-// -| src/test_files/check/duplicate_function.gdn:1:12
-// 1| public fun foo() {}
 // 2|            ^^^ Note: Previous definition was here.
 // 3| public fun foo() {}
+// 4|            ^^^

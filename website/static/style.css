@@ -321,61 +321,51 @@ button[hidden] {
 .comment {
   color: var(--muted);
 }
-/* CodeMirror Integration */
 .cm-editor {
-  font-family: monospace;
-  font-size: 16px;
-  line-height: 20px;
-  border: none;
-  outline: none;
-  background-color: var(--pale-cream);
+  font:
+    16px/1.55 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  background: transparent;
+  color: inherit;
+  margin: 16px 20px;
 }
-
-.cm-focused {
-  outline: none !important;
-}
-
 .cm-scroller {
-  font-family: monospace;
-  overflow: auto;
+  font: inherit;
 }
-
 .cm-content {
-  padding: 10px;
   min-height: 100px;
-  caret-color: var(--green-primary);
+  padding: 0;
+  caret-color: currentColor;
 }
-
-.cm-focused {
-  outline: 2px solid var(--green-primary);
-  outline-offset: 2px;
-}
-
-.cm-selectionBackground {
-  background-color: var(--green-primary) !important;
-  opacity: 0.3;
-}
-
-.snippet .cm-editor {
-  font-weight: 700;
-  margin: 10px;
-}
-
 .cm-line {
   padding: 0;
 }
-
-/* Gutters (line numbers, etc) */
+.cm-focused {
+  outline: 2px solid var(--green-primary);
+  outline-offset: 3px;
+}
 .cm-gutters {
-  background-color: var(--cream);
-  border-right: 1px solid #00000030;
+  background: transparent;
+  color: inherit;
+  border-right: 1px solid var(--rule);
 }
-
-/* Active line highlighting with pale green to match theme */
 .cm-activeLine {
-  background-color: #a8dda855 !important;
+  background: #307d300c;
 }
-
+.cm-selectionBackground,
+.cm-focused .cm-selectionBackground {
+  background: #307d3030 !important;
+}
+.cm-tooltip {
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 16px;
+}
+.cm-editor .cm-cursor {
+  border-left-color: currentColor;
+}
 textarea {
   display: block;
   width: calc(100% - 40px);

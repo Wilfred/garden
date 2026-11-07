@@ -1,52 +1,53 @@
 // Good.
-Dict[]
+let _ = Dict[]
 
 // Bad: undefined key.
-Dict[no_such => 1]
+let _ = Dict[no_such => 1]
 
 // Bad: undefined value.
-Dict["foo" => no_such2]
+let _ = Dict["foo" => no_such2]
 
 // Bad: key isn't a string.
-Dict[1 => 2]
+let _ = Dict[1 => 2]
 
 // Good: all values the same type.
-Dict["x" => 1, "y" => 2]
-Dict["x" => "xx", "y" => "yy"]
+let _ = Dict["x" => 1, "y" => 2]
+let _ = Dict["x" => "xx", "y" => "yy"]
 
 // Bad: mixed value types.
-Dict["x" => 1, "y" => ""]
+let _ = Dict["x" => 1, "y" => ""]
 
 // args: check
 // expected exit status: 1
 // expected stdout:
 // Error: Unbound symbol: `no_such`
 // 
-// -| src/test_files/check/dict_literal_types.gdn:5:6
+// -| src/test_files/check/dict_literal_types.gdn:5:14
 // 4| // Bad: undefined key.
-// 5| Dict[no_such => 1]
-// 6|      ^^^^^^^
+// 5| let _ = Dict[no_such => 1]
+// 6|              ^^^^^^^
 // 7| // Bad: undefined value.
 // 
 // Error: Unbound symbol: `no_such2`
 // 
-// --| src/test_files/check/dict_literal_types.gdn:8:15
+// --| src/test_files/check/dict_literal_types.gdn:8:23
 //  7| // Bad: undefined value.
-//  8| Dict["foo" => no_such2]
-//  9|               ^^^^^^^^
+//  8| let _ = Dict["foo" => no_such2]
+//  9|                       ^^^^^^^^
 // 10| // Bad: key isn't a string.
 // 
 // Error: Expected a `String` but got an `Int`.
 // 
-// --| src/test_files/check/dict_literal_types.gdn:11:6
+// --| src/test_files/check/dict_literal_types.gdn:11:14
 // 10| // Bad: key isn't a string.
-// 11| Dict[1 => 2]
-// 12|      ^
+// 11| let _ = Dict[1 => 2]
+// 12|              ^
 // 13| // Good: all values the same type.
 // 
 // Error: Dict values have different types.
 // 
-// --| src/test_files/check/dict_literal_types.gdn:18:23
+// --| src/test_files/check/dict_literal_types.gdn:18:31
 // 17| // Bad: mixed value types.
-// 18| Dict["x" => 1, "y" => ""]
-// 19|                       ^^
+// 18| let _ = Dict["x" => 1, "y" => ""]
+// 19|                               ^^
+

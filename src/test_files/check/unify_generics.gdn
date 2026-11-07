@@ -1,5 +1,5 @@
 {
-    if True {
+    let _ = if True {
         None
     } else {
         Some(123)

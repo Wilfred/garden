@@ -15,7 +15,7 @@ public fun example() {
 // expected stdout:
 // Warning: Unused value.
 // 
-// -| src/test_files/check/unused_literal_loop.gdn:5:5
+// -| src/test_files/check/unused_values_loop.gdn:5:5
 // 3|   while i < 3 {
 // 4|     i += 1
 // 5|     42
@@ -23,7 +23,7 @@ public fun example() {
 // 
 // Warning: Unused value.
 // 
-// --| src/test_files/check/unused_literal_loop.gdn:9:5
+// --| src/test_files/check/unused_values_loop.gdn:9:5
 //  8|   for _ in [1, 2, 3] {
 //  9|     "hello"
 // 10|   } ^^^^^^^

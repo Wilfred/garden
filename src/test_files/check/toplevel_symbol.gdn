@@ -1,4 +1,4 @@
-foo
+let _ = foo
 
 fun greet(): Unit {}
 
@@ -10,7 +10,7 @@ greeet()
 // Warning: `greet` is never called.
 // 
 // -| src/test_files/check/toplevel_symbol.gdn:3:5
-// 1| foo
+// 1| let _ = foo
 // 2| 
 // 3| fun greet(): Unit {}
 // 4|     ^^^^^
@@ -18,10 +18,9 @@ greeet()
 // 
 // Error: Unbound symbol: `foo`
 // 
-// -| src/test_files/check/toplevel_symbol.gdn:1:1
-// 1| foo
-//  | ^^^
-// 2| 
+// -| src/test_files/check/toplevel_symbol.gdn:1:9
+// 1| let _ = foo
+// 2|         ^^^
 // 3| fun greet(): Unit {}
 // 
 // Error: Unbound symbol: `greeet` Did you mean `greet`?

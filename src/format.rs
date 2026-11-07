@@ -31,6 +31,7 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
     // multiple lines before any other formatting. This requires
     // re-parsing afterwards because line numbers and offsets shift.
     let src_owned = wrap_long_signatures(src, path);
+    let src_owned = split_struct_fields(&src_owned, path);
     let src = src_owned.as_str();
 
     let mut id_gen = IdGenerator::default();
@@ -46,6 +47,7 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
         span_edits: vec![],
         src: src.to_owned(),
         toplevel_start_lines: vec![],
+        toplevel_type_end_lines: vec![],
     };
 
     for item in &items {
@@ -67,7 +69,11 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
     let src_after_indent = apply_indentation_edits(&src_after_spans, &visitor.line_edits);
 
     // Phase 6: Normalize blank lines
-    let src_after_blanks = normalize_blank_lines(&src_after_indent, &visitor.toplevel_start_lines);
+    let src_after_blanks = normalize_blank_lines(
+        &src_after_indent,
+        &visitor.toplevel_start_lines,
+        &visitor.toplevel_type_end_lines,
+    );
 
     // Phase 7: Fix type annotation spacing
     let src_after_types = fix_type_annotation_spacing(&src_after_blanks, &vfs_path);
@@ -113,6 +119,7 @@ struct IndentationVisitor {
     /// enforcement). Imports are excluded so that consecutive imports
     /// can stay grouped together without blank lines.
     toplevel_start_lines: Vec<usize>,
+    toplevel_type_end_lines: Vec<usize>,
 }
 
 impl IndentationVisitor {
@@ -365,6 +372,11 @@ impl Visitor for IndentationVisitor {
         };
         if let Some(line) = start_line {
             self.toplevel_start_lines.push(line);
+        }
+
+        if matches!(item, ToplevelItem::Struct(_) | ToplevelItem::Enum(_)) {
+            self.toplevel_type_end_lines
+                .push(item.position().end_line_number);
         }
 
         // Continue with default visitor behavior
@@ -750,14 +762,20 @@ fn apply_span_edits(src: &str, span_edits: &mut [SpanEdit]) -> String {
 /// Normalize blank lines in the formatted source.
 ///
 /// - Before non-import toplevel definitions: exactly one blank line
+/// - After toplevel types: one blank line before subsequent content
 /// - Inside blocks: at most one blank line between lines
-fn normalize_blank_lines(src: &str, toplevel_start_lines: &[usize]) -> String {
+fn normalize_blank_lines(
+    src: &str,
+    toplevel_start_lines: &[usize],
+    toplevel_type_end_lines: &[usize],
+) -> String {
     let lines: Vec<&str> = src.lines().collect();
     if lines.is_empty() {
         return src.to_owned();
     }
 
     let toplevel_lines: FxHashSet<usize> = toplevel_start_lines.iter().copied().collect();
+    let type_end_lines: FxHashSet<usize> = toplevel_type_end_lines.iter().copied().collect();
     let mut result = String::with_capacity(src.len());
 
     let mut i = 0;
@@ -784,17 +802,13 @@ fn normalize_blank_lines(src: &str, toplevel_start_lines: &[usize]) -> String {
         result.push('\n');
         i += 1;
 
-        // Check if the next line (after any blanks) starts a new toplevel definition
-        // If so, we need exactly one blank line between them. Doc comments
-        // (lines starting with `//`) on the previous line are considered
-        // attached to the following item, so no blank line is inserted.
+        // Separate types from following content and definitions from preceding
+        // content. Keep comments attached to the definition they precede.
         if i < lines.len()
             && !lines[i].trim().is_empty()
-            && toplevel_lines.contains(&i)
-            && !line.trim_start().starts_with("//")
+            && (type_end_lines.contains(&(i - 1))
+                || (toplevel_lines.contains(&i) && !line.trim_start().starts_with("//")))
         {
-            // Next non-blank line is a toplevel definition, but there's no blank line
-            // Insert one blank line
             result.push('\n');
         }
     }
@@ -969,6 +983,65 @@ fn normalize_token_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPathBuf)
     }
 
     apply_span_edits(src, &mut edits)
+}
+
+/// Put struct declaration fields and closing braces on separate lines.
+fn split_struct_fields(src: &str, path: &Path) -> String {
+    let mut id_gen = IdGenerator::default();
+    let (_vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+    let mut edits = vec![];
+
+    for item in &items {
+        let ToplevelItem::Struct(info) = item else {
+            continue;
+        };
+        if info.fields.is_empty() {
+            continue;
+        }
+
+        let (mut tokens, _) =
+            lex_between(&vfs_path, src, info.pos.start_offset, info.pos.end_offset);
+        while let Some(token) = tokens.pop() {
+            let is_field = info
+                .fields
+                .iter()
+                .any(|field| field.sym.position.start_offset == token.position.start_offset);
+            let is_close = token.text == "}" && token.position.end_offset == info.pos.end_offset;
+            if !is_field && !is_close {
+                continue;
+            }
+
+            for (comment_pos, _) in &token.preceding_comments {
+                put_on_separate_line(src, comment_pos.start_offset, 2, &mut edits);
+            }
+            put_on_separate_line(
+                src,
+                token.position.start_offset,
+                if is_close { 0 } else { 2 },
+                &mut edits,
+            );
+        }
+    }
+
+    apply_span_edits(src, &mut edits)
+}
+
+fn put_on_separate_line(src: &str, offset: usize, indent: usize, edits: &mut Vec<SpanEdit>) {
+    let before = &src[..offset];
+    let whitespace_start = before.trim_end().len();
+    // Preserve existing line breaks, replacing only the indentation after the last one.
+    let start = before[whitespace_start..]
+        .rfind('\n')
+        .map_or(whitespace_start, |i| whitespace_start + i);
+    let replacement = format!("\n{}", " ".repeat(indent));
+    if src[start..offset] != replacement {
+        edits.push(SpanEdit {
+            start_offset: start,
+            end_offset: offset,
+            replacement,
+        });
+    }
 }
 
 /// Wrap function and method signatures that fit on a single line

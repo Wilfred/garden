@@ -1,5 +1,5 @@
 struct Foo {
-    x: Int,
+  x: Int,
 }
 
 fun get_x(foo: Foo): Int {

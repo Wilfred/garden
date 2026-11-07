@@ -1,6 +1,6 @@
 struct Foo {
-    x: Int,
-    y: String,
+  x: Int,
+  y: String,
 }
 
 {

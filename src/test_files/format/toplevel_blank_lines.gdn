@@ -11,6 +11,25 @@ fun baz() {
   3
 }
 
+struct Box<T> { value: T }
+let b: Box<Int> = Box{ value: "wrong" }
+println(string_repr(b))
+struct Pair {
+first: Int, second: String }
+// Use the pair.
+let pair = Pair{ first: 1, second: "two" }
+struct Documented { // First field.
+first: (Int, String), // Second field.
+second: List<Int> // End of fields.
+}
+/// An enum.
+enum Choice { Yes, No }
+println("choice")
+struct Empty {}
+import "__fs.gdn" as fs
+struct Last {
+  value: Int }
+
 // args: format
 // expected stdout:
 // fun foo() {
@@ -23,4 +42,40 @@ fun baz() {
 // 
 // fun baz() {
 //   3
+// }
+// 
+// struct Box<T> {
+//   value: T
+// }
+// 
+// let b: Box<Int> = Box{ value: "wrong" }
+// println(string_repr(b))
+// 
+// struct Pair {
+//   first: Int,
+//   second: String
+// }
+// 
+// // Use the pair.
+// let pair = Pair{ first: 1, second: "two" }
+// 
+// struct Documented {
+//   // First field.
+//   first: (Int, String),
+//   // Second field.
+//   second: List<Int>
+//   // End of fields.
+// }
+// 
+// /// An enum.
+// enum Choice { Yes, No }
+// 
+// println("choice")
+// 
+// struct Empty {}
+// 
+// import "__fs.gdn" as fs
+// 
+// struct Last {
+//   value: Int
 // }

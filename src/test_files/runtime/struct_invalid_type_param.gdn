@@ -1,5 +1,5 @@
 struct Box<T> {
-    value: T,
+  value: T,
 }
 
 fun foo(): Box<Int> {

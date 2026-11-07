@@ -45,9 +45,15 @@ fn apply_fixes(src: &str, fixes: &[Autofix]) -> String {
     fixes.sort_by_key(|b| std::cmp::Reverse(b.position.start_offset));
 
     let mut result = src.to_owned();
+    let mut next_start = src.len();
     for fix in fixes {
         let start = fix.position.start_offset;
         let end = fix.position.end_offset;
+        // Overlapping fixes refer to source that has already been edited.
+        if end > next_start {
+            continue;
+        }
+        next_start = start;
         result = format!("{}{}{}", &result[..start], fix.new_text, &result[end..]);
     }
     result

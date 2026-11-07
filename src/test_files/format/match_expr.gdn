@@ -8,7 +8,7 @@ None => 0,
 }
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo(x: Option<Int>) {
 //   match x {

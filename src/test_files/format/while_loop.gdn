@@ -6,7 +6,7 @@ i += 1
 }
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo() {
 //   let i = 0

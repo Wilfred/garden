@@ -3,7 +3,7 @@ println("hello")
 let x = 1
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo() {
 //   println("hello")

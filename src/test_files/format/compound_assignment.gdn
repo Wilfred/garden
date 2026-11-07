@@ -5,7 +5,7 @@ fun foo(): Unit {
   x += 3
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo(): Unit {
 //   let x = 1

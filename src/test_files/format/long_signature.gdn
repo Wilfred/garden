@@ -14,7 +14,7 @@ method long_method(self: MyType, a: List<(Int, String)>, b: Dict<Int>, c: (Int, 
   "result"
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // struct MyType {
 //   field: Int,

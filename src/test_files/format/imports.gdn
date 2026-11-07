@@ -6,7 +6,7 @@ fun main(): Unit {
   println("hello")
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // import "__fs.gdn" as fs
 // import "__random.gdn" as random

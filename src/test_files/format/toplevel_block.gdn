@@ -3,7 +3,7 @@ println("one")
 println("two")
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // {
 //   println("one")

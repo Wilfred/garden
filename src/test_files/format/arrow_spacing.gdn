@@ -7,7 +7,7 @@ fun foo(x: Int): Int {
   }
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo(x: Int): Int {
 //   let d = Dict[1 => 2, 3 => 4, 5 => 6]

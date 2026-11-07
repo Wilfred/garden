@@ -13,7 +13,7 @@ let z = 3
 //   let z = 3
 // }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo() {
 //   let x = 1

@@ -15,6 +15,6 @@ println(string_repr(b))
 // 4| 
 // 5| let b: Box<Int> = Box{ value: "wrong" }
 //  |                   ^^^^^^^^^^^^^^^^^^^^^
-//  |        ^^^^^^^^ Note: expected `Box<Int>` because of this type hint.
+//  |        ^^^^^^^^ Note: Expected `Box<Int>` because of this type hint.
 // 6| println(string_repr(b))
 

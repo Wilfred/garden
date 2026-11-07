@@ -19,7 +19,7 @@ public fun bad(): Bool {
 // 
 // -| src/test_files/check/type_error_return_type.gdn:4:5
 // 1| public fun bad(): Bool {
-//  |                   ^^^^ Note: expected `Bool` because of this return type.
+//  |                   ^^^^ Note: Expected `Bool` because of this return type.
 // 2|     let _f = fun(): Int { True }
 // 3|     
 // 4|     "abc"

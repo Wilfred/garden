@@ -34,7 +34,7 @@ public fun bar(): Int {
 //  7| {
 //  8|   match One {
 //  9|     One => [],
-//   |            ^^ Note: this branch has type `List<NoValue>`.
+//   |            ^^ Note: This branch has type `List<NoValue>`.
 // 10|     Two => throw(""),
 // 11|     Three => {
 // 12|       "stuff"
@@ -48,7 +48,7 @@ public fun bar(): Int {
 // 15| }
 // 16| 
 // 17| public fun bar(): Int {
-// 18|   match One {     ^^^ Note: expected `Int` because of this return type.
+// 18|   match One {     ^^^ Note: Expected `Int` because of this return type.
 // 19|     One => "wrong",
 //   |            ^^^^^^^
 // 20|     Two => "wrong too",
@@ -60,7 +60,7 @@ public fun bar(): Int {
 // 15| }
 // 16| 
 // 17| public fun bar(): Int {
-// 18|   match One {     ^^^ Note: expected `Int` because of this return type.
+// 18|   match One {     ^^^ Note: Expected `Int` because of this return type.
 // 19|     One => "wrong",
 // 20|     Two => "wrong too",
 //   |            ^^^^^^^^^^^

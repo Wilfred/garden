@@ -11,6 +11,6 @@
 // 1| {
 // 2|     let _: Bool = 123
 //  |                   ^^^
-//  |            ^^^^ Note: expected `Bool` because of this type hint.
+//  |            ^^^^ Note: Expected `Bool` because of this type hint.
 // 3| }
 

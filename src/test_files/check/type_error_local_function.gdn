@@ -11,7 +11,7 @@ public fun takes_int(_v: Int) {}
 // 
 // -| src/test_files/check/type_error_local_function.gdn:4:15
 // 1| public fun takes_int(_v: Int) {}
-// 2|                      ^^^^^^^ Note: the parameter `_v` is declared with type `Int` here.
+// 2|                      ^^^^^^^ Note: The parameter `_v` is declared with type `Int` here.
 // 3| {
 // 4|     takes_int("foo")
 // 5| }             ^^^^^

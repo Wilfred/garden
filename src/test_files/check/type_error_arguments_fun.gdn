@@ -15,7 +15,7 @@
 // 915| /// print("hello world\n")
 // 916| /// ```
 // 917| public fun print(_: String): Unit {
-//    |                  ^^^^^^^^^ Note: the parameter `_` is declared with type `String` here.
+//    |                  ^^^^^^^^^ Note: The parameter `_` is declared with type `String` here.
 // 918|   __BUILT_IN_IMPLEMENTATION
 // 919| }
 

@@ -408,7 +408,7 @@ impl TypeCheckVisitor<'_> {
         let return_note = fun_info.return_hint.as_ref().map(|hint| {
             (
                 ErrorMessage(vec![
-                    msgtext!("expected "),
+                    msgtext!("Expected "),
                     msgcode!("{}", return_ty),
                     msgtext!(" because of this return type."),
                 ]),
@@ -963,7 +963,7 @@ impl TypeCheckVisitor<'_> {
                     self.diagnostics.push(Diagnostic {
                         notes: vec![(
                             ErrorMessage(vec![
-                                msgtext!("this branch has type "),
+                                msgtext!("This branch has type "),
                                 msgcode!("{}", prev_ty),
                                 msgtext!("."),
                             ]),
@@ -1120,7 +1120,7 @@ impl TypeCheckVisitor<'_> {
 
                         let hint_note = (
                             ErrorMessage(vec![
-                                msgtext!("expected "),
+                                msgtext!("Expected "),
                                 msgcode!("{}", hint_ty),
                                 msgtext!(" because of this type hint."),
                             ]),
@@ -2266,7 +2266,7 @@ impl TypeCheckVisitor<'_> {
                         self.diagnostics.push(Diagnostic {
                             notes: vec![(
                                 ErrorMessage(vec![
-                                    msgtext!("this branch has type "),
+                                    msgtext!("This branch has type "),
                                     msgcode!("{}", then_ty),
                                     msgtext!("."),
                                 ]),
@@ -3508,7 +3508,7 @@ fn param_declared_note(param: &SymbolWithHint, param_ty: &Type) -> (ErrorMessage
 
     (
         ErrorMessage(vec![
-            msgtext!("the parameter "),
+            msgtext!("The parameter "),
             msgcode!("{}", param.symbol.name),
             msgtext!(" is declared with type "),
             msgcode!("{}", param_ty),

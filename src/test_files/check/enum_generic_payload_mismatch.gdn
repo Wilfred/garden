@@ -17,7 +17,7 @@ public fun unwrap(w: Wrap<Int>): String {
 // 3| }
 // 4| 
 // 5| public fun unwrap(w: Wrap<Int>): String {
-// 6|   match w {                      ^^^^^^ Note: expected `String` because of this return type.
+// 6|   match w {                      ^^^^^^ Note: Expected `String` because of this return type.
 // 7|     Wrapped(xs) => xs
 // 8|   }                ^^
 // 9| }

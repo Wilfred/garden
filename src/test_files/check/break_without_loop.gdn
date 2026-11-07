@@ -6,7 +6,7 @@ public fun foo() {
         break
 
         // Bad
-        fun() { break }
+        let _ = fun() { break }
     }
 
 }
@@ -24,7 +24,8 @@ public fun foo() {
 // 
 // Error: `break` can only be used inside `for` or `while` loops.
 // 
-// --| src/test_files/check/break_without_loop.gdn:9:17
+// --| src/test_files/check/break_without_loop.gdn:9:25
 //  8|         // Bad
-//  9|         fun() { break }
-// 10|     }           ^^^^^
+//  9|         let _ = fun() { break }
+// 10|     }                   ^^^^^
+

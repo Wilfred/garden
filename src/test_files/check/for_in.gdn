@@ -1,17 +1,17 @@
 public fun foo(items: List<Int>) {
   // Good
   for x in items {
-    x + 1
+    let _ = x + 1
   }
 
   // Good
   for (x, y) in [(1, 2)] {
-    x + y
+    let _ = x + y
   }
 
   // Bad
   for (x, y) in items {
-    x + y
+    let _ = x + y
   }
 }
 
@@ -23,5 +23,7 @@ public fun foo(items: List<Int>) {
 // --| src/test_files/check/for_in.gdn:13:17
 // 12|   // Bad
 // 13|   for (x, y) in items {
-// 14|     x + y       ^^^^^
+//   |                 ^^^^^
+// 14|     let _ = x + y
 // 15|   }
+

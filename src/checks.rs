@@ -15,7 +15,7 @@ mod unnecessary_let;
 mod unnecessary_return;
 mod unreachable;
 mod unused_defs;
-mod unused_literals;
+mod unused_values;
 mod unused_vars;
 
 use std::cell::RefCell;
@@ -45,7 +45,7 @@ use self::duplicates::check_duplicates;
 use self::hints::check_hints;
 use self::struct_fields::check_struct_fields;
 use self::type_checker::check_types;
-use self::unused_literals::check_unused_literals;
+use self::unused_values::check_unused_values;
 use self::unused_vars::check_unused_variables;
 
 /// Check toplevel items in a fresh environment, without any
@@ -76,7 +76,7 @@ pub(crate) fn check_toplevel_items_in_env(
     let mut diagnostics = vec![];
 
     diagnostics.extend(check_unused_variables(items));
-    diagnostics.extend(check_unused_literals(items, env));
+    diagnostics.extend(check_unused_values(items, env));
     diagnostics.extend(check_struct_fields(items, env));
     diagnostics.extend(check_hints(items, env));
 

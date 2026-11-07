@@ -1,6 +1,10 @@
-// A carriage return is escaped as `\r` in the string representation.
+// Control characters are escaped in the string representation.
 println(string_repr("a\rb"))
+println(string_repr("a\tb"))
+println(string_repr("a\\tb"))
 
 // args: run
 // expected stdout:
 // "a\rb"
+// "a\tb"
+// "a\\tb"

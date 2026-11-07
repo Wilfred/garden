@@ -789,6 +789,7 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
             '"' => res.push_str("\\\""),
             '\n' => res.push_str("\\n"),
             '\r' => res.push_str("\\r"),
+            '\t' => res.push_str("\\t"),
             '\\' => res.push_str("\\\\"),
             _ => res.push(c),
         }

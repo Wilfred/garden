@@ -1,6 +1,6 @@
 { "op": "clone" }
-{ "op": "eval", "id": "e1", "session": "garden-1", "code": "while True { 1 }" }
-// sleep 100
+{ "op": "eval", "id": "e1", "session": "garden-1", "code": "println(\"ready\")\nwhile True { 1 }" }
+// wait-for-output e1
 { "op": "interrupt", "id": "i1", "session": "garden-1" }
 
 // args: reftest-nrepl
@@ -10,6 +10,11 @@
 //   "status": [
 //     "done"
 //   ]
+// }
+// {
+//   "id": "e1",
+//   "out": "ready\n",
+//   "session": "garden-1"
 // }
 // {
 //   "err": "Interrupted.\n",

@@ -1540,7 +1540,8 @@ fn parse_enum_body(
 ) -> Vec<VariantInfo> {
     let mut variants = vec![];
     loop {
-        if peeked_symbol_is(tokens, "}") {
+        let start_idx = tokens.idx;
+        if tokens.peek().is_none() || peeked_symbol_is(tokens, "}") {
             break;
         }
 
@@ -1591,6 +1592,11 @@ fn parse_enum_body(
             });
             break;
         }
+
+        assert!(
+            tokens.idx > start_idx,
+            "The parser should always make forward progress."
+        );
     }
 
     variants

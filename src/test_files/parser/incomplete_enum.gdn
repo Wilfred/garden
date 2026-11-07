@@ -2,6 +2,8 @@ enum Foo
 
 fun bar() {}
 
+enum E { A,
+
 // args: reftest-ast
 // expected stdout:
 // Enum(
@@ -42,6 +44,24 @@ fun bar() {}
 //     },
 //     CurrentFile,
 // )
+// Enum(
+//     EnumInfo {
+//         pos: Position { ... },
+//         visibility: CurrentFile,
+//         doc_comment: None,
+//         name_sym: TypeSymbol"E",
+//         type_params: [],
+//         variants: [
+//             VariantInfo {
+//                 name_sym: Symbol"A",
+//                 payload_hint: None,
+//                 comma: Some(
+//                     Position { ... },
+//                 ),
+//             },
+//         ],
+//     },
+// )
 
 // expected stderr:
 // Error: Parse error: Expected `{` after this.
@@ -50,3 +70,4 @@ fun bar() {}
 // 1| enum Foo
 // 2|      ^^^
 // 3| fun bar() {}
+// Parse error (incomplete input): Expected `}`, but reached the end of the file.

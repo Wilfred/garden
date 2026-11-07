@@ -213,6 +213,9 @@ relevant errors is better than fewer.
 - cargo clippy: Check that your Rust code is correct
 
 # Running Tests
+Prefer reftests when the behaviour can be covered by a sample program
+and expected output.
+
 Garden uses reftests in `src/test_files/` that include a sample
 program and the expected output. Test coverage should be
 proportional to risk: prefer extending existing reftest files over

@@ -4619,6 +4619,7 @@ fn eval_call(
         );
         arg_positions.push(arg.expr.position.clone());
     }
+    arg_values.reverse();
     let receiver_value = env
         .pop_value()
         .expect("Popped an empty value stack for call receiver");
@@ -5080,6 +5081,7 @@ fn eval_method_call(
         );
         arg_positions.push(arg.expr.position.clone());
     }
+    arg_values.reverse();
     let receiver_value = env
         .pop_value()
         .expect("Popped an empty value stack for method call receiver.");
@@ -7053,18 +7055,24 @@ fn eval_expr(
                     Rc::clone(&outer_expr),
                 );
 
-                for arg in &paren_args.arguments {
+                for arg in paren_args.arguments.iter().rev() {
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(&arg.expr));
                 }
             }
             ExpressionState::EvaluatedSubexpressions => {
+                // Preserve the evaluated receiver and arguments in stack order
+                // so failed calls can resume without reevaluating arguments.
+                let values = &env.current_frame().evalled_values;
+                let saved_values = values[values.len() - paren_args.arguments.len() - 1..].to_vec();
                 match eval_call(
                     env,
                     expr_value_is_used,
                     Rc::clone(&outer_expr),
                     paren_args,
                     session,
-                )? {
+                )
+                .map_err(|(_, error)| (RestoreValues(saved_values), error))?
+                {
                     Some(new_stack_frame) => {
                         return Ok(Some(new_stack_frame));
                     }
@@ -7074,13 +7082,17 @@ fn eval_expr(
         },
         Expression_::MethodCall(receiver_expr, meth_name, paren_args) => {
             if expr_state.done_subexpressions() {
+                let values = &env.current_frame().evalled_values;
+                let saved_values = values[values.len() - paren_args.arguments.len() - 1..].to_vec();
                 match eval_method_call(
                     env,
                     expr_value_is_used,
                     Rc::clone(&outer_expr),
                     meth_name,
                     paren_args,
-                )? {
+                )
+                .map_err(|(_, error)| (RestoreValues(saved_values), error))?
+                {
                     Some(new_stack_frame) => {
                         return Ok(Some(new_stack_frame));
                     }
@@ -7092,7 +7104,7 @@ fn eval_expr(
                     Rc::clone(&outer_expr),
                 );
 
-                for arg in &paren_args.arguments {
+                for arg in paren_args.arguments.iter().rev() {
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(&arg.expr));
                 }
                 // Push the receiver after arguments, so

@@ -1,0 +1,15 @@
+fun foo(_a: Unit, _b: Unit) {}
+
+foo(println("1"), println("2"))
+
+method foo(_self: Unit, _a: Unit, _b: Unit) {}
+
+println("receiver").foo(println("1"), println("2"))
+
+// args: run
+// expected stdout:
+// 1
+// 2
+// receiver
+// 1
+// 2

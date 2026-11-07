@@ -6,18 +6,24 @@ criterion that user programs and editor input must never panic or hang the Rust
 host. The most urgent findings concern interpreter/parser robustness, generic
 type soundness, module isolation, and incomplete exception handling.
 
-This review contains **79 improvement candidates**, ordered by expected benefit
+This review contains **58 improvement candidates**, ordered by expected benefit
 for shipping a reliable language. They include confirmed bugs, warning and
 documentation gaps, and deliberately lower-priority design/API requests. They
-are not 79 independent root causes. Related reproductions are grouped, and
+are not 58 independent root causes. Related reproductions are grouped, and
 existing finding IDs are retained so earlier commits remain traceable; IDs are
 not priority numbers. No language implementation changes were made.
 
+The outstanding findings were rechecked against `main` at
+[`3b49b214`](https://github.com/Wilfred/garden/commit/3b49b2142e1238586332bf19a0e8e2f140de4cd8).
+Resolved items are omitted; partially resolved items retain their IDs with
+narrowed scope. The saved evidence, exercise experiences and validation results
+below describe the original review baseline unless stated otherwise.
+
 | Priority | Release significance | Candidates |
 | --- | --- | ---: |
-| P0 | Release blockers: host failures, broken type/module guarantees, nonworking accepted syntax | 19 |
-| P1 | High-value correctness, failure reporting, validation and essential API work | 24 |
-| P2 | Diagnostics, documented semantics, usable APIs and documentation clarity | 32 |
+| P0 | Release blockers: host failures, broken type/module guarantees, nonworking accepted syntax | 13 |
+| P1 | High-value correctness, failure reporting, validation and essential API work | 14 |
+| P2 | Diagnostics, documented semantics, usable APIs and documentation clarity | 27 |
 | P3 | Optional convenience and migration hints with false-positive tradeoffs | 4 |
 
 The first release gate should be: no host panic/hang on bounded input, sound
@@ -36,11 +42,11 @@ not misclassified implementation bugs.
 
 Evidence: [continue_argument.gdn](robustness/continue_argument.gdn) · [captured parser/runtime output](evidence/robustness.json).
 
-#### F61 — Generic struct type arguments are erased during inference
+#### F61 — Generic struct field access loses concrete type arguments
 
-Inferred generic struct literals lose all type arguments. Box{ value: "wrong" } is accepted as `Box<Int>`, including in an explicitly annotated binding. Generic field arithmetic also passes check before failing at runtime. infer_struct_literal solves field variables but returns args: []; subtyping zips argument lists without checking equal length, accepting the empty list against any instantiation. Preserve solved args and check type-argument arity. See generic_struct_bad, generic_struct_annotation_bad, generic_struct_flow and wrong_struct_field_read in type_checker/.
+Inferred struct literals retain their type arguments, and incompatible `Box<Int>` arguments and annotated bindings are rejected. However, `let b = Box{ value: "wrong" }` followed by `b.value + 1` still passes checking and fails at runtime. `infer_dot_access` resolves the field hint without substituting the receiver's concrete type arguments. Apply those arguments when inferring field types.
 
-Evidence: [generic_struct_annotation_bad.gdn](type_checker/generic_struct_annotation_bad.gdn) · [wrong_struct_field_read.gdn](type_checker/wrong_struct_field_read.gdn) · [captured check/run output](evidence/type_checker.json).
+Evidence: [wrong_struct_field_read.gdn](type_checker/wrong_struct_field_read.gdn) · [captured check/run output](evidence/type_checker.json).
 
 #### F62 — Method inference drops constraints from the receiver
 
@@ -56,7 +62,7 @@ Evidence: [function_field_variance.gdn](type_checker/function_field_variance.gdn
 
 #### F75 — Same-named types interfere across module namespaces
 
-Importing two namespaces that independently declare Record with different fields causes one definition to overwrite the other's type behavior. Both entry programs check cleanly; construction in the first module fails against the other module's field type. Reversing import order reverses the affected module. One module alone works. Key nominal type identity by defining module, not just the textual name.
+Importing two namespaces that independently declare Record with different fields causes one definition to overwrite the other's type behavior. Neither entry program reports a type error; construction in the first module fails against the other module's field type. Reversing import order reverses the affected module. One module alone works. Key nominal type identity by defining module, not just the textual name.
 
 Evidence: [module_collision.gdn](broad/module_collision.gdn) · [reverse_module_collision.gdn](broad/reverse_module_collision.gdn) · [captured check/run output](evidence/broad.json).
 
@@ -65,18 +71,6 @@ Evidence: [module_collision.gdn](broad/module_collision.gdn) · [reverse_module_
 An unsupported non-ASCII source character, such as é in café, a smart quote, or a BOM, is sliced as &s[0..1]. Rust panics on an invalid UTF-8 boundary instead of producing a Garden diagnostic. Unicode whitespace takes a different one-byte advance path and also panics. See unicode_identifier/whitespace/bom/smart_quote.gdn.
 
 Evidence: [unicode_identifier.gdn](robustness/unicode_identifier.gdn) · [unicode_whitespace.gdn](robustness/unicode_whitespace.gdn) · [captured parser/runtime output](evidence/robustness.json).
-
-#### F54 — Incomplete tuples and patterns panic in the parser
-
-Incomplete `(1,` and `match x { Some((a` trigger forward-progress assertions, in different tuple/pattern parsing loops. These are normal partial editor states; return an incomplete-input diagnostic rather than asserting progress.
-
-Evidence: [unfinished_tuple.gdn](robustness/unfinished_tuple.gdn) · [unfinished_pattern.gdn](robustness/unfinished_pattern.gdn) · [captured parser/runtime output](evidence/robustness.json).
-
-#### F55 — Incomplete enums hang the parser
-
-`enum E { A,` never finishes parsing within the two-second bound. This can freeze editing, checking and execution before any Garden code runs. Recover or stop at EOF in enum variant parsing.
-
-Evidence: [unfinished_enum.gdn](robustness/unfinished_enum.gdn) · [captured parser/runtime output](evidence/robustness.json).
 
 #### F56 — Small deeply nested files abort the host process
 
@@ -90,29 +84,11 @@ Redefining List or Float as a struct passes check; calling the retained built-in
 
 Evidence: [spoof_list.gdn](robustness/spoof_list.gdn) · [spoof_float.gdn](robustness/spoof_float.gdn) · [captured parser/runtime output](evidence/robustness.json).
 
-#### F30 — Overlapping quickfixes panic in preview mode
-
-`check --fix --stdout` panics on `b || b || b` (84). Check emits three duplicate-expression warnings, including two for the same occurrence. Applying overlapping deletions uses invalid byte offsets and exits 101. Deduplicate diagnostics and edits, and reject/merge conflicting changes before applying a batch. This failure happens even in preview mode.
-
-Evidence: [84_repeated_bool.gdn](probes/84_repeated_bool.gdn) · [fixes.json](evidence/fixes.json).
-
 #### F76 — Tooling transports panic on malformed frames
 
 An LSP Content-Length of usize::MAX panics with capacity overflow before reading a body. The JSON-session transport also panics on malformed lengths, truncated bodies and non-UTF-8 payloads. Bound frame lengths before allocating, validate decoding and return transport errors rather than expect/unwrap. Inputs are captured as exact hex bytes in evidence/broad.json; these tests open no network listeners.
 
 Evidence: [broad.json](evidence/broad.json) · [audit_broad.py](audit_broad.py).
-
-#### F03 — Compound integer overflow panics
-
-Int += overflow panics in the debug Rust interpreter (exit 101), while + wraps. Probes 14/15. Make compound and ordinary arithmetic consistent and keep Garden failures within Garden's diagnostic machinery.
-
-Evidence: [14_overflow_update.gdn](probes/14_overflow_update.gdn) · [15_overflow_add.gdn](probes/15_overflow_add.gdn) · [subtract_overflow.gdn](robustness/subtract_overflow.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F20 — Minimum integer division panics
-
-minimum Int divided by -1 panics in Rust (30), unlike division by zero's Garden exception. This is a division overflow case distinct from the compound-assignment inconsistency in finding 03.
-
-Evidence: [30_division_overflow.gdn](probes/30_division_overflow.gdn) · [captured check/run output](evidence/probes.json).
 
 #### F01 — Empty separators hang split
 
@@ -138,12 +114,6 @@ Checking an entry file accepts a called imported function declared Int whose bod
 
 Evidence: [imported_type_error.gdn](broad/imported_type_error.gdn) · [broken.gdn](broad/modules/broken.gdn) · [captured check/run output](evidence/broad.json).
 
-#### F58 — Break in a loop iterator panics during execution
-
-`for x in break { ... }` is rejected by check but run panics on an empty binding stack. Even unchecked invalid programs need a Garden error rather than a host assertion. See for_break_iterator.gdn.
-
-Evidence: [for_break_iterator.gdn](robustness/for_break_iterator.gdn) · [captured parser/runtime output](evidence/robustness.json).
-
 ### P1 — Prioritize correctness and reliable workflows
 
 #### F64 — Runtime type enforcement differs between equivalent constructs
@@ -151,36 +121,6 @@ Evidence: [for_break_iterator.gdn](robustness/for_break_iterator.gdn) · [captur
 Ordinary function arguments and annotated bindings enforce concrete types, but method arguments, enum payloads, reassignment and generic return types can bypass equivalent checks. Methods accepting an Int can receive an unused String argument; Text(42) constructs a declared String payload; identity<T> can return a String for T=Int at runtime. Their static errors are correctly caught, so this is not another checker false negative. Choose a coherent checked/unchecked execution policy; runtime checks or a mandatory preflight should enforce the promised boundary. These cases matter for REPL/live replacement too.
 
 Evidence: [wrong_unused_method_argument.gdn](type_checker/wrong_unused_method_argument.gdn) · [constructor_payload_bad.gdn](type_checker/constructor_payload_bad.gdn) · [generic_return_bad.gdn](type_checker/generic_return_bad.gdn) · [captured check/run output](evidence/type_checker.json).
-
-#### F77 — JSON sessions keep running after stdin EOF
-
-The JSON session does not terminate on stdin EOF; the two-second audit times out after its greeting. Its read loop treats a zero-byte EOF read as an empty line and continues indefinitely. LSP's equivalent EOF control exits normally. Handle EOF and join/stop workers.
-
-Evidence: [broad.json](evidence/broad.json) · [audit_broad.py](audit_broad.py).
-
-#### F46 — Extension returns a name with no dot as an extension
-
-extension() returns Some("README") for a filename with no dot (92), contradicting the contract requiring a dot. Dotfiles and trailing dots also need an explicit policy/examples.
-
-Evidence: [92_path_extension.gdn](probes/92_path_extension.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F47 — Path parent loses the root and contradicts its docs
-
-parent() on /file returns Some(Path{ p: "" }), losing the root (93). The doc prose says parent always returns a Path and root is returned as-is, but its signature/example/runtime return None for root. Correct the absolute single-component result and contradictory prose.
-
-Evidence: [93_root_parent.gdn](probes/93_root_parent.gdn) · [__prelude.gdn](../src/__prelude.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F48 — Path joining can turn a relative path absolute
-
-joining "" with "file" produces absolute /file; joining /tmp with /etc/config yields /tmp//etc/config (94). The one-line doc "Append component" leaves empty-base and absolute-component behavior unspecified. Preserve relative paths and define absolute-argument handling.
-
-Evidence: [94_path_join.gdn](probes/94_path_join.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F21 — Remainder overflow reports the wrong divisor
-
-minimum Int % -1 says "dividing ... by zero" although the divisor is -1 (31). It should return the representable remainder 0 or accurately describe the unsupported case.
-
-Evidence: [31_remainder_overflow.gdn](probes/31_remainder_overflow.gdn) · [captured check/run output](evidence/probes.json).
 
 #### F06 — Discarded Results hide failed operations
 
@@ -199,18 +139,6 @@ Evidence: [37_ignored_immutable.gdn](probes/37_ignored_immutable.gdn) · [52_dic
 assigning a captured variable inside a map callback changes a captured copy, leaving the outer value 0 without warning (11). Explain capture-by-value in tooling or warn on misleading captured writes.
 
 Evidence: [11_mutable_capture.gdn](probes/11_mutable_capture.gdn) · [51_true_counter.gdn](probes/51_true_counter.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F65 — Discarded comparisons can hide assignment mistakes
-
-`n == 2` as a statement passes check and leaves n unchanged (forgot_assignment). Warn when a comparison result is discarded; this is a common assignment/comparison typo and has no useful side effect in this simple example. Do not automatically replace == with =.
-
-Evidence: [forgot_assignment.gdn](linters/forgot_assignment.gdn) · [captured check/run output](evidence/linters.json).
-
-#### F66 — Bare function references can hide forgotten calls
-
-A bare `save` function reference is silently discarded (forgot_call), so no save occurs and the program prints "finished". Warn on unused callable values where the likely intent was `save()`.
-
-Evidence: [forgot_call.gdn](linters/forgot_call.gdn) · [captured check/run output](evidence/linters.json).
 
 #### F67 — Shadowed accumulator updates need targeted warnings
 
@@ -236,12 +164,6 @@ Literal division by zero, negative integer exponents, invalid byte constants and
 
 Evidence: [constant_zero_division.gdn](linters/constant_zero_division.gdn) · [bytes_constant_invalid.gdn](linters/bytes_constant_invalid.gdn) · [unsafe_first.gdn](linters/unsafe_first.gdn) · [captured check/run output](evidence/linters.json).
 
-#### F34 — Overwritten initial values get no warning
-
-A local's initial value overwritten before any read gets no warning (80). The variable name is used, so an unused-variable check does not catch the likely mistaken initialization or forgotten branch.
-
-Evidence: [80_dead_store.gdn](probes/80_dead_store.gdn) · [captured check/run output](evidence/probes.json).
-
 #### F32 — Fix mode reports success with unresolved syntax errors
 
 --fix exits 0 without diagnostics for syntax errors that it cannot fix, including Python def and semicolons (59/66). Output is unchanged and still fails check/run. Automation cannot treat successful fixing as successful checking. Report remaining diagnostics or document/provide an option for a failing exit status when issues remain.
@@ -259,18 +181,6 @@ Evidence: [doc_examples.json](evidence/doc_examples.json) · [run_code_blocks.rs
 A fenced `test incorrect { assert(False) }` is counted as a checked block and passes without executing the test. The fun page's embedded test therefore has no effect even if its fence is recognized. Execute contained tests or distinguish loaded examples from tested ones.
 
 Evidence: [doc_examples.json](evidence/doc_examples.json).
-
-#### F05 — Trim documents more whitespace than it removes
-
-String.trim only removes ASCII space, despite documenting whitespace. Tabs and newlines survive (01). HTTP needs a local trim_ows. Clarify the contract or offer whitespace and explicit-character variants.
-
-Evidence: [01_trim_tabs.gdn](probes/01_trim_tabs.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F08 — String lacks checked Float parsing
-
-String has as_int but no as_float (06). JSON decimal/exponent values cannot use the obvious symmetric conversion. Add checked parsing.
-
-Evidence: [06_float_parse.gdn](probes/06_float_parse.gdn) · [captured check/run output](evidence/probes.json).
 
 #### F13 — Float ordering is unavailable
 
@@ -298,23 +208,11 @@ all binary operators have equal precedence. During the header parser, i != lines
 
 Evidence: [29_precedence.gdn](probes/29_precedence.gdn) · [captured check/run output](evidence/probes.json).
 
-#### F10 — Field assignment has an unhelpful error
-
-field assignment s.n = 1 gives "Expected an expression after this" at n (09). Immutable state is viable, but this deserves an explicit message suggesting construction of a replacement struct.
-
-Evidence: [09_field_update.gdn](probes/09_field_update.gdn) · [captured check/run output](evidence/probes.json).
-
 #### F11 — Lists lack an element replacement API
 
 indexed list assignment is unavailable (08), and List has no replacement method. Tape algorithms must rebuild a list or use a dict. A persistent list set(index, value) would suit the current value semantics.
 
 Evidence: [08_list_update.gdn](probes/08_list_update.gdn) · [55_list_set.gdn](probes/55_list_set.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F12 — Nested enum patterns produce cascading errors
-
-nested enum patterns Ok(Some(n)) produce seven parser errors (25). Nested matches work, but a precise unsupported-pattern message would help; supporting nested patterns would make Result/Option-heavy parsers smaller.
-
-Evidence: [25_nested_pattern.gdn](probes/25_nested_pattern.gdn) · [captured check/run output](evidence/probes.json).
 
 #### F14 — Scientific numeric literals are not recognized clearly
 
@@ -354,21 +252,9 @@ Evidence: [35_eof.gdn](probes/35_eof.gdn) · [captured check/run output](evidenc
 
 #### F24 — Unsupported tuple access causes extra parser errors
 
-unsupported tuple access gets a helpful destructuring suggestion followed by an unrelated missing-comma error (24). Preserve the good first message and reduce cascades after recognized unsupported constructs. Nested patterns (12) are another example of this issue.
+unsupported tuple access gets a helpful destructuring suggestion followed by an unrelated missing-comma error (24). Preserve the good first message and reduce cascades after recognized unsupported constructs.
 
 Evidence: [24_tuple_access.gdn](probes/24_tuple_access.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F25 — Dictionary size requires materializing items
-
-Dict lacks len/is_empty (22). Getting its size requires creating the full items list and taking len. Add a direct size query.
-
-Evidence: [22_dict_length.gdn](probes/22_dict_length.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F26 — Debug string representations contain literal tabs
-
-string_repr leaves tabs literal (58), unlike newline/CR escaping. Tabs make parser diagnostics and expected values hard to read and copy reliably. Escape tabs as \t in representations.
-
-Evidence: [58_tab_repr.gdn](probes/58_tab_repr.gdn) · [captured check/run output](evidence/probes.json).
 
 #### F27 — Basic floating point math APIs are missing
 
@@ -456,7 +342,7 @@ Evidence: [105_result_map.gdn](probes/105_result_map.gdn) · [captured check/run
 
 #### F52 — Whitespace tokenization needs a standard API
 
-no split_whitespace (102). Replacing tabs/newlines and filtering empty strings works, but every text-processing script must choose and implement its own whitespace policy. A documented tokenizer would pair well with clarifying trim's existing ASCII-space behavior (05).
+no split_whitespace (102). Replacing tabs/newlines and filtering empty strings works, but every text-processing script must choose and implement its own whitespace policy. A documented tokenizer would make that policy reusable.
 
 Evidence: [102_string_split_whitespace.gdn](probes/102_string_split_whitespace.gdn) · [captured check/run output](evidence/probes.json).
 
@@ -471,12 +357,6 @@ Evidence: [float_equality.gdn](linters/float_equality.gdn) · [captured check/ru
 9007199254740993.as_float().floor() loses one (float_precision_loss). That is normal binary64 rounding, not an arithmetic bug. Int.as_float's doc does not explain the loss of exactness outside the safe integer range. Add a boundary example or checked exact conversion for callers who need round trips.
 
 Evidence: [float_precision_loss.gdn](linters/float_precision_loss.gdn) · [captured check/run output](evidence/linters.json).
-
-#### F78 — Reflection omits supported bitwise operators
-
-& and | execute as integer bitwise operators but are absent from reflect::operators(), which claims to list all operators and drives the manual's operator links. Keep token recognition, reflection and documentation inventories consistent. See reflect_inventory.
-
-Evidence: [reflect_inventory.gdn](broad/reflect_inventory.gdn) · [captured check/run output](evidence/broad.json).
 
 #### F79 — Try and catch have no keyword documentation
 
@@ -605,7 +485,7 @@ the same likely scaling limitation; this review has not benchmarked it.
 - Typo and lowercase-boolean errors suggest the correct name and provide working fixes. String `+` points directly to `^`; Float `+` points to `+.`.
 - Concrete argument diagnostics point to both the call and parameter declaration. Equality assertions show actual and expected containers.
 - Exhaustive enum matches identify missing variants. Duplicate variants and arms after `_` get useful diagnostics.
-- The unused-binding fix preserves an effectful initializer, and ordinary tuple-binding/final-return fixes preserve results. Smaller grouped boolean fixes work; the overlapping case is F30.
+- The unused-binding fix preserves an effectful initializer, and ordinary tuple-binding/final-return fixes preserve results. Overlapping boolean fixes also complete without panicking in the recheck.
 - An unmodified-local `while` condition gets an invariant-loop warning. `main` gets a particularly helpful explanation of top-level execution.
 - Concrete callbacks, branch results and scopes are checked well in the control cases. Recursive enums, forward references, annotated empty containers, nested generic constructors and bounded cyclic imports work.
 - Unicode string APIs consistently use codepoints. Private module access is rejected, and invalid byte/text file operations fail with Garden errors.
@@ -625,10 +505,9 @@ reflected types have doc comments; Tuple has a separate
 These counts measure doc/fence presence, not execution or assertion coverage.
 
 The weakest areas are edge-case contracts and verification: skipped fences and
-unexecuted tests (F44/F45), contradictory path prose (F47), omitted conversion
-precision (F73), incomplete operator inventories (F78), and try/catch support
-status (F60/F79). Both eager boolean pages explicitly explain eagerness; the
-initial uncertainty about documentation was corrected. Division and modulo
+unexecuted tests (F44/F45), omitted conversion precision (F73), and try/catch
+support status (F60/F79). Both eager boolean pages explicitly explain eagerness;
+the initial uncertainty about documentation was corrected. Division and modulo
 are also individually documented; F49 requests an explanation of their joint
 signed-arithmetic behavior rather than claiming neither rule is documented.
 

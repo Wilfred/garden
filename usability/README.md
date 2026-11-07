@@ -1,6 +1,6 @@
 # Garden language usability exercises and review
 
-Read the [prioritized review](review.md) for **79 improvement candidates**, the
+Read the [prioritized review](review.md) for **58 improvement candidates**, the
 six project experiences, positive controls and remaining blind spots. Findings
 are ordered by production impact; their stable IDs link back to earlier commits.
 Confirmed defects, documented design choices and API/linter proposals are

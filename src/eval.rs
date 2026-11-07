@@ -5370,6 +5370,47 @@ fn eval_built_in_method_call(
                 }
             }
         }
+        BuiltInMethodKind::DictLen => {
+            check_arity(
+                &SymbolName {
+                    text: "Dict::len".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            match receiver_value.as_ref() {
+                Value_::Dict { items, .. } => {
+                    if expr_value_is_used {
+                        env.push_value(Value::new(Value_::Int(items.size() as i64)));
+                    }
+                }
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: format_type_error(
+                                &TypeName {
+                                    text: "Dict".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            }
+        }
         BuiltInMethodKind::DictRemove => {
             check_arity(
                 &SymbolName {

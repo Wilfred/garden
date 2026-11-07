@@ -974,6 +974,7 @@ impl PartialEq for ImportInfo {
 pub(crate) enum BuiltInMethodKind {
     DictGet,
     DictItems,
+    DictLen,
     DictRemove,
     DictSet,
     FloatCeil,

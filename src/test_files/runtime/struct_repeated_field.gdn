@@ -1,0 +1,16 @@
+struct Foo {
+  x: Int,
+}
+
+{
+  Foo{ x: 1, x: 2 }
+}
+
+// args: run
+// expected exit status: 1
+// expected stderr:
+// Exception: Duplicate field `x` in struct literal.
+// -| src/test_files/runtime/struct_repeated_field.gdn:6:14	 __toplevel__
+// 6|   Foo{ x: 1, x: 2 }
+//  |              ^
+

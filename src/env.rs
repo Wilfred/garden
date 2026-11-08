@@ -224,7 +224,7 @@ impl Env {
 
     pub(crate) fn get_namespace(&self, abs_path: &Path) -> Option<Rc<RefCell<NamespaceInfo>>> {
         let abs_path = canonicalize_namespace_path(abs_path);
-        self.namespaces.get(&abs_path).cloned()
+        self.namespaces.get(abs_path).cloned()
     }
 
     pub(crate) fn get_or_create_namespace(
@@ -233,7 +233,7 @@ impl Env {
     ) -> Rc<RefCell<NamespaceInfo>> {
         let abs_path = canonicalize_namespace_path(abs_path);
 
-        if let Some(ns) = self.namespaces.get(&abs_path) {
+        if let Some(ns) = self.namespaces.get(abs_path) {
             return Rc::clone(ns);
         }
 
@@ -252,7 +252,7 @@ impl Env {
         }
 
         let ns = Rc::new(RefCell::new(NamespaceInfo {
-            abs_path: Rc::new(abs_path.clone()),
+            abs_path: Rc::new(abs_path.to_path_buf()),
             exported_syms: FxHashSet::default(),
             values,
             types: FxHashMap::default(),
@@ -260,7 +260,8 @@ impl Env {
 
         insert_prelude(Rc::clone(&ns), Rc::clone(&self.prelude_namespace));
 
-        self.namespaces.insert(abs_path, Rc::clone(&ns));
+        self.namespaces
+            .insert(abs_path.to_path_buf(), Rc::clone(&ns));
         ns
     }
 
@@ -636,7 +637,7 @@ pub(crate) struct StackFrame {
     pub(crate) evalled_values: Vec<Value>,
 }
 
-fn canonicalize_namespace_path(abs_path: &Path) -> PathBuf {
+fn canonicalize_namespace_path(abs_path: &Path) -> &Path {
     // Canonicalize stdlib paths, which always start with __.
     //
     // We treat "foo/bar/__fs.gdn" as "__fs.gdn". This ensures we can
@@ -644,11 +645,10 @@ fn canonicalize_namespace_path(abs_path: &Path) -> PathBuf {
     // well as pass them to the CLI (e.g. `garden check
     // src/__fs.gdn`).
     if let Some(name_osstr) = abs_path.file_name() {
-        let name = name_osstr.to_string_lossy();
-        if name.starts_with("__") {
-            return PathBuf::from(name_osstr);
+        if name_osstr.as_encoded_bytes().starts_with(b"__") {
+            return Path::new(name_osstr);
         }
     }
 
-    abs_path.to_path_buf()
+    abs_path
 }

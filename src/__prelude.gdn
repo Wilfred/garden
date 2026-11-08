@@ -828,6 +828,21 @@ test list_enumerate {
   assert(["a", "b"].enumerate() == [(0, "a"), (1, "b")])
 }
 
+/// Return a new list with the items of this list in reverse order.
+///
+/// ```
+/// [1, 2, 3].reverse() //-> [3, 2, 1]
+/// ```
+public method reverse<T>(this: List<T>): List<T> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test list_reverse {
+  assert([].reverse() == [])
+  assert([1].reverse() == [1])
+  assert([1, 2, 3].reverse() == [3, 2, 1])
+}
+
 /// Return a new list of these integers sorted in ascending order.
 ///
 /// ```

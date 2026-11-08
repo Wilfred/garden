@@ -5734,6 +5734,51 @@ fn eval_built_in_method_call(
                 }
             }
         }
+        BuiltInMethodKind::ListReverse => {
+            check_arity(
+                &SymbolName {
+                    text: "List::reverse".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            match receiver_value.as_ref() {
+                Value_::List { items, elem_type } => {
+                    if expr_value_is_used {
+                        let new_items: rpds::Vector<Value> = items.iter().rev().cloned().collect();
+                        env.push_value(Value::new(Value_::List {
+                            items: new_items,
+                            elem_type: elem_type.clone(),
+                        }));
+                    }
+                }
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(ExceptionInfo {
+                            position: receiver_pos.clone(),
+                            message: format_type_error(
+                                &TypeName {
+                                    text: "List".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                }
+            }
+        }
         BuiltInMethodKind::ListSlice => {
             check_arity(
                 "List::slice",

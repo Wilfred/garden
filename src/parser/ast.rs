@@ -984,6 +984,7 @@ pub(crate) enum BuiltInMethodKind {
     ListContains,
     ListGet,
     ListLen,
+    ListReverse,
     ListSlice,
     PathExists,
     PathInfo,

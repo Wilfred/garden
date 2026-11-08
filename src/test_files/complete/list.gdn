@@ -19,5 +19,6 @@ fun foo() {
 // {"label":"last()","kind":2,"detail":"(): Option<T>","insertText":"last()","insertTextFormat":2}
 // {"label":"len()","kind":2,"detail":"(): Int","insertText":"len()","insertTextFormat":2}
 // {"label":"map","kind":2,"detail":"(Fun<(T), U>): List<U>","insertText":"map($0)","insertTextFormat":2}
+// {"label":"reverse()","kind":2,"detail":"(): List<T>","insertText":"reverse()","insertTextFormat":2}
 // {"label":"slice","kind":2,"detail":"(Int, Int): List<T>","insertText":"slice($0)","insertTextFormat":2}
 

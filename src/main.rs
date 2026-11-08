@@ -176,6 +176,9 @@ enum CliCommands {
         /// instead of printing it.
         #[clap(long, action, conflicts_with = "check")]
         write: bool,
+        /// Drop the reftest comment footer starting at `// args:`.
+        #[clap(long, action)]
+        drop_reftest_footer: bool,
     },
     /// Check the Garden program at the path specified for issues.
     Check {
@@ -671,14 +674,17 @@ fn main() {
                 }
             }
         }
-        CliCommands::Format { path, check, write } => {
+        CliCommands::Format {
+            path,
+            check,
+            write,
+            drop_reftest_footer,
+        } => {
             let abs_path = to_abs_path(&path);
-            let raw_src = read_utf8_or_die(&abs_path);
-            let mut src = remove_testing_footer(&raw_src);
-            // The formatter emits a single trailing newline. When a
-            // reftest footer separates the body from `// args:`, trim
-            // those blank lines so the comparison ignores them.
-            if src.len() != raw_src.len() {
+            let mut src = read_utf8_or_die(&abs_path);
+            if drop_reftest_footer {
+                src = remove_testing_footer(&src);
+                // Strip blank lines separating the program and footer.
                 while src.ends_with("\n\n") {
                     src.pop();
                 }

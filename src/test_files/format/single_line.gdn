@@ -4,7 +4,7 @@ fun extra_spaces() {  a  }
 fun no_spaces() {b}
 fun mixed() {  c}
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo() { x }
 // 

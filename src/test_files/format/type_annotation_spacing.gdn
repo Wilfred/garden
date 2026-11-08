@@ -19,7 +19,7 @@ fun tuple_type(x:(Int, String)):Unit {}
 // Namespace separator should be preserved
 fs::list_directory(path)
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun add_one(i: Int): Int {
 //   i + 1

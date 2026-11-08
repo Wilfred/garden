@@ -1,0 +1,6 @@
+println("hello")
+
+// args: format --check
+  // This footer comment needs indentation removed.
+// expected exit status: 1
+// expected stderr: src/test_files/format/check_footer.gdn: not formatted

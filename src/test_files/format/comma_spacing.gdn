@@ -6,7 +6,7 @@ fun foo(a:Int,b:Int): Int {
   a + b
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo(a: Int, b: Int): Int {
 //   let xs = [1, 2, 3]

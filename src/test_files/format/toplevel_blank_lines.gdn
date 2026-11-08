@@ -30,7 +30,7 @@ import "__fs.gdn" as fs
 struct Last {
   value: Int }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo() {
 //   1

@@ -3,7 +3,7 @@ let y =2
 let z= 3
 let w = 4
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // let x = 1
 // let y = 2

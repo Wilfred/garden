@@ -7,7 +7,7 @@ let y = 2
 }
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo() {
 //   if True {

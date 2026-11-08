@@ -14,7 +14,7 @@ fun foo(a: Bool, b: Bool): Unit {
   assert(a)
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo(a: Bool, b: Bool): Unit {
 //   if (a) {

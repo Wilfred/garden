@@ -6,7 +6,7 @@ let y = 2
 // Trailing comment
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // fun foo() {
 //   // Comment 1

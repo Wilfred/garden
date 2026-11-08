@@ -27,7 +27,7 @@ qux(
 )
 }
 
-// args: format
+// args: format --drop-reftest-footer
 // expected stdout:
 // // Before formatting - arguments not indented
 // fun test_call() {

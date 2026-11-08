@@ -78,7 +78,6 @@ impl Type {
         matches!(self, Type::Error { .. })
     }
 
-    /// Equivalent to `self == &Type::bool()`, without allocating.
     pub(crate) fn is_bool(&self) -> bool {
         matches!(
             self,

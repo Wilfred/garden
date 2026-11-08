@@ -53,7 +53,7 @@ impl Value {
         match self.as_ref() {
             Value_::Fun { fun_info, .. } => Some(fun_info),
             Value_::Closure(_, fun_info, _) => Some(fun_info),
-            Value_::BuiltInFunction(_, fun_info, _) => fun_info.as_ref(),
+            Value_::BuiltInFunction(_, fun_info, _) => fun_info.as_deref(),
             _ => None,
         }
     }
@@ -74,14 +74,14 @@ pub(crate) enum Value_ {
     /// A reference to a user-defined function, along with its return
     /// type.
     Fun {
-        name_sym: Symbol,
-        fun_info: FunInfo,
+        name_sym: Box<Symbol>,
+        fun_info: Rc<FunInfo>,
         runtime_type: Type,
     },
     /// A closure value.
-    Closure(Vec<BlockBindings>, FunInfo, Type),
+    Closure(Vec<BlockBindings>, Rc<FunInfo>, Type),
     /// A reference to a built-in function.
-    BuiltInFunction(BuiltInFunctionKind, Option<FunInfo>, Option<Type>),
+    BuiltInFunction(BuiltInFunctionKind, Option<Rc<FunInfo>>, Option<Type>),
     /// A string value.
     String(String),
     /// A list value, along with the type of its elements.

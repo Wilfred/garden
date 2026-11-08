@@ -69,7 +69,7 @@ pub(crate) enum Type {
 impl Type {
     pub(crate) fn is_no_value(&self) -> bool {
         match self {
-            Type::UserDefined { name, .. } => name.text == "NoValue",
+            Type::UserDefined { name, .. } => name.as_str() == "NoValue",
             _ => false,
         }
     }
@@ -82,7 +82,7 @@ impl Type {
         matches!(
             self,
             Type::UserDefined { kind: TypeDefKind::Enum, name, args }
-                if name.text == "Bool" && args.is_empty()
+                if name.as_str() == "Bool" && args.is_empty()
         )
     }
 
@@ -91,7 +91,7 @@ impl Type {
             return false;
         };
 
-        name.text == "Unit"
+        name.as_str() == "Unit"
     }
 
     pub(crate) fn error<T: AsRef<str>>(msg: T) -> Self {
@@ -105,7 +105,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
             name: TypeName {
-                text: "NoValue".to_owned(),
+                text: "NoValue".into(),
             },
             args: vec![],
         }
@@ -115,7 +115,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
             name: TypeName {
-                text: "Unit".to_owned(),
+                text: "Unit".into(),
             },
             args: vec![],
         }
@@ -125,7 +125,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
             name: TypeName {
-                text: "Bool".to_owned(),
+                text: "Bool".into(),
             },
             args: vec![],
         }
@@ -134,9 +134,7 @@ impl Type {
     pub(crate) fn int() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
-            name: TypeName {
-                text: "Int".to_owned(),
-            },
+            name: TypeName { text: "Int".into() },
             args: vec![],
         }
     }
@@ -145,7 +143,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                text: "Float".to_owned(),
+                text: "Float".into(),
             },
             args: vec![],
         }
@@ -155,7 +153,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                text: "String".to_owned(),
+                text: "String".into(),
             },
             args: vec![],
         }
@@ -165,7 +163,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                text: "Namespace".to_owned(),
+                text: "Namespace".into(),
             },
             args: vec![],
         }
@@ -175,7 +173,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                text: "Path".to_owned(),
+                text: "Path".into(),
             },
             args: vec![],
         }
@@ -185,7 +183,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                text: "List".to_owned(),
+                text: "List".into(),
             },
             args: vec![ty],
         }
@@ -195,7 +193,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                text: "Dict".to_owned(),
+                text: "Dict".into(),
             },
             args: vec![ty],
         }
@@ -341,9 +339,7 @@ impl Type {
         match self {
             Type::Any | Type::Error { .. } => None,
             Type::Tuple(_) => None,
-            Type::Fun { .. } => Some(TypeName {
-                text: "Fun".to_owned(),
-            }),
+            Type::Fun { .. } => Some(TypeName { text: "Fun".into() }),
             Type::UserDefined {
                 kind: _,
                 name: name_sym,
@@ -391,7 +387,7 @@ impl Type {
             Type::Tuple(_) | Type::Fun { .. } => vec![msgtext!("a "), msgcode!("{}", self)],
             Type::UserDefined { name, .. } => {
                 // Match types defined in the prelude.
-                match name.text.as_str() {
+                match name.as_str() {
                     "Bool" | "Dict" | "Float" | "List" | "Namespace" | "Path" | "Result"
                     | "String" => vec![msgtext!("a "), msgcode!("{}", self)],
                     "Int" | "Option" => vec![msgtext!("an "), msgcode!("{}", self)],

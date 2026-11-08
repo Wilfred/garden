@@ -44,7 +44,7 @@ pub(crate) fn run_sandboxed_playground(
         .borrow()
         .types
         .keys()
-        .map(|name| name.text.clone())
+        .map(|name| name.text.to_string())
         .collect::<Vec<_>>();
     prelude_types.sort();
     println!("{}", serde_json::json!({ "prelude_types": prelude_types }));

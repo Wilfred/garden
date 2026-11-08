@@ -529,7 +529,7 @@ fn handle_completions(env: &Env, prefix: &str, base_msg: &HashMap<Vec<u8>, Value
                 Value_::Namespace { .. } => "namespace",
                 _ => "var",
             };
-            (name.text.clone(), kind)
+            (name.text.to_string(), kind)
         })
         .collect();
     matches.sort_by(|a, b| a.0.cmp(&b.0));
@@ -570,9 +570,7 @@ fn handle_lookup(
         .unwrap_or("")
         .to_owned();
 
-    let value = ns_borrow.values.get(&SymbolName {
-        text: sym.to_owned(),
-    });
+    let value = ns_borrow.values.get(&SymbolName { text: sym.into() });
 
     let Some(value) = value else {
         let mut msg = base_msg.clone();
@@ -590,7 +588,7 @@ fn handle_lookup(
             .params
             .iter()
             .map(|p| {
-                let mut s = p.symbol.name.text.clone();
+                let mut s = p.symbol.name.text.to_string();
                 if let Some(hint) = &p.hint {
                     s.push_str(": ");
                     s.push_str(&hint.as_src());

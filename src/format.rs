@@ -1147,7 +1147,7 @@ fn signature_from_fun<'a>(
     let mut params: Vec<String> = vec![];
 
     if let Some(mi) = method_info {
-        let mut s = mi.receiver_sym.name.text.clone();
+        let mut s = mi.receiver_sym.name.text.to_string();
         if !mi.receiver_hint.sym.is_placeholder() {
             s.push_str(": ");
             s.push_str(&mi.receiver_hint.as_src());
@@ -1156,7 +1156,7 @@ fn signature_from_fun<'a>(
     }
 
     for param in &fun_info.params.params {
-        let mut s = param.symbol.name.text.clone();
+        let mut s = param.symbol.name.text.to_string();
         if let Some(hint) = &param.hint {
             s.push_str(": ");
             s.push_str(&hint.as_src());

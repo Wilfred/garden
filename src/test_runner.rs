@@ -135,7 +135,7 @@ fn sandboxed_tests_summary(
         }
 
         tests.insert(
-            outcome.test_sym.name.text.clone(),
+            outcome.test_sym.name.text.to_string(),
             TestState {
                 description: msg,
                 failure_start_offset,
@@ -226,7 +226,7 @@ pub(crate) fn describe_tests(env: &Env, summary: &ToplevelEvalSummary) -> String
                 if use_color {
                     outcome.test_sym.name.text.bold().to_string()
                 } else {
-                    outcome.test_sym.name.text.clone()
+                    outcome.test_sym.name.text.to_string()
                 }
             ));
 

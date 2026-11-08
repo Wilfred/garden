@@ -16,7 +16,7 @@ struct SelfAssignCompareVisitor {
 /// expressions that are too complex to compare syntactically.
 fn expr_key(expr: &Expression) -> Option<String> {
     match &expr.expr_ {
-        Expression_::Variable(sym) => Some(sym.name.text.clone()),
+        Expression_::Variable(sym) => Some(sym.name.text.to_string()),
         Expression_::IntLiteral(n) => Some(format!("int:{}", n)),
         Expression_::FloatLiteral(f) => Some(format!("float:{}", f)),
         Expression_::StringLiteral(s) => Some(format!("str:{}", s)),

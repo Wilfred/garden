@@ -113,7 +113,7 @@ fn resolve_fun_info(
                 let ns = ns.borrow();
                 let value = ns.values.get(&sym.name)?;
                 let fun_info = value.fun_info()?.clone();
-                Some((fun_info, sym.name.text.clone()))
+                Some((fun_info, sym.name.text.to_string()))
             }
             Expression_::NamespaceAccess(recv, sym) => {
                 let Expression_::Variable(ns_sym) = &recv.expr_ else {
@@ -129,7 +129,7 @@ fn resolve_fun_info(
                 let ns_info = ns_info.borrow();
                 let target = ns_info.values.get(&sym.name)?;
                 let fun_info = target.fun_info()?.clone();
-                Some((fun_info, sym.name.text.clone()))
+                Some((fun_info, sym.name.text.to_string()))
             }
             _ => None,
         },
@@ -138,7 +138,7 @@ fn resolve_fun_info(
             let type_name = recv_ty.type_name()?;
             let method_info = env.types.get(&type_name)?.methods.get(&sym.name)?;
             let fun_info = method_info.fun_info()?.clone();
-            Some((fun_info, sym.name.text.clone()))
+            Some((fun_info, sym.name.text.to_string()))
         }
         _ => None,
     }
@@ -173,7 +173,7 @@ fn build_signature(fun_info: &FunInfo, name: &str, active_param: u32) -> Signatu
 
         let param_label = match &param.hint {
             Some(hint) => format!("{}: {}", param.symbol.name, hint.as_src()),
-            None => param.symbol.name.text.clone(),
+            None => param.symbol.name.text.to_string(),
         };
 
         parameters.push(ParameterInformation {

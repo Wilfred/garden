@@ -15,7 +15,7 @@ fn uncalled_message(symbol: &Symbol, only_called_in_tests: bool) -> ErrorMessage
             msgcode!("{}", symbol.name),
             msgtext!(" is only called in tests."),
         ])
-    } else if symbol.name.text == "main" {
+    } else if symbol.name.as_str() == "main" {
         ErrorMessage(vec![
             msgcode!("{}", symbol.name),
             msgtext!(" is never called. Garden does not treat "),

@@ -12,12 +12,16 @@ use crate::parser::position::Position;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub(crate) struct TypeName {
-    pub(crate) text: String,
+    pub(crate) text: Rc<str>,
 }
 
 impl TypeName {
+    pub(crate) fn as_str(&self) -> &str {
+        &self.text
+    }
+
     pub(crate) fn is_no_value(&self) -> bool {
-        self.text == "NoValue"
+        self.as_str() == "NoValue"
     }
 }
 
@@ -34,13 +38,15 @@ impl Display for TypeName {
 
 impl From<&str> for TypeName {
     fn from(s: &str) -> Self {
-        TypeName { text: s.to_owned() }
+        TypeName { text: s.into() }
     }
 }
 
 impl From<&String> for TypeName {
     fn from(s: &String) -> Self {
-        TypeName { text: s.to_owned() }
+        TypeName {
+            text: s.as_str().into(),
+        }
     }
 }
 
@@ -82,7 +88,7 @@ impl Display for TypeSymbol {
 impl TypeSymbol {
     pub(crate) fn is_placeholder(&self) -> bool {
         // TODO: Prevent users from writing this symbol in userland code.
-        self.name.text == "__placeholder" || self.name.text == "__keyword_placeholder"
+        self.name.as_str() == "__placeholder" || self.name.as_str() == "__keyword_placeholder"
     }
 }
 
@@ -113,7 +119,7 @@ impl TypeHint {
     pub(crate) fn as_src(&self) -> String {
         if self.args.is_empty() {
             format!("{}", self.sym.name)
-        } else if self.sym.name.text == "Tuple" {
+        } else if self.sym.name.as_str() == "Tuple" {
             let formatted_args = self
                 .args
                 .iter()
@@ -136,7 +142,7 @@ impl TypeHint {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct SymbolName {
-    pub(crate) text: String,
+    pub(crate) text: Rc<str>,
 }
 
 impl Display for SymbolName {
@@ -146,19 +152,23 @@ impl Display for SymbolName {
 }
 
 impl SymbolName {
+    pub(crate) fn as_str(&self) -> &str {
+        &self.text
+    }
+
     pub(crate) fn is_underscore(&self) -> bool {
-        self.text == "_"
+        self.as_str() == "_"
     }
 
     pub(crate) fn is_placeholder(&self) -> bool {
         // TODO: Prevent users from writing these symbols in userland code.
-        self.text == "__placeholder" || self.text == "__keyword_placeholder"
+        self.as_str() == "__placeholder" || self.as_str() == "__keyword_placeholder"
     }
 }
 
 impl From<&str> for SymbolName {
     fn from(s: &str) -> Self {
-        SymbolName { text: s.to_owned() }
+        SymbolName { text: s.into() }
     }
 }
 
@@ -197,7 +207,7 @@ impl Symbol {
         id_gen: &mut IdGenerator,
     ) -> Self {
         let name = SymbolName {
-            text: name.as_ref().to_owned(),
+            text: name.as_ref().into(),
         };
 
         Self {

@@ -242,7 +242,7 @@ impl Value {
             // prelude.
             static UNIT: Value = Value::new(Value_::EnumVariant {
                 type_name: TypeName {
-                    text: "Unit".to_owned(),
+                    text: "Unit".into(),
                 },
                 runtime_type: Type::unit(),
                 variant_idx: 0,
@@ -259,7 +259,7 @@ impl Value {
             // prelude.
             static TRUE: Value = Value::new(Value_::EnumVariant {
                 type_name: TypeName {
-                    text: "Bool".to_owned(),
+                    text: "Bool".into(),
                 },
                 runtime_type: Type::bool(),
                 variant_idx: 0,
@@ -267,7 +267,7 @@ impl Value {
             });
             static FALSE: Value = Value::new(Value_::EnumVariant {
                 type_name: TypeName {
-                    text: "Bool".to_owned(),
+                    text: "Bool".into(),
                 },
                 runtime_type: Type::bool(),
                 variant_idx: 1,
@@ -300,14 +300,14 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                text: "Option".to_owned(),
+                text: "Option".into(),
             },
             variant_idx: 0,
             payload: Some(Box::new(v)),
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
-                    text: "Option".to_owned(),
+                    text: "Option".into(),
                 },
                 args: vec![value_type],
             },
@@ -319,14 +319,14 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                text: "Option".to_owned(),
+                text: "Option".into(),
             },
             variant_idx: 1,
             payload: None,
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
-                    text: "Option".to_owned(),
+                    text: "Option".into(),
                 },
                 args: vec![Type::no_value()],
             },
@@ -340,14 +340,14 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                text: "Result".to_owned(),
+                text: "Result".into(),
             },
             variant_idx: 0,
             payload: Some(Box::new(v)),
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
-                    text: "Result".to_owned(),
+                    text: "Result".into(),
                 },
                 args: vec![value_type, Type::no_value()],
             },
@@ -361,12 +361,12 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                text: "Result".to_owned(),
+                text: "Result".into(),
             },
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
-                    text: "Result".to_owned(),
+                    text: "Result".into(),
                 },
                 args: vec![Type::no_value(), value_type],
             },
@@ -378,7 +378,7 @@ impl Value {
     pub(crate) fn path(inner: String) -> Self {
         Self::new(Value_::Struct {
             type_name: TypeName {
-                text: "Path".to_owned(),
+                text: "Path".into(),
             },
             fields: vec![(SymbolName::from("p"), Value::new(Value_::String(inner)))],
             runtime_type: Type::path(),
@@ -406,7 +406,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value_::Struct { type_name, .. } => &type_name.text,
             Value_::Namespace { .. } => "Namespace",
         }
-        .to_owned(),
+        .into(),
     }
 }
 
@@ -771,7 +771,7 @@ impl Value {
                 type_name,
                 variant_idx,
                 ..
-            } if type_name.text == "Unit" && *variant_idx == 0 => None,
+            } if type_name.as_str() == "Unit" && *variant_idx == 0 => None,
             _ => Some(self.display(env)),
         }
     }

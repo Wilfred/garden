@@ -209,7 +209,7 @@ fn get_namespace_values(
 
         let ty = Type::from_value(value);
         items.push(CompletionItem {
-            label: name.text.clone(),
+            label: name.text.to_string(),
             kind: Some(CompletionItemKind::Variable),
             detail: Some(format!(": {}", ty)),
             ..Default::default()
@@ -228,7 +228,7 @@ fn get_local_variables(bindings: &[(SymbolName, Type)], prefix: &str) -> Vec<Com
         }
 
         items.push(CompletionItem {
-            label: name.text.clone(),
+            label: name.text.to_string(),
             kind: Some(CompletionItemKind::Variable),
             detail: Some(format!(": {}", ty)),
             ..Default::default()
@@ -285,14 +285,14 @@ fn get_methods(
         let (label, insert_text) = if has_trailing_paren {
             // The user has already typed `(`, so don't insert
             // parentheses again.
-            (method_name.text.clone(), method_name.text.clone())
+            (method_name.text.to_string(), method_name.text.to_string())
         } else if params.is_empty() {
             // Complete parentheses too if there are zero parameters.
             let name = format!("{}()", method_name.text);
             (name.clone(), name)
         } else {
             (
-                method_name.text.clone(),
+                method_name.text.to_string(),
                 format!("{}($0)", method_name.text),
             )
         };
@@ -322,7 +322,7 @@ fn get_methods(
             }
 
             items.push(CompletionItem {
-                label: field.sym.name.text.clone(),
+                label: field.sym.name.text.to_string(),
                 kind: Some(CompletionItemKind::Field),
                 detail: Some(format!(": {}", field.hint.as_src())),
                 ..Default::default()
@@ -386,12 +386,15 @@ fn get_namespace_functions(
         let (label, insert_text) = if has_trailing_paren {
             // The user has already typed `(`, so don't insert
             // parentheses again.
-            (value_name.text.clone(), value_name.text.clone())
+            (value_name.text.to_string(), value_name.text.to_string())
         } else if params.is_empty() {
             let name = format!("{}()", value_name.text);
             (name.clone(), name)
         } else {
-            (value_name.text.clone(), format!("{}($0)", value_name.text))
+            (
+                value_name.text.to_string(),
+                format!("{}($0)", value_name.text),
+            )
         };
 
         let detail = format!("({params}){return_hint}");

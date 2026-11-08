@@ -50,7 +50,7 @@ impl Visitor for UnreachableVisitor {
                 }
                 Expression_::Call(recv, _) => {
                     if let Expression_::Variable(v) = &recv.expr_ {
-                        if v.name.text == "error" {
+                        if v.name.as_str() == "error" {
                             unreachable_reason = Some("Unreachable code after `error`.");
                         }
                     }

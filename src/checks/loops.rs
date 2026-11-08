@@ -101,7 +101,7 @@ pub(crate) fn check_loops(items: &[ToplevelItem]) -> Vec<Diagnostic> {
 /// Whether this while loop diverges.
 pub(super) fn while_diverges(cond: &Expression, body: &Block) -> bool {
     // TODO: Resolve True to distinguish the prelude variant from a shadowing binding.
-    if !matches!(&cond.expr_, Expression_::Variable(sym) if sym.name.text == "True") {
+    if !matches!(&cond.expr_, Expression_::Variable(sym) if sym.name.as_str() == "True") {
         return false;
     }
 

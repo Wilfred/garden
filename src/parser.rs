@@ -2092,7 +2092,7 @@ fn parse_tuple_type_hint(
     TypeHint {
         sym: TypeSymbol {
             name: TypeName {
-                text: "Tuple".to_owned(),
+                text: "Tuple".into(),
             },
             position: open_paren.position.clone(),
             id: id_gen.next(),
@@ -2120,7 +2120,7 @@ fn parse_type_hint(
         None => sym.position.clone(),
     };
 
-    if sym.name.text == "Tuple" {
+    if sym.name.as_str() == "Tuple" {
         let formatted_args = args
             .iter()
             .map(|h| h.as_src())
@@ -2278,14 +2278,14 @@ fn parse_parameters(
     let close_paren = require_token(tokens, diagnostics, ")");
 
     // Emit error if there are duplicate parameters.
-    let mut seen: FxHashMap<&String, &Position> = FxHashMap::default();
+    let mut seen: FxHashMap<&str, &Position> = FxHashMap::default();
 
     for param in &params {
         if param.symbol.name.is_underscore() {
             continue;
         }
 
-        let param_name = &param.symbol.name.text;
+        let param_name = param.symbol.name.as_str();
         if let Some(prev_pos) = seen.get(&param_name) {
             diagnostics.push(ParseError::Invalid {
                 position: param.symbol.position.clone(),
@@ -2723,7 +2723,7 @@ fn parse_method(
 
         let receiver_type_sym = TypeSymbol {
             name: TypeName {
-                text: receiver_sym.name.text.clone(),
+                text: Rc::clone(&receiver_sym.name.text),
             },
             position: receiver_sym.position.clone(),
             id: id_gen.next(),
@@ -2748,7 +2748,7 @@ fn parse_method(
 
                 let receiver_type_sym = TypeSymbol {
                     name: TypeName {
-                        text: receiver_type_sym.name.text.clone(),
+                        text: Rc::clone(&receiver_type_sym.name.text),
                     },
                     position: receiver_type_sym.position.clone(),
                     id: id_gen.next(),
@@ -2839,7 +2839,7 @@ pub(crate) const KEYWORDS: &[&str] = &[
 
 pub(crate) fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     let name = SymbolName {
-        text: "__placeholder".to_owned(),
+        text: "__placeholder".into(),
     };
     Symbol {
         interned_id: id_gen.intern_symbol(&name),
@@ -2851,7 +2851,7 @@ pub(crate) fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -
 
 fn keyword_placeholder(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     let name = SymbolName {
-        text: "__keyword_placeholder".to_owned(),
+        text: "__keyword_placeholder".into(),
     };
     Symbol {
         interned_id: id_gen.intern_symbol(&name),
@@ -2862,7 +2862,7 @@ fn keyword_placeholder(position: Position, id_gen: &mut IdGenerator) -> Symbol {
 }
 
 fn is_keyword_placeholder(symbol: &Symbol) -> bool {
-    symbol.name.text == "__keyword_placeholder"
+    symbol.name.as_str() == "__keyword_placeholder"
 }
 
 fn parse_let_destination(
@@ -2904,13 +2904,13 @@ fn parse_let_destination(
             );
         }
 
-        let mut seen: FxHashMap<&String, &Position> = FxHashMap::default();
+        let mut seen: FxHashMap<&str, &Position> = FxHashMap::default();
         for symbol in &symbols {
             if symbol.name.is_underscore() {
                 continue;
             }
 
-            let name = &symbol.name.text;
+            let name = symbol.name.as_str();
             if let Some(prev_pos) = seen.get(&name) {
                 diagnostics.push(ParseError::Invalid {
                     position: symbol.position.clone(),
@@ -3024,7 +3024,7 @@ fn parse_symbol(
     }
 
     let name = SymbolName {
-        text: variable_token.text.to_owned(),
+        text: variable_token.text.into(),
     };
     Symbol {
         interned_id: id_gen.intern_symbol(&name),

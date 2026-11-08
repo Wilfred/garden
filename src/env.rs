@@ -245,7 +245,7 @@ impl Env {
 
             values.insert(
                 SymbolName {
-                    text: format!("{fun_kind}"),
+                    text: format!("{fun_kind}").into(),
                 },
                 Value::new(Value_::BuiltInFunction(fun_kind, None, None)),
             );
@@ -483,7 +483,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
 
         values.insert(
             SymbolName {
-                text: format!("{fun_kind}"),
+                text: format!("{fun_kind}").into(),
             },
             Value::new(Value_::BuiltInFunction(fun_kind, None, None)),
         );
@@ -580,7 +580,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
 
     for (type_name, methods) in built_in_methods {
         let Some(type_def_and_methods) = env.types.get_mut(&TypeName {
-            text: type_name.to_owned(),
+            text: type_name.into(),
         }) else {
             continue;
         };
@@ -588,9 +588,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         // Merge the built-in method kinds for this type into the stub
         // methods defined in the prelude.
         for (name, built_in_kind) in methods {
-            let name = SymbolName {
-                text: name.to_owned(),
-            };
+            let name = SymbolName { text: name.into() };
 
             if let Some(existing_meth) = type_def_and_methods.methods.get_mut(&name) {
                 existing_meth.kind =

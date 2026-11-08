@@ -691,7 +691,7 @@ pub(crate) fn run_command<T: Write>(
                     .last_mut()
                     .expect("Should always have at least one frame");
 
-                let sym_name = SymbolName { text: name.clone() };
+                let sym_name = SymbolName::from(name.as_str());
                 let sym_intern_id = env.id_gen.intern_symbol(&sym_name);
 
                 if stack_frame.bindings.has(sym_intern_id) {
@@ -711,9 +711,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Forget(name) => {
             if let Some(name) = name {
-                let sym = SymbolName {
-                    text: name.to_owned(),
-                };
+                let sym = SymbolName::from(name.as_str());
 
                 let ns = env.current_namespace();
                 let mut ns = ns.borrow_mut();
@@ -744,7 +742,7 @@ pub(crate) fn run_command<T: Write>(
                 let mut locals = vec![];
                 for (var_id, value) in stack_frame.bindings.all().iter() {
                     let name = match env.id_gen.intern_id_to_name.get(var_id) {
-                        Some(SymbolName { text: name }) => name.clone(),
+                        Some(SymbolName { text: name }) => name.to_string(),
                         None => "INTERNAL ERROR: Could not find var with this ID".to_owned(),
                     };
 
@@ -799,9 +797,9 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Test(name) => match name {
             Some(name) => {
-                return Err(CommandError::Action(EvalAction::RunTest(SymbolName {
-                    text: name.clone(),
-                })));
+                return Err(CommandError::Action(EvalAction::RunTest(SymbolName::from(
+                    name.as_str(),
+                ))));
             }
             None => write!(buf, ":test requires a name, e.g. `:test name_of_test`.")?,
         },
@@ -968,10 +966,10 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
 
     if let Some((type_name, method_name)) = name.split_once("::") {
         if let Some(type_def_and_methods) = env.types.get(&TypeName {
-            text: type_name.to_owned(),
+            text: type_name.into(),
         }) {
             if let Some(method_info) = type_def_and_methods.methods.get(&SymbolName {
-                text: method_name.to_owned(),
+                text: method_name.into(),
             }) {
                 Ok(method_info
                     .fun_info()
@@ -983,9 +981,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
             // TODO: distinguish between no type with this name, and the type having no methods.
             Err(format!("No type named `{type_name}`."))
         }
-    } else if let Some(type_) = env.get_type_def(&TypeName {
-        text: name.to_owned(),
-    }) {
+    } else if let Some(type_) = env.get_type_def(&TypeName { text: name.into() }) {
         match type_ {
             TypeDef::BuiltIn(_, Some(struct_info)) => {
                 Ok(env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned()))
@@ -996,9 +992,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
                 Ok(env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned()))
             }
         }
-    } else if let Some(value) = ns.borrow().values.get(&SymbolName {
-        text: name.to_owned(),
-    }) {
+    } else if let Some(value) = ns.borrow().values.get(&SymbolName { text: name.into() }) {
         match value.as_ref() {
             Value_::Fun { fun_info, .. } => {
                 Ok(env.vfs.pos_src(&fun_info.pos).map(|s| s.to_owned()))
@@ -1018,10 +1012,10 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
 
     if let Some((before_colon, after_colon)) = name.split_once("::") {
         if let Some(type_def_and_methods) = env.types.get(&TypeName {
-            text: before_colon.to_owned(),
+            text: before_colon.into(),
         }) {
             if let Some(method_info) = type_def_and_methods.methods.get(&SymbolName {
-                text: after_colon.to_owned(),
+                text: after_colon.into(),
             }) {
                 Ok((
                     format!("Method `{after_colon}`"),
@@ -1033,7 +1027,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
                 ))
             }
         } else if let Some(v) = ns.borrow().values.get(&SymbolName {
-            text: before_colon.to_owned(),
+            text: before_colon.into(),
         }) {
             let Value_::Namespace {
                 ns_info: named_ns_info,
@@ -1045,7 +1039,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
             let named_ns_info = named_ns_info.borrow();
 
             let Some(value) = named_ns_info.values.get(&SymbolName {
-                text: after_colon.to_owned(),
+                text: after_colon.into(),
             }) else {
                 return Err(format!(
                     "`{before_colon}` does not contain a value named `{after_colon}`."
@@ -1059,13 +1053,9 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
         } else {
             Err(format!("No type named `{before_colon}`."))
         }
-    } else if let Some(type_) = env.get_type_def(&TypeName {
-        text: name.to_owned(),
-    }) {
+    } else if let Some(type_) = env.get_type_def(&TypeName { text: name.into() }) {
         Ok((format!("Type `{name}`"), Some(describe_type(type_))))
-    } else if let Some(value) = ns.borrow().values.get(&SymbolName {
-        text: name.to_owned(),
-    }) {
+    } else if let Some(value) = ns.borrow().values.get(&SymbolName { text: name.into() }) {
         // TODO: Ideally we'd print both values and type if both are defined.
         match describe_fun(value, &env.project_root) {
             Some(description) => Ok((format!("Function `{name}`"), Some(description))),

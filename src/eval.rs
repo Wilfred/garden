@@ -430,7 +430,7 @@ fn load_toplevel_items_(
                 }
 
                 new_syms.push(SymbolName {
-                    text: meth_info.full_name(),
+                    text: meth_info.full_name().into(),
                 });
             }
             ToplevelItem::Test(test) => {
@@ -447,7 +447,7 @@ fn load_toplevel_items_(
                 enum_infos.push(enum_info);
 
                 let name_as_sym = SymbolName {
-                    text: enum_info.name_sym.name.text.clone(),
+                    text: Rc::clone(&enum_info.name_sym.name.text),
                 };
                 new_syms.push(name_as_sym);
             }
@@ -473,7 +473,7 @@ fn load_toplevel_items_(
                 );
 
                 let name_as_sym = SymbolName {
-                    text: struct_info.name_sym.name.text.clone(),
+                    text: Rc::clone(&struct_info.name_sym.name.text),
                 };
                 new_syms.push(name_as_sym);
             }
@@ -632,7 +632,7 @@ fn insert_placeholder_namespace(
     let mut values = FxHashMap::default();
     values.insert(
         SymbolName {
-            text: "__PLACEHOLDER_NAMESPACE".to_owned(),
+            text: "__PLACEHOLDER_NAMESPACE".into(),
         },
         Value::unit(),
     );
@@ -1624,7 +1624,7 @@ fn is_built_in_stub(fun_info: &FunInfo) -> bool {
 
     let expr_ = &exprs[0].expr_;
     match expr_ {
-        Expression_::Variable(variable) => variable.name.text == "__BUILT_IN_IMPLEMENTATION",
+        Expression_::Variable(variable) => variable.name.as_str() == "__BUILT_IN_IMPLEMENTATION",
         _ => false,
     }
 }
@@ -3108,7 +3108,7 @@ fn eval_built_in_call(
             let ns = namespace_info.borrow();
             for sym_name in ns.values.keys() {
                 if ns.exported_syms.contains(sym_name) {
-                    fun_names.push(sym_name.text.clone());
+                    fun_names.push(sym_name.text.to_string());
                 }
             }
 
@@ -3147,7 +3147,7 @@ fn eval_built_in_call(
 
             if let Some(type_def_and_methods) = env.types.get(&TypeName::from(type_name)) {
                 for method_name in type_def_and_methods.methods.keys() {
-                    method_names.push(method_name.text.clone());
+                    method_names.push(method_name.text.to_string());
                 }
             }
 
@@ -4146,7 +4146,7 @@ fn eval_built_in_call(
 
             let mut ret_value = Value::none();
             for (name, value) in &ns.values {
-                if name.text == *target_name {
+                if *name.text == *target_name {
                     if let Some(doc_comment_text) = value.doc_comment() {
                         ret_value = Value::some(Value::new(Value_::String(doc_comment_text)));
                     }
@@ -4280,10 +4280,7 @@ fn eval_built_in_call(
             let name = check_string(&arg_values[1], &arg_positions[1], saved_values, env)?;
 
             let namespace_info = ns_info.borrow();
-            let v = match namespace_info
-                .values
-                .get(&SymbolName { text: name.clone() })
-            {
+            let v = match namespace_info.values.get(&SymbolName::from(name.as_str())) {
                 Some(ns_value) => {
                     let fun_info = match ns_value.as_ref() {
                         Value_::Fun { fun_info, .. } => Some(fun_info),
@@ -4329,7 +4326,7 @@ fn eval_built_in_call(
             let mut v = Value::none();
             if let Some(ty) = env.types.get(&TypeName::from(type_name)) {
                 if let Some(meth_info) = ty.methods.get(&SymbolName {
-                    text: method_name.to_owned(),
+                    text: method_name.as_str().into(),
                 }) {
                     if let Some(src) = env.vfs.pos_src(&meth_info.pos) {
                         v = Value::some(Value::new(Value_::String(src.to_owned())));
@@ -4400,7 +4397,7 @@ fn eval_built_in_call(
                 .borrow()
                 .types
                 .keys()
-                .map(|k| k.text.clone())
+                .map(|k| k.text.to_string())
                 .collect::<Vec<_>>();
             names.sort();
 
@@ -5134,7 +5131,7 @@ fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
         ));
     };
 
-    if type_name.text != "Path" {
+    if type_name.as_str() != "Path" {
         return Err(format_type_error(
             &TypeName {
                 text: "Path".into(),
@@ -5149,7 +5146,7 @@ fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
             "Malformed `Path` struct (expected some fields).".to_owned(),
         )]));
     };
-    if field_name.text != "p" {
+    if field_name.as_str() != "p" {
         return Err(ErrorMessage(vec![Text(format!(
             "Malformed `Path` struct (expected a field named `p`, got `{field_name}`).",
         ))]));
@@ -5734,7 +5731,7 @@ fn eval_built_in_method_call(
         BuiltInMethodKind::ListReverse => {
             check_arity(
                 &SymbolName {
-                    text: "List::reverse".to_owned(),
+                    text: "List::reverse".into(),
                 },
                 receiver_value,
                 receiver_pos,
@@ -5998,13 +5995,13 @@ fn eval_built_in_method_call(
                     ];
                     let info = Value::new(Value_::Struct {
                         type_name: TypeName {
-                            text: "PathInfo".to_owned(),
+                            text: "PathInfo".into(),
                         },
                         fields,
                         runtime_type: Type::UserDefined {
                             kind: TypeDefKind::Struct,
                             name: TypeName {
-                                text: "PathInfo".to_owned(),
+                                text: "PathInfo".into(),
                             },
                             args: vec![],
                         },

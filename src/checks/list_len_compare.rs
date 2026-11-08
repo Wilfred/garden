@@ -32,7 +32,7 @@ fn list_len_call<'a>(
     let Expression_::MethodCall(recv, method_sym, args) = &expr.expr_ else {
         return None;
     };
-    if method_sym.name.text != "len" {
+    if method_sym.name.as_str() != "len" {
         return None;
     }
     if !args.arguments.is_empty() {
@@ -43,7 +43,7 @@ fn list_len_call<'a>(
     let Type::UserDefined { name, .. } = recv_ty else {
         return None;
     };
-    if name.text != "List" {
+    if name.as_str() != "List" {
         return None;
     }
 
@@ -56,7 +56,7 @@ fn is_zero_literal(expr: &Expression) -> bool {
 
 impl Visitor for ListLenCompareVisitor<'_> {
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
-        let name = &method_info.name_sym.name.text;
+        let name = method_info.name_sym.name.as_str();
         let is_replacement = name == "is_empty" || name == "is_non_empty";
 
         let prev = self.in_replacement_method;

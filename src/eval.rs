@@ -2551,7 +2551,7 @@ fn eval_string_concat(
 }
 
 fn check_arity(
-    fun_name: &SymbolName,
+    fun_name: impl std::fmt::Display,
     receiver_value: &Value,
     receiver_pos: &Position,
     expected: usize,
@@ -2657,9 +2657,7 @@ fn eval_built_in_call(
     match kind {
         BuiltInFunctionKind::PreludeThrow => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -2684,9 +2682,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::PreludePrint => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -2735,9 +2731,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::PreludePrintln => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -2786,9 +2780,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::PreludeEprint => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -2834,9 +2826,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::PreludeEprintln => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -2885,9 +2875,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::PreludeReadLine => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -2936,9 +2924,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 2,
@@ -3016,9 +3002,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::PreludeStringRepr => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3032,9 +3016,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::PreludeDbg => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3088,9 +3070,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectNamespaceFunctions => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3149,9 +3129,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectMethodsForType => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3203,9 +3181,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3267,9 +3243,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectSourceFile => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -3288,9 +3262,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::PreludeShellArguments => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -3313,9 +3285,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ShellGetEnv => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3342,9 +3312,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ShellIsTty => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -3359,9 +3327,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectKeywords => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -3386,9 +3352,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::FsSetWorkingDirectory => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3425,9 +3389,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::FsWorkingDirectory => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -3456,9 +3418,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 2,
@@ -3526,9 +3486,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 2,
@@ -3667,9 +3625,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3728,9 +3684,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3789,9 +3743,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 2,
@@ -3874,9 +3826,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3949,9 +3899,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -4033,9 +3981,7 @@ fn eval_built_in_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -4081,9 +4027,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectCheckSnippet => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 2,
@@ -4119,9 +4063,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectLex => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -4167,9 +4109,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectDocComment => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 2,
@@ -4222,9 +4162,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectDocCommentForType => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -4263,9 +4201,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectDocCommentForMethod => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 2,
@@ -4307,9 +4243,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectSourceForFun => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 2,
@@ -4377,9 +4311,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectSourceForMethod => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 2,
@@ -4413,9 +4345,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectSourceForType => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 1,
@@ -4459,9 +4389,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectPreludeTypes => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -4494,9 +4422,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::RandomRandomInt => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -4513,9 +4439,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::TimeUnixtime => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -4534,9 +4458,7 @@ fn eval_built_in_call(
         }
         BuiltInFunctionKind::ReflectBuiltInFiles => {
             check_arity(
-                &SymbolName {
-                    text: format!("{kind}"),
-                },
+                kind,
                 receiver_value,
                 receiver_pos,
                 0,
@@ -4791,9 +4713,7 @@ fn eval_call(
             ..
         } => {
             check_arity(
-                &SymbolName {
-                    text: type_name.text.clone(),
-                },
+                type_name,
                 &receiver_value,
                 &caller_expr.position,
                 1,
@@ -5260,9 +5180,7 @@ fn eval_built_in_method_call(
     match kind {
         BuiltInMethodKind::DictGet => {
             check_arity(
-                &SymbolName {
-                    text: "Dict::get".to_owned(),
-                },
+                "Dict::get",
                 receiver_value,
                 receiver_pos,
                 1,
@@ -5309,9 +5227,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::DictItems => {
             check_arity(
-                &SymbolName {
-                    text: "Dict::items".to_owned(),
-                },
+                "Dict::items",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -5372,9 +5288,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::DictLen => {
             check_arity(
-                &SymbolName {
-                    text: "Dict::len".to_owned(),
-                },
+                "Dict::len",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -5413,9 +5327,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::DictRemove => {
             check_arity(
-                &SymbolName {
-                    text: "Dict::remove".to_owned(),
-                },
+                "Dict::remove",
                 receiver_value,
                 receiver_pos,
                 1,
@@ -5462,9 +5374,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::DictSet => {
             check_arity(
-                &SymbolName {
-                    text: "Dict::set".to_owned(),
-                },
+                "Dict::set",
                 receiver_value,
                 receiver_pos,
                 2,
@@ -5513,9 +5423,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::FloatCeil => {
             check_arity(
-                &SymbolName {
-                    text: "Float::ceil".to_owned(),
-                },
+                "Float::ceil",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -5554,9 +5462,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::FloatFloor => {
             check_arity(
-                &SymbolName {
-                    text: "Float::floor".to_owned(),
-                },
+                "Float::floor",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -5595,9 +5501,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::IntAsFloat => {
             check_arity(
-                &SymbolName {
-                    text: "Int::as_float".to_owned(),
-                },
+                "Int::as_float",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -5634,9 +5538,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::ListAppend => {
             check_arity(
-                &SymbolName {
-                    text: "List::append".to_owned(),
-                },
+                "List::append",
                 receiver_value,
                 receiver_pos,
                 1,
@@ -5684,9 +5586,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::ListContains => {
             check_arity(
-                &SymbolName {
-                    text: "List::contains".to_owned(),
-                },
+                "List::contains",
                 receiver_value,
                 receiver_pos,
                 1,
@@ -5734,9 +5634,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::ListGet => {
             check_arity(
-                &SymbolName {
-                    text: "List::get".to_owned(),
-                },
+                "List::get",
                 receiver_value,
                 receiver_pos,
                 1,
@@ -5800,9 +5698,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::ListLen => {
             check_arity(
-                &SymbolName {
-                    text: "List::len".to_owned(),
-                },
+                "List::len",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -5841,9 +5737,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::ListSlice => {
             check_arity(
-                &SymbolName {
-                    text: "List::slice".to_owned(),
-                },
+                "List::slice",
                 receiver_value,
                 receiver_pos,
                 2,
@@ -5956,9 +5850,7 @@ fn eval_built_in_method_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: "Path::exists".to_owned(),
-                },
+                "Path::exists",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -6009,9 +5901,7 @@ fn eval_built_in_method_call(
             }
 
             check_arity(
-                &SymbolName {
-                    text: "Path::info".to_owned(),
-                },
+                "Path::info",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -6104,9 +5994,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringAsFloat => {
             check_arity(
-                &SymbolName {
-                    text: "String::as_float".to_owned(),
-                },
+                "String::as_float",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -6132,9 +6020,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringAsInt => {
             check_arity(
-                &SymbolName {
-                    text: "String::as_int".to_owned(),
-                },
+                "String::as_int",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -6160,9 +6046,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringChars => {
             check_arity(
-                &SymbolName {
-                    text: "String::chars".to_owned(),
-                },
+                "String::chars",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -6192,9 +6076,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringIndexOf => {
             check_arity(
-                &SymbolName {
-                    text: "String::index_of".to_owned(),
-                },
+                "String::index_of",
                 receiver_value,
                 receiver_pos,
                 1,
@@ -6227,9 +6109,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringStartsWith => {
             check_arity(
-                &SymbolName {
-                    text: "String::starts_with".to_owned(),
-                },
+                "String::starts_with",
                 receiver_value,
                 receiver_pos,
                 1,
@@ -6253,9 +6133,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringEndsWith => {
             check_arity(
-                &SymbolName {
-                    text: "String::ends_with".to_owned(),
-                },
+                "String::ends_with",
                 receiver_value,
                 receiver_pos,
                 1,
@@ -6279,9 +6157,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringJoin => {
             check_arity(
-                &SymbolName {
-                    text: "String::join".to_owned(),
-                },
+                "String::join",
                 receiver_value,
                 receiver_pos,
                 1,
@@ -6340,9 +6216,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringLen => {
             check_arity(
-                &SymbolName {
-                    text: "String::len".to_owned(),
-                },
+                "String::len",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -6363,9 +6237,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringLines => {
             check_arity(
-                &SymbolName {
-                    text: "String::lines".to_owned(),
-                },
+                "String::lines",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -6401,9 +6273,7 @@ fn eval_built_in_method_call(
 
         BuiltInMethodKind::StringSubstring => {
             check_arity(
-                &SymbolName {
-                    text: "String::substring".to_owned(),
-                },
+                "String::substring",
                 receiver_value,
                 receiver_pos,
                 2,
@@ -6521,9 +6391,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringToAsciiLowercase => {
             check_arity(
-                &SymbolName {
-                    text: "String::to_ascii_lowercase".to_owned(),
-                },
+                "String::to_ascii_lowercase",
                 receiver_value,
                 receiver_pos,
                 0,
@@ -6544,9 +6412,7 @@ fn eval_built_in_method_call(
         }
         BuiltInMethodKind::StringToAsciiUppercase => {
             check_arity(
-                &SymbolName {
-                    text: "String::to_ascii_uppercase".to_owned(),
-                },
+                "String::to_ascii_uppercase",
                 receiver_value,
                 receiver_pos,
                 0,

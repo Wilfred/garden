@@ -288,7 +288,7 @@ impl Value {
                 runtime_type,
                 variant_idx,
                 ..
-            } if runtime_type == &Type::bool() => Some(*variant_idx == 0),
+            } if runtime_type.is_bool() => Some(*variant_idx == 0),
             _ => None,
         }
     }

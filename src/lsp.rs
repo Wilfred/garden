@@ -367,7 +367,7 @@ fn toplevel_item_symbol(src: &str, item: &ToplevelItem) -> Option<DocumentSymbol
 
     match item {
         ToplevelItem::Fun(name_sym, _, _) => Some(document_symbol(
-            name_sym.name.text.clone(),
+            name_sym.name.text.to_string(),
             SymbolKind::Function,
             range,
             garden_pos_to_lsp_range(src, &name_sym.position),
@@ -381,7 +381,7 @@ fn toplevel_item_symbol(src: &str, item: &ToplevelItem) -> Option<DocumentSymbol
             None,
         )),
         ToplevelItem::Test(test_info) => Some(document_symbol(
-            test_info.name_sym.name.text.clone(),
+            test_info.name_sym.name.text.to_string(),
             SymbolKind::Function,
             range,
             garden_pos_to_lsp_range(src, &test_info.name_sym.position),
@@ -394,7 +394,7 @@ fn toplevel_item_symbol(src: &str, item: &ToplevelItem) -> Option<DocumentSymbol
                 .map(|variant| {
                     let variant_range = garden_pos_to_lsp_range(src, &variant.name_sym.position);
                     document_symbol(
-                        variant.name_sym.name.text.clone(),
+                        variant.name_sym.name.text.to_string(),
                         SymbolKind::EnumMember,
                         variant_range,
                         variant_range,
@@ -404,7 +404,7 @@ fn toplevel_item_symbol(src: &str, item: &ToplevelItem) -> Option<DocumentSymbol
                 .collect();
 
             Some(document_symbol(
-                enum_info.name_sym.name.text.clone(),
+                enum_info.name_sym.name.text.to_string(),
                 SymbolKind::Enum,
                 range,
                 garden_pos_to_lsp_range(src, &enum_info.name_sym.position),
@@ -418,7 +418,7 @@ fn toplevel_item_symbol(src: &str, item: &ToplevelItem) -> Option<DocumentSymbol
                 .map(|field| {
                     let field_range = garden_pos_to_lsp_range(src, &field.sym.position);
                     document_symbol(
-                        field.sym.name.text.clone(),
+                        field.sym.name.text.to_string(),
                         SymbolKind::Field,
                         field_range,
                         field_range,
@@ -428,7 +428,7 @@ fn toplevel_item_symbol(src: &str, item: &ToplevelItem) -> Option<DocumentSymbol
                 .collect();
 
             Some(document_symbol(
-                struct_info.name_sym.name.text.clone(),
+                struct_info.name_sym.name.text.to_string(),
                 SymbolKind::Struct,
                 range,
                 garden_pos_to_lsp_range(src, &struct_info.name_sym.position),
@@ -438,7 +438,7 @@ fn toplevel_item_symbol(src: &str, item: &ToplevelItem) -> Option<DocumentSymbol
         ToplevelItem::Import(import_info) => {
             let name_sym = import_info.namespace_sym.as_ref()?;
             Some(document_symbol(
-                name_sym.name.text.clone(),
+                name_sym.name.text.to_string(),
                 SymbolKind::Namespace,
                 range,
                 garden_pos_to_lsp_range(src, &name_sym.position),

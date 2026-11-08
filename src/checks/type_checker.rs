@@ -1065,7 +1065,7 @@ impl TypeCheckVisitor<'_> {
                 self.bindings.enter_block();
 
                 let elem_ty = match expr_ty {
-                    Type::UserDefined { name, args, .. } if name.text == "List" => {
+                    Type::UserDefined { name, args, .. } if name.as_str() == "List" => {
                         if let Some(arg) = args.first() {
                             arg.clone()
                         } else {
@@ -1654,7 +1654,7 @@ impl TypeCheckVisitor<'_> {
                     let fix = Autofix {
                         description: format!("Use `{}` here.", similar),
                         position: sym.position.clone(),
-                        new_text: similar.text.clone(),
+                        new_text: similar.text.to_string(),
                     };
                     fixes.push(fix);
 
@@ -1692,7 +1692,7 @@ impl TypeCheckVisitor<'_> {
         expected_return_ty: &Type,
     ) -> Type {
         if let Expression_::Variable(s) = &recv.expr_ {
-            if s.name.text == "todo" && self.bindings.get(&SymbolName::from("todo")).is_none() {
+            if s.name.as_str() == "todo" && self.bindings.get(&SymbolName::from("todo")).is_none() {
                 self.diagnostics.push(Diagnostic {
                     message: ErrorMessage(vec![Text("Unfinished code.".to_owned())]),
                     position: pos.clone(),
@@ -1752,7 +1752,7 @@ impl TypeCheckVisitor<'_> {
                         }
                     }
                 } else {
-                    let name = name_sym.map(|sym| sym.name.text.clone());
+                    let name = name_sym.map(|sym| sym.name.text.to_string());
                     self.arity_diagnostics(name.as_ref(), &params, &arg_tys, paren_args);
                 }
 
@@ -1829,7 +1829,7 @@ impl TypeCheckVisitor<'_> {
             // errors.
             self.set_binding(sym, ty.clone());
 
-            if sym.name.text != "__BUILT_IN_IMPLEMENTATION" {
+            if sym.name.as_str() != "__BUILT_IN_IMPLEMENTATION" {
                 let mut fixes = vec![];
 
                 let ns = self.env.get_namespace(&self.path.path).expect(&format!(
@@ -1854,7 +1854,7 @@ impl TypeCheckVisitor<'_> {
                     fixes.push(Autofix {
                         description: format!("Use `{}` here.", similar),
                         position: sym.position.clone(),
-                        new_text: similar.text.clone(),
+                        new_text: similar.text.to_string(),
                     });
 
                     format!(" Did you mean `{similar}`?")
@@ -2479,7 +2479,7 @@ impl TypeCheckVisitor<'_> {
                     }
                     None => {
                         if !values.contains_key(&SymbolName {
-                            text: "__PLACEHOLDER_NAMESPACE".to_owned(),
+                            text: "__PLACEHOLDER_NAMESPACE".into(),
                         }) {
                             // If this is only a placeholder because the
                             // imported file didn't exist, avoid cascading
@@ -2749,7 +2749,7 @@ impl TypeCheckVisitor<'_> {
                     name,
                     args,
                 },
-            ) if name.text == "List" && args.len() == 1 => {
+            ) if name.as_str() == "List" && args.len() == 1 => {
                 let expected_elem_ty = &args[0];
 
                 // Even if we check, we should return the more
@@ -3149,7 +3149,7 @@ fn unify_and_solve_hint(
         }
     }
 
-    if hint_name.text == "Fun" && hint.args.len() == 2 {
+    if hint_name.as_str() == "Fun" && hint.args.len() == 2 {
         if let Type::Fun {
             params, return_, ..
         } = ty
@@ -3477,7 +3477,7 @@ fn build_missing_cases_autofix(
         let pattern_text = if variant.payload_hint.is_some() {
             format!("{}(_)", variant.name_sym.name.text)
         } else {
-            variant.name_sym.name.text.clone()
+            variant.name_sym.name.text.to_string()
         };
         new_text.push_str(&format!("{}{} => {{}}\n", indent_str, pattern_text));
     }

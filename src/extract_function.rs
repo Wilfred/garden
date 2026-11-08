@@ -105,7 +105,7 @@ fn extract_single_expr(
 
             let arguments_src = params
                 .iter()
-                .map(|(param, _)| param.text.clone())
+                .map(|(param, _)| param.text.to_string())
                 .collect::<Vec<String>>()
                 .join(", ");
 
@@ -157,7 +157,7 @@ fn extract_exprs(
 
             let arguments_src = params
                 .iter()
-                .map(|(param, _)| param.text.clone())
+                .map(|(param, _)| param.text.to_string())
                 .collect::<Vec<String>>()
                 .join(", ");
 
@@ -194,7 +194,7 @@ fn extracted_fun_src(
         .iter()
         .map(|(param, ty)| match ty {
             Some(ty) => format!("{}: {}", param.text, ty),
-            None => param.text.to_owned(),
+            None => param.text.to_string(),
         })
         .collect::<Vec<_>>()
         .join(", ");

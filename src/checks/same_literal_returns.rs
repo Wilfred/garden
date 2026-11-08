@@ -92,7 +92,7 @@ fn expr_as_constant(expr: &Expression) -> Option<LiteralValue> {
         Expression_::Variable(sym) => {
             let name = &sym.name.text;
             if name.starts_with(|c: char| c.is_uppercase()) {
-                Some(LiteralValue::EnumVariant(name.clone()))
+                Some(LiteralValue::EnumVariant(name.to_string()))
             } else {
                 None
             }

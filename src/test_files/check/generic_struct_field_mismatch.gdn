@@ -2,7 +2,7 @@ struct Box<T> {
   value: T
 }
 
-let b = Box{ value: "wrong" }
+let b = Box{ value: "hello" }
 b.value + 1
 
 // args: check
@@ -11,7 +11,7 @@ b.value + 1
 // Error: Expected an `Int` but got a `String`.
 // 
 // -| src/test_files/check/generic_struct_field_mismatch.gdn:6:1
-// 5| let b = Box{ value: "wrong" }
+// 5| let b = Box{ value: "hello" }
 // 6| b.value + 1
 //  | ^^^^^^^
 // 7|

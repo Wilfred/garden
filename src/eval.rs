@@ -7726,10 +7726,22 @@ fn eval_struct_value(
             // TODO: this would be a good candidate for additional
             // positions, in this case the definition site of the
             // struct.
-            let message = ErrorMessage(vec![Text(format!(
-                "`{}` does not have a field named `{}`.",
-                type_symbol.name, field_sym.name
-            ))]);
+            let is_duplicate = struct_info
+                .fields
+                .iter()
+                .any(|f| f.sym.name == field_sym.name);
+            let message = if is_duplicate {
+                ErrorMessage(vec![
+                    msgtext!("Duplicate field "),
+                    msgcode!("{}", field_sym.name),
+                    msgtext!(" in struct literal."),
+                ])
+            } else {
+                ErrorMessage(vec![Text(format!(
+                    "`{}` does not have a field named `{}`.",
+                    type_symbol.name, field_sym.name
+                ))])
+            };
 
             return Err((
                 RestoreValues(vec![]), // TODO

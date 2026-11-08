@@ -32,6 +32,14 @@ impl Display for TypeName {
     }
 }
 
+// Allows map lookups by `&str`. The derived `Hash` hashes only
+// `text`, so it agrees with `str`'s `Hash`.
+impl std::borrow::Borrow<str> for TypeName {
+    fn borrow(&self) -> &str {
+        &self.text
+    }
+}
+
 impl From<&str> for TypeName {
     fn from(s: &str) -> Self {
         TypeName { text: s.to_owned() }
@@ -153,6 +161,14 @@ impl SymbolName {
     pub(crate) fn is_placeholder(&self) -> bool {
         // TODO: Prevent users from writing these symbols in userland code.
         self.text == "__placeholder" || self.text == "__keyword_placeholder"
+    }
+}
+
+// Allows map lookups by `&str`. The derived `Hash` hashes only
+// `text`, so it agrees with `str`'s `Hash`.
+impl std::borrow::Borrow<str> for SymbolName {
+    fn borrow(&self) -> &str {
+        &self.text
     }
 }
 

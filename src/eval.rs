@@ -34,7 +34,9 @@ use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol, set_observed_expr_value_used};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::type_defs::TypeDef;
-use crate::values::{type_representation, BlockBindings, BuiltInFunctionKind, Value, Value_};
+use crate::values::{
+    type_name_str, type_representation, BlockBindings, BuiltInFunctionKind, Value, Value_,
+};
 use crate::{msgcode, msgtext};
 
 /// The bindings in the current scope. This is a vec of block
@@ -5083,21 +5085,23 @@ fn eval_method_call(
         .pop_value()
         .expect("Popped an empty value stack for method call receiver.");
 
-    let receiver_type_name = type_representation(&receiver_value);
+    let receiver_type_name = type_name_str(&receiver_value);
 
-    let prev_meth_calls_for_ty = env
+    let seen_meth_call = env
         .prev_method_call_args
-        .entry(receiver_type_name.clone())
-        .or_default();
-
-    if !prev_meth_calls_for_ty.contains_key(&meth_name.name) {
-        prev_meth_calls_for_ty.insert(
-            meth_name.name.clone(),
-            (receiver_value.clone(), arg_values.clone()),
-        );
+        .get(receiver_type_name)
+        .is_some_and(|calls| calls.contains_key(&meth_name.name));
+    if !seen_meth_call {
+        env.prev_method_call_args
+            .entry(TypeName::from(receiver_type_name))
+            .or_default()
+            .insert(
+                meth_name.name.clone(),
+                (receiver_value.clone(), arg_values.clone()),
+            );
     }
 
-    let Some(receiver_type_and_methods) = env.types.get(&receiver_type_name) else {
+    let Some(receiver_type_and_methods) = env.types.get(receiver_type_name) else {
         let mut saved_values = vec![receiver_value.clone()];
         for value in arg_values.iter().rev() {
             saved_values.push(value.clone());
@@ -5167,6 +5171,9 @@ fn eval_method_call(
         &arg_values,
     )?;
 
+    let enclosing_name =
+        EnclosingSymbol::Method(TypeName::from(receiver_type_name), meth_name.clone());
+
     // TODO: check for duplicate parameter names.
     // TODO: parameter names must not clash with the receiver name.
     let mut fun_bindings: FxHashMap<InternedSymbolId, Value> = FxHashMap::default();
@@ -5189,7 +5196,7 @@ fn eval_method_call(
     Ok(Some(StackFrame {
         namespace,
         return_hint,
-        enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
+        enclosing_name,
         caller_pos: Some(caller_expr.position.clone()),
         caller_expr_id: Some(caller_expr.id),
         bindings: Bindings::new_with(fun_bindings),

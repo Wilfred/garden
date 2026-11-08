@@ -78,6 +78,14 @@ impl Type {
         matches!(self, Type::Error { .. })
     }
 
+    pub(crate) fn is_bool(&self) -> bool {
+        matches!(
+            self,
+            Type::UserDefined { kind: TypeDefKind::Enum, name, args }
+                if name.text == "Bool" && args.is_empty()
+        )
+    }
+
     pub(crate) fn is_unit(&self) -> bool {
         let Type::UserDefined { name, .. } = self else {
             return false;

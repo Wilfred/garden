@@ -469,11 +469,19 @@ footer {
   opacity: 0;
   pointer-events: none;
 }
-.footer-plant:is(:hover, :focus-visible, .is-active) .footer-plant-drop {
+.footer-plant:is(:focus-visible, .is-active) .footer-plant-drop {
   animation: water-drop 0.8s ease-in;
 }
-.footer-plant:is(:hover, :focus-visible, .is-active) .footer-plant-leaves {
+.footer-plant:is(:focus-visible, .is-active) .footer-plant-leaves {
   animation: happy-plant 0.95s 0.76s ease-in-out;
+}
+@media (hover: hover) {
+  .footer-plant:hover .footer-plant-drop {
+    animation: water-drop 0.8s ease-in;
+  }
+  .footer-plant:hover .footer-plant-leaves {
+    animation: happy-plant 0.95s 0.76s ease-in-out;
+  }
 }
 @keyframes water-drop {
   10% {

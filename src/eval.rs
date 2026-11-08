@@ -1936,10 +1936,9 @@ fn eval_assign_update(
         ));
     };
 
-    let rhs_value = env.pop_value().expect(&format!(
-        "Popped an empty value stack for `{}`",
-        op.as_src()
-    ));
+    let rhs_value = env
+        .pop_value()
+        .unwrap_or_else(|| panic!("Popped an empty value stack for `{}`", op.as_src()));
     let Value_::Int(rhs_num) = rhs_value.as_ref() else {
         return Err((
             RestoreValues(vec![rhs_value.clone()]),
@@ -6578,7 +6577,7 @@ fn eval_expr(
     outer_expr: Rc<Expression>,
     expr_state: &mut ExpressionState,
 ) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
-    let expr_position = outer_expr.position.clone();
+    let expr_position = &outer_expr.position;
     let expr_value_is_used = outer_expr.value_is_used;
 
     match &outer_expr.expr_ {
@@ -6770,7 +6769,7 @@ fn eval_expr(
         }
         Expression_::AssignUpdate(variable, op, expr) => {
             if expr_state.done_subexpressions() {
-                eval_assign_update(env, expr_value_is_used, &expr_position, variable, *op)?;
+                eval_assign_update(env, expr_value_is_used, expr_position, variable, *op)?;
             } else {
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedSubexpressions,
@@ -6989,7 +6988,7 @@ fn eval_expr(
                 eval_int_binop(
                     env,
                     expr_value_is_used,
-                    &expr_position,
+                    expr_position,
                     &lhs.position,
                     &rhs.position,
                     op,
@@ -7019,7 +7018,7 @@ fn eval_expr(
                 eval_float_binop(
                     env,
                     expr_value_is_used,
-                    &expr_position,
+                    expr_position,
                     &lhs.position,
                     &rhs.position,
                     op,
@@ -7216,7 +7215,7 @@ fn eval_expr(
         }
         Expression_::Invalid => {
             return Err((RestoreValues(vec![]),
-                        (EvalError::Exception(ExceptionInfo { position: expr_position, message: ErrorMessage(vec![msgtext!("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.")]) }))));
+                        (EvalError::Exception(ExceptionInfo { position: expr_position.clone(), message: ErrorMessage(vec![msgtext!("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.")]) }))));
         }
         Expression_::Assert(expr) => {
             match expr_state {

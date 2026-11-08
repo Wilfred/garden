@@ -396,8 +396,8 @@ fn load_toplevel_items_(
                     namespace.borrow_mut().values.insert(
                         name_symbol.name.clone(),
                         Value::new(Value_::Fun {
-                            name_sym: name_symbol.clone(),
-                            fun_info: fun_info.clone(),
+                            name_sym: Box::new(name_symbol.clone()),
+                            fun_info: Rc::new(fun_info.clone()),
                             runtime_type,
                         }),
                     );
@@ -1580,8 +1580,8 @@ fn update_built_in_fun_info(
         ns.values.insert(
             symbol.name.clone(),
             Value::new(Value_::Fun {
-                name_sym: symbol.clone(),
-                fun_info: fun_info.clone(),
+                name_sym: Box::new(symbol.clone()),
+                fun_info: Rc::new(fun_info.clone()),
                 runtime_type,
             }),
         );
@@ -1611,7 +1611,7 @@ fn update_built_in_fun_info(
         symbol.name.clone(),
         Value::new(Value_::BuiltInFunction(
             *kind,
-            Some(fun_info.clone()),
+            Some(Rc::new(fun_info.clone())),
             Some(runtime_type),
         )),
     );
@@ -4698,14 +4698,14 @@ fn eval_call(
         }
         Value_::Fun {
             name_sym,
-            fun_info:
-                fi @ FunInfo {
-                    params: ParenthesizedParameters { params, .. },
-                    body,
-                    ..
-                },
+            fun_info: fi,
             ..
         } => {
+            let FunInfo {
+                params: ParenthesizedParameters { params, .. },
+                body,
+                ..
+            } = fi.as_ref();
             // Calling a user-defined function.
 
             check_arity(
@@ -4717,7 +4717,7 @@ fn eval_call(
                 &arg_values,
             )?;
 
-            let enclosing_name = EnclosingSymbol::Fun(name_sym.clone());
+            let enclosing_name = EnclosingSymbol::Fun(name_sym.as_ref().clone());
             let is_self_call = enclosing_name == stack_frame.enclosing_name;
 
             // Always update prev_call_args, unless we're in a
@@ -7104,7 +7104,7 @@ fn eval_expr(
 
                 env.push_value(Value::new(Value_::Closure(
                     bindings,
-                    fun_info.clone(),
+                    Rc::new(fun_info.clone()),
                     runtime_type,
                 )));
             }

@@ -39,6 +39,9 @@
 // Prefer explicit Rc::clone/Arc::clone to make refcount bumps visible.
 #![warn(clippy::clone_on_ref_ptr)]
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 mod add_type_annotation;
 mod caret_finder;
 mod checks;

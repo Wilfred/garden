@@ -2,11 +2,17 @@ fun option_identity<T>(value: Option<T>): Option<T> {
   value
 }
 
+fun constant<T>(value: T): Fun<(), T> {
+  fun(): T { value }
+}
+
 {
   dbg(option_identity(Some(1)))
+  dbg(constant(1)())
 }
 
 // args: run
 // expected stderr:
-// [src/test_files/runtime/return_generic.gdn:6:3] option_identity(Some(1)) //-> Some(1)
+// [src/test_files/runtime/return_generic.gdn:10:3] option_identity(Some(1)) //-> Some(1)
+// [src/test_files/runtime/return_generic.gdn:11:3] constant(1)() //-> 1
 

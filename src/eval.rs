@@ -4295,7 +4295,7 @@ fn eval_built_in_call(
                 Some(ns_value) => {
                     let fun_info = match ns_value.as_ref() {
                         Value_::Fun { fun_info, .. } => Some(fun_info),
-                        Value_::Closure(_, fun_info, _) => Some(fun_info),
+                        Value_::Closure(_, fun_info, ..) => Some(fun_info),
                         Value_::BuiltInFunction(_, fun_info, _) => fun_info.as_ref(),
                         _ => None,
                     };
@@ -4555,7 +4555,7 @@ fn eval_call(
     let stack_frame = env.current_frame_mut();
 
     match receiver_value.as_ref() {
-        Value_::Closure(bindings, fun_info, _) => {
+        Value_::Closure(bindings, fun_info, _, closure_type_bindings) => {
             let mut bindings = bindings.clone();
 
             if fun_info.params.params.len() != arg_values.len() {
@@ -4595,7 +4595,7 @@ fn eval_call(
                 }
             }
 
-            let mut type_bindings = TypeVarEnv::default();
+            let mut type_bindings = closure_type_bindings.clone();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
                 type_bindings.insert(type_param.name.clone(), None);
@@ -7017,15 +7017,16 @@ fn eval_expr(
                 // solved, so use the lower bound: a closure
                 // mentioning them is usable wherever some
                 // instantiation would be.
-                let runtime_type =
-                    Type::from_fun_info(fun_info, &env.types, &env.stack.type_bindings())
-                        .unwrap_or_err_ty()
-                        .erase_type_params(Variance::Contravariant);
+                let type_bindings = env.stack.type_bindings();
+                let runtime_type = Type::from_fun_info(fun_info, &env.types, &type_bindings)
+                    .unwrap_or_err_ty()
+                    .erase_type_params(Variance::Contravariant);
 
                 env.push_value(Value::new(Value_::Closure(
                     bindings,
                     Rc::new(fun_info.clone()),
                     runtime_type,
+                    type_bindings,
                 )));
             }
         }

@@ -346,7 +346,7 @@ impl Type {
             Value_::Int(_) => Type::int(),
             Value_::Float(_) => Type::float(),
             Value_::Fun { runtime_type, .. } => runtime_type.clone(),
-            Value_::Closure(_, _, runtime_type) => runtime_type.clone(),
+            Value_::Closure(_, _, runtime_type, _) => runtime_type.clone(),
             Value_::BuiltInFunction(_, _, Some(runtime_type)) => runtime_type.clone(),
             Value_::BuiltInFunction(_, _, None) => Self::error("No fun_info for built-in function"),
             Value_::String(_) => Type::string(),

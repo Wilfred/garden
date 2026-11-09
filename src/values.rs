@@ -7,7 +7,7 @@ use rustc_hash::FxHashMap;
 use strum_macros::EnumIter;
 
 use crate::env::Env;
-use crate::garden_type::{Type, TypeDefKind};
+use crate::garden_type::{Type, TypeDefKind, TypeVarEnv};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{FunInfo, InternedSymbolId, Symbol, SymbolName, TypeName};
 use crate::parser::vfs::to_project_relative;
@@ -52,7 +52,7 @@ impl Value {
     pub(crate) fn fun_info(&self) -> Option<&FunInfo> {
         match self.as_ref() {
             Value_::Fun { fun_info, .. } => Some(fun_info),
-            Value_::Closure(_, fun_info, _) => Some(fun_info),
+            Value_::Closure(_, fun_info, ..) => Some(fun_info),
             Value_::BuiltInFunction(_, fun_info, _) => fun_info.as_deref(),
             _ => None,
         }
@@ -78,8 +78,9 @@ pub(crate) enum Value_ {
         fun_info: Rc<FunInfo>,
         runtime_type: Type,
     },
-    /// A closure value.
-    Closure(Vec<BlockBindings>, Rc<FunInfo>, Type),
+    /// A closure value: its captured bindings, definition, type, and
+    /// the type parameters in scope where it was created.
+    Closure(Vec<BlockBindings>, Rc<FunInfo>, Type, TypeVarEnv),
     /// A reference to a built-in function.
     BuiltInFunction(BuiltInFunctionKind, Option<Rc<FunInfo>>, Option<Type>),
     /// A string value.
@@ -144,7 +145,7 @@ impl PartialEq for Value_ {
                     ..
                 },
             ) => name_sym == other_name_sym,
-            (Value_::Closure(_, _, _), Value_::Closure(_, _, _)) => {
+            (Value_::Closure(..), Value_::Closure(..)) => {
                 // TODO: we should probably use reference equality on
                 // closures in Value, instead of always returning
                 // false.
@@ -394,7 +395,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value_::Int(_) => "Int",
             Value_::Float(_) => "Float",
             Value_::Fun { .. } => "Fun",
-            Value_::Closure(_, _, _) => "Fun",
+            Value_::Closure(..) => "Fun",
             Value_::BuiltInFunction(_, _, _) => "Fun",
             Value_::String(_) => "String",
             Value_::List { .. } => "List",
@@ -583,7 +584,7 @@ impl Value {
                     fun_info.pos.line_number + 1
                 )
             }
-            Value_::Closure(_, info, _) => {
+            Value_::Closure(_, info, ..) => {
                 let pos_path = info.pos.path.to_path_buf();
                 let file_name: String = match pos_path.file_name() {
                     Some(file_name) => file_name.to_string_lossy().to_string(),

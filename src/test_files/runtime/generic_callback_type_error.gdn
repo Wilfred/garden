@@ -5,7 +5,7 @@ takes_callback(fun(_value: Int): String { "wrong" })
 // args: run
 // expected exit status: 1
 // expected stderr:
-// Exception: Expected `Fun<(NoValue), Bool>` but `<closure generic_callback_type_error.gdn:3>` has type `Fun<(Int), String>`.
+// Exception: Expected `Fun<(T), Bool>` but `<closure generic_callback_type_error.gdn:3>` has type `Fun<(Int), String>`.
 // -| src/test_files/runtime/generic_callback_type_error.gdn:3:16	 __toplevel__
 // 3| takes_callback(fun(_value: Int): String { "wrong" })
 //  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

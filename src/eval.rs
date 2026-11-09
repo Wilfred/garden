@@ -17,7 +17,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use crate::checks::{check_loops, check_toplevel_items, check_toplevel_items_in_env};
 use crate::diagnostics::{format_exception_with_stack, Diagnostic, Severity};
 use crate::env::{EnclosingSymbol, Env, StackFrame};
-use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
+use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy, Variance};
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
@@ -2590,10 +2590,21 @@ fn check_arity(
 }
 
 /// Check that `value` has `expected` type.
+///
+/// Type parameters are not solved at runtime, so any type parameters
+/// in `expected` accept every value that some instantiation would
+/// accept.
 fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMessage> {
     let value_type = Type::from_value(value);
 
-    if is_subtype(&value_type, expected) {
+    // The upper bound is a supertype of `expected`, so it is only
+    // computed when the cheaper check fails.
+    if is_subtype(&value_type, expected)
+        || is_subtype(
+            &value_type,
+            &expected.erase_type_params(Variance::Covariant),
+        )
+    {
         Ok(())
     } else {
         Err(format_type_error(expected, value, env))
@@ -4587,7 +4598,7 @@ fn eval_call(
             let mut type_bindings = TypeVarEnv::default();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
-                type_bindings.insert(type_param.name.clone(), Some(Type::Any));
+                type_bindings.insert(type_param.name.clone(), None);
             }
 
             bindings.push(BlockBindings {
@@ -4649,7 +4660,7 @@ fn eval_call(
             let mut type_bindings = TypeVarEnv::default();
             for param_sym in &fi.type_params {
                 // TODO: calculate the value of type parameters properly.
-                type_bindings.insert(param_sym.name.clone(), Some(Type::Any));
+                type_bindings.insert(param_sym.name.clone(), None);
             }
 
             check_param_types(
@@ -4927,61 +4938,6 @@ fn enum_value_runtime_type(
     }
 }
 
-#[derive(Clone, Copy)]
-enum Variance {
-    Covariant,
-    Contravariant,
-}
-
-impl Variance {
-    fn reversed(self) -> Self {
-        match self {
-            Self::Covariant => Self::Contravariant,
-            Self::Contravariant => Self::Covariant,
-        }
-    }
-}
-
-/// Erase unknown generics to permissive bounds.
-fn erase_runtime_type_params(ty: &Type, variance: Variance) -> Type {
-    match ty {
-        Type::TypeParameter(_) => match variance {
-            Variance::Covariant => Type::Any,
-            Variance::Contravariant => Type::no_value(),
-        },
-        Type::Fun {
-            name_sym,
-            type_params,
-            params,
-            return_,
-        } => Type::Fun {
-            name_sym: name_sym.clone(),
-            type_params: type_params.clone(),
-            // Function parameters reverse variance, so their lower bound is
-            // NoValue rather than Any.
-            params: params
-                .iter()
-                .map(|param| erase_runtime_type_params(param, variance.reversed()))
-                .collect(),
-            return_: Box::new(erase_runtime_type_params(return_, variance)),
-        },
-        Type::Tuple(args) => Type::Tuple(
-            args.iter()
-                .map(|arg| erase_runtime_type_params(arg, variance))
-                .collect(),
-        ),
-        Type::UserDefined { kind, name, args } => Type::UserDefined {
-            kind: kind.clone(),
-            name: name.clone(),
-            args: args
-                .iter()
-                .map(|arg| erase_runtime_type_params(arg, variance))
-                .collect(),
-        },
-        Type::Any | Type::Error { .. } => ty.clone(),
-    }
-}
-
 fn check_param_types(
     env: &Env,
     receiver_value: &Value,
@@ -4990,17 +4946,9 @@ fn check_param_types(
     arg_values: &[Value],
     type_bindings: &TypeVarEnv,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    // Preserve unknown generics as TypeParameter until their variance is known.
-    let mut type_bindings = type_bindings.clone();
-    for ty in type_bindings.values_mut() {
-        if matches!(ty, Some(Type::Any)) {
-            *ty = None;
-        }
-    }
-
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
-            let mut param_ty = match Type::from_hint(param_hint, &env.types, &type_bindings) {
+            let param_ty = match Type::from_hint(param_hint, &env.types, type_bindings) {
                 Ok(ty) => ty,
                 Err(e) => {
                     return Err((
@@ -5015,8 +4963,6 @@ fn check_param_types(
                     ));
                 }
             };
-
-            param_ty = erase_runtime_type_params(&param_ty, Variance::Covariant);
 
             if let Err(msg) = check_type(arg_value, &param_ty, env) {
                 let mut saved_values = vec![];
@@ -5159,7 +5105,7 @@ fn eval_method_call(
     let mut type_bindings = TypeVarEnv::default();
     for type_param in &fun_info.type_params {
         // TODO: compute the value of these type params properly.
-        type_bindings.insert(type_param.name.clone(), Some(Type::Any));
+        type_bindings.insert(type_param.name.clone(), None);
     }
 
     let return_hint = fun_info.return_hint.clone();
@@ -7067,9 +7013,14 @@ fn eval_expr(
             if expr_value_is_used {
                 let stack_frame = env.current_frame_mut();
                 let bindings = stack_frame.bindings.block_bindings.clone();
+                // The enclosing function's type parameters are not
+                // solved, so use the lower bound: a closure
+                // mentioning them is usable wherever some
+                // instantiation would be.
                 let runtime_type =
                     Type::from_fun_info(fun_info, &env.types, &env.stack.type_bindings())
-                        .unwrap_or_err_ty();
+                        .unwrap_or_err_ty()
+                        .erase_type_params(Variance::Contravariant);
 
                 env.push_value(Value::new(Value_::Closure(
                     bindings,

@@ -8,13 +8,20 @@ fun nested<T>(f: Fun<(Fun<(T), Bool>), Bool>): Bool {
   f(fun(_value: T): Bool { True })
 }
 
+fun same<T>(f: Fun<(T), T>): Fun<(T), T> {
+  let g: Fun<(T), T> = f
+  g
+}
+
 {
   foo(1)
   println(apply(fun(value: Int): String { string_repr(value) }, 2))
   println(string_repr(nested(fun(predicate: Fun<(Int), Bool>): Bool { predicate(1) })))
+  println(string_repr(same(fun(value: Int): Int { value + 1 })(2)))
 }
 
 // args: run
 // expected stdout:
 // 2
 // True
+// 3

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit --amend *)",
+      "Bash(git rebase *)",
+      "Bash(git reset *)",
+      "Bash(git cherry-pick *)",
+      "Bash(git merge *)",
+      "Bash(git push --force-with-lease *)"
+    ]
+  },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Rewriting history on the session's own PR branches (amend, rebase, squash, reset) and pushing them with git push --force-with-lease"
+    ]
+  }
+}

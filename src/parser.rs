@@ -1520,6 +1520,10 @@ fn token_as_binary_op(token: &Token<'_>) -> Option<BinaryOperatorSymbol> {
         "<=" => Some(BinaryOperatorKind::LessThanOrEqual),
         ">" => Some(BinaryOperatorKind::GreaterThan),
         ">=" => Some(BinaryOperatorKind::GreaterThanOrEqual),
+        "<." => Some(BinaryOperatorKind::LessThanFloat),
+        "<=." => Some(BinaryOperatorKind::LessThanOrEqualFloat),
+        ">." => Some(BinaryOperatorKind::GreaterThanFloat),
+        ">=." => Some(BinaryOperatorKind::GreaterThanOrEqualFloat),
         "^" => Some(BinaryOperatorKind::StringConcat),
         _ => None,
     };

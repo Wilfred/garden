@@ -1931,7 +1931,11 @@ impl TypeCheckVisitor<'_> {
             BinaryOperatorKind::AddFloat
             | BinaryOperatorKind::SubtractFloat
             | BinaryOperatorKind::MultiplyFloat
-            | BinaryOperatorKind::DivideFloat => {
+            | BinaryOperatorKind::DivideFloat
+            | BinaryOperatorKind::LessThanFloat
+            | BinaryOperatorKind::LessThanOrEqualFloat
+            | BinaryOperatorKind::GreaterThanFloat
+            | BinaryOperatorKind::GreaterThanOrEqualFloat => {
                 self.infer_float_binop(lhs, rhs, op, type_bindings, expected_return_ty)
             }
             BinaryOperatorKind::LessThan
@@ -2011,6 +2015,10 @@ impl TypeCheckVisitor<'_> {
                 BinaryOperatorKind::SubtractFloat => ("-", "-."),
                 BinaryOperatorKind::MultiplyFloat => ("*", "*."),
                 BinaryOperatorKind::DivideFloat => ("/", "/."),
+                BinaryOperatorKind::LessThanFloat => ("<", "<."),
+                BinaryOperatorKind::LessThanOrEqualFloat => ("<=", "<=."),
+                BinaryOperatorKind::GreaterThanFloat => (">", ">."),
+                BinaryOperatorKind::GreaterThanOrEqualFloat => (">=", ">=."),
                 _ => unreachable!(),
             };
 
@@ -2049,7 +2057,13 @@ impl TypeCheckVisitor<'_> {
             }
         }
 
-        Type::float()
+        match op.kind {
+            BinaryOperatorKind::LessThanFloat
+            | BinaryOperatorKind::LessThanOrEqualFloat
+            | BinaryOperatorKind::GreaterThanFloat
+            | BinaryOperatorKind::GreaterThanOrEqualFloat => Type::bool(),
+            _ => Type::float(),
+        }
     }
 
     fn infer_int_binop(

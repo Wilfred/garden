@@ -124,8 +124,10 @@ test keywords {
 /// All the operators in Garden.
 public fun operators(): List<String> {
   [
+    // THREE_CHAR_OPERATORS in lex.rs.
+    "<=.", ">=.",
     // TWO_CHAR_OPERATORS in lex.rs.
-    "==", "!=", ">=", "<=", "&&", "||", "+=", "-=", "**", "+.", "-.", "*.", "/.",
+    "==", "!=", ">=", "<=", "&&", "||", "+=", "-=", "**", "+.", "-.", "*.", "/.", "<.", ">.",
     // ONE_CHAR_OPERATORS in lex.rs
     "+", "-", "*", "/", "%", "^", "=", "<", ">", "&", "|",
   ]

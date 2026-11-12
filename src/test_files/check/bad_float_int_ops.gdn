@@ -14,6 +14,10 @@ public fun using_int_add_op() {
   1.0 + 2.0
 }
 
+public fun using_int_comparison() {
+  1.0 > 2.0
+}
+
 // Error: You can only use `*` for `Int` values. For `Float` values, use `*.` instead.
 // --| src/test_files/check/bad_float_int_ops.gdn:6:7
 //  5| public fun using_int_op() {
@@ -56,5 +60,12 @@ public fun using_int_add_op() {
 // 13| public fun using_int_add_op() {
 // 14|   1.0 + 2.0
 // 15| }     ^
+// 
+// Error: You can only use `>` for `Int` values. For `Float` values, use `>.` instead.
+// 
+// --| src/test_files/check/bad_float_int_ops.gdn:18:7
+// 17| public fun using_int_comparison() {
+// 18|   1.0 > 2.0
+// 19| }     ^
 
-// expected stderr: 4 issues can be fixed automatically (use `--fix`).
+// expected stderr: 5 issues can be fixed automatically (use `--fix`).

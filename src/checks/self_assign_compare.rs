@@ -34,6 +34,10 @@ fn is_comparison_op(op: &BinaryOperatorSymbol) -> bool {
             | BinaryOperatorKind::LessThanOrEqual
             | BinaryOperatorKind::GreaterThan
             | BinaryOperatorKind::GreaterThanOrEqual
+            | BinaryOperatorKind::LessThanFloat
+            | BinaryOperatorKind::LessThanOrEqualFloat
+            | BinaryOperatorKind::GreaterThanFloat
+            | BinaryOperatorKind::GreaterThanOrEqualFloat
     )
 }
 

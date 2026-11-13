@@ -9,6 +9,10 @@ fun url_safe_mapping(): Dict<String> {
     "-." => "minusdot",
     "*." => "stardot",
     "/." => "slashdot",
+    "<." => "ltdot",
+    "<=." => "ltedot",
+    ">." => "gtdot",
+    ">=." => "gtedot",
   ]
 }
 

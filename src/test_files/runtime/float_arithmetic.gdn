@@ -3,6 +3,10 @@
   dbg(0.25 -. 1.5)
   dbg(0.5 *. 10.2)
   dbg(1.0 /. 3.0)
+  dbg(0.25 <. 1.5)
+  dbg(1.5 <=. 1.5)
+  dbg(0.25 >. 1.5)
+  dbg(1.5 >=. 1.5)
 }
 
 // args: run
@@ -11,3 +15,7 @@
 // [src/test_files/runtime/float_arithmetic.gdn:3:3] 0.25 -. 1.5 //-> -1.25
 // [src/test_files/runtime/float_arithmetic.gdn:4:3] 0.5 *. 10.2 //-> 5.1
 // [src/test_files/runtime/float_arithmetic.gdn:5:3] 1.0 /. 3.0 //-> 0.3333333333333333
+// [src/test_files/runtime/float_arithmetic.gdn:6:3] 0.25 <. 1.5 //-> True
+// [src/test_files/runtime/float_arithmetic.gdn:7:3] 1.5 <=. 1.5 //-> True
+// [src/test_files/runtime/float_arithmetic.gdn:8:3] 0.25 >. 1.5 //-> False
+// [src/test_files/runtime/float_arithmetic.gdn:9:3] 1.5 >=. 1.5 //-> True

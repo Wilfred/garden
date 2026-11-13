@@ -2496,6 +2496,10 @@ fn eval_float_binop(
 
             Value::new(Value_::Float(lhs_float / rhs_float))
         }
+        BinaryOperatorKind::LessThanFloat => Value::bool(lhs_float < rhs_float),
+        BinaryOperatorKind::LessThanOrEqualFloat => Value::bool(lhs_float <= rhs_float),
+        BinaryOperatorKind::GreaterThanFloat => Value::bool(lhs_float > rhs_float),
+        BinaryOperatorKind::GreaterThanOrEqualFloat => Value::bool(lhs_float >= rhs_float),
         _ => {
             unreachable!()
         }
@@ -6914,7 +6918,11 @@ fn eval_expr(
                     BinaryOperatorKind::AddFloat
                     | BinaryOperatorKind::SubtractFloat
                     | BinaryOperatorKind::MultiplyFloat
-                    | BinaryOperatorKind::DivideFloat,
+                    | BinaryOperatorKind::DivideFloat
+                    | BinaryOperatorKind::LessThanFloat
+                    | BinaryOperatorKind::LessThanOrEqualFloat
+                    | BinaryOperatorKind::GreaterThanFloat
+                    | BinaryOperatorKind::GreaterThanOrEqualFloat,
                 ..
             },
             rhs,

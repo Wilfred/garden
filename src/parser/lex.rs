@@ -16,9 +16,12 @@ lazy_static! {
     pub(crate) static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
 }
 
+/// Three character binary operators.
+const THREE_CHAR_OPERATORS: &[&str] = &["<=.", ">=."];
+
 /// Two character binary operators.
 const TWO_CHAR_OPERATORS: &[&str] = &[
-    "==", "!=", ">=", "<=", "&&", "||", "+=", "-=", "**", "+.", "-.", "*.", "/.",
+    "==", "!=", ">=", "<=", "&&", "||", "+=", "-=", "**", "+.", "-.", "*.", "/.", "<.", ">.",
 ];
 
 /// Lexemes that aren't infix operators.
@@ -168,7 +171,11 @@ pub(crate) fn lex_between<'a>(
         }
 
         // Two character binary operators.
-        for token_str in TWO_CHAR_OPERATORS.iter().chain(TWO_CHAR_TOKENS.iter()) {
+        for token_str in THREE_CHAR_OPERATORS
+            .iter()
+            .chain(TWO_CHAR_OPERATORS.iter())
+            .chain(TWO_CHAR_TOKENS.iter())
+        {
             if s.starts_with(token_str) {
                 let (line_number, column) = lp.from_offset(offset);
 

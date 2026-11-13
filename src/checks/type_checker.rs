@@ -1925,23 +1925,22 @@ impl TypeCheckVisitor<'_> {
             | BinaryOperatorKind::Modulo
             | BinaryOperatorKind::Exponent
             | BinaryOperatorKind::BitwiseAnd
-            | BinaryOperatorKind::BitwiseOr => {
+            | BinaryOperatorKind::BitwiseOr
+            | BinaryOperatorKind::LessThan
+            | BinaryOperatorKind::LessThanOrEqual
+            | BinaryOperatorKind::GreaterThan
+            | BinaryOperatorKind::GreaterThanOrEqual => {
                 self.infer_int_binop(lhs, rhs, op, type_bindings, expected_return_ty)
             }
             BinaryOperatorKind::AddFloat
             | BinaryOperatorKind::SubtractFloat
             | BinaryOperatorKind::MultiplyFloat
-            | BinaryOperatorKind::DivideFloat => {
+            | BinaryOperatorKind::DivideFloat
+            | BinaryOperatorKind::LessThanFloat
+            | BinaryOperatorKind::LessThanOrEqualFloat
+            | BinaryOperatorKind::GreaterThanFloat
+            | BinaryOperatorKind::GreaterThanOrEqualFloat => {
                 self.infer_float_binop(lhs, rhs, op, type_bindings, expected_return_ty)
-            }
-            BinaryOperatorKind::LessThan
-            | BinaryOperatorKind::LessThanOrEqual
-            | BinaryOperatorKind::GreaterThan
-            | BinaryOperatorKind::GreaterThanOrEqual => {
-                self.check_expr(&Type::int(), lhs, type_bindings, expected_return_ty, None);
-                self.check_expr(&Type::int(), rhs, type_bindings, expected_return_ty, None);
-
-                Type::bool()
             }
             BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
                 let lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
@@ -2011,6 +2010,10 @@ impl TypeCheckVisitor<'_> {
                 BinaryOperatorKind::SubtractFloat => ("-", "-."),
                 BinaryOperatorKind::MultiplyFloat => ("*", "*."),
                 BinaryOperatorKind::DivideFloat => ("/", "/."),
+                BinaryOperatorKind::LessThanFloat => ("<", "<."),
+                BinaryOperatorKind::LessThanOrEqualFloat => ("<=", "<=."),
+                BinaryOperatorKind::GreaterThanFloat => (">", ">."),
+                BinaryOperatorKind::GreaterThanOrEqualFloat => (">=", ">=."),
                 _ => unreachable!(),
             };
 
@@ -2049,7 +2052,13 @@ impl TypeCheckVisitor<'_> {
             }
         }
 
-        Type::float()
+        match op.kind {
+            BinaryOperatorKind::LessThanFloat
+            | BinaryOperatorKind::LessThanOrEqualFloat
+            | BinaryOperatorKind::GreaterThanFloat
+            | BinaryOperatorKind::GreaterThanOrEqualFloat => Type::bool(),
+            _ => Type::float(),
+        }
     }
 
     fn infer_int_binop(
@@ -2065,6 +2074,10 @@ impl TypeCheckVisitor<'_> {
             BinaryOperatorKind::Subtract => Some(("-", "-.")),
             BinaryOperatorKind::Multiply => Some(("*", "*.")),
             BinaryOperatorKind::Divide => Some(("/", "/.")),
+            BinaryOperatorKind::LessThan => Some(("<", "<.")),
+            BinaryOperatorKind::LessThanOrEqual => Some(("<=", "<=.")),
+            BinaryOperatorKind::GreaterThan => Some((">", ">.")),
+            BinaryOperatorKind::GreaterThanOrEqual => Some((">=", ">=.")),
             _ => None,
         };
 
@@ -2144,7 +2157,13 @@ impl TypeCheckVisitor<'_> {
             }
         }
 
-        Type::int()
+        match op.kind {
+            BinaryOperatorKind::LessThan
+            | BinaryOperatorKind::LessThanOrEqual
+            | BinaryOperatorKind::GreaterThan
+            | BinaryOperatorKind::GreaterThanOrEqual => Type::bool(),
+            _ => Type::int(),
+        }
     }
 
     fn infer_struct_literal(

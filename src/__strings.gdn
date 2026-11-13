@@ -1,0 +1,49 @@
+/// A character encoding, used by `encode()` and `decode()`.
+///
+/// `Utf8` represents a string as bytes (0 to 255) and `Utf16`
+/// represents a string as 16-bit code units (0 to 65535).
+public enum Encoding {
+  Utf8,
+  Utf16,
+}
+
+/// Convert `s` to a list of integers using `encoding`.
+///
+/// ```
+/// import "__strings.gdn" as strings
+/// strings::encode("hé", strings::Utf8) // [104, 195, 169]
+/// strings::encode("hé", strings::Utf16) // [104, 233]
+/// ```
+public fun encode(s: String, encoding: Encoding): List<Int> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test encode {
+  assert(encode("", Utf8) == [])
+  assert(encode("hé", Utf8) == [104, 195, 169])
+  assert(encode("hé", Utf16) == [104, 233])
+  assert(encode("😀", Utf16) == [55357, 56832])
+}
+
+/// Convert `units` to a string using `encoding`. Returns an error if
+/// `units` is not valid for `encoding`.
+///
+/// ```
+/// import "__strings.gdn" as strings
+/// strings::decode([104, 195, 169], strings::Utf8) // Ok("hé")
+/// strings::decode([104, 233], strings::Utf16) // Ok("hé")
+/// ```
+public fun decode(units: List<Int>, encoding: Encoding): Result<String, String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test decode {
+  assert(decode([], Utf8) == Ok(""))
+  assert(decode([104, 195, 169], Utf8) == Ok("hé"))
+  assert(decode([104, 233], Utf16) == Ok("hé"))
+  assert(decode([55357, 56832], Utf16) == Ok("😀"))
+  assert(decode([255], Utf8) == Err("invalid utf-8 sequence of 1 bytes from index 0"))
+  assert(decode([256], Utf8) == Err("UTF-8 byte 256 is outside the range 0 to 255."))
+  assert(decode([55357], Utf16) == Err("invalid utf-16: lone surrogate found"))
+  assert(decode([-1], Utf16) == Err("UTF-16 code unit -1 is outside the range 0 to 65535."))
+}

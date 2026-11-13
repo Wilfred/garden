@@ -45,6 +45,10 @@ Added `String::to_ascii_lowercase()` and `String::to_ascii_uppercase()`.
 
 Added `String::as_float()` to parse strings as `Option<Float>`.
 
+Added a `__strings.gdn` built-in namespace with `encode()` and
+`decode()`, which convert between strings and lists of UTF-8 bytes or
+UTF-16 code units.
+
 Added `Dict::len()` to return the number of entries in a dict.
 
 ## Checks

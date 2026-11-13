@@ -1191,7 +1191,8 @@ mod tests {
             .arg("src/__fs.gdn")
             .arg("src/__random.gdn")
             .arg("src/__reflect.gdn")
-            .arg("src/__shell.gdn");
+            .arg("src/__shell.gdn")
+            .arg("src/__strings.gdn");
         cmd.assert().success();
     }
 

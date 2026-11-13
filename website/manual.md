@@ -34,6 +34,10 @@ __REFLECT_FUNS
 
 __SHELL_FUNS
 
+## Strings `__strings.gdn`
+
+__STRINGS_FUNS
+
 ## Time `__time.gdn`
 
 __TIME_FUNS

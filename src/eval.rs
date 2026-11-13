@@ -4931,6 +4931,61 @@ fn enum_value_runtime_type(
     }
 }
 
+#[derive(Clone, Copy)]
+enum Variance {
+    Covariant,
+    Contravariant,
+}
+
+impl Variance {
+    fn reversed(self) -> Self {
+        match self {
+            Self::Covariant => Self::Contravariant,
+            Self::Contravariant => Self::Covariant,
+        }
+    }
+}
+
+/// Erase unknown generics to permissive bounds.
+fn erase_runtime_type_params(ty: &Type, variance: Variance) -> Type {
+    match ty {
+        Type::TypeParameter(_) => match variance {
+            Variance::Covariant => Type::Any,
+            Variance::Contravariant => Type::no_value(),
+        },
+        Type::Fun {
+            name_sym,
+            type_params,
+            params,
+            return_,
+        } => Type::Fun {
+            name_sym: name_sym.clone(),
+            type_params: type_params.clone(),
+            // Function parameters reverse variance, so their lower bound is
+            // NoValue rather than Any.
+            params: params
+                .iter()
+                .map(|param| erase_runtime_type_params(param, variance.reversed()))
+                .collect(),
+            return_: Box::new(erase_runtime_type_params(return_, variance)),
+        },
+        Type::Tuple(args) => Type::Tuple(
+            args.iter()
+                .map(|arg| erase_runtime_type_params(arg, variance))
+                .collect(),
+        ),
+        Type::UserDefined { kind, name, args } => Type::UserDefined {
+            kind: kind.clone(),
+            name: name.clone(),
+            args: args
+                .iter()
+                .map(|arg| erase_runtime_type_params(arg, variance))
+                .collect(),
+        },
+        Type::Any | Type::Error { .. } => ty.clone(),
+    }
+}
+
 fn check_param_types(
     env: &Env,
     receiver_value: &Value,
@@ -4939,9 +4994,17 @@ fn check_param_types(
     arg_values: &[Value],
     type_bindings: &TypeVarEnv,
 ) -> Result<(), (RestoreValues, EvalError)> {
+    // Preserve unknown generics as TypeParameter until their variance is known.
+    let mut type_bindings = type_bindings.clone();
+    for ty in type_bindings.values_mut() {
+        if matches!(ty, Some(Type::Any)) {
+            *ty = None;
+        }
+    }
+
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
-            let param_ty = match Type::from_hint(param_hint, &env.types, type_bindings) {
+            let mut param_ty = match Type::from_hint(param_hint, &env.types, &type_bindings) {
                 Ok(ty) => ty,
                 Err(e) => {
                     return Err((
@@ -4956,6 +5019,8 @@ fn check_param_types(
                     ));
                 }
             };
+
+            param_ty = erase_runtime_type_params(&param_ty, Variance::Covariant);
 
             if let Err(msg) = check_type(arg_value, &param_ty, env) {
                 let mut saved_values = vec![];

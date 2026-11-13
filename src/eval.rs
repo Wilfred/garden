@@ -610,10 +610,17 @@ fn load_toplevel_items_(
             // TODO: warn if we're clobbering a name from a
             // different enum (i.e. not just redefining the
             // current enum).
-            namespace
-                .borrow_mut()
-                .values
+            let mut ns = namespace.borrow_mut();
+            ns.values
                 .insert(variant_sym.name_sym.name.clone(), enum_value);
+            match enum_info.visibility {
+                Visibility::Public(_) => {
+                    ns.exported_syms.insert(variant_sym.name_sym.name.clone());
+                }
+                Visibility::CurrentFile => {
+                    ns.exported_syms.remove(&variant_sym.name_sym.name);
+                }
+            }
         }
     }
 
@@ -3084,8 +3091,12 @@ fn eval_built_in_call(
             let mut fun_names = vec![];
 
             let ns = namespace_info.borrow();
-            for sym_name in ns.values.keys() {
-                if ns.exported_syms.contains(sym_name) {
+            for (sym_name, value) in &ns.values {
+                let is_fun = matches!(
+                    value.as_ref(),
+                    Value_::Fun { .. } | Value_::BuiltInFunction(..)
+                );
+                if is_fun && ns.exported_syms.contains(sym_name) {
                     fun_names.push(sym_name.text.to_string());
                 }
             }

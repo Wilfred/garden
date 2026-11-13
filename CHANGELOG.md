@@ -19,6 +19,9 @@ values.
 
 Added the `\r` (carriage return) escape sequence in string literals.
 
+Variants of `public` enums are now exported, so they can be used
+from files that import them.
+
 Fixed parsing of string literals ending in an escaped backslash, such
 as `"\\"`, where the closing quote was incorrectly treated as escaped.
 

@@ -2,7 +2,10 @@ import "./lib.gdn" as lib
 
 {
   dbg(lib::foo())
+  dbg(lib::Down)
 }
 
 // args: run
-// expected stderr: [src/test_files/runtime/import.gdn:4:3] lib::foo() //-> 42
+// expected stderr:
+// [src/test_files/runtime/import.gdn:4:3] lib::foo() //-> 42
+// [src/test_files/runtime/import.gdn:5:3] lib::Down //-> Down

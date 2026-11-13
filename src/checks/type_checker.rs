@@ -1361,7 +1361,7 @@ impl TypeCheckVisitor<'_> {
             Type::UserDefined {
                 kind: TypeDefKind::Struct,
                 ref name,
-                ..
+                ref args,
             } => {
                 if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(name) {
                     for field in &struct_info.fields {
@@ -1369,8 +1369,17 @@ impl TypeCheckVisitor<'_> {
                             self.id_to_def_pos
                                 .insert(field_sym.id, field.sym.position.clone());
 
+                            // Bind the struct's type parameters to the
+                            // receiver's type arguments, so `value: T`
+                            // on a `Box<Int>` has type `Int`.
+                            let mut field_type_bindings = type_bindings.clone();
+                            for (type_param, arg) in struct_info.type_params.iter().zip(args) {
+                                field_type_bindings
+                                    .insert(type_param.name.clone(), Some(arg.clone()));
+                            }
+
                             let field_ty =
-                                Type::from_hint(&field.hint, &self.env.types, type_bindings)
+                                Type::from_hint(&field.hint, &self.env.types, &field_type_bindings)
                                     .unwrap_or_err_ty();
                             return field_ty;
                         }

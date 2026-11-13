@@ -66,7 +66,87 @@ pub(crate) enum Type {
     },
 }
 
+/// Whether a position in a type produces values (covariant) or
+/// consumes them (contravariant).
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum Variance {
+    Covariant,
+    Contravariant,
+}
+
+impl Variance {
+    fn reversed(self) -> Self {
+        match self {
+            Self::Covariant => Self::Contravariant,
+            Self::Contravariant => Self::Covariant,
+        }
+    }
+}
+
 impl Type {
+    /// Replace the free type parameters in this type with concrete
+    /// bounds.
+    ///
+    /// With `Variance::Covariant`, the result is the upper bound: a
+    /// supertype of every instantiation of this type. With
+    /// `Variance::Contravariant`, it is the lower bound: a subtype of
+    /// every instantiation.
+    pub(crate) fn erase_type_params(&self, variance: Variance) -> Type {
+        self.erase_type_params_(variance, &mut vec![])
+    }
+
+    /// `bound` is the type parameters introduced by enclosing
+    /// function types, which are not free.
+    fn erase_type_params_(&self, variance: Variance, bound: &mut Vec<TypeName>) -> Type {
+        match self {
+            Type::TypeParameter(name) if bound.contains(name) => self.clone(),
+            Type::TypeParameter(_) => match variance {
+                Variance::Covariant => Type::Any,
+                Variance::Contravariant => Type::no_value(),
+            },
+            Type::Fun {
+                name_sym,
+                type_params,
+                params,
+                return_,
+            } => {
+                let outer_bound_len = bound.len();
+                bound.extend(type_params.iter().cloned());
+
+                let params = params
+                    .iter()
+                    .map(|param| param.erase_type_params_(variance.reversed(), bound))
+                    .collect();
+                let return_ = Box::new(return_.erase_type_params_(variance, bound));
+
+                bound.truncate(outer_bound_len);
+
+                Type::Fun {
+                    name_sym: name_sym.clone(),
+                    type_params: type_params.clone(),
+                    params,
+                    return_,
+                }
+            }
+            Type::Tuple(items) => Type::Tuple(
+                items
+                    .iter()
+                    .map(|item| item.erase_type_params_(variance, bound))
+                    .collect(),
+            ),
+            // User-defined types are covariant in their arguments.
+            Type::UserDefined { kind, name, args } => Type::UserDefined {
+                kind: kind.clone(),
+                name: name.clone(),
+                args: args
+                    .iter()
+                    .map(|arg| arg.erase_type_params_(variance, bound))
+                    .collect(),
+            },
+            Type::Any | Type::Error { .. } => self.clone(),
+        }
+    }
+
     pub(crate) fn is_no_value(&self) -> bool {
         match self {
             Type::UserDefined { name, .. } => name.as_str() == "NoValue",

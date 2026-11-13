@@ -17,7 +17,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use crate::checks::{check_loops, check_toplevel_items, check_toplevel_items_in_env};
 use crate::diagnostics::{format_exception_with_stack, Diagnostic, Severity};
 use crate::env::{EnclosingSymbol, Env, StackFrame};
-use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
+use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy, Variance};
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
@@ -2594,10 +2594,21 @@ fn check_arity(
 }
 
 /// Check that `value` has `expected` type.
+///
+/// Type parameters are not solved at runtime, so any type parameters
+/// in `expected` accept every value that some instantiation would
+/// accept.
 fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMessage> {
     let value_type = Type::from_value(value);
 
-    if is_subtype(&value_type, expected) {
+    // The upper bound is a supertype of `expected`, so it is only
+    // computed when the cheaper check fails.
+    if is_subtype(&value_type, expected)
+        || is_subtype(
+            &value_type,
+            &expected.erase_type_params(Variance::Covariant),
+        )
+    {
         Ok(())
     } else {
         Err(format_type_error(expected, value, env))
@@ -4591,7 +4602,7 @@ fn eval_call(
             let mut type_bindings = closure_type_bindings.clone();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
-                type_bindings.insert(type_param.name.clone(), Some(Type::Any));
+                type_bindings.insert(type_param.name.clone(), None);
             }
 
             bindings.push(BlockBindings {
@@ -4653,7 +4664,7 @@ fn eval_call(
             let mut type_bindings = TypeVarEnv::default();
             for param_sym in &fi.type_params {
                 // TODO: calculate the value of type parameters properly.
-                type_bindings.insert(param_sym.name.clone(), Some(Type::Any));
+                type_bindings.insert(param_sym.name.clone(), None);
             }
 
             check_param_types(
@@ -5098,7 +5109,7 @@ fn eval_method_call(
     let mut type_bindings = TypeVarEnv::default();
     for type_param in &fun_info.type_params {
         // TODO: compute the value of these type params properly.
-        type_bindings.insert(type_param.name.clone(), Some(Type::Any));
+        type_bindings.insert(type_param.name.clone(), None);
     }
 
     let return_hint = fun_info.return_hint.clone();
@@ -7010,9 +7021,14 @@ fn eval_expr(
             if expr_value_is_used {
                 let stack_frame = env.current_frame_mut();
                 let bindings = stack_frame.bindings.block_bindings.clone();
+                // The enclosing function's type parameters are not
+                // solved, so use the lower bound: a closure
+                // mentioning them is usable wherever some
+                // instantiation would be.
                 let type_bindings = env.stack.type_bindings();
-                let runtime_type =
-                    Type::from_fun_info(fun_info, &env.types, &type_bindings).unwrap_or_err_ty();
+                let runtime_type = Type::from_fun_info(fun_info, &env.types, &type_bindings)
+                    .unwrap_or_err_ty()
+                    .erase_type_params(Variance::Contravariant);
 
                 env.push_value(Value::new(Value_::Closure(
                     bindings,

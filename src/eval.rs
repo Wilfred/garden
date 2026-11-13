@@ -2594,10 +2594,15 @@ fn check_arity(
 }
 
 /// Check that `value` has `expected` type.
+///
+/// Type parameters are not solved at runtime, so type parameters in
+/// `expected` are treated as `Any`.
 fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMessage> {
     let value_type = Type::from_value(value);
 
-    if is_subtype(&value_type, expected) {
+    // Most hints have no type parameters, so only erase when the
+    // direct check fails.
+    if is_subtype(&value_type, expected) || is_subtype(&value_type, &expected.erase_type_params()) {
         Ok(())
     } else {
         Err(format_type_error(expected, value, env))
@@ -4591,7 +4596,7 @@ fn eval_call(
             let mut type_bindings = closure_type_bindings.clone();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
-                type_bindings.insert(type_param.name.clone(), Some(Type::Any));
+                type_bindings.insert(type_param.name.clone(), None);
             }
 
             bindings.push(BlockBindings {
@@ -4653,7 +4658,7 @@ fn eval_call(
             let mut type_bindings = TypeVarEnv::default();
             for param_sym in &fi.type_params {
                 // TODO: calculate the value of type parameters properly.
-                type_bindings.insert(param_sym.name.clone(), Some(Type::Any));
+                type_bindings.insert(param_sym.name.clone(), None);
             }
 
             check_param_types(
@@ -5098,7 +5103,7 @@ fn eval_method_call(
     let mut type_bindings = TypeVarEnv::default();
     for type_param in &fun_info.type_params {
         // TODO: compute the value of these type params properly.
-        type_bindings.insert(type_param.name.clone(), Some(Type::Any));
+        type_bindings.insert(type_param.name.clone(), None);
     }
 
     let return_hint = fun_info.return_hint.clone();
@@ -7011,8 +7016,11 @@ fn eval_expr(
                 let stack_frame = env.current_frame_mut();
                 let bindings = stack_frame.bindings.block_bindings.clone();
                 let type_bindings = env.stack.type_bindings();
-                let runtime_type =
-                    Type::from_fun_info(fun_info, &env.types, &type_bindings).unwrap_or_err_ty();
+                // The enclosing function's type parameters are not
+                // solved at runtime.
+                let runtime_type = Type::from_fun_info(fun_info, &env.types, &type_bindings)
+                    .unwrap_or_err_ty()
+                    .erase_type_params();
 
                 env.push_value(Value::new(Value_::Closure(
                     bindings,

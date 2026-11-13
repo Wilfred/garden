@@ -682,6 +682,7 @@ pub(crate) const BUILT_IN_FILES: &[(&str, &str)] = &[
     ("__random.gdn", include_str!("__random.gdn")),
     ("__reflect.gdn", include_str!("__reflect.gdn")),
     ("__shell.gdn", include_str!("__shell.gdn")),
+    ("__strings.gdn", include_str!("__strings.gdn")),
     ("__time.gdn", include_str!("__time.gdn")),
 ];
 
@@ -2585,6 +2586,82 @@ fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMess
     }
 }
 
+/// A character encoding from the `Encoding` type in `__strings.gdn`.
+enum Encoding {
+    Utf8,
+    Utf16,
+}
+
+/// If `value` is an `Encoding`, return it, otherwise return a type
+/// error.
+fn check_encoding(
+    value: &Value,
+    pos: &Position,
+    saved_values: Vec<Value>,
+    env: &Env,
+) -> Result<Encoding, (RestoreValues, EvalError)> {
+    if let Value_::EnumVariant {
+        type_name,
+        variant_idx,
+        ..
+    } = value.as_ref()
+    {
+        if type_name.text.as_ref() == "Encoding" {
+            match variant_idx {
+                0 => return Ok(Encoding::Utf8),
+                1 => return Ok(Encoding::Utf16),
+                _ => {}
+            }
+        }
+    }
+
+    let message = format_type_error(
+        &TypeName {
+            text: "Encoding".into(),
+        },
+        value,
+        env,
+    );
+    Err((
+        RestoreValues(saved_values),
+        EvalError::Exception(ExceptionInfo {
+            position: pos.clone(),
+            message,
+        }),
+    ))
+}
+
+/// If `value` is a `List<Int>`, return its items, otherwise return a
+/// type error.
+fn check_int_list(
+    value: &Value,
+    pos: &Position,
+    saved_values: Vec<Value>,
+    env: &Env,
+) -> Result<Vec<i64>, (RestoreValues, EvalError)> {
+    if let Value_::List { items, .. } = value.as_ref() {
+        let ints = items
+            .iter()
+            .map(|item| match item.as_ref() {
+                Value_::Int(i) => Some(*i),
+                _ => None,
+            })
+            .collect::<Option<Vec<_>>>();
+        if let Some(ints) = ints {
+            return Ok(ints);
+        }
+    }
+
+    let message = format_type_error("List<Int>", value, env);
+    Err((
+        RestoreValues(saved_values),
+        EvalError::Exception(ExceptionInfo {
+            position: pos.clone(),
+            message,
+        }),
+    ))
+}
+
 /// If `value` is a string, return its content, otherwise return a
 /// type error.
 fn check_string<'a>(
@@ -4419,6 +4496,84 @@ fn eval_built_in_call(
 
             if expr_value_is_used {
                 env.push_value(Value::new(Value_::Int(random_value)));
+            }
+        }
+        BuiltInFunctionKind::StringsEncode => {
+            check_arity(
+                kind,
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let s = check_string(&arg_values[0], &arg_positions[0], saved_values.clone(), env)?;
+            let encoding = check_encoding(&arg_values[1], &arg_positions[1], saved_values, env)?;
+
+            let units: Vec<i64> = match encoding {
+                Encoding::Utf8 => s.bytes().map(i64::from).collect(),
+                Encoding::Utf16 => s.encode_utf16().map(i64::from).collect(),
+            };
+
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::List {
+                    items: units
+                        .into_iter()
+                        .map(|i| Value::new(Value_::Int(i)))
+                        .collect(),
+                    elem_type: Type::int(),
+                }));
+            }
+        }
+        BuiltInFunctionKind::StringsDecode => {
+            check_arity(
+                kind,
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let units =
+                check_int_list(&arg_values[0], &arg_positions[0], saved_values.clone(), env)?;
+            let encoding = check_encoding(&arg_values[1], &arg_positions[1], saved_values, env)?;
+
+            let decoded = match encoding {
+                Encoding::Utf8 => units
+                    .iter()
+                    .map(|i| u8::try_from(*i).map_err(|_| *i))
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|i| format!("UTF-8 byte {i} is outside the range 0 to 255."))
+                    .and_then(|bytes| String::from_utf8(bytes).map_err(|e| e.to_string())),
+                Encoding::Utf16 => units
+                    .iter()
+                    .map(|i| u16::try_from(*i).map_err(|_| *i))
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|i| format!("UTF-16 code unit {i} is outside the range 0 to 65535."))
+                    .and_then(|code_units| {
+                        String::from_utf16(&code_units).map_err(|e| e.to_string())
+                    }),
+            };
+
+            if expr_value_is_used {
+                env.push_value(match decoded {
+                    Ok(s) => Value::ok(Value::new(Value_::String(s))),
+                    Err(msg) => Value::err(Value::new(Value_::String(msg))),
+                });
             }
         }
         BuiltInFunctionKind::TimeUnixtime => {

@@ -1,6 +1,6 @@
 // This should be fine, it's a no-op to import something we've already
 // imported.
-import "./import_cyclic.gdn"
+import "./import_cyclic.gdn" as cyclic
 
 {
   println("hello world")

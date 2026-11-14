@@ -1,4 +1,4 @@
-import "__ra"
+import "__ra" as p
 //           ^
 
 // args: reftest-complete

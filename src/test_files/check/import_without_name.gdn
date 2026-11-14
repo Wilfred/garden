@@ -1,0 +1,13 @@
+import "./lib.gdn"
+
+lib::foo()
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `import` requires a name, for example `import "./lib.gdn" as foo`.
+// 
+// -| src/test_files/check/import_without_name.gdn:1:8
+// 1| import "./lib.gdn"
+// 2|        ^^^^^^^^^^^
+// 3| lib::foo()

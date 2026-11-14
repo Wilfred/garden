@@ -431,9 +431,7 @@ impl Visitor for UnusedVariableVisitor {
     }
 
     fn visit_import_info(&mut self, import_info: &ImportInfo) {
-        let Some(namespace_sym) = &import_info.namespace_sym else {
-            return;
-        };
+        let namespace_sym = &import_info.namespace_sym;
 
         // We don't want to complain on unused placeholder symbols,
         // they indicate an incomplete expression with a parse error.

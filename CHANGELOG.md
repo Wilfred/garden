@@ -4,6 +4,10 @@
 
 ## Language
 
+`import` now requires a name, such as `import "./foo.gdn" as foo`.
+Importing all public definitions into the current file with
+`import "./foo.gdn"` is no longer supported.
+
 Integer compound assignments (`+=` and `-=`), division, remainder, and
 exponentiation now wrap on overflow, matching addition, subtraction,
 and multiplication.

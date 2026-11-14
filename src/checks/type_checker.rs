@@ -2485,7 +2485,7 @@ impl TypeCheckVisitor<'_> {
                                 message: ErrorMessage(vec![
                                     msgcode!("{}", sym.name),
                                     msgtext!(" is not marked as "),
-                                    msgcode!("external"),
+                                    msgcode!("public"),
                                     msgtext!(
                                         " so it cannot be used outside the file that contains it."
                                     ),

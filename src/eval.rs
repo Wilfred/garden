@@ -7483,7 +7483,7 @@ fn eval_namespace_access(
                                 message: ErrorMessage(vec![
                                     msgcode!("{}", symbol.name),
                                     msgtext!(" is not marked as "),
-                                    msgcode!("external"),
+                                    msgcode!("public"),
                                     msgtext!(" in "),
                                     msgcode!(
                                         "{}",

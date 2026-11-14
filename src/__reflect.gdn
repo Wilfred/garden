@@ -192,7 +192,7 @@ test source_for_method {
   }
 }
 
-/// All the `external` functions in `ns`.
+/// All the `public` functions in `ns`.
 public fun namespace_functions(ns: Namespace): List<String> {
   // This is deliberately not a method on Namespace, so code
   // completion isn't confusing.

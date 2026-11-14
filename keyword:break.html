@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>break - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container"><h1><code>break</code> and <code>continue</code> keywords</h1>
+<p><code>break</code> stops evaluation of a loop.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example 1</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code><a class="keyword" href="/keyword:let.html">let</a> flavors <a class="operator" href="/operator:=.html">=</a> [<span class="string">"Chocolate"</span>, <span class="string">"Strawberry"</span>, <span class="string">"Mint"</span>, <span class="string">"Vanilla"</span>]
+
+<a class="keyword" href="/keyword:for.html">for</a> flavor <a class="keyword" href="/keyword:in.html">in</a> flavors {
+  <a class="keyword" href="/keyword:if.html">if</a> flavor <a class="operator" href="/operator:==.html">==</a> <span class="string">"Mint" </span>{
+    <a class="keyword" href="/keyword:break.html">break</a>
+  }
+  <a href="/fun:__prelude.gdn::println.html">println</a>(flavor <a class="operator" href="/operator:^.html">^</a> <span class="string">" ice cream is yummy."</span>)
+}
+
+<span class="comment">// Chocolate ice cream is yummy.</span>
+<span class="comment">// Strawberry ice cream is yummy.</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p><code>continue</code> stops evaluation of the current loop iteration, and
+immediately starts the next iteration.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example 2</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code><a class="keyword" href="/keyword:let.html">let</a> flavors <a class="operator" href="/operator:=.html">=</a> [<span class="string">"Chocolate"</span>, <span class="string">"Strawberry"</span>, <span class="string">"Mint"</span>, <span class="string">"Vanilla"</span>]
+
+<a class="keyword" href="/keyword:for.html">for</a> flavor <a class="keyword" href="/keyword:in.html">in</a> flavors {
+  <a class="keyword" href="/keyword:if.html">if</a> flavor <a class="operator" href="/operator:==.html">==</a> <span class="string">"Mint" </span>{
+    <a class="keyword" href="/keyword:continue.html">continue</a> <span class="comment">// Yuck.</span>
+  }
+  <a href="/fun:__prelude.gdn::println.html">println</a>(flavor <a class="operator" href="/operator:^.html">^</a> <span class="string">" ice cream is yummy."</span>)
+}
+
+<span class="comment">// Chocolate ice cream is yummy.</span>
+<span class="comment">// Strawberry ice cream is yummy.</span>
+<span class="comment">// Vanilla ice cream is yummy.</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div></main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <button class="footer-plant" type="button" aria-label="Water the plant">
+          <span class="footer-plant-drop" aria-hidden="true"></span>
+          <span class="footer-plant-leaves" aria-hidden="true">🪴</span>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

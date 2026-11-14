@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>assert - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container"><h1><code>assert</code> keyword</h1>
+<p>You can use <code>assert</code> to perform a runtime check that a value is
+<code>True</code>.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example 1</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code><a class="keyword" href="/keyword:assert.html">assert</a>(1 <a class="operator" href="/operator:<.html">&lt;</a> 2)</code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p>If the assertion fails, Garden will raise an error.</p>
+<p><code>assert</code> is particularly useful when defining a <code>test</code>.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example 2</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code><a class="keyword" href="/keyword:fun.html">fun</a> add_one(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
+  i <a class="operator" href="/operator:+.html">+</a> 1
+}
+
+<a class="keyword" href="/keyword:test.html">test</a> add_one_to_five {
+  <a class="keyword" href="/keyword:assert.html">assert</a>(add_one(5) <a class="operator" href="/operator:==.html">==</a> 6)
+}</code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div></main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <button class="footer-plant" type="button" aria-label="Water the plant">
+          <span class="footer-plant-drop" aria-hidden="true"></span>
+          <span class="footer-plant-leaves" aria-hidden="true">🪴</span>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title><. - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container"><h1><code>&lt;.</code>, <a href="/operator:ltedot.html"><code>&lt;=.</code></a>, <a href="/operator:gtdot.html"><code>&gt;.</code></a> and <a href="/operator:gtedot.html"><code>&gt;=.</code></a> Operators</h1>
+<p>These operators compare <a href="/type:Float.html"><code>Float</code></a> values. For <a href="/type:Int.html"><code>Int</code></a> values, see <a href="/operator:<.html"><code>&lt;</code></a>.</p>
+<p><code>&lt;.</code> evaluates to <code>True</code> if the first float is strictly less than the
+second.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>1.0 <span class="operator">&lt;.</span> 2.5 <span class="comment">//-&gt; True</span>
+1.5 <span class="operator">&lt;.</span> 1.5 <span class="comment">//-&gt; False</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p><a href="/operator:ltedot.html"><code>&lt;=.</code></a> evaluates to <code>True</code> if the first float is less than or equal to
+the second.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>1.0 <a class="operator" href="/operator:ltedot.html">&lt;=.</a> 2.5 <span class="comment">//-&gt; True</span>
+1.5 <a class="operator" href="/operator:ltedot.html">&lt;=.</a> 1.5 <span class="comment">//-&gt; True</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p><a href="/operator:gtdot.html"><code>&gt;.</code></a> evaluates to <code>True</code> if the first float is strictly greater than
+the second.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>2.5 <a class="operator" href="/operator:gtdot.html">&gt;.</a> 1.0 <span class="comment">//-&gt; True</span>
+1.5 <a class="operator" href="/operator:gtdot.html">&gt;.</a> 1.5 <span class="comment">//-&gt; False</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p><a href="/operator:gtedot.html"><code>&gt;=.</code></a> evaluates to <code>True</code> if the first float is greater than or equal
+to the second.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>2.5 <a class="operator" href="/operator:gtedot.html">&gt;=.</a> 1.0 <span class="comment">//-&gt; True</span>
+1.5 <a class="operator" href="/operator:gtedot.html">&gt;=.</a> 1.5 <span class="comment">//-&gt; True</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div></main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <button class="footer-plant" type="button" aria-label="Water the plant">
+          <span class="footer-plant-drop" aria-hidden="true"></span>
+          <span class="footer-plant-leaves" aria-hidden="true">🪴</span>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

@@ -1,12 +1,12 @@
-import "./lib.gdn"
+import "./lib.gdn" as lib
 
 {
-  dbg(bar())
+  dbg(lib::bar())
 }
 
 // args: run
 // expected stderr:
-// Exception: No such variable `bar`.
-// -| src/test_files/runtime/import_not_external.gdn:4:7	 __toplevel__
-// 4|   dbg(bar())
-//  |       ^^^
+// Exception: `bar` is not marked as `external` in `src/test_files/runtime/lib.gdn`. 
+// -| src/test_files/runtime/import_not_external.gdn:4:12	 __toplevel__
+// 4|   dbg(lib::bar())
+//  |            ^^^

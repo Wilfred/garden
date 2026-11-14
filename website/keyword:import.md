@@ -8,16 +8,8 @@ public fun say_hello() {
 }
 ```
 
-```title:"Example 1"
+```title:"Example"
 import "./greetings.gdn" as g
 
 g::say_hello()
-```
-
-You can also load all the definitions into the current file.
-
-```title:"Example 2"
-import "./greetings.gdn"
-
-say_hello()
 ```

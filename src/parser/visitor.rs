@@ -76,9 +76,7 @@ pub(crate) trait Visitor {
     }
 
     fn visit_import_info_default(&mut self, import_info: &ImportInfo) {
-        if let Some(namespace_sym) = &import_info.namespace_sym {
-            self.visit_symbol(namespace_sym);
-        }
+        self.visit_symbol(&import_info.namespace_sym);
     }
 
     fn visit_struct_info(&mut self, struct_info: &StructInfo) {

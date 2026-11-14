@@ -1,4 +1,4 @@
-import "./no_such_file.gdn"
+import "./no_such_file.gdn" as missing
 
 // args: check
 // expected exit status: 1
@@ -6,5 +6,13 @@ import "./no_such_file.gdn"
 // Error: No such file `./no_such_file.gdn`.
 // 
 // -| src/test_files/check/import_missing_file.gdn:1:8
-// 1| import "./no_such_file.gdn"
+// 1| import "./no_such_file.gdn" as missing
 // 2|        ^^^^^^^^^^^^^^^^^^^^
+// 
+// Warning: `missing` is unused.
+// 
+// -| src/test_files/check/import_missing_file.gdn:1:32
+// 1| import "./no_such_file.gdn" as missing
+// 2|                                ^^^^^^^
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

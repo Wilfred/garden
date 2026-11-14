@@ -436,7 +436,7 @@ fn toplevel_item_symbol(src: &str, item: &ToplevelItem) -> Option<DocumentSymbol
             ))
         }
         ToplevelItem::Import(import_info) => {
-            let name_sym = import_info.namespace_sym.as_ref()?;
+            let name_sym = &import_info.namespace_sym;
             Some(document_symbol(
                 name_sym.name.text.to_string(),
                 SymbolKind::Namespace,

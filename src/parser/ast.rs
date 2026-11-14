@@ -626,7 +626,7 @@ pub(crate) enum AstId {
     /// An import item.
     ///
     /// ```
-    /// import "./foo.gdn"
+    /// import "./foo.gdn" as foo
     /// ```
     Import(SyntaxId),
 }
@@ -952,21 +952,18 @@ impl PartialEq for StructInfo {
 pub(crate) struct ImportInfo {
     pub(crate) pos: Position,
     /// The actual path being imported. For example, if the user
-    /// wrote `import "./foo.gdn"`, then ./foo.gdn is the path here.
+    /// wrote `import "./foo.gdn" as foo`, then ./foo.gdn is the path here.
     pub(crate) path: PathBuf,
     /// The position of the string literal within
-    /// `import "./foo.gdn"`.
+    /// `import "./foo.gdn" as foo`.
     pub(crate) path_pos: Position,
     /// The symbol that this imported namespace will be bound to.
     ///
     /// ```
     /// // namespace_sym is `foo` here.
     /// import "./foo.gdn" as foo
-    ///
-    /// // namespace_sym is None here.
-    /// import "./bar.gdn"
     /// ```
-    pub(crate) namespace_sym: Option<Symbol>,
+    pub(crate) namespace_sym: Symbol,
 
     pub(crate) id: SyntaxId,
 }
@@ -1102,7 +1099,6 @@ pub(crate) enum ToplevelItem {
     /// ```
     Struct(StructInfo),
     /// ```garden
-    /// import "./foo.gdn"
     /// import "./foo.gdn" as bar
     /// ```
     Import(ImportInfo),

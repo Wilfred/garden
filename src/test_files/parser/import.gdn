@@ -1,4 +1,4 @@
-import "./foo.gdn"
+import "./foo.gdn" as foo
 
 // args: reftest-ast
 // expected stdout:
@@ -7,7 +7,7 @@ import "./foo.gdn"
 //         pos: Position { ... },
 //         path: "./foo.gdn",
 //         path_pos: Position { ... },
-//         namespace_sym: None,
-//         id: SyntaxId(0),
+//         namespace_sym: Symbol"foo",
+//         id: SyntaxId(1),
 //     },
 // )

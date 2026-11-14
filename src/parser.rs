@@ -1545,7 +1545,7 @@ fn parse_definition(
         if token.text == "fun" && next_token.text != "(" {
             return parse_function(tokens, id_gen, diagnostics);
         }
-        // Arguably `external` then `fun` is always a function
+        // Arguably `public` then `fun` is always a function
         // definition, but check for `(` for consistency with the
         // `fun` case.
         let nextnext_is_paren = match tokens.peek_at(2) {

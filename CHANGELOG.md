@@ -19,6 +19,9 @@ values.
 
 Added the `\r` (carriage return) escape sequence in string literals.
 
+Variants of `public` enums are now exported, so they can be used
+from files that import them.
+
 Fixed parsing of string literals ending in an escaped backslash, such
 as `"\\"`, where the closing quote was incorrectly treated as escaped.
 
@@ -41,6 +44,10 @@ Replaced the `not` method on `Bool` with a `not()` function. Write
 Added `String::to_ascii_lowercase()` and `String::to_ascii_uppercase()`.
 
 Added `String::as_float()` to parse strings as `Option<Float>`.
+
+Added a `__strings.gdn` built-in namespace with `encode()` and
+`decode()`, which convert between strings and lists of UTF-8 bytes or
+UTF-16 code units.
 
 Added `Dict::len()` to return the number of entries in a dict.
 

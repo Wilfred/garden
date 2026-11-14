@@ -24,7 +24,7 @@ test add_one_to_two {
 ```
 
 The built-in files available are `__fs`, `__random`, `__reflect`,
-`__shell` and `__time`. You can import and use them like this:
+`__shell`, `__strings` and `__time`. You can import and use them like this:
 
 ```
 import "__fs.gdn" as fs

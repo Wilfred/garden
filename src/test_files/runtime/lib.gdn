@@ -6,6 +6,11 @@ fun bar(): Int {
   41
 }
 
+public enum Direction {
+  Up,
+  Down,
+}
+
 {}
 
 // args: run

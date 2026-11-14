@@ -2,6 +2,7 @@ import "__fs.gdn" as fs
 import "__random.gdn" as random
 import "__reflect.gdn" as reflect
 import "__shell.gdn" as shell
+import "__strings.gdn" as strings
 import "__time.gdn" as time
 import "__prelude.gdn" as prelude
 import "./markdown.gdn" as markdown
@@ -371,6 +372,7 @@ fun build_site(): Unit {
     ("__random.gdn", random),
     ("__reflect.gdn", reflect),
     ("__shell.gdn", shell),
+    ("__strings.gdn", strings),
     ("__time.gdn", time),
   ]
 
@@ -483,6 +485,11 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
   })
   let shell_funs = join_with_commas_and(shell_funs)
 
+  let strings_funs = reflect::namespace_functions(strings).map(fun(name: String) {
+    code_link(name ^ "()", "./fun:__strings.gdn::" ^ name ^ ".html")
+  })
+  let strings_funs = join_with_commas_and(strings_funs)
+
   let time_funs = reflect::namespace_functions(time).map(fun(name: String) {
     code_link(name ^ "()", "./fun:__time.gdn::" ^ name ^ ".html")
   })
@@ -525,6 +532,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
     .replace("__RANDOM_FUNS", random_funs)
     .replace("__REFLECT_FUNS", reflect_funs)
     .replace("__SHELL_FUNS", shell_funs)
+    .replace("__STRINGS_FUNS", strings_funs)
     .replace("__TIME_FUNS", time_funs)
     .replace("__BLOG_LINKS", blog_links)
 }

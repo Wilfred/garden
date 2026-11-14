@@ -1,4 +1,4 @@
-import "./prelude"
+import "./prelude" as p
 //               ^
 
 // args: reftest-complete

@@ -1,4 +1,4 @@
-import "./has_bad_syntax.gdn"
+import "./has_bad_syntax.gdn" as lib
 // A comment on line 2.
 // A comment on line 3.
 
@@ -18,3 +18,12 @@ import "./has_bad_syntax.gdn"
 // 1| public fun bar() {
 // 2|   let x
 // 3| }     ^
+// 
+// Warning: `lib` is unused.
+// 
+// -| src/test_files/check/bad_syntax_in_imported_file.gdn:1:34
+// 1| import "./has_bad_syntax.gdn" as lib
+// 2| // A comment on line 2.          ^^^
+// 3| // A comment on line 3.
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

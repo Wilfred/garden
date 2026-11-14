@@ -1820,8 +1820,7 @@ fn parse_test(
     })
 }
 
-/// Parse an import statement, e.g. `import "./foo.gdn"` or
-/// `import "./foo.gdn" as bar`.
+/// Parse an import statement, e.g. `import "./foo.gdn" as bar`.
 fn parse_import(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
@@ -1855,7 +1854,7 @@ fn parse_import(
             message: ErrorMessage(vec![
                 msgcode!("import"),
                 msgtext!(" requires a path, for example "),
-                msgcode!("import \"./foo.gdn\""),
+                msgcode!("import \"./foo.gdn\" as foo"),
                 msgtext!(". See "),
                 msglink!(
                     "https://www.garden-lang.org/keyword:import.html",
@@ -1868,17 +1867,25 @@ fn parse_import(
         return None;
     };
 
-    let mut namespace_sym = None;
-
-    // Parse `as foo` syntax.
-    if peeked_symbol_is(tokens, "as") {
+    let namespace_sym = if peeked_symbol_is(tokens, "as") {
         tokens.pop();
 
         let sym = parse_symbol(tokens, id_gen, diagnostics, None);
         position = Position::merge(&position, &sym.position);
-
-        namespace_sym = Some(sym);
-    }
+        sym
+    } else {
+        diagnostics.push(ParseError::Invalid {
+            position: path_token.position.clone(),
+            message: ErrorMessage(vec![
+                msgcode!("import"),
+                msgtext!(" requires a name, for example "),
+                msgcode!("import {} as foo", path_token.text),
+                msgtext!("."),
+            ]),
+            notes: vec![],
+        });
+        placeholder_symbol(path_token.position.clone(), id_gen)
+    };
 
     let import_info = ImportInfo {
         pos: position.clone(),

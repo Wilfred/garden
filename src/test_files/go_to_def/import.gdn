@@ -1,4 +1,4 @@
-import "./some_lib.gdn"
+import "./some_lib.gdn" as lib
 //       ^
 
 // args: reftest-position

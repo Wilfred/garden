@@ -515,7 +515,7 @@ fn load_toplevel_items_(
                     // current namespace.
                     let imported_ns = env.get_namespace(&abs_path).unwrap();
                     insert_imported_namespace(
-                        import_info.namespace_sym.as_ref(),
+                        &import_info.namespace_sym,
                         Rc::clone(&namespace),
                         imported_ns,
                     );
@@ -535,7 +535,7 @@ fn load_toplevel_items_(
                         // namespace.
                         insert_placeholder_namespace(
                             abs_path.clone(),
-                            import_info.namespace_sym.as_ref(),
+                            &import_info.namespace_sym,
                             Rc::clone(&namespace),
                         );
 
@@ -570,14 +570,14 @@ fn load_toplevel_items_(
                     vivify_types,
                 );
 
-                let imported_syms = insert_imported_namespace(
-                    import_info.namespace_sym.as_ref(),
+                let imported_sym = insert_imported_namespace(
+                    &import_info.namespace_sym,
                     Rc::clone(&namespace),
                     destination_ns,
                 );
 
                 diagnostics.extend(import_diagnostics);
-                new_syms.extend(imported_syms);
+                new_syms.push(imported_sym);
             }
         }
     }
@@ -622,13 +622,9 @@ fn load_toplevel_items_(
 
 fn insert_placeholder_namespace(
     abs_path: PathBuf,
-    namespace_sym: Option<&Symbol>,
+    namespace_sym: &Symbol,
     current_ns: Rc<RefCell<NamespaceInfo>>,
 ) {
-    let Some(namespace_sym) = namespace_sym else {
-        return;
-    };
-
     let mut values = FxHashMap::default();
     values.insert(
         SymbolName {
@@ -654,45 +650,23 @@ fn insert_placeholder_namespace(
         .insert(namespace_sym.name.clone(), v);
 }
 
-/// Insert `imported_ns` into `current_ns`, either as a single value
-/// or as all the public symbols as values. Return a vec of all the
-/// imported symbols.
+/// Bind `imported_ns` to `namespace_sym` in `current_ns`, and return
+/// the bound name.
 fn insert_imported_namespace(
-    namespace_sym: Option<&Symbol>,
+    namespace_sym: &Symbol,
     current_ns: Rc<RefCell<NamespaceInfo>>,
     imported_ns: Rc<RefCell<NamespaceInfo>>,
-) -> Vec<SymbolName> {
-    match namespace_sym {
-        Some(namespace_sym) => {
-            let v = Value::new(Value_::Namespace {
-                ns_info: imported_ns,
-                imported_name_sym: namespace_sym.clone(),
-            });
-            current_ns
-                .borrow_mut()
-                .values
-                .insert(namespace_sym.name.clone(), v);
+) -> SymbolName {
+    let v = Value::new(Value_::Namespace {
+        ns_info: imported_ns,
+        imported_name_sym: namespace_sym.clone(),
+    });
+    current_ns
+        .borrow_mut()
+        .values
+        .insert(namespace_sym.name.clone(), v);
 
-            vec![namespace_sym.name.clone()]
-        }
-        None => {
-            let mut syms = vec![];
-
-            // Load all the public items into the current namespace.
-            let imported_ns = imported_ns.borrow();
-            for (sym, value) in &imported_ns.values {
-                if imported_ns.exported_syms.contains(sym) {
-                    current_ns
-                        .borrow_mut()
-                        .values
-                        .insert(sym.clone(), value.clone());
-                    syms.push(sym.clone());
-                }
-            }
-
-            syms
-        }
-    }
+    namespace_sym.name.clone()
 }
 
 pub(crate) const BUILT_IN_FILES: &[(&str, &str)] = &[

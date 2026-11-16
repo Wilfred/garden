@@ -6,15 +6,15 @@ criterion that user programs and editor input must never panic or hang the Rust
 host. The most urgent findings concern interpreter/parser robustness, generic
 type soundness, module isolation, and incomplete exception handling.
 
-This review contains **58 improvement candidates**, ordered by expected benefit
+This review contains **56 improvement candidates**, ordered by expected benefit
 for shipping a reliable language. They include confirmed bugs, warning and
 documentation gaps, and deliberately lower-priority design/API requests. They
-are not 58 independent root causes. Related reproductions are grouped, and
+are not 56 independent root causes. Related reproductions are grouped, and
 existing finding IDs are retained so earlier commits remain traceable; IDs are
 not priority numbers. No language implementation changes were made.
 
 The outstanding findings were rechecked against `main` at
-[`3b49b214`](https://github.com/Wilfred/garden/commit/3b49b2142e1238586332bf19a0e8e2f140de4cd8).
+[`7ced483a`](https://github.com/Wilfred/garden/commit/7ced483a93ddfefb3d51442e5ab1c1078279170c).
 Resolved items are omitted; partially resolved items retain their IDs with
 narrowed scope. The saved evidence, exercise experiences and validation results
 below describe the original review baseline unless stated otherwise.
@@ -22,8 +22,8 @@ below describe the original review baseline unless stated otherwise.
 | Priority | Release significance | Candidates |
 | --- | --- | ---: |
 | P0 | Release blockers: host failures, broken type/module guarantees, nonworking accepted syntax | 13 |
-| P1 | High-value correctness, failure reporting, validation and essential API work | 14 |
-| P2 | Diagnostics, documented semantics, usable APIs and documentation clarity | 27 |
+| P1 | High-value correctness, failure reporting, validation and essential API work | 13 |
+| P2 | Diagnostics, documented semantics, usable APIs and documentation clarity | 26 |
 | P3 | Optional convenience and migration hints with false-positive tradeoffs | 4 |
 
 The first release gate should be: no host panic/hang on bounded input, sound
@@ -182,12 +182,6 @@ A fenced `test incorrect { assert(False) }` is counted as a checked block and pa
 
 Evidence: [doc_examples.json](evidence/doc_examples.json).
 
-#### F13 — Float ordering is unavailable
-
-Float has no ordering operators, including <. (05/23). Arithmetic has useful dedicated operators but a renderer cannot directly express radius_squared < 4.0. Add ordering with a clear NaN policy.
-
-Evidence: [05_float_compare.gdn](probes/05_float_compare.gdn) · [23_float_order.gdn](probes/23_float_order.gdn) · [captured check/run output](evidence/probes.json).
-
 #### F09 — No codepoint to character conversion
 
 no integer-to-character conversion (07; prelude API inspected). Escaped JSON Unicode and Brainfuck character output need a workaround.
@@ -261,12 +255,6 @@ Evidence: [24_tuple_access.gdn](probes/24_tuple_access.gdn) · [captured check/r
 no Float.sqrt (54) or transcendental functions in the prelude. Escape-time rendering works, but smooth coloring, distances, rotations need common math functions.
 
 Evidence: [54_float_sqrt.gdn](probes/54_float_sqrt.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F29 — Duplicate field runtime errors name the wrong problem
-
-A duplicate struct field is correctly detected by check, but run says Point does not have a field named x, even though it does (44). Retain the precise duplicate-field diagnosis at runtime.
-
-Evidence: [44_duplicate_field.gdn](probes/44_duplicate_field.gdn) · [captured check/run output](evidence/probes.json).
 
 #### F31 — Quickfixes leave predictable follow-up warnings
 
@@ -380,9 +368,9 @@ Evidence: [68_string_interpolation.gdn](probes/68_string_interpolation.gdn) · [
 
 #### F50 — Common collection combinators are absent
 
-no fold, reverse or zip (101/103/104), forcing loops and indexing boilerplate in ordinary aggregate/pairwise tasks. This is an API request, not a demand for iterator syntax or a claim of impossibility.
+no fold or zip (101/104), forcing loops and indexing boilerplate in ordinary aggregate/pairwise tasks. This is an API request, not a demand for iterator syntax or a claim of impossibility.
 
-Evidence: [101_list_reduce.gdn](probes/101_list_reduce.gdn) · [103_list_reverse.gdn](probes/103_list_reverse.gdn) · [104_list_zip.gdn](probes/104_list_zip.gdn) · [captured check/run output](evidence/probes.json).
+Evidence: [101_list_reduce.gdn](probes/101_list_reduce.gdn) · [104_list_zip.gdn](probes/104_list_zip.gdn) · [captured check/run output](evidence/probes.json).
 
 #### F72 — Reversed literal ranges silently do no work
 

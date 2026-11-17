@@ -8,6 +8,10 @@
 Importing all public definitions into the current file with
 `import "./foo.gdn"` is no longer supported.
 
+Enum variants can now be marked `public`, such as `public enum
+Direction { public Up, Down }`, so other files can use them with
+`some_file::Up`.
+
 Integer compound assignments (`+=` and `-=`), division, remainder, and
 exponentiation now wrap on overflow, matching addition, subtraction,
 and multiplication.

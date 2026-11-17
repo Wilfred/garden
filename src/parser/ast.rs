@@ -843,6 +843,7 @@ impl PartialEq for TestInfo {
 
 #[derive(Debug, Clone, Eq)]
 pub(crate) struct VariantInfo {
+    pub(crate) visibility: Visibility,
     pub(crate) name_sym: Symbol,
     /// If this variant is of the form `Foo(T)`, the type hint inside
     /// the parentheses.
@@ -855,11 +856,14 @@ pub(crate) struct VariantInfo {
 impl PartialEq for VariantInfo {
     fn eq(&self, other: &Self) -> bool {
         let Self {
+            visibility,
             name_sym,
             payload_hint,
             comma: _,
         } = self;
-        *name_sym == other.name_sym && *payload_hint == other.payload_hint
+        *visibility == other.visibility
+            && *name_sym == other.name_sym
+            && *payload_hint == other.payload_hint
     }
 }
 

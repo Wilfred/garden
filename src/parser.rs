@@ -1663,12 +1663,20 @@ fn parse_enum_body(
     variants
 }
 
-/// Parse enum variant, e.g. `Some(T)`.
+/// Parse enum variant, e.g. `Some(T)` or `public None`.
 fn parse_variant(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> VariantInfo {
+    let mut visibility = Visibility::CurrentFile;
+    if let Some(token) = tokens.peek() {
+        if token.text == "public" {
+            let token = tokens.pop().unwrap();
+            visibility = Visibility::Public(token.position);
+        }
+    }
+
     let name_symbol = parse_symbol(tokens, id_gen, diagnostics, Some("variant name"));
 
     let mut payload_hint = None;
@@ -1679,6 +1687,7 @@ fn parse_variant(
     }
 
     VariantInfo {
+        visibility,
         name_sym: name_symbol,
         payload_hint,
         comma: None,

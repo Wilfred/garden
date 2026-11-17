@@ -53,6 +53,7 @@ enum E { A,
 //         type_params: [],
 //         variants: [
 //             VariantInfo {
+//                 visibility: CurrentFile,
 //                 name_sym: Symbol"A",
 //                 payload_hint: None,
 //                 comma: Some(

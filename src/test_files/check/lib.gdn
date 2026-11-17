@@ -6,4 +6,9 @@ fun bar(): Int {
   41
 }
 
+public enum Direction {
+  public Up,
+  Down,
+}
+
 // args: check

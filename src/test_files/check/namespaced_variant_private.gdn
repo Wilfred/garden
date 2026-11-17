@@ -1,0 +1,15 @@
+import "./lib.gdn" as f
+
+{
+  f::Down
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `Down` is not marked as `public` so it cannot be used outside the file that contains it.
+// 
+// -| src/test_files/check/namespaced_variant_private.gdn:4:6
+// 3| {
+// 4|   f::Down
+// 5| }    ^^^^

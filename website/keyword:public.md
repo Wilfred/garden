@@ -23,5 +23,21 @@ import "./other_file.gdn" as other_file
 other_file::visible_everywhere()
 ```
 
+Enum variants can also be marked `public`, so other files can use
+them.
+
+```title:"File: other_file.gdn"
+public enum Direction {
+  public Up,
+  Down,
+}
+```
+
+```title:"Example 3"
+import "./other_file.gdn" as other_file
+
+other_file::Up
+```
+
 The keyword `shared` is currently reserved for an additional
 visibility level.

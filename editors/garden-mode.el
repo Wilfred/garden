@@ -965,6 +965,7 @@ the result."
       (1+ column)
       (if (string= severity "warning") 'warning 'error)
       message
+      :filename (plist-get it :path)
       :end-line end-line-number
       :end-column (1+ end-column)
       :buffer buffer))

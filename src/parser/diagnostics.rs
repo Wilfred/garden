@@ -48,6 +48,15 @@ macro_rules! msglink {
 pub(crate) struct ErrorMessage(pub(crate) Vec<MessagePart>);
 
 impl ErrorMessage {
+    pub(crate) fn elif_hint() -> Self {
+        Self(vec![
+            crate::msgcode!("elif"),
+            crate::msgtext!(" is unbound. To continue a conditional, write "),
+            crate::msgcode!("else if"),
+            crate::msgtext!("."),
+        ])
+    }
+
     pub(crate) fn as_string(&self) -> String {
         let mut s = String::new();
         for message_part in &self.0 {

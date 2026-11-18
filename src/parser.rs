@@ -545,6 +545,42 @@ fn parse_assert(
     Expression::new(position, Expression_::Assert(first.expr), id_gen.next())
 }
 
+fn parse_condition(
+    tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let mut condition = parse_expression(tokens, id_gen, diagnostics);
+    while let Some(token) = tokens.peek().filter(|token| token.text == "and") {
+        tokens.pop();
+        diagnostics.push(ParseError::Invalid {
+            position: token.position.clone(),
+            message: ErrorMessage(vec![
+                msgtext!("Use "),
+                msgcode!("&&"),
+                msgtext!(" for logical conjunction in place of "),
+                msgcode!("and"),
+                msgtext!(". Garden evaluates both operands."),
+            ]),
+            notes: vec![],
+        });
+        let rhs = parse_expression(tokens, id_gen, diagnostics);
+        condition = Expression::new(
+            Position::merge(&condition.position, &rhs.position),
+            Expression_::BinaryOperator(
+                Rc::new(condition),
+                BinaryOperatorSymbol {
+                    kind: BinaryOperatorKind::And,
+                    position: token.position,
+                },
+                Rc::new(rhs),
+            ),
+            id_gen.next(),
+        );
+    }
+    condition
+}
+
 fn parse_if(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
@@ -552,7 +588,7 @@ fn parse_if(
 ) -> Expression {
     let if_token = require_token(tokens, diagnostics, "if");
 
-    let cond_expr = parse_expression(tokens, id_gen, diagnostics);
+    let cond_expr = parse_condition(tokens, id_gen, diagnostics);
     let then_body = parse_block(tokens, id_gen, diagnostics);
 
     let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
@@ -594,7 +630,7 @@ fn parse_while(
 ) -> Expression {
     let while_token = require_token(tokens, diagnostics, "while");
 
-    let cond_expr = parse_expression(tokens, id_gen, diagnostics);
+    let cond_expr = parse_condition(tokens, id_gen, diagnostics);
     let body = parse_block(tokens, id_gen, diagnostics);
 
     Expression::new(

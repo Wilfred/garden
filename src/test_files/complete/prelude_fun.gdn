@@ -2,4 +2,4 @@ read_
 //  ^
 
 // args: reftest-complete
-// expected stdout: {"label":"read_line","kind":6,"detail":": Fun<(), Result<String, String>>"}
+// expected stdout: {"label":"read_line","kind":6,"detail":": Fun<(), Result<Option<String>, String>>"}

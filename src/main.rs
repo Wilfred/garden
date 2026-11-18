@@ -1446,6 +1446,39 @@ fun main() {
     }
 
     #[test]
+    fn test_read_line() {
+        assert_cmd::Command::cargo_bin("garden")
+            .unwrap()
+            .args([
+                "run",
+                "-c",
+                r#"
+assert(read_line() == Ok(Some("first")))
+assert(read_line() == Ok(Some("")))
+assert(read_line() == Ok(Some("last")))
+assert(read_line() == Ok(None))
+"#,
+            ])
+            .write_stdin("first\r\n\nlast")
+            .assert()
+            .success();
+    }
+
+    #[test]
+    fn test_read_line_invalid_utf8() {
+        assert_cmd::Command::cargo_bin("garden")
+            .unwrap()
+            .args([
+                "run",
+                "-c",
+                "assert(match read_line() { Ok(_) => False, Err(_) => True })",
+            ])
+            .write_stdin(vec![0xff, b'\n'])
+            .assert()
+            .success();
+    }
+
+    #[test]
     fn test_run_c_flag_with_path_errors() {
         let path = assert_cmd::cargo::cargo_bin("garden");
         let mut cmd = Command::new(path);

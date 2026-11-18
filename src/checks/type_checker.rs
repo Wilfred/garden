@@ -797,12 +797,23 @@ impl TypeCheckVisitor<'_> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
+        self.infer_expr_with_lambda_params(expr, type_bindings, expected_return_ty, &[])
+    }
+
+    fn infer_expr_with_lambda_params(
+        &mut self,
+        expr: &Expression,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+        lambda_params: &[Type],
+    ) -> Type {
         let ty = self.infer_expr_(
             &expr.expr_,
             &expr.position,
             expr.id,
             type_bindings,
             expected_return_ty,
+            lambda_params,
         );
         self.id_to_ty.insert(expr.id, ty.clone());
 
@@ -1019,6 +1030,7 @@ impl TypeCheckVisitor<'_> {
         expr_id: SyntaxId,
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
+        lambda_params: &[Type],
     ) -> Type {
         match expr_ {
             Expression_::Match(scrutinee, cases) => self.check_match(
@@ -1299,11 +1311,12 @@ impl TypeCheckVisitor<'_> {
                     .params
                     .params
                     .iter()
-                    .map(|param| match &param.hint {
+                    .enumerate()
+                    .map(|(i, param)| match &param.hint {
                         Some(hint) => {
                             Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty()
                         }
-                        None => Type::Any,
+                        None => lambda_params.get(i).cloned().unwrap_or(Type::Any),
                     })
                     .collect::<Vec<_>>();
 
@@ -1334,9 +1347,12 @@ impl TypeCheckVisitor<'_> {
                 self.check_expr(&Type::bool(), expr, type_bindings, expected_return_ty, None);
                 Type::unit()
             }
-            Expression_::Parentheses(paren) => {
-                self.infer_expr(&paren.expr, type_bindings, expected_return_ty)
-            }
+            Expression_::Parentheses(paren) => self.infer_expr_with_lambda_params(
+                &paren.expr,
+                type_bindings,
+                expected_return_ty,
+                lambda_params,
+            ),
             Expression_::Invalid => {
                 // We've already emitted a parse error, so use the
                 // bottom type to prevent later type errors.
@@ -1587,8 +1603,27 @@ impl TypeCheckVisitor<'_> {
                 unify_and_solve_ty(&recv_decl_ty, &receiver_ty, &mut ty_var_env);
 
                 let mut arg_tys = vec![];
-                for arg in &paren_args.arguments {
-                    let arg_ty = self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+                for (i, arg) in paren_args.arguments.iter().enumerate() {
+                    let callback_params = match param_decl_tys.get(i) {
+                        Some(Type::Fun { params, .. }) => {
+                            // Keep unconstrained callback parameters open to any value.
+                            let mut callback_bindings = ty_var_env.clone();
+                            for binding in callback_bindings.values_mut() {
+                                binding.get_or_insert(Type::Any);
+                            }
+                            params
+                                .iter()
+                                .map(|ty| substitute_ty_vars(ty, &callback_bindings))
+                                .collect()
+                        }
+                        _ => vec![],
+                    };
+                    let arg_ty = self.infer_expr_with_lambda_params(
+                        &arg.expr,
+                        type_bindings,
+                        expected_return_ty,
+                        &callback_params,
+                    );
                     arg_tys.push((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
                 }
 
@@ -2855,7 +2890,7 @@ impl TypeCheckVisitor<'_> {
 
                 expected_ty.clone()
             }
-            _ => self.infer_expr_(expr_, pos, expr_id, type_bindings, expected_return_ty),
+            _ => self.infer_expr_(expr_, pos, expr_id, type_bindings, expected_return_ty, &[]),
         };
 
         if !is_subtype(&ty, expected_ty) {

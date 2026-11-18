@@ -3,4 +3,4 @@ fun unused() {}
 // args: check --json
 // expected exit status: 1
 // expected stdout:
-// {"line_number":1,"end_line_number":1,"column":4,"end_column":10,"message":"`unused` is never called.","severity":"warning"}
+// {"path":"src/test_files/check/json_format.gdn","line_number":1,"end_line_number":1,"column":4,"end_column":10,"message":"`unused` is never called.","severity":"warning"}

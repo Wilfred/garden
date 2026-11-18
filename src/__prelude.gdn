@@ -843,6 +843,26 @@ test list_reverse {
   assert([1, 2, 3].reverse() == [3, 2, 1])
 }
 
+/// Return a new list with the item at the zero-based `index` replaced by
+/// `value`. Returns `None` if the index is out of bounds.
+///
+/// ```
+/// [10, 20, 30].set(1, 99) //-> Some([10, 99, 30])
+/// [10, 20, 30].set(3, 99) //-> None
+/// ```
+public method set<T>(this: List<T>, index: Int, value: T): Option<List<T>> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test list_set {
+  let items = [10, 20, 30]
+  assert(items.set(1, 99) == Some([10, 99, 30]))
+  assert(items == [10, 20, 30])
+  assert(items.set(3, 99) == None)
+  assert(items.set(-1, 99) == None)
+  assert([].set(0, 99) == None)
+}
+
 /// Return a new list of these integers sorted in ascending order.
 ///
 /// ```

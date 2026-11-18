@@ -166,7 +166,7 @@ pub(crate) fn lex_between<'a>(
             break;
         };
         if first_char.is_whitespace() {
-            offset += 1;
+            offset += first_char.len_utf8();
             continue;
         }
 
@@ -370,22 +370,22 @@ pub(crate) fn lex_between<'a>(
             errors.push(ParseError::Invalid {
                 position: Position {
                     start_offset: offset,
-                    end_offset: offset + 1,
+                    end_offset: offset + first_char.len_utf8(),
                     line_number: line_number.as_usize(),
                     end_line_number: line_number.as_usize(),
                     column,
-                    end_column: column + 1,
+                    end_column: column + first_char.len_utf8(),
                     path: Rc::clone(&vfs_path.path),
                     vfs_path: vfs_path.clone(),
                 },
                 message: ErrorMessage(vec![
                     msgtext!("Unrecognized syntax "),
-                    msgcode!("{}", &s[0..1]),
+                    msgcode!("{}", first_char),
                 ]),
                 notes: vec![],
             });
 
-            offset += 1;
+            offset += first_char.len_utf8();
         }
     }
 

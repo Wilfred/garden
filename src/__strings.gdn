@@ -47,3 +47,23 @@ test decode {
   assert(decode([55357], Utf16) == Err("invalid utf-16: lone surrogate found"))
   assert(decode([-1], Utf16) == Err("UTF-16 code unit -1 is outside the range 0 to 65535."))
 }
+
+/// Return the character for this Unicode code point as a one-character string.
+/// Returns `None` for values outside 0 to 1114111 and for surrogate code points.
+///
+/// ```
+/// import "__strings.gdn" as strings
+/// strings::from_codepoint(9731) //-> Some("☃")
+/// ```
+public fun from_codepoint(codepoint: Int): Option<String> {
+  __BUILT_IN_IMPLEMENTATION
+}
+
+test from_codepoint {
+  assert(from_codepoint(65) == Some("A"))
+  assert(from_codepoint(128512) == Some("😀"))
+  assert(from_codepoint(-1) == None)
+  assert(from_codepoint(55296) == None)
+  assert(from_codepoint(1114112) == None)
+  assert(from_codepoint(4294967361) == None)
+}

@@ -4576,6 +4576,34 @@ fn eval_built_in_call(
                 });
             }
         }
+        BuiltInFunctionKind::StringsFromCodepoint => {
+            check_arity(
+                kind,
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let Value_::Int(codepoint) = arg_values[0].as_ref() else {
+                return Err((
+                    RestoreValues(vec![arg_values[0].clone(), receiver_value.clone()]),
+                    EvalError::Exception(ExceptionInfo {
+                        position: arg_positions[0].clone(),
+                        message: format_type_error(&Type::int(), &arg_values[0], env),
+                    }),
+                ));
+            };
+
+            if expr_value_is_used {
+                let character = u32::try_from(*codepoint).ok().and_then(char::from_u32);
+                env.push_value(match character {
+                    Some(c) => Value::some(Value::new(Value_::String(c.to_string()))),
+                    None => Value::none(),
+                });
+            }
+        }
         BuiltInFunctionKind::TimeUnixtime => {
             check_arity(
                 kind,

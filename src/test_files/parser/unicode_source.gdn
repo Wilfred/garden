@@ -1,0 +1,16 @@
+1 é
+
+// args: reftest-ast
+// expected stdout:
+// IntLiteral(
+//     1,
+// )
+
+// expected stderr:
+// Error: Parse error: Unrecognized syntax `é`
+// 
+// -| src/test_files/parser/unicode_source.gdn:1:5
+// 1| 1 é
+// 2|     ^^
+// 3| // args: reftest-ast
+

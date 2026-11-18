@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>sort_nums - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container"><h1><code>sort_<wbr>nums()</code></h1>
+<p>Return a new list of these integers sorted in ascending order.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>sort_nums([3, 1, 2]) <span class="comment">//-&gt; [1, 2, 3]</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Source Code</span></div><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> sort_nums(items: <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt;): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt; {
+  <a class="keyword" href="/keyword:match.html">match</a> items.first() {
+    <span class="type">None</span> =&gt; [],
+    <span class="type">Some</span>(pivot) =&gt; {
+      <a class="keyword" href="/keyword:let.html">let</a> rest <a class="operator" href="/operator:=.html">=</a> items.slice(1, items.len())
+      <a class="keyword" href="/keyword:let.html">let</a> smaller <a class="operator" href="/operator:=.html">=</a> rest.filter(<a class="keyword" href="/keyword:fun.html">fun</a>(x: <a class="type" href="/type:Int.html">Int</a>) { x <a class="operator" href="/operator:<.html">&lt;</a> pivot })
+      <a class="keyword" href="/keyword:let.html">let</a> larger <a class="operator" href="/operator:=.html">=</a> rest.filter(<a class="keyword" href="/keyword:fun.html">fun</a>(x: <a class="type" href="/type:Int.html">Int</a>) { x <a class="operator" href="/operator:>=.html">&gt;=</a> pivot })
+      sort_nums(smaller).concat([pivot]).concat(sort_nums(larger))
+    },
+  }
+}</code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div></main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <button class="footer-plant" type="button" aria-label="Water the plant">
+          <span class="footer-plant-drop" aria-hidden="true"></span>
+          <span class="footer-plant-leaves" aria-hidden="true">🪴</span>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

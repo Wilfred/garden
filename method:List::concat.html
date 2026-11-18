@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>List::concat - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container"><h1><code>List::<wbr>concat()</code></h1>
+<p>Return a new list with all the items from <code>this</code>, followed by all
+the items from <code>other</code>.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>[1, 2].concat([3, 4]) <span class="comment">//-&gt; [1, 2, 3, 4]</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Source Code</span></div><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> concat&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;, other: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;): <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; {
+  <a class="keyword" href="/keyword:let.html">let</a> result: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; <a class="operator" href="/operator:=.html">=</a> this
+  <a class="keyword" href="/keyword:for.html">for</a> item <a class="keyword" href="/keyword:in.html">in</a> other {
+    result <a class="operator" href="/operator:=.html">=</a> result.append(item)
+  }
+
+  result
+}</code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div></main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <button class="footer-plant" type="button" aria-label="Water the plant">
+          <span class="footer-plant-drop" aria-hidden="true"></span>
+          <span class="footer-plant-leaves" aria-hidden="true">🪴</span>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

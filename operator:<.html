@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>< - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container"><h1><code>&lt;</code>, <code>&lt;=</code>, <a href="/operator:>.html"><code>&gt;</code></a> and <code>&gt;=</code> Operators</h1>
+<p><code>&lt;</code> evaluates to <code>True</code> if the first integer is strictly less than the
+second.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>1 <span class="operator">&lt;</span> 2 <span class="comment">//-&gt; True</span>
+10 <span class="operator">&lt;</span> 10 <span class="comment">//-&gt; False</span>
+100 <span class="operator">&lt;</span> 99 <span class="comment">//-&gt; False</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p><code>&lt;=</code> evaluates to <code>True</code> if the first integer is less than or equal to
+the second.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>1 <a class="operator" href="/operator:<=.html">&lt;=</a> 2 <span class="comment">//-&gt; True</span>
+10 <a class="operator" href="/operator:<=.html">&lt;=</a> 10 <span class="comment">//-&gt; True</span>
+100 <a class="operator" href="/operator:<=.html">&lt;=</a> 99 <span class="comment">//-&gt; False</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p><a href="/operator:>.html"><code>&gt;</code></a> evaluates to <code>True</code> if the first integer is strictly greater than
+the second.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>2 <a class="operator" href="/operator:>.html">&gt;</a> 1 <span class="comment">//-&gt; True</span>
+10 <a class="operator" href="/operator:>.html">&gt;</a> 10 <span class="comment">//-&gt; False</span>
+99 <a class="operator" href="/operator:>.html">&gt;</a> 100 <span class="comment">//-&gt; False</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p><code>&gt;=</code> evaluates to <code>True</code> if the first integer is greater than or equal
+to the second.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>2 <a class="operator" href="/operator:>=.html">&gt;=</a> 1 <span class="comment">//-&gt; True</span>
+10 <a class="operator" href="/operator:>=.html">&gt;=</a> 10 <span class="comment">//-&gt; True</span>
+99 <a class="operator" href="/operator:>=.html">&gt;=</a> 100 <span class="comment">//-&gt; False</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div></main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <button class="footer-plant" type="button" aria-label="Water the plant">
+          <span class="footer-plant-drop" aria-hidden="true"></span>
+          <span class="footer-plant-leaves" aria-hidden="true">🪴</span>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>source_file - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container"><h1><code>_<wbr>_<wbr>reflect.gdn::<wbr>source_<wbr>file()</code></h1>
+<p>Return the path of the current source file. Returns None when run
+directly in a CLI or JSON session.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>source_file() <span class="comment">// Some(Path{ p: "/home/yourname/awesome_garden_project/main.gdn" })</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Source Code</span></div><pre><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> source_file(): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:Path.html">Path</a>&gt; {
+  __BUILT_IN_IMPLEMENTATION
+}</code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div></main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <button class="footer-plant" type="button" aria-label="Water the plant">
+          <span class="footer-plant-drop" aria-hidden="true"></span>
+          <span class="footer-plant-leaves" aria-hidden="true">🪴</span>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

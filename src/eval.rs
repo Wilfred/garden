@@ -5945,6 +5945,52 @@ fn eval_built_in_method_call(
                 }
             }
         }
+        BuiltInMethodKind::ListSet => {
+            check_arity(
+                "List::set",
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let (items, index) = match (receiver_value.as_ref(), arg_values[0].as_ref()) {
+                (Value_::List { items, .. }, Value_::Int(index)) => (items, *index),
+                (_, arg) => {
+                    let (expected, value, position) = if matches!(arg, Value_::Int(_)) {
+                        ("List", receiver_value, receiver_pos)
+                    } else {
+                        ("Int", &arg_values[0], &arg_positions[0])
+                    };
+                    return Err((
+                        RestoreValues(vec![
+                            arg_values[1].clone(),
+                            arg_values[0].clone(),
+                            receiver_value.clone(),
+                        ]),
+                        EvalError::Exception(ExceptionInfo {
+                            position: position.clone(),
+                            message: format_type_error(expected, value, env),
+                        }),
+                    ));
+                }
+            };
+
+            if expr_value_is_used {
+                let value = &arg_values[1];
+                let updated = usize::try_from(index)
+                    .ok()
+                    .and_then(|index| items.set(index, value.clone()));
+                env.push_value(match updated {
+                    Some(items) => Value::some(Value::new(Value_::List {
+                        items,
+                        elem_type: Type::from_value(value),
+                    })),
+                    None => Value::none(),
+                });
+            }
+        }
         BuiltInMethodKind::ListSlice => {
             check_arity(
                 "List::slice",

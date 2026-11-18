@@ -543,6 +543,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
                 ("get", BuiltInMethodKind::ListGet),
                 ("len", BuiltInMethodKind::ListLen),
                 ("reverse", BuiltInMethodKind::ListReverse),
+                ("set", BuiltInMethodKind::ListSet),
                 ("slice", BuiltInMethodKind::ListSlice),
             ],
         ),

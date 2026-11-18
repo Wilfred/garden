@@ -11,7 +11,7 @@
 // 1| {
 // 2|     print(123)
 // 3| }         ^^^
-// ----| __prelude.gdn:1002:21
-// 1002| public fun print(_: String): Unit {
+// ----| __prelude.gdn:1022:21
+// 1022| public fun print(_: String): Unit {
 //     |                     ^^^^^^ Note: The parameter `_` is declared with type `String` here.
 

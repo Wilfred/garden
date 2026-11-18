@@ -1,0 +1,8 @@
+import "./check_json.gdn" as lib
+
+// args: check --json
+// expected exit status: 1
+// expected stdout:
+// {"path":"src/test_files/check/check_json.gdn","line_number":2,"end_line_number":2,"column":18,"end_column":19,"message":"Expected `,` or `)` here.","severity":"error"}
+// 
+// {"path":"src/test_files/check/imported_syntax_error_json.gdn","line_number":1,"end_line_number":1,"column":29,"end_column":32,"message":"`lib` is unused.","severity":"warning"}

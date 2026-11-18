@@ -1,6 +1,6 @@
 use serde::Serialize;
 use std::io::IsTerminal;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use crate::checks::check_toplevel_items_in_env;
@@ -9,7 +9,7 @@ use crate::parser::ast::IdGenerator;
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
-use crate::parser::vfs::Vfs;
+use crate::parser::vfs::{to_project_relative, Vfs};
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::{load_toplevel_items, Env};
 
@@ -23,6 +23,7 @@ struct CheckDiagnostic {
     position: Position,
     #[serde(skip)]
     notes: Vec<(ErrorMessage, Position)>,
+    path: PathBuf,
     // TODO: Could we just use Position here? The only downside of
     // using Position directly is that a file with a large number of
     // errors will repeat the same file name many times in the JSON
@@ -77,6 +78,8 @@ pub(crate) fn check(
 
     let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
 
+    let mut env = Env::new(id_gen, vfs);
+
     for e in errors.into_iter() {
         match e {
             ParseError::Invalid {
@@ -86,6 +89,7 @@ pub(crate) fn check(
             } => {
                 // Expose line numbers as 1-indexed.
                 diagnostics.push(CheckDiagnostic {
+                    path: to_project_relative(&position.path, &env.project_root),
                     position: position.clone(),
                     line_number: position.line_number + 1,
                     end_line_number: position.end_line_number + 1,
@@ -104,6 +108,7 @@ pub(crate) fn check(
                 message, position, ..
             } => {
                 diagnostics.push(CheckDiagnostic {
+                    path: to_project_relative(&position.path, &env.project_root),
                     position: position.clone(),
                     line_number: position.line_number + 1,
                     end_line_number: position.end_line_number + 1,
@@ -120,8 +125,6 @@ pub(crate) fn check(
             }
         };
     }
-
-    let mut env = Env::new(id_gen, vfs);
 
     // If we have syntax errors, don't bother checking anything else,
     // as it has a high false positive rate and it's hard to see what
@@ -142,6 +145,7 @@ pub(crate) fn check(
             all_fixes.extend(fixes);
 
             diagnostics.push(CheckDiagnostic {
+                path: to_project_relative(&position.path, &env.project_root),
                 position: position.clone(),
                 line_number: position.line_number + 1,
                 end_line_number: position.end_line_number + 1,

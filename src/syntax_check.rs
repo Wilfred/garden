@@ -1,17 +1,16 @@
 use serde::Serialize;
 use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 
-use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{format_diagnostic, Autofix, Diagnostic, Severity};
+use crate::eval::load_and_check_file;
 use crate::parser::ast::IdGenerator;
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_project_relative, Vfs};
 use crate::parser::{parse_toplevel_items, ParseError};
-use crate::{load_toplevel_items, Env};
+use crate::Env;
 
 /// A diagnostic that can be serialized. Messages and positions are
 /// stored in an IDE friendly format.
@@ -130,19 +129,19 @@ pub(crate) fn check(
     // as it has a high false positive rate and it's hard to see what
     // needs fixing next.
     if diagnostics.is_empty() {
-        let ns = env.get_or_create_namespace(path);
-        let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, Rc::clone(&ns));
-        raw_diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, &env, ns));
-
         for Diagnostic {
             message,
             position,
             severity,
             notes,
             fixes,
-        } in raw_diagnostics
+        } in load_and_check_file(&vfs_path, &items, &mut env)
         {
-            all_fixes.extend(fixes);
+            all_fixes.extend(
+                fixes
+                    .into_iter()
+                    .filter(|fix| fix.position.vfs_path == vfs_path),
+            );
 
             diagnostics.push(CheckDiagnostic {
                 path: to_project_relative(&position.path, &env.project_root),

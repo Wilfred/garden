@@ -1,0 +1,12 @@
+import "./type_error_return_option.gdn" as first
+import "./type_error_return_option.gdn" as second
+
+{
+  first::foo([])
+  second::foo([])
+}
+
+// args: check --json
+// expected exit status: 1
+// expected stdout:
+// {"path":"src/test_files/check/type_error_return_option.gdn","line_number":2,"end_line_number":2,"column":4,"end_column":17,"message":"Expected a `String` but got an `Option<String>`.","severity":"error"}

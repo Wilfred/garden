@@ -455,6 +455,7 @@ pub(crate) enum BuiltInFunctionKind {
     ReflectSourceForType,
     StringsDecode,
     StringsEncode,
+    StringsFromCodepoint,
     TimeUnixtime,
 }
 
@@ -499,9 +500,9 @@ impl BuiltInFunctionKind {
             | BuiltInFunctionKind::ReflectKeywords
             | BuiltInFunctionKind::ReflectBuiltInFiles => PathBuf::from("__reflect.gdn"),
             BuiltInFunctionKind::RandomRandomInt => PathBuf::from("__random.gdn"),
-            BuiltInFunctionKind::StringsDecode | BuiltInFunctionKind::StringsEncode => {
-                PathBuf::from("__strings.gdn")
-            }
+            BuiltInFunctionKind::StringsDecode
+            | BuiltInFunctionKind::StringsEncode
+            | BuiltInFunctionKind::StringsFromCodepoint => PathBuf::from("__strings.gdn"),
             BuiltInFunctionKind::TimeUnixtime => PathBuf::from("__time.gdn"),
         }
     }
@@ -549,6 +550,7 @@ impl Display for BuiltInFunctionKind {
             BuiltInFunctionKind::FsRemoveFile => "remove_file",
             BuiltInFunctionKind::StringsDecode => "decode",
             BuiltInFunctionKind::StringsEncode => "encode",
+            BuiltInFunctionKind::StringsFromCodepoint => "from_codepoint",
             BuiltInFunctionKind::TimeUnixtime => "unixtime",
             BuiltInFunctionKind::ReflectBuiltInFiles => "built_in_files",
         };

@@ -3060,6 +3060,21 @@ fn parse_let(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let let_token = require_token(tokens, diagnostics, "let");
+    if let Some((modifier, _)) = tokens
+        .peek_two()
+        .filter(|(modifier, name)| modifier.text == "mut" && SYMBOL_RE.is_match(name.text))
+    {
+        tokens.pop();
+        diagnostics.push(ParseError::Invalid {
+            position: modifier.position,
+            message: ErrorMessage(vec![
+                msgtext!("Remove "),
+                msgcode!("mut"),
+                msgtext!(". Garden bindings can be reassigned without a modifier."),
+            ]),
+            notes: vec![],
+        });
+    }
     let destination = parse_let_destination(tokens, id_gen, diagnostics);
 
     let hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);

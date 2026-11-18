@@ -1032,17 +1032,17 @@ public fun eprintln(_: String): Unit {
 
 /// Read a single line of text from stdin.
 ///
-/// Returns `Ok` with the line (without trailing newline) on success,
-/// or `Err` with an error message on failure. When there is no more
-/// input available (end of file), returns `Err("End of input.")`.
+/// Returns `Ok(Some(line))` without the trailing newline, `Ok(None)`
+/// at end of input, or `Err` with an error message on failure.
+/// A blank line returns `Ok(Some(""))`.
 ///
 /// ```
 /// match read_line() {
-///   Ok(line) => println("You entered: " ^ line)
-///   Err(e) => println("Error: " ^ e)
+///   Ok(input) => println(input.or_value("End of input.")),
+///   Err(e) => println("Error: " ^ e),
 /// }
 /// ```
-public fun read_line(): Result<String, String> {
+public fun read_line(): Result<Option<String>, String> {
   __BUILT_IN_IMPLEMENTATION
 }
 

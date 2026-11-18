@@ -1862,15 +1862,19 @@ impl TypeCheckVisitor<'_> {
                     "".to_owned()
                 };
 
+                let mut message = ErrorMessage(vec![
+                    msgtext!("Unbound symbol: "),
+                    msgcode!("{}", sym.name),
+                    msgtext!("{}", suggest),
+                ]);
+                if let Some(src) = self.env.vfs.file_src(&sym.position.vfs_path) {
+                    message.suggest_fun(src, sym.position.start_offset);
+                }
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
                     fixes,
                     severity: Severity::Error,
-                    message: ErrorMessage(vec![
-                        msgtext!("Unbound symbol: "),
-                        msgcode!("{}", sym.name),
-                        msgtext!("{}", suggest),
-                    ]),
+                    message,
                     position: sym.position.clone(),
                 });
             }

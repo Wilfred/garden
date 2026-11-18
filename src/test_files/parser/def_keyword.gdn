@@ -1,0 +1,13 @@
+def greet(name):
+  print(name)
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected an expression after this.
+// To declare a function, write `fun greet(name: String) { ... }`.
+// 
+// -| src/test_files/parser/def_keyword.gdn:1:15
+// 1| def greet(name):
+// 2|   print(name) ^
+

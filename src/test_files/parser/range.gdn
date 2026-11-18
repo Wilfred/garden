@@ -1,0 +1,19 @@
+for i in 1..2 {}
+x.0
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected a method or field name after this.
+// 
+// -| src/test_files/parser/range.gdn:1:11
+// 1| for i in 1..2 {}
+// 2| x.0       ^
+// 
+// Error: Garden does not support tuple field access like `.0` or `.1`. Use destructuring instead, for example: `let (x, y) = value`.
+// 
+// -| src/test_files/parser/range.gdn:2:2
+// 1| for i in 1..2 {}
+// 2| x.0
+// 3|  ^
+

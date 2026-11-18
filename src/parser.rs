@@ -1284,7 +1284,8 @@ fn parse_expression(
                 if Some(token.position.end_offset)
                     == next_token.map(|tok| tok.position.start_offset)
                 {
-                    let variable = parse_symbol(tokens, id_gen, diagnostics, Some("method name"));
+                    let variable =
+                        parse_symbol(tokens, id_gen, diagnostics, Some("method or field name"));
 
                     if peeked_symbol_is(tokens, "(") {
                         // TODO: just treat a method call as a call of a dot access.
@@ -2996,6 +2997,16 @@ fn parse_symbol(
                 message: ErrorMessage(vec![msgtext!("Expected a {description} after this.")]),
                 notes: vec![],
             });
+        }
+        // In `1..2`, retrying the second dot would misdiagnose `.2` as tuple access.
+        if variable_token.text == "." && prev_token.is_some_and(|t| t.text == ".") {
+            if let Some(number) = tokens.peek().filter(|t| {
+                t.position.start_offset == variable_token.position.end_offset
+                    && INTEGER_RE.is_match(t.text)
+            }) {
+                tokens.pop();
+                return placeholder_symbol(number.position, id_gen);
+            }
         }
         tokens.unpop();
         return placeholder_symbol(variable_token.position, id_gen);

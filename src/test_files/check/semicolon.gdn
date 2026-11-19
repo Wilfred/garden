@@ -1,0 +1,10 @@
+assert(True);
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Unrecognized syntax `;`. Remove the semicolon.
+// 
+// -| src/test_files/check/semicolon.gdn:1:13
+// 1| assert(True);
+// 2|             ^

@@ -1,0 +1,14 @@
+if !False {
+  assert(1 != 2)
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Unrecognized syntax `!`. For logical negation, use `not(value)`.
+// 
+// -| src/test_files/check/logical_negation.gdn:1:4
+// 1| if !False {
+//  |    ^
+// 2|   assert(1 != 2)
+// 3| }

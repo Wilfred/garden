@@ -62,7 +62,7 @@ fun foo() {
 // )
 
 // expected stderr:
-// Error: Parse error: Unrecognized syntax `!`
+// Error: Parse error: Unrecognized syntax `!`. For logical negation, use `not(value)`.
 // 
 // -| src/test_files/parser/accidental_rust_dbg.gdn:2:8
 // 1| fun foo() {

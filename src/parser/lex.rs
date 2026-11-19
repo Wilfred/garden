@@ -366,6 +366,14 @@ pub(crate) fn lex_between<'a>(
             offset += variable_match.end();
         } else {
             let (line_number, column) = lp.from_offset(offset);
+            let mut message = vec![msgtext!("Unrecognized syntax "), msgcode!("{}", first_char)];
+            if first_char == '!' {
+                message.extend([
+                    msgtext!(". For logical negation, use "),
+                    msgcode!("not(value)"),
+                    msgtext!("."),
+                ]);
+            }
 
             errors.push(ParseError::Invalid {
                 position: Position {
@@ -378,10 +386,7 @@ pub(crate) fn lex_between<'a>(
                     path: Rc::clone(&vfs_path.path),
                     vfs_path: vfs_path.clone(),
                 },
-                message: ErrorMessage(vec![
-                    msgtext!("Unrecognized syntax "),
-                    msgcode!("{}", first_char),
-                ]),
+                message: ErrorMessage(message),
                 notes: vec![],
             });
 

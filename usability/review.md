@@ -6,24 +6,24 @@ criterion that user programs and editor input must never panic or hang the Rust
 host. The most urgent findings concern interpreter/parser robustness, generic
 type soundness, module isolation, and incomplete exception handling.
 
-This review contains **56 improvement candidates**, ordered by expected benefit
+This review contains **52 improvement candidates**, ordered by expected benefit
 for shipping a reliable language. They include confirmed bugs, warning and
 documentation gaps, and deliberately lower-priority design/API requests. They
-are not 56 independent root causes. Related reproductions are grouped, and
+are not 52 independent root causes. Related reproductions are grouped, and
 existing finding IDs are retained so earlier commits remain traceable; IDs are
 not priority numbers. No language implementation changes were made.
 
-The outstanding findings were rechecked against `main` at
-[`7ced483a`](https://github.com/Wilfred/garden/commit/7ced483a93ddfefb3d51442e5ab1c1078279170c).
+The list accounts for fixes merged through
+[`58f60ac3`](https://github.com/Wilfred/garden/commit/58f60ac3019e578b31b15dddd0f6d7206472381e).
 Resolved items are omitted; partially resolved items retain their IDs with
 narrowed scope. The saved evidence, exercise experiences and validation results
 below describe the original review baseline unless stated otherwise.
 
 | Priority | Release significance | Candidates |
 | --- | --- | ---: |
-| P0 | Release blockers: host failures, broken type/module guarantees, nonworking accepted syntax | 13 |
-| P1 | High-value correctness, failure reporting, validation and essential API work | 13 |
-| P2 | Diagnostics, documented semantics, usable APIs and documentation clarity | 26 |
+| P0 | Release blockers: host failures, broken type/module guarantees, nonworking accepted syntax | 12 |
+| P1 | High-value correctness, failure reporting, validation and essential API work | 11 |
+| P2 | Diagnostics, documented semantics, usable APIs and documentation clarity | 25 |
 | P3 | Optional convenience and migration hints with false-positive tradeoffs | 4 |
 
 The first release gate should be: no host panic/hang on bounded input, sound
@@ -65,12 +65,6 @@ Evidence: [function_field_variance.gdn](type_checker/function_field_variance.gdn
 Importing two namespaces that independently declare Record with different fields causes one definition to overwrite the other's type behavior. Neither entry program reports a type error; construction in the first module fails against the other module's field type. Reversing import order reverses the affected module. One module alone works. Key nominal type identity by defining module, not just the textual name.
 
 Evidence: [module_collision.gdn](broad/module_collision.gdn) · [reverse_module_collision.gdn](broad/reverse_module_collision.gdn) · [captured check/run output](evidence/broad.json).
-
-#### F53 — Non-ASCII source text panics in the lexer
-
-An unsupported non-ASCII source character, such as é in café, a smart quote, or a BOM, is sliced as &s[0..1]. Rust panics on an invalid UTF-8 boundary instead of producing a Garden diagnostic. Unicode whitespace takes a different one-byte advance path and also panics. See unicode_identifier/whitespace/bom/smart_quote.gdn.
-
-Evidence: [unicode_identifier.gdn](robustness/unicode_identifier.gdn) · [unicode_whitespace.gdn](robustness/unicode_whitespace.gdn) · [captured parser/runtime output](evidence/robustness.json).
 
 #### F56 — Small deeply nested files abort the host process
 
@@ -182,18 +176,6 @@ A fenced `test incorrect { assert(False) }` is counted as a checked block and pa
 
 Evidence: [doc_examples.json](evidence/doc_examples.json).
 
-#### F09 — No codepoint to character conversion
-
-no integer-to-character conversion (07; prelude API inspected). Escaped JSON Unicode and Brainfuck character output need a workaround.
-
-Evidence: [07_char_decode.gdn](probes/07_char_decode.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F28 — Text and bytes have no encoding bridge
-
-String has no bytes conversion (56), and the API inventory has no UTF-8 encode/decode pair. __fs has byte file I/O, but protocol and interpreter code cannot bridge it to text without a manual encoding implementation or external process. This is separate from a single-codepoint constructor (09).
-
-Evidence: [56_string_bytes.gdn](probes/56_string_bytes.gdn) · [captured check/run output](evidence/probes.json).
-
 ### P2 — Improve everyday usability and clarify contracts
 
 #### F07 — Equal operator precedence surprises ordinary expressions
@@ -201,12 +183,6 @@ Evidence: [56_string_bytes.gdn](probes/56_string_bytes.gdn) · [captured check/r
 all binary operators have equal precedence. During the header parser, i != lines.len() - 1 grouped as (i != lines.len()) - 1. Even when the checker rejects it, the message doesn't explain grouping. Probe 29 captures arithmetic and mixed comparison. Standard precedence or a warning on mixed operators would reduce surprises.
 
 Evidence: [29_precedence.gdn](probes/29_precedence.gdn) · [captured check/run output](evidence/probes.json).
-
-#### F11 — Lists lack an element replacement API
-
-indexed list assignment is unavailable (08), and List has no replacement method. Tape algorithms must rebuild a list or use a dict. A persistent list set(index, value) would suit the current value semantics.
-
-Evidence: [08_list_update.gdn](probes/08_list_update.gdn) · [55_list_set.gdn](probes/55_list_set.gdn) · [captured check/run output](evidence/probes.json).
 
 #### F14 — Scientific numeric literals are not recognized clearly
 
@@ -306,7 +282,7 @@ Evidence: [72_bang_not.gdn](probes/72_bang_not.gdn) · [captured check/run outpu
 
 #### F41 — List indexing errors omit the get API
 
-`items[0]` reports missing comma/parenthesis (69). This is distinct from the earlier list-update gap: ordinary reads have a working API, `items.get(0)`, and the message could explain its Option result.
+`items[0]` reports missing comma/parenthesis (69). The message could suggest `items.get(0)` and explain its Option result.
 
 Evidence: [69_index_read.gdn](probes/69_index_read.gdn) · [captured check/run output](evidence/probes.json).
 
@@ -416,9 +392,8 @@ pointer bounds and nontermination. This is an interpreter API, not a terminal
 character-output frontend.
 
 Good: Euclidean modulo makes cell wrapping natural; Option bounds checks and
-Result allow controlled errors instead of interpreter exceptions. Poor fit:
-list replacement needs slice/append/concat, integer jump addresses need string
-keys in Dict, and bytes cannot be directly decoded into a String.
+Result allow controlled errors instead of interpreter exceptions. Integer jump
+addresses still need string keys in Dict.
 
 ### JSON — library author
 
@@ -429,15 +404,12 @@ are preserved. Tests cover nested data and malformed inputs.
 
 Limits: explicitly rejects JSON \u, \b and \f escapes; it only rejects raw tab,
 CR and LF among control characters, so this is not a conforming JSON parser.
-Numeric lexemes avoid overflow/precision loss, but application code still lacks
-a standard decimal conversion. No performance claims: repeated substring calls
-rescan character offsets, so this style is unsuitable for large inputs.
+Numeric lexemes preserve the original precision. Repeated substring calls rescan
+character offsets; this review has not benchmarked large inputs.
 
 Good: recursive enum variants and tuple destructuring make a compact syntax
 tree possible. Forward references work. Bad: propagating Result requires
 repeated Err(e) => return Err(e) arms; no nested enum patterns or ? shorthand.
-Without ordinal/character conversion, standards-compliant string decoding
-becomes a much larger project than the recursive grammar.
 
 ### Mandelbrot — scientific programmer
 
@@ -445,14 +417,13 @@ Working: ASCII 64 by 25 Mandelbrot escape-time render, tests for known points,
 image dimensions and symmetry. Floating point arithmetic uses +., -., *. and
 /.. To test squared magnitude < 4, the implementation compares floor(magnitude)
 with integer 4. This is equivalent for the nonnegative bounded values used in
-this renderer, but a workaround users should not need. render assumes width
+this renderer. render assumes width
 and height greater than 1 and a positive iteration limit.
 
 Good: explicit Int.as_float and Float.floor conversions, simple loops and
 text output suffice to get a recognizable image. The arithmetic error for +
-is unusually helpful. In contrast, float comparisons are impossible with
-ordinary operators; <. is not syntax either. There is no sqrt/log/trigonometry
-API in the prelude for smooth coloring or common other fractals.
+is unusually helpful. There is no sqrt/log/trigonometry API in the prelude for smooth
+coloring or common other fractals.
 
 ### CSV — data-processing programmer
 

@@ -1,0 +1,7 @@
+import "../check/type_error_return.gdn" as lib
+lib::foo()
+
+// args: check --fix --stdout
+// expected stdout:
+// import "../check/type_error_return.gdn" as lib
+// lib::foo()

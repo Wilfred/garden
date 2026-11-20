@@ -67,6 +67,59 @@ pub(crate) enum Type {
 }
 
 impl Type {
+    /// Replace the free type parameters in this type with `Any`.
+    pub(crate) fn erase_type_params(&self) -> Type {
+        self.erase_type_params_(&mut vec![])
+    }
+
+    /// `bound` is the type parameters introduced by enclosing
+    /// function types, which are not free.
+    fn erase_type_params_(&self, bound: &mut Vec<TypeName>) -> Type {
+        match self {
+            Type::TypeParameter(name) if bound.contains(name) => self.clone(),
+            Type::TypeParameter(_) => Type::Any,
+            Type::Fun {
+                name_sym,
+                type_params,
+                params,
+                return_,
+            } => {
+                let outer_bound_len = bound.len();
+                bound.extend(type_params.iter().cloned());
+
+                let params = params
+                    .iter()
+                    .map(|param| param.erase_type_params_(bound))
+                    .collect();
+                let return_ = Box::new(return_.erase_type_params_(bound));
+
+                bound.truncate(outer_bound_len);
+
+                Type::Fun {
+                    name_sym: name_sym.clone(),
+                    type_params: type_params.clone(),
+                    params,
+                    return_,
+                }
+            }
+            Type::Tuple(items) => Type::Tuple(
+                items
+                    .iter()
+                    .map(|item| item.erase_type_params_(bound))
+                    .collect(),
+            ),
+            Type::UserDefined { kind, name, args } => Type::UserDefined {
+                kind: kind.clone(),
+                name: name.clone(),
+                args: args
+                    .iter()
+                    .map(|arg| arg.erase_type_params_(bound))
+                    .collect(),
+            },
+            Type::Any | Type::Error { .. } => self.clone(),
+        }
+    }
+
     pub(crate) fn is_no_value(&self) -> bool {
         match self {
             Type::UserDefined { name, .. } => name.as_str() == "NoValue",

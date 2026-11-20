@@ -373,6 +373,8 @@ pub(crate) fn lex_between<'a>(
                     msgcode!("not(value)"),
                     msgtext!("."),
                 ]);
+            } else if first_char == ';' {
+                message.push(msgtext!(". Remove the semicolon."));
             }
 
             errors.push(ParseError::Invalid {

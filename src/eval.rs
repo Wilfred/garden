@@ -131,17 +131,18 @@ impl Default for Bindings {
     }
 }
 
-#[allow(clippy::enum_variant_names)]
+/// For a partially evaluated expression, tracks whether the deferred
+/// subexpressions (e.g. a loop body, call arguments or the RHS of
+/// `&&`) have been evaluated yet.
 #[derive(Debug, Clone, Copy)]
-pub(crate) enum BlockState {
-    WillRunBlock,
-    DoneRunBlock,
-    // TODO: Clean up function calls and assertions, and we will
-    // always be entering blocks for this expression state.
-    //
-    // Alternatively, keep using this, so we can support short-circuit
-    // evaluation of && and ||.
-    NotBlock,
+pub(crate) enum PartialState {
+    /// We've evaluated the initial subexpression (e.g. a loop
+    /// condition, a call receiver or the LHS of `&&`), but not the
+    /// rest.
+    WillEvalRest,
+    /// We've evaluated a deferred block, and still need to clean up
+    /// the bindings it pushed.
+    DoneEvalRest,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -160,7 +161,7 @@ pub(crate) enum ExpressionState {
     ///   called the receiver function.
     /// * In `assert(foo() == bar())` we've evaluated `foo()` and
     ///   `bar()` but not yet compared them.
-    PartiallyEvaluated(BlockState),
+    PartiallyEvaluated(PartialState),
     /// This expression has had its children evaluated, but hasn't
     /// been evaluated itself. For example, in `foo(bar())` we have
     /// evaluated `bar()` but not yet called `foo()` with the result.
@@ -1735,7 +1736,7 @@ fn eval_while_body(
         // Once we've evaluated the body on this iteration, we might
         // want to evaluate again.
         stack_frame.exprs_to_eval.push((
-            ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock),
+            ExpressionState::PartiallyEvaluated(PartialState::DoneEvalRest),
             Rc::clone(&expr),
         ));
 
@@ -1816,11 +1817,11 @@ fn eval_for_in(
         return Ok(());
     }
 
-    // After this iteration's body, a DoneRunBlock step (see the
+    // After this iteration's body, a DoneEvalRest step (see the
     // `ForIn` dispatch) pops the bindings block that `eval_block`
     // pushes, before the next iteration runs.
     env.push_expr_to_eval(
-        ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock),
+        ExpressionState::PartiallyEvaluated(PartialState::DoneEvalRest),
         Rc::clone(&outer_expr),
     );
 
@@ -2126,65 +2127,38 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
     ErrorMessage(parts)
 }
 
+/// Finish evaluating `&&` or `||`. The value on top of the value
+/// stack is either the RHS value, or the LHS value if we
+/// short-circuited (in which case it is already the result).
 fn eval_boolean_binop(
     env: &mut Env,
     expr_value_is_used: bool,
-    lhs_position: &Position,
     rhs_position: &Position,
-    op: &BinaryOperatorSymbol,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    {
-        let rhs_value = env
-            .pop_value()
-            .expect("Popped an empty value stack for RHS of binary operator");
-        let lhs_value = env
-            .pop_value()
-            .expect("Popped an empty value stack for LHS of binary operator");
+    let value = env
+        .pop_value()
+        .expect("Popped an empty value stack for binary operator");
 
-        let Some(lhs_bool) = lhs_value.as_rust_bool() else {
-            return Err((
-                RestoreValues(vec![lhs_value.clone(), rhs_value]),
-                EvalError::Exception(ExceptionInfo {
-                    position: lhs_position.clone(),
-                    message: format_type_error(
-                        &TypeName {
-                            text: "Bool".into(),
-                        },
-                        &lhs_value,
-                        env,
-                    ),
-                }),
-            ));
-        };
+    let Some(value_bool) = value.as_rust_bool() else {
+        return Err((
+            RestoreValues(vec![value.clone()]),
+            EvalError::Exception(ExceptionInfo {
+                position: rhs_position.clone(),
+                message: format_type_error(
+                    &TypeName {
+                        text: "Bool".into(),
+                    },
+                    &value,
+                    env,
+                ),
+            }),
+        ));
+    };
 
-        let Some(rhs_bool) = rhs_value.as_rust_bool() else {
-            return Err((
-                RestoreValues(vec![lhs_value, rhs_value.clone()]),
-                EvalError::Exception(ExceptionInfo {
-                    position: rhs_position.clone(),
-                    message: format_type_error(
-                        &TypeName {
-                            text: "Bool".into(),
-                        },
-                        &rhs_value,
-                        env,
-                    ),
-                }),
-            ));
-        };
-
-        if expr_value_is_used {
-            match op.kind {
-                BinaryOperatorKind::And => {
-                    env.push_value(Value::bool(lhs_bool && rhs_bool));
-                }
-                BinaryOperatorKind::Or => {
-                    env.push_value(Value::bool(lhs_bool || rhs_bool));
-                }
-                _ => unreachable!(),
-            }
-        }
+    if expr_value_is_used {
+        env.push_value(Value::bool(value_bool));
     }
+
     Ok(())
 }
 
@@ -6707,7 +6681,7 @@ fn eval_expr(
         Expression_::Match(scrutinee, cases) => match expr_state {
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(
-                    ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
+                    ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
                     Rc::clone(&outer_expr),
                 );
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(scrutinee));
@@ -6727,7 +6701,7 @@ fn eval_expr(
         Expression_::If(condition, ref then_body, ref else_body) => match expr_state {
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(
-                    ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
+                    ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
                     Rc::clone(&outer_expr),
                 );
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(condition));
@@ -6759,15 +6733,15 @@ fn eval_expr(
                 ExpressionState::NotEvaluated => {
                     // Once we've evaluated the condition, we can consider evaluating the body.
                     env.push_expr_to_eval(
-                        ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
+                        ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
                         Rc::clone(&outer_expr),
                     );
                     // Evaluate the loop condition first.
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(condition));
                 }
-                ExpressionState::PartiallyEvaluated(block_state) => {
-                    match block_state {
-                        BlockState::WillRunBlock => {
+                ExpressionState::PartiallyEvaluated(partial_state) => {
+                    match partial_state {
+                        PartialState::WillEvalRest => {
                             // Evaluated condition, can possibly evaluate body.
                             eval_while_body(
                                 env,
@@ -6777,11 +6751,11 @@ fn eval_expr(
                                 body,
                             )?;
                         }
-                        BlockState::DoneRunBlock => {
+                        PartialState::DoneEvalRest => {
                             env.current_frame_mut().bindings.pop_block();
 
                             env.push_expr_to_eval(
-                                ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
+                                ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
                                 Rc::clone(&outer_expr),
                             );
                             env.push_expr_to_eval(
@@ -6789,7 +6763,6 @@ fn eval_expr(
                                 Rc::clone(condition),
                             );
                         }
-                        BlockState::NotBlock => unreachable!(),
                     }
                 }
                 ExpressionState::EvaluatedSubexpressions => {
@@ -6804,7 +6777,7 @@ fn eval_expr(
                     env.push_value(Value::new(Value_::Int(0)));
 
                     env.push_expr_to_eval(
-                        ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
+                        ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
                         Rc::clone(&outer_expr),
                     );
 
@@ -6812,9 +6785,9 @@ fn eval_expr(
                     // that we want to iterate over.
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(expr));
                 }
-                ExpressionState::PartiallyEvaluated(block_state) => {
-                    match block_state {
-                        BlockState::WillRunBlock => {
+                ExpressionState::PartiallyEvaluated(partial_state) => {
+                    match partial_state {
+                        PartialState::WillEvalRest => {
                             eval_for_in(
                                 env,
                                 expr_value_is_used,
@@ -6824,17 +6797,16 @@ fn eval_expr(
                                 body,
                             )?;
                         }
-                        BlockState::DoneRunBlock => {
+                        PartialState::DoneEvalRest => {
                             // Pop this iteration's bindings block, then
                             // schedule the next iteration.
                             env.current_frame_mut().bindings.pop_block();
 
                             env.push_expr_to_eval(
-                                ExpressionState::PartiallyEvaluated(BlockState::WillRunBlock),
+                                ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
                                 Rc::clone(&outer_expr),
                             );
                         }
-                        BlockState::NotBlock => unreachable!(),
                     }
                 }
                 ExpressionState::EvaluatedSubexpressions => {
@@ -7185,19 +7157,60 @@ fn eval_expr(
                 ..
             },
             rhs,
-        ) => {
-            if expr_state.done_subexpressions() {
-                eval_boolean_binop(env, expr_value_is_used, &lhs.position, &rhs.position, op)?;
-            } else {
-                // TODO: do short-circuit evaluation of && and ||.
+        ) => match expr_state {
+            ExpressionState::NotEvaluated => {
+                // Evaluate the LHS first, so we can short-circuit if
+                // it determines the result.
+                env.push_expr_to_eval(
+                    ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
+                    Rc::clone(&outer_expr),
+                );
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(lhs));
+            }
+            ExpressionState::PartiallyEvaluated(_) => {
+                let lhs_value = env
+                    .pop_value()
+                    .expect("Popped an empty value stack for LHS of binary operator");
+
+                let Some(lhs_bool) = lhs_value.as_rust_bool() else {
+                    return Err((
+                        RestoreValues(vec![lhs_value.clone()]),
+                        EvalError::Exception(ExceptionInfo {
+                            position: lhs.position.clone(),
+                            message: format_type_error(
+                                &TypeName {
+                                    text: "Bool".into(),
+                                },
+                                &lhs_value,
+                                env,
+                            ),
+                        }),
+                    ));
+                };
+
+                let short_circuits = match op.kind {
+                    BinaryOperatorKind::And => !lhs_bool,
+                    BinaryOperatorKind::Or => lhs_bool,
+                    _ => unreachable!(),
+                };
+
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedSubexpressions,
                     Rc::clone(&outer_expr),
                 );
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(rhs));
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(lhs));
+
+                if short_circuits {
+                    // The LHS value determines the result, so don't
+                    // evaluate the RHS.
+                    env.push_value(lhs_value);
+                } else {
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::clone(rhs));
+                }
             }
-        }
+            ExpressionState::EvaluatedSubexpressions => {
+                eval_boolean_binop(env, expr_value_is_used, &rhs.position)?;
+            }
+        },
         Expression_::BinaryOperator(
             lhs,
             BinaryOperatorSymbol {
@@ -7209,7 +7222,6 @@ fn eval_expr(
             if expr_state.done_subexpressions() {
                 eval_string_concat(env, expr_value_is_used, &lhs.position, &rhs.position)?;
             } else {
-                // TODO: do short-circuit evaluation of && and ||.
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedSubexpressions,
                     Rc::clone(&outer_expr),
@@ -7239,7 +7251,7 @@ fn eval_expr(
         Expression_::Call(receiver, paren_args) => match expr_state {
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(
-                    ExpressionState::PartiallyEvaluated(BlockState::NotBlock),
+                    ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
                     Rc::clone(&outer_expr),
                 );
 
@@ -7354,7 +7366,7 @@ fn eval_expr(
                         // assertion failure message.
 
                         env.push_expr_to_eval(
-                            ExpressionState::PartiallyEvaluated(BlockState::NotBlock),
+                            ExpressionState::PartiallyEvaluated(PartialState::WillEvalRest),
                             Rc::clone(&outer_expr),
                         );
 
@@ -7410,6 +7422,15 @@ fn binop_for_assert(
 ) -> Option<(Rc<Expression>, BinaryOperatorKind, Rc<Expression>)> {
     match &expr.expr_ {
         Expression_::BinaryOperator(lhs, op_sym, rhs) => {
+            if matches!(
+                op_sym.kind,
+                BinaryOperatorKind::And | BinaryOperatorKind::Or
+            ) {
+                // && and || short-circuit, so we can't eagerly
+                // evaluate both sides.
+                return None;
+            }
+
             Some((Rc::clone(lhs), op_sym.kind, Rc::clone(rhs)))
         }
         _ => None,
@@ -7634,7 +7655,7 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
                 // should pop the bindings block here too.
                 if matches!(
                     expr_state,
-                    ExpressionState::PartiallyEvaluated(BlockState::DoneRunBlock)
+                    ExpressionState::PartiallyEvaluated(PartialState::DoneEvalRest)
                 ) {
                     env.current_frame_mut().bindings.pop_block();
                 }

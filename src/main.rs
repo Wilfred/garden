@@ -864,6 +864,7 @@ fn reftest_ast(src: &str, path: &Path) {
                 position,
                 message: e,
                 notes,
+                ..
             } => {
                 eprintln!(
                     "{}",
@@ -912,6 +913,7 @@ fn parse_toplevel_items_or_die(
                     position,
                     message: e,
                     notes,
+                    ..
                 } => eprintln!(
                     "{}",
                     format_diagnostic(

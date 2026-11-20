@@ -1,0 +1,13 @@
+enum Shape {
+    Circle,
+    Square,
+    Circle,
+}
+
+// args: check --fix --stdout
+// expected stdout:
+// enum Shape {
+//     Circle,
+//     Square,
+// }
+

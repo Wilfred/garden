@@ -200,6 +200,7 @@ fn eval_code_block(
                     position,
                     message,
                     notes: _,
+                    ..
                 } => {
                     let adjusted_pos = position.clone();
                     // Use the actual file path

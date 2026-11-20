@@ -1,0 +1,9 @@
+x = = 1
+2 + 2
+
+// args: reftest-repl
+// expected stdout:
+// Parsing failed: Expected an expression after this.
+// 
+// 4
+

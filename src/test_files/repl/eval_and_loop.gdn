@@ -1,0 +1,13 @@
+1 + 2
+let xs = [10, 20, 30]
+for x in xs { println(string_repr(x)) }
+
+// args: reftest-repl
+// expected stdout:
+// 3
+// 
+// 
+// 10
+// 20
+// 30
+

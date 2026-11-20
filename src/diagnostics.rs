@@ -18,7 +18,7 @@ use crate::parser::vfs::{to_project_relative, Vfs, VfsId};
 use crate::parser::KEYWORDS;
 use crate::VfsPathBuf;
 
-#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum Severity {
     Warning,

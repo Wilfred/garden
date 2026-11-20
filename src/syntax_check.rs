@@ -66,6 +66,7 @@ pub(crate) fn check(
     json: bool,
     fix: bool,
     stdout: bool,
+    ignore_warnings: bool,
     original_path: &Path,
 ) {
     let use_color = std::io::stdout().is_terminal() && !json && !fix;
@@ -160,6 +161,10 @@ pub(crate) fn check(
                 notes,
             });
         }
+    }
+
+    if ignore_warnings {
+        diagnostics.retain(|d| d.severity != Severity::Warning);
     }
 
     if fix {

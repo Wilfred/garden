@@ -1,0 +1,11 @@
+function greet(name) { println(name) }
+
+// args: run
+// expected exit status: 1
+// expected stderr:
+// Exception: No such variable `function`.
+// To declare a function, write `fun greet(name: String) { ... }`.
+// -| src/test_files/runtime/function_keyword.gdn:1:1	 __toplevel__
+// 1| function greet(name) { println(name) }
+//  | ^^^^^^^^
+

@@ -48,6 +48,28 @@ macro_rules! msglink {
 pub(crate) struct ErrorMessage(pub(crate) Vec<MessagePart>);
 
 impl ErrorMessage {
+    pub(crate) fn suggest_fun(&mut self, src: &str, offset: usize) {
+        let Some(line) = src.get(offset..).and_then(|s| s.lines().next()) else {
+            return;
+        };
+        let Some((keyword, signature)) = line.trim_start().split_once(char::is_whitespace) else {
+            return;
+        };
+        if !matches!(keyword, "def" | "fn" | "function") {
+            return;
+        }
+        let signature = signature.trim_start();
+        if let Some(name) = super::lex::SYMBOL_RE.find(signature) {
+            if signature[name.end()..].trim_start().starts_with('(') {
+                self.0.extend([
+                    crate::msgtext!("\nTo declare a function, write "),
+                    crate::msgcode!("fun {}(name: String) {{ ... }}", name.as_str()),
+                    crate::msgtext!("."),
+                ]);
+            }
+        }
+    }
+
     pub(crate) fn as_string(&self) -> String {
         let mut s = String::new();
         for message_part in &self.0 {

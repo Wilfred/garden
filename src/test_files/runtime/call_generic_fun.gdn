@@ -1,7 +1,20 @@
 fun foo<T>(x: T): Unit {}
 
+fun apply<T, U>(f: Fun<(T), U>, value: T): U {
+  f(value)
+}
+
+fun nested<T>(f: Fun<(Fun<(T), Bool>), Bool>): Bool {
+  f(fun(_value: T): Bool { True })
+}
+
 {
   foo(1)
+  println(apply(fun(value: Int): String { string_repr(value) }, 2))
+  println(string_repr(nested(fun(predicate: Fun<(Int), Bool>): Bool { predicate(1) })))
 }
 
 // args: run
+// expected stdout:
+// 2
+// True

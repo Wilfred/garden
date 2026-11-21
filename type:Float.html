@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>Float - Garden</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="title-container">
+          <a class="logo" href="/">Garden<span aria-hidden="true">🌻</span></a>
+          <nav aria-label="Main">
+            <a href="/blog.html">Blog</a>
+            <a href="/manual.html">Manual</a>
+            <a href="/playground.html">Playground</a>
+            <a href="https://github.com/Wilfred/garden">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container"><h1><code>Float</code> type</h1>
+<p>A 64-bit floating point number, such as <code>1.5</code> or <code>-1_<wbr>000.00</code>.</p>
+<p>Floats are compared by value. Positive and negative zero are
+equal.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>1.5 <a class="operator" href="/operator:==.html">==</a> 1.5 <span class="comment">//-&gt; True</span>
+0.0 <a class="operator" href="/operator:==.html">==</a> -0.0 <span class="comment">//-&gt; True</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<p>Floats have limited precision, so arithmetic can produce results
+that are close but not exactly equal. Comparing computed floats
+with <code>==</code> is usually a mistake.</p>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Example</span><div class="snippet-actions"><button class="run-snippet" type="button">Run</button><button class="edit-snippet" type="button">Edit</button></div></div><pre><code>0.1 <a class="operator" href="/operator:plusdot.html">+.</a> 0.2 <a class="operator" href="/operator:==.html">==</a> 0.3 <span class="comment">//-&gt; False</span></code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<div class="snippet"><div class="snippet-titlebar"><span class="code-title">Source Code</span></div><pre><code><a class="keyword" href="/keyword:struct.html">struct</a> <span class="type">Float</span> {
+  __BUILT_IN_IMPLEMENTATION: <a class="type" href="/type:NoValue.html">NoValue</a>,
+}</code></pre><div class="snippet-output" role="status" aria-live="polite" hidden></div></div>
+<h2>Methods</h2>
+<ul>
+<li><a href="/method:Float::ceil.html"><code>ceil()</code></a></li>
+<li><a href="/method:Float::floor.html"><code>floor()</code></a></li>
+</ul></main>
+
+      <footer>
+        <div class="footer-links">
+          <a href="/blog.html">Blog</a>
+          <a href="https://github.com/Wilfred/garden">GitHub</a>
+        </div>
+        <button class="footer-plant" type="button" aria-label="Water the plant">
+          <span class="footer-plant-drop" aria-hidden="true"></span>
+          <span class="footer-plant-leaves" aria-hidden="true">🪴</span>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/playground.js"></script>
+  </body>
+</html>

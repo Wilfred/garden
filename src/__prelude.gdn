@@ -576,9 +576,9 @@ public method set_extension(this: Path, new_ext: String): Path {
 }
 
 test path_set_extension {
-  assert(Path{ p: "/foo/bar"}.set_extension("log") == Path{ p: "/foo/bar.log"} )
-  assert(Path{ p: "/foo/bar.txt"}.set_extension("log") == Path{ p: "/foo/bar.log"} )
-  assert(Path{ p: "/foo/bar.txt.gz"}.set_extension("log") == Path{ p: "/foo/bar.log"} )
+  assert(Path{ p: "/foo/bar"}.set_extension("log") == Path{ p: "/foo/bar.log"})
+  assert(Path{ p: "/foo/bar.txt"}.set_extension("log") == Path{ p: "/foo/bar.log"})
+  assert(Path{ p: "/foo/bar.txt.gz"}.set_extension("log") == Path{ p: "/foo/bar.log"})
 }
 
 /// Return a list from `i` (inclusive) to `j` (exclusive).

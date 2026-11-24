@@ -1032,7 +1032,8 @@ fn split_struct_fields(src: &str, path: &Path) -> String {
 }
 
 /// Put the contents and closing brace of single-line `while` and
-/// `for` loop bodies on separate lines.
+/// `for` loop bodies on separate lines, for loops at the start of a
+/// line.
 fn split_loop_bodies(src: &str, path: &Path) -> String {
     let mut id_gen = IdGenerator::default();
     let (_vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
@@ -1067,22 +1068,21 @@ impl LoopBodyVisitor<'_> {
 }
 
 impl Visitor for LoopBodyVisitor<'_> {
-    fn visit_expr_while(&mut self, cond: &Expression, body: &Block) {
-        self.split_body(body);
-        self.visit_expr(cond);
-        self.visit_block(body);
-    }
-
-    fn visit_expr_for_in(
-        &mut self,
-        dest: &crate::parser::ast::LetDestination,
-        expr: &Expression,
-        body: &Block,
-    ) {
-        self.split_body(body);
-        self.visit_dest(dest);
-        self.visit_expr(expr);
-        self.visit_block(body);
+    fn visit_expr(&mut self, expr: &Expression) {
+        if let Expression_::While(_, body) | Expression_::ForIn(_, _, body) = &expr.expr_ {
+            // Only split loops that start their own line, as nested
+            // loops (e.g. call arguments) don't indent well when split.
+            let line_start = self.src[..expr.position.start_offset]
+                .rfind('\n')
+                .map_or(0, |i| i + 1);
+            if self.src[line_start..expr.position.start_offset]
+                .trim()
+                .is_empty()
+            {
+                self.split_body(body);
+            }
+        }
+        self.visit_expr_(&expr.expr_);
     }
 }
 

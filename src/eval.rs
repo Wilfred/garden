@@ -4817,8 +4817,7 @@ fn eval_call(
 
             let mut type_bindings = TypeVarEnv::default();
             for param_sym in &fi.type_params {
-                // TODO: calculate the value of type parameters properly.
-                type_bindings.insert(param_sym.name.clone(), Some(Type::Any));
+                type_bindings.insert(param_sym.name.clone(), None);
             }
 
             check_param_types(
@@ -4829,6 +4828,11 @@ fn eval_call(
                 &arg_values,
                 &type_bindings,
             )?;
+
+            // The function body uses Any for type parameters without a runtime binding.
+            for binding in type_bindings.values_mut() {
+                binding.get_or_insert(Type::Any);
+            }
 
             let mut fun_subexprs = vec![];
             for expr in body.exprs.iter().rev() {
@@ -5096,6 +5100,47 @@ fn enum_value_runtime_type(
     }
 }
 
+#[derive(Clone, Copy)]
+enum Variance {
+    Covariant,
+    Contravariant,
+}
+
+impl Variance {
+    fn reversed(self) -> Self {
+        match self {
+            Self::Covariant => Self::Contravariant,
+            Self::Contravariant => Self::Covariant,
+        }
+    }
+}
+
+/// Widen the expected argument type to admit every instantiation of its unknowns.
+fn erase_runtime_type_params(ty: &mut Type, variance: Variance) {
+    match ty {
+        Type::TypeParameter(_) => {
+            *ty = match variance {
+                Variance::Covariant => Type::Any,
+                Variance::Contravariant => Type::no_value(),
+            };
+        }
+        Type::Fun {
+            params, return_, ..
+        } => {
+            for param in params {
+                erase_runtime_type_params(param, variance.reversed());
+            }
+            erase_runtime_type_params(return_, variance);
+        }
+        Type::Tuple(args) | Type::UserDefined { args, .. } => {
+            for arg in args {
+                erase_runtime_type_params(arg, variance);
+            }
+        }
+        Type::Any | Type::Error { .. } => {}
+    }
+}
+
 fn check_param_types(
     env: &Env,
     receiver_value: &Value,
@@ -5106,7 +5151,7 @@ fn check_param_types(
 ) -> Result<(), (RestoreValues, EvalError)> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
-            let param_ty = match Type::from_hint(param_hint, &env.types, type_bindings) {
+            let mut param_ty = match Type::from_hint(param_hint, &env.types, type_bindings) {
                 Ok(ty) => ty,
                 Err(e) => {
                     return Err((
@@ -5121,6 +5166,10 @@ fn check_param_types(
                     ));
                 }
             };
+
+            if !type_bindings.is_empty() {
+                erase_runtime_type_params(&mut param_ty, Variance::Covariant);
+            }
 
             if let Err(msg) = check_type(arg_value, &param_ty, env) {
                 let mut saved_values = vec![];

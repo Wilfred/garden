@@ -7450,7 +7450,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             if session.trace_exprs {
                 println!("{:?}:\n  {:?}", expr_state, outer_expr.expr_,);
                 println!(
-                    "  Stack frame: exprs_to_eval: {} values: {}\n",
+                    "  Stack frame counts: exprs_to_eval:{} evalled_values:{}\n",
                     env.current_frame().exprs_to_eval.len(),
                     env.current_frame().evalled_values.len()
                 );

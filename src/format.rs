@@ -906,8 +906,8 @@ fn fix_type_annotation_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPath
 /// constructs such as `assert(...)` are deliberately excluded.
 const SPACED_BEFORE_PAREN: &[&str] = &["if", "while", "for", "match", "return"];
 
-/// Normalize whitespace around commas, `=>` arrows, compound-assignment
-/// operators (`+=`, `-=`), and control-flow keywords.
+/// Normalize whitespace around commas, parentheses, `=>` arrows,
+/// compound-assignment operators (`+=`, `-=`), and control-flow keywords.
 ///
 /// This works on the gaps between adjacent tokens produced by the lexer,
 /// so it never touches whitespace inside string literals. Gaps that span
@@ -922,6 +922,7 @@ const SPACED_BEFORE_PAREN: &[&str] = &["if", "while", "for", "match", "return"];
 /// - Exactly one space on each side of a `=>` arrow.
 /// - Exactly one space on each side of a `+=` or `-=` operator.
 /// - A single space between a control-flow keyword and a following `(`.
+/// - No space after `(` or before `)`.
 fn normalize_token_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPathBuf) -> String {
     let (mut token_stream, _) = lex_between(vfs_path, src, 0, src.len());
 
@@ -960,6 +961,8 @@ fn normalize_token_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPathBuf)
             } else {
                 Some(" ")
             }
+        } else if prev.text == "(" || next.text == ")" {
+            Some("")
         } else if prev.text == "=>"
             || next.text == "=>"
             || matches!(prev.text, "+=" | "-=")

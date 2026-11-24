@@ -32,6 +32,7 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
     // re-parsing afterwards because line numbers and offsets shift.
     let src_owned = wrap_long_signatures(src, path);
     let src_owned = split_struct_fields(&src_owned, path);
+    let src_owned = split_loop_bodies(&src_owned, path);
     let src = src_owned.as_str();
 
     let mut id_gen = IdGenerator::default();
@@ -1028,6 +1029,61 @@ fn split_struct_fields(src: &str, path: &Path) -> String {
     }
 
     apply_span_edits(src, &mut edits)
+}
+
+/// Put the contents and closing brace of single-line `while` and
+/// `for` loop bodies on separate lines.
+fn split_loop_bodies(src: &str, path: &Path) -> String {
+    let mut id_gen = IdGenerator::default();
+    let (_vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+    let mut visitor = LoopBodyVisitor { src, edits: vec![] };
+    for item in &items {
+        visitor.visit_toplevel_item(item);
+    }
+
+    apply_span_edits(src, &mut visitor.edits)
+}
+
+struct LoopBodyVisitor<'a> {
+    src: &'a str,
+    edits: Vec<SpanEdit>,
+}
+
+impl LoopBodyVisitor<'_> {
+    fn split_body(&mut self, body: &Block) {
+        let Some(first) = body.exprs.first() else {
+            return;
+        };
+        if body.open_brace.line_number != body.close_brace.line_number {
+            return;
+        }
+
+        // Indentation is corrected by later formatting phases.
+        put_on_separate_line(self.src, first.position.start_offset, 0, &mut self.edits);
+        put_on_separate_line(self.src, body.close_brace.start_offset, 0, &mut self.edits);
+    }
+}
+
+impl Visitor for LoopBodyVisitor<'_> {
+    fn visit_expr_while(&mut self, cond: &Expression, body: &Block) {
+        self.split_body(body);
+        self.visit_expr(cond);
+        self.visit_block(body);
+    }
+
+    fn visit_expr_for_in(
+        &mut self,
+        dest: &crate::parser::ast::LetDestination,
+        expr: &Expression,
+        body: &Block,
+    ) {
+        self.split_body(body);
+        self.visit_dest(dest);
+        self.visit_expr(expr);
+        self.visit_block(body);
+    }
 }
 
 fn put_on_separate_line(src: &str, offset: usize, indent: usize, edits: &mut Vec<SpanEdit>) {

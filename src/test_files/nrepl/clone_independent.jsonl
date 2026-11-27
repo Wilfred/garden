@@ -1,0 +1,66 @@
+{ "op": "clone", "id": "1" }
+{ "op": "eval", "session": "garden-1", "code": "let x = 42", "id": "2" }
+{ "op": "clone", "session": "garden-1", "id": "3" }
+{ "op": "eval", "session": "garden-2", "code": "let x = 99", "id": "4" }
+{ "op": "eval", "session": "garden-1", "code": "x", "id": "5" }
+
+// args: reftest-nrepl
+// expected stdout:
+// {
+//   "id": "1",
+//   "new-session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "id": "2",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": "Unit"
+// }
+// {
+//   "id": "2",
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "id": "3",
+//   "new-session": "garden-2",
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "id": "4",
+//   "ns": "__user",
+//   "session": "garden-2",
+//   "value": "Unit"
+// }
+// {
+//   "id": "4",
+//   "session": "garden-2",
+//   "status": [
+//     "done"
+//   ]
+// }
+// {
+//   "eval-msec": "<eval-msec>",
+//   "id": "5",
+//   "ns": "__user",
+//   "session": "garden-1",
+//   "value": "42"
+// }
+// {
+//   "id": "5",
+//   "session": "garden-1",
+//   "status": [
+//     "done"
+//   ]
+// }
+

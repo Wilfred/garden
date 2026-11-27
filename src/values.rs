@@ -391,23 +391,28 @@ impl Value {
 /// name to look up available methods.
 pub(crate) fn type_representation(value: &Value) -> TypeName {
     TypeName {
-        text: match value.as_ref() {
-            Value_::Int(_) => "Int",
-            Value_::Float(_) => "Float",
-            Value_::Fun { .. } => "Fun",
-            Value_::Closure(..) => "Fun",
-            Value_::BuiltInFunction(_, _, _) => "Fun",
-            Value_::String(_) => "String",
-            Value_::List { .. } => "List",
-            Value_::Tuple { .. } => "Tuple",
-            Value_::Dict { .. } => "Dict",
-            Value_::EnumVariant { type_name, .. } | Value_::EnumConstructor { type_name, .. } => {
-                &type_name.text
-            }
-            Value_::Struct { type_name, .. } => &type_name.text,
-            Value_::Namespace { .. } => "Namespace",
+        text: type_name_str(value).into(),
+    }
+}
+
+/// The name of the type of `value`, borrowed from `value` where
+/// possible.
+pub(crate) fn type_name_str(value: &Value) -> &str {
+    match value.as_ref() {
+        Value_::Int(_) => "Int",
+        Value_::Float(_) => "Float",
+        Value_::Fun { .. } => "Fun",
+        Value_::Closure(..) => "Fun",
+        Value_::BuiltInFunction(_, _, _) => "Fun",
+        Value_::String(_) => "String",
+        Value_::List { .. } => "List",
+        Value_::Tuple { .. } => "Tuple",
+        Value_::Dict { .. } => "Dict",
+        Value_::EnumVariant { type_name, .. } | Value_::EnumConstructor { type_name, .. } => {
+            &type_name.text
         }
-        .into(),
+        Value_::Struct { type_name, .. } => &type_name.text,
+        Value_::Namespace { .. } => "Namespace",
     }
 }
 

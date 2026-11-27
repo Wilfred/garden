@@ -1,0 +1,14 @@
+let mut = 1
+mut = 2
+let mut count: Int = mut
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Remove `mut`. Garden bindings can be reassigned without a modifier.
+// 
+// -| src/test_files/check/rust_mut_binding.gdn:3:5
+// 1| let mut = 1
+// 2| mut = 2
+// 3| let mut count: Int = mut
+// 4|     ^^^

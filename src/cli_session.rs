@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
@@ -31,22 +32,81 @@ enum ReadError {
     ReadlineError,
 }
 
-/// Read toplevel items from stdin. If the user gives us a command,
+/// A source of input lines for a REPL session.
+///
+/// The interactive REPL reads from the terminal via rustyline, while
+/// reftests replay a fixed script. Abstracting over the line source
+/// lets both share the same session logic.
+trait LineReader {
+    /// Read a single line, displaying `prompt`. Returns `None` when
+    /// there is no more input.
+    fn read_line(&mut self, prompt: &str) -> Option<String>;
+
+    /// Record `line` in the input history. No-op by default.
+    fn add_history(&mut self, _line: &str) {}
+
+    /// Persist the accepted source `src` to the session log. No-op by
+    /// default.
+    fn log_src(&mut self, _src: &str) {}
+}
+
+/// A [`LineReader`] backed by rustyline, used for interactive sessions.
+struct RustylineReader {
+    editor: Editor<GardenHighlighter, DefaultHistory>,
+}
+
+impl RustylineReader {
+    fn new() -> Self {
+        let mut editor = Editor::new().unwrap();
+        editor.set_helper(Some(GardenHighlighter::new()));
+        if let Some(path) = BaseDirectories::with_prefix("garden").get_state_file("history") {
+            let _ = editor.load_history(&path);
+        }
+        Self { editor }
+    }
+}
+
+impl LineReader for RustylineReader {
+    fn read_line(&mut self, prompt: &str) -> Option<String> {
+        self.editor.readline(prompt).ok()
+    }
+
+    fn add_history(&mut self, line: &str) {
+        let _ = self.editor.add_history_entry(line);
+        if let Ok(path) = BaseDirectories::with_prefix("garden").place_state_file("history") {
+            let _ = self.editor.save_history(&path);
+        }
+    }
+
+    fn log_src(&mut self, src: &str) {
+        let _ = log_src(src);
+    }
+}
+
+/// A [`LineReader`] that replays a fixed list of input lines, used by
+/// reftests.
+struct ScriptedReader {
+    lines: VecDeque<String>,
+}
+
+impl LineReader for ScriptedReader {
+    fn read_line(&mut self, _prompt: &str) -> Option<String> {
+        self.lines.pop_front()
+    }
+}
+
+/// Read toplevel items from the reader. If the user gives us a command,
 /// execute it and prompt again.
 fn read_expr(
     env: &mut Env,
     session: &mut Session,
-    rl: &mut Editor<GardenHighlighter, DefaultHistory>,
+    reader: &mut dyn LineReader,
     is_stopped: bool,
 ) -> Result<(String, Vec<ToplevelItem>), ReadError> {
     loop {
-        match rl.readline(&prompt_symbol(is_stopped)) {
-            Ok(input) => {
-                let _ = rl.add_history_entry(input.as_str());
-                if let Ok(path) = BaseDirectories::with_prefix("garden").place_state_file("history")
-                {
-                    let _ = rl.save_history(&path);
-                }
+        match reader.read_line(&prompt_symbol(is_stopped)) {
+            Some(input) => {
+                reader.add_history(&input);
 
                 match Command::from_string(&input) {
                     Ok(cmd) => match run_command(&mut std::io::stdout(), cmd, env, session) {
@@ -74,9 +134,9 @@ fn read_expr(
                     }
                 }
 
-                match read_multiline_syntax(&input, rl, &mut env.vfs, &mut env.id_gen) {
+                match read_multiline_syntax(&input, reader, &mut env.vfs, &mut env.id_gen) {
                     Ok((src, items)) => {
-                        log_src(&src).unwrap();
+                        reader.log_src(&src);
                         return Ok((src, items));
                     }
                     Err(ParseError::Incomplete { message, .. }) => {
@@ -87,7 +147,7 @@ fn read_expr(
                     }
                 }
             }
-            Err(_) => return Err(ReadError::ReadlineError),
+            None => return Err(ReadError::ReadlineError),
         }
 
         println!();
@@ -97,6 +157,33 @@ fn read_expr(
 pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
     print_repl_header();
 
+    let mut reader = RustylineReader::new();
+    run_repl(&mut reader, interrupted, trace_exprs);
+}
+
+/// Replay a scripted REPL session and print its output, for reftests.
+///
+/// Input lines are read from `src`. Lines beginning with `//` are
+/// ignored so the same file can carry goldentests directives, and the
+/// header is omitted to keep output stable across version bumps.
+pub(crate) fn reftest_repl(src: &str, interrupted: Arc<AtomicBool>) {
+    let mut lines: VecDeque<String> = src
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("//"))
+        .map(|line| line.to_owned())
+        .collect();
+
+    // Drop trailing blank lines so we don't feed empty prompts after
+    // the script's final input.
+    while lines.back().is_some_and(|line| line.trim().is_empty()) {
+        lines.pop_back();
+    }
+
+    let mut reader = ScriptedReader { lines };
+    run_repl(&mut reader, interrupted, false);
+}
+
+fn run_repl(reader: &mut dyn LineReader, interrupted: Arc<AtomicBool>, trace_exprs: bool) {
     let id_gen = IdGenerator::default();
     let vfs = Vfs::default();
     let mut env = Env::new(id_gen, vfs);
@@ -109,7 +196,6 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
         pretty_print_json: false,
     };
 
-    let mut rl = new_editor();
     let mut is_stopped = false;
     let mut last_src = String::new();
     let path = PathBuf::from("__user.gdn");
@@ -117,7 +203,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
     loop {
         println!();
 
-        match read_expr(&mut env, &mut session, &mut rl, is_stopped) {
+        match read_expr(&mut env, &mut session, reader, is_stopped) {
             Ok((src, items)) => {
                 last_src = src;
 
@@ -260,15 +346,6 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>, trace_exprs: bool) {
     }
 }
 
-fn new_editor() -> Editor<GardenHighlighter, DefaultHistory> {
-    let mut rl = Editor::new().unwrap();
-    rl.set_helper(Some(GardenHighlighter::new()));
-    if let Some(path) = BaseDirectories::with_prefix("garden").get_state_file("history") {
-        let _ = rl.load_history(&path);
-    }
-    rl
-}
-
 fn print_repl_header() {
     println!(
         "{} {}{}",
@@ -286,14 +363,19 @@ fn print_repl_header() {
 /// error.
 fn read_multiline_syntax(
     first_line: &str,
-    rl: &mut Editor<GardenHighlighter, DefaultHistory>,
+    reader: &mut dyn LineReader,
     vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> Result<(String, Vec<ToplevelItem>), ParseError> {
     let mut src = first_line.to_owned();
 
     loop {
-        let path = Rc::new(PathBuf::from("__interactive_session__"));
+        // Parse interactive input under the same namespace path that
+        // definitions are loaded into (see `repl_session`), so that
+        // toplevel items defined in the session (e.g. functions) are
+        // visible to other items run in that namespace, such as tests
+        // invoked with `:test`.
+        let path = Rc::new(PathBuf::from("__user.gdn"));
         let vfs_path = vfs.insert(Rc::clone(&path), src.to_owned());
 
         let (items, errors) = parse_toplevel_items(&vfs_path, &src, id_gen);
@@ -305,24 +387,26 @@ fn read_multiline_syntax(
                     // If we didn't parse anything, but the text isn't
                     // just whitespace, it's probably a comment that
                     // will become a doc comment.
-                    match rl.readline(&prompt_symbol(false)) {
-                        Ok(input) => {
+                    match reader.read_line(&prompt_symbol(false)) {
+                        Some(input) => {
                             src.push('\n');
                             src.push_str(&input);
                         }
-                        Err(_) => return Ok((src, items)),
+                        None => return Ok((src, items)),
                     }
                 } else {
                     return Ok((src, items));
                 }
             }
-            Some(e @ ParseError::Incomplete { .. }) => match rl.readline(&prompt_symbol(false)) {
-                Ok(input) => {
-                    src.push('\n');
-                    src.push_str(&input);
+            Some(e @ ParseError::Incomplete { .. }) => {
+                match reader.read_line(&prompt_symbol(false)) {
+                    Some(input) => {
+                        src.push('\n');
+                        src.push_str(&input);
+                    }
+                    None => return Err(e),
                 }
-                Err(_) => return Err(e),
-            },
+            }
             Some(e @ ParseError::Invalid { .. }) => return Err(e),
         }
     }

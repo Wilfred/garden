@@ -1,0 +1,22 @@
+// The number of elements in a list.
+{"inputs": ["[10, 20, 30]"], "output": "3"}
+
+// args: suggest
+// expected stdout:
+// {
+//   "error": null,
+//   "inputs": [
+//     "[10, 20, 30]"
+//   ],
+//   "output": "3",
+//   "suggestions": [
+//     {
+//       "kind": "method",
+//       "name": "len",
+//       "call": "[10, 20, 30].len()",
+//       "signature": "(this: List<T>): Int",
+//       "constants": []
+//     }
+//   ]
+// }
+

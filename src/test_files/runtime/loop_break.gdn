@@ -1,15 +1,18 @@
 {
   let i = 0
-  while True {
+  let result = (while True {
     if i == 10 {
-      break
+      println(string_repr((i, break)))
     }
 
     i = i + 1
-  }
+  }, 42)
 
+  dbg(result)
   dbg(i)
 }
 
 // args: run
-// expected stderr: [src/test_files/runtime/loop_break.gdn:11:3] i //-> 10
+// expected stderr:
+// [src/test_files/runtime/loop_break.gdn:11:3] result //-> (Unit, 42)
+// [src/test_files/runtime/loop_break.gdn:12:3] i //-> 10

@@ -86,7 +86,10 @@ pub(crate) fn check(
                 position,
                 message,
                 notes,
+                fixes,
             } => {
+                all_fixes.extend(fixes);
+
                 // Expose line numbers as 1-indexed.
                 diagnostics.push(CheckDiagnostic {
                     path: to_project_relative(&position.path, &env.project_root),

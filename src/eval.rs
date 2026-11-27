@@ -347,7 +347,8 @@ pub(crate) fn load_toplevel_items(
     namespace: Rc<RefCell<NamespaceInfo>>,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut paths_seen = FxHashSet::default();
-    load_toplevel_items_(items, env, &mut paths_seen, namespace, false)
+    let loaded = load_toplevel_items_(items, env, &mut paths_seen, namespace, false);
+    (loaded.diagnostics, loaded.new_syms)
 }
 
 pub(crate) fn load_toplevel_items_with_stubs(
@@ -356,7 +357,35 @@ pub(crate) fn load_toplevel_items_with_stubs(
     namespace: Rc<RefCell<NamespaceInfo>>,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut paths_seen = FxHashSet::default();
-    load_toplevel_items_(items, env, &mut paths_seen, namespace, true)
+    let loaded = load_toplevel_items_(items, env, &mut paths_seen, namespace, true);
+    (loaded.diagnostics, loaded.new_syms)
+}
+
+/// Check each source file after loading the whole graph, so references across
+/// cyclic imports can use the completed namespaces.
+pub(crate) fn load_and_check_file(
+    path: &VfsPathBuf,
+    items: &[ToplevelItem],
+    env: &mut Env,
+) -> Vec<Diagnostic> {
+    let namespace = env.get_or_create_namespace(&path.path);
+    let mut paths_seen = FxHashSet::default();
+    paths_seen.insert(path.path.as_ref().clone());
+    let loaded = load_toplevel_items_(items, env, &mut paths_seen, Rc::clone(&namespace), false);
+
+    let mut diagnostics = loaded.diagnostics;
+    diagnostics.extend(check_toplevel_items_in_env(path, items, env, namespace));
+    for (path, items) in loaded.imports {
+        let namespace = env.get_namespace(&path.path).unwrap();
+        diagnostics.extend(check_toplevel_items_in_env(&path, &items, env, namespace));
+    }
+    diagnostics
+}
+
+struct LoadedItems {
+    diagnostics: Vec<Diagnostic>,
+    new_syms: Vec<SymbolName>,
+    imports: Vec<(VfsPathBuf, Vec<ToplevelItem>)>,
 }
 
 fn load_toplevel_items_(
@@ -365,7 +394,8 @@ fn load_toplevel_items_(
     paths_seen: &mut FxHashSet<PathBuf>,
     namespace: Rc<RefCell<NamespaceInfo>>,
     vivify_types: bool,
-) -> (Vec<Diagnostic>, Vec<SymbolName>) {
+) -> LoadedItems {
+    let mut imports = vec![];
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
 
@@ -522,7 +552,6 @@ fn load_toplevel_items_(
 
                     continue;
                 }
-                paths_seen.insert(abs_path.clone());
 
                 let src = match read_src(&abs_path, import_info) {
                     Ok(src) => src,
@@ -562,7 +591,8 @@ fn load_toplevel_items_(
 
                 // Load into its own namespace.
                 let destination_ns = env.get_or_create_namespace(&abs_path);
-                let (import_diagnostics, _) = load_toplevel_items_(
+                paths_seen.insert(abs_path.clone());
+                let loaded = load_toplevel_items_(
                     &imported_items,
                     env,
                     paths_seen,
@@ -570,13 +600,19 @@ fn load_toplevel_items_(
                     vivify_types,
                 );
 
+                imports.extend(loaded.imports);
+                // Built-in modules ship with the interpreter.
+                if abs_path.is_absolute() {
+                    imports.push((vfs_path, imported_items));
+                }
+
                 let imported_sym = insert_imported_namespace(
                     &import_info.namespace_sym,
                     Rc::clone(&namespace),
                     destination_ns,
                 );
 
-                diagnostics.extend(import_diagnostics);
+                diagnostics.extend(loaded.diagnostics);
                 new_syms.push(imported_sym);
             }
         }
@@ -624,7 +660,11 @@ fn load_toplevel_items_(
         }
     }
 
-    (diagnostics, new_syms)
+    LoadedItems {
+        diagnostics,
+        new_syms,
+        imports,
+    }
 }
 
 fn insert_placeholder_namespace(

@@ -1,0 +1,29 @@
+enum Color {
+  Red,
+  Green,
+  Blue,
+}
+
+public fun describe(c: Color): String {
+  // The `_` case is redundant because every variant is matched.
+  match c {
+    Red => "red"
+    Green => "green"
+    Blue => "blue"
+    _ => "other"
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: This `_` case is redundant, as all the cases of `Color` are already matched.
+// 
+// --| src/test_files/check/match_redundant_wildcard.gdn:13:5
+// 11|     Green => "green"
+// 12|     Blue => "blue"
+// 13|     _ => "other"
+// 14|   } ^
+// 15| }
+
+// expected stderr: 1 issue can be fixed automatically (use `--fix`).

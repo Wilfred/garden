@@ -8,6 +8,7 @@ pub(crate) mod visitor;
 use std::rc::Rc;
 
 use ast::{FieldInfo, StructInfo};
+use itertools::Itertools;
 use position::Position;
 
 use ast::*;
@@ -3234,15 +3235,7 @@ pub(crate) fn parse_toplevel_items(
     src: &str,
     id_gen: &mut IdGenerator,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
-    let mut diagnostics = vec![];
-
-    let (mut tokens, lex_errors) = lex(vfs_path, src);
-    for error in lex_errors {
-        diagnostics.push(error);
-    }
-
-    let items = parse_toplevel_items_from_tokens(&mut tokens, id_gen, &mut diagnostics);
-    (items, diagnostics)
+    parse_toplevel_items_from_span(vfs_path, src, id_gen, 0, src.len())
 }
 
 /// Parse all the toplevel items in `src` between `offset` and
@@ -3262,6 +3255,18 @@ pub(crate) fn parse_toplevel_items_from_span(
     }
 
     let items = parse_toplevel_items_from_tokens(&mut tokens, id_gen, &mut diagnostics);
+    for error in diagnostics
+        .iter_mut()
+        .unique_by(|e| e.position().line_number)
+    {
+        if let ParseError::Invalid {
+            position, message, ..
+        } = error
+        {
+            let start = position.start_offset.saturating_sub(position.column);
+            message.suggest_fun(src, start);
+        }
+    }
     (items, diagnostics)
 }
 

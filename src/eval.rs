@@ -7075,11 +7075,15 @@ fn eval_expr(
                     message.push(msgtext!(" instead?"));
                 }
 
+                let mut message = ErrorMessage(message);
+                if let Some(src) = env.vfs.file_src(&name_sym.position.vfs_path) {
+                    message.suggest_fun(src, name_sym.position.start_offset);
+                }
                 return Err((
                     RestoreValues(vec![]),
                     EvalError::Exception(ExceptionInfo {
                         position: name_sym.position.clone(),
-                        message: ErrorMessage(message),
+                        message,
                     }),
                 ));
             }

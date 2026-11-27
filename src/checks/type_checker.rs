@@ -1850,27 +1850,33 @@ impl TypeCheckVisitor<'_> {
                 let available: Vec<&SymbolName> =
                     ns_names.iter().chain(local_names.iter()).collect();
 
-                let suggest = if let Some(similar) = most_similar(&available, &sym.name) {
-                    fixes.push(Autofix {
-                        description: format!("Use `{}` here.", similar),
-                        position: sym.position.clone(),
-                        new_text: similar.text.to_string(),
-                    });
-
-                    format!(" Did you mean `{similar}`?")
+                let message = if sym.name.as_str() == "elif" {
+                    ErrorMessage::elif_hint()
                 } else {
-                    "".to_owned()
+                    let suggest = if let Some(similar) = most_similar(&available, &sym.name) {
+                        fixes.push(Autofix {
+                            description: format!("Use `{}` here.", similar),
+                            position: sym.position.clone(),
+                            new_text: similar.text.to_string(),
+                        });
+
+                        format!(" Did you mean `{similar}`?")
+                    } else {
+                        "".to_owned()
+                    };
+
+                    ErrorMessage(vec![
+                        msgtext!("Unbound symbol: "),
+                        msgcode!("{}", sym.name),
+                        msgtext!("{}", suggest),
+                    ])
                 };
 
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
                     fixes,
                     severity: Severity::Error,
-                    message: ErrorMessage(vec![
-                        msgtext!("Unbound symbol: "),
-                        msgcode!("{}", sym.name),
-                        msgtext!("{}", suggest),
-                    ]),
+                    message,
                     position: sym.position.clone(),
                 });
             }

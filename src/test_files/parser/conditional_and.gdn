@@ -1,0 +1,11 @@
+if True and False { println("yes") }
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Use `&&` for logical conjunction in place of `and`. Garden evaluates both operands.
+// 
+// -| src/test_files/parser/conditional_and.gdn:1:9
+// 1| if True and False { println("yes") }
+// 2|         ^^^
+

@@ -1,0 +1,28 @@
+let n = 2
+if n == 1 { println("one") } elif n == 2 { println("two") }
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Unused value.
+// 
+// -| src/test_files/check/conditional_elif.gdn:2:30
+// 1| let n = 2
+// 2| if n == 1 { println("one") } elif n == 2 { println("two") }
+// 3|                              ^^^^
+// 
+// Warning: Unused value.
+// 
+// -| src/test_files/check/conditional_elif.gdn:2:35
+// 1| let n = 2
+// 2| if n == 1 { println("one") } elif n == 2 { println("two") }
+// 3|                                   ^^^^^^
+// 
+// Error: `elif` is unbound. To continue a conditional, write `else if`.
+// 
+// -| src/test_files/check/conditional_elif.gdn:2:30
+// 1| let n = 2
+// 2| if n == 1 { println("one") } elif n == 2 { println("two") }
+// 3|                              ^^^^
+
+// expected stderr: 2 issues can be fixed automatically (use `--fix`).

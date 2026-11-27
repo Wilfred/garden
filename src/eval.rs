@@ -7079,7 +7079,11 @@ fn eval_expr(
                     RestoreValues(vec![]),
                     EvalError::Exception(ExceptionInfo {
                         position: name_sym.position.clone(),
-                        message: ErrorMessage(message),
+                        message: if name_sym.name.as_str() == "elif" {
+                            ErrorMessage::elif_hint()
+                        } else {
+                            ErrorMessage(message)
+                        },
                     }),
                 ));
             }

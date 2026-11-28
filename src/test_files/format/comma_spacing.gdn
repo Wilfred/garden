@@ -3,6 +3,8 @@ fun foo(a:Int,b:Int): Int {
   let t = (1 ,2 , 3)
   bar(a,b,c)
   baz(x , y)
+  let u = ( 1, 2 )
+  qux( a )
   a + b
 }
 
@@ -13,6 +15,8 @@ fun foo(a:Int,b:Int): Int {
 //   let t = (1, 2, 3)
 //   bar(a, b, c)
 //   baz(x, y)
+//   let u = (1, 2)
+//   qux(a)
 //   a + b
 // }
 

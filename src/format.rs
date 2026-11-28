@@ -32,6 +32,7 @@ pub(crate) fn format(src: &str, path: &Path) -> String {
     // re-parsing afterwards because line numbers and offsets shift.
     let src_owned = wrap_long_signatures(src, path);
     let src_owned = split_struct_fields(&src_owned, path);
+    let src_owned = split_loop_bodies(&src_owned, path);
     let src = src_owned.as_str();
 
     let mut id_gen = IdGenerator::default();
@@ -906,8 +907,8 @@ fn fix_type_annotation_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPath
 /// constructs such as `assert(...)` are deliberately excluded.
 const SPACED_BEFORE_PAREN: &[&str] = &["if", "while", "for", "match", "return"];
 
-/// Normalize whitespace around commas, `=>` arrows, compound-assignment
-/// operators (`+=`, `-=`), and control-flow keywords.
+/// Normalize whitespace around commas, parentheses, `=>` arrows,
+/// compound-assignment operators (`+=`, `-=`), and control-flow keywords.
 ///
 /// This works on the gaps between adjacent tokens produced by the lexer,
 /// so it never touches whitespace inside string literals. Gaps that span
@@ -922,6 +923,7 @@ const SPACED_BEFORE_PAREN: &[&str] = &["if", "while", "for", "match", "return"];
 /// - Exactly one space on each side of a `=>` arrow.
 /// - Exactly one space on each side of a `+=` or `-=` operator.
 /// - A single space between a control-flow keyword and a following `(`.
+/// - No space after `(` or before `)`.
 fn normalize_token_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPathBuf) -> String {
     let (mut token_stream, _) = lex_between(vfs_path, src, 0, src.len());
 
@@ -960,6 +962,8 @@ fn normalize_token_spacing(src: &str, vfs_path: &crate::parser::vfs::VfsPathBuf)
             } else {
                 Some(" ")
             }
+        } else if prev.text == "(" || next.text == ")" {
+            Some("")
         } else if prev.text == "=>"
             || next.text == "=>"
             || matches!(prev.text, "+=" | "-=")
@@ -1025,6 +1029,61 @@ fn split_struct_fields(src: &str, path: &Path) -> String {
     }
 
     apply_span_edits(src, &mut edits)
+}
+
+/// Put the contents and closing brace of single-line `while` and
+/// `for` loop bodies on separate lines, for loops at the start of a
+/// line.
+fn split_loop_bodies(src: &str, path: &Path) -> String {
+    let mut id_gen = IdGenerator::default();
+    let (_vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
+
+    let mut visitor = LoopBodyVisitor { src, edits: vec![] };
+    for item in &items {
+        visitor.visit_toplevel_item(item);
+    }
+
+    apply_span_edits(src, &mut visitor.edits)
+}
+
+struct LoopBodyVisitor<'a> {
+    src: &'a str,
+    edits: Vec<SpanEdit>,
+}
+
+impl LoopBodyVisitor<'_> {
+    fn split_body(&mut self, body: &Block) {
+        let Some(first) = body.exprs.first() else {
+            return;
+        };
+        if body.open_brace.line_number != body.close_brace.line_number {
+            return;
+        }
+
+        // Indentation is corrected by later formatting phases.
+        put_on_separate_line(self.src, first.position.start_offset, 0, &mut self.edits);
+        put_on_separate_line(self.src, body.close_brace.start_offset, 0, &mut self.edits);
+    }
+}
+
+impl Visitor for LoopBodyVisitor<'_> {
+    fn visit_expr(&mut self, expr: &Expression) {
+        if let Expression_::While(_, body) | Expression_::ForIn(_, _, body) = &expr.expr_ {
+            // Only split loops that start their own line, as nested
+            // loops (e.g. call arguments) don't indent well when split.
+            let line_start = self.src[..expr.position.start_offset]
+                .rfind('\n')
+                .map_or(0, |i| i + 1);
+            if self.src[line_start..expr.position.start_offset]
+                .trim()
+                .is_empty()
+            {
+                self.split_body(body);
+            }
+        }
+        self.visit_expr_(&expr.expr_);
+    }
 }
 
 fn put_on_separate_line(src: &str, offset: usize, indent: usize, edits: &mut Vec<SpanEdit>) {
